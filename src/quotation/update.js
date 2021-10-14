@@ -1,0 +1,149 @@
+import React from 'react';
+import QuotationPreview from './preview.js';
+import { Modal, Button } from 'react-bootstrap';
+import BusinessCreate from './../business/create.js';
+import ClientCreate from './../client/create.js';
+import ProductCreate from './../product/create.js';
+import UserCreate from './../user/create.js';
+
+
+class QuotationUpdate extends React.Component {
+
+    state = {
+        show: false,
+    };
+
+    handleClose = () => {
+        this.setState({
+            show: false,
+        });
+    };
+
+    handleShow = () => {
+        this.setState({
+            show: true,
+        });
+    };
+
+    render() {
+        return <>
+            {this.props.showUpdateButton && (
+                <button className="btn btn-default btn-sm" onClick={this.handleShow}>
+                    <i className="bi bi-pencil"></i>
+                </button>
+            )}
+            <Modal show={this.state.show} size="lg" onHide={this.handleClose} animation={false}>
+                <Modal.Header>
+                    <Modal.Title>Update Quotation #123</Modal.Title>
+
+                    <div className="col align-self-end text-end">
+                        <QuotationPreview />
+                        <button
+                            type="button"
+                            className="btn-close"
+                            onClick={this.handleClose}
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <form className="row g-3 needs-validation" >
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Business*</label>
+
+                            <div className="input-group mb-3">
+                                <input type="text" value="Business1" className="form-control" placeholder="Select Business" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <BusinessCreate showCreateButton={true} />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Business.
+                                    </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Client*</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" value="Client1" className="form-control" id="validationCustom02" placeholder="Select Client" aria-label="Select Client" aria-describedby="button-addon2" />
+                                <ClientCreate showCreateButton={true} />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Client.
+                  </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Product*</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" value="ABC" className="form-control" id="validationCustom03" placeholder="Select Product" aria-label="Select Product" aria-describedby="button-addon3" />
+                                <ProductCreate showCreateButton={true} />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Product.
+                  </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label"
+                            >Qty*</label
+                            >
+                            <input
+                                type="text"
+                                className="form-control"
+                                id="validationCustom04"
+                                placeholder="Quantity"
+                                defaultValue="1"
+
+                            />
+
+                            <div className="valid-feedback">Looks good!</div>
+                            <div className="invalid-feedback">
+                                Please provide a valid Quantity.
+                </div>
+                        </div>
+                        <div className="col-md-2">
+                            <label className="form-label">
+                                &nbsp;</label
+                            >
+                            <a href="/" className="btn-primary form-control"><i className="align-middle me-1" data-feather="plus"></i> ADD</a>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Delivered By*</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" value="User1" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
+                                <UserCreate showCreateButton={true} />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid User.
+                  </div>
+                            </div>
+                        </div>
+
+                    </form>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={this.handleClose}>
+                        Close
+                </Button>
+                    <Button variant="primary" onClick={this.handleClose}>
+                        Save Changes
+                </Button>
+                </Modal.Footer>
+            </Modal>
+        </>;
+    }
+}
+
+export default QuotationUpdate;
