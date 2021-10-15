@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
 
 
-class ProductCreate extends React.Component {
+class ProductUpdate extends React.Component {
 
     state = {
         show: false,
@@ -22,12 +22,14 @@ class ProductCreate extends React.Component {
 
     render() {
         return <>
-            {this.props.showCreateButton && (
-                <Button hide={true} onClick={this.handleShow} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+            {this.props.showUpdateButton && (
+                <button className="btn btn-default btn-sm" onClick={this.handleShow}>
+                    <i className="bi bi-pencil"></i>
+                </button>
             )}
             <Modal show={this.state.show} scrollable={true} size="lg" onHide={this.handleClose} animation={false}>
                 <Modal.Header>
-                    <Modal.Title>Create New Product</Modal.Title>
+                    <Modal.Title>Update Product #123</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -46,7 +48,7 @@ class ProductCreate extends React.Component {
                             >Product Name*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Product Name" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" value="Product 1" className="form-control" placeholder="Product Name" aria-label="Select Business" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Business.
@@ -71,7 +73,7 @@ class ProductCreate extends React.Component {
                             >Item CODE*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Item CODE" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" value="ABC-1" className="form-control" placeholder="Item CODE" aria-label="Select Business" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Business.
@@ -165,7 +167,7 @@ class ProductCreate extends React.Component {
                         Close
                 </Button>
                     <Button variant="primary" onClick={this.handleClose}>
-                        Create
+                        Save Changes
                 </Button>
                 </Modal.Footer>
             </Modal>
@@ -173,4 +175,4 @@ class ProductCreate extends React.Component {
     }
 }
 
-export default ProductCreate;
+export default ProductUpdate;

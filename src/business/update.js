@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
 
 
-class ProductCreate extends React.Component {
+class BusinessUpdate extends React.Component {
 
     state = {
         show: false,
@@ -22,14 +22,17 @@ class ProductCreate extends React.Component {
 
     render() {
         return <>
-            {this.props.showCreateButton && (
-                <Button hide={true} onClick={this.handleShow} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+            {this.props.showUpdateButton && (
+                <button className="btn btn-default btn-sm" onClick={this.handleShow}>
+                    <i className="bi bi-pencil"></i>
+                </button>
             )}
-            <Modal show={this.state.show} scrollable={true} size="lg" onHide={this.handleClose} animation={false}>
+            <Modal show={this.state.show} size="lg" onHide={this.handleClose} animation={false}>
                 <Modal.Header>
-                    <Modal.Title>Create New Product</Modal.Title>
+                    <Modal.Title>Update Business #123</Modal.Title>
 
                     <div className="col align-self-end text-end">
+
                         <button
                             type="button"
                             className="btn-close"
@@ -43,10 +46,10 @@ class ProductCreate extends React.Component {
                     <form className="row g-3 needs-validation" >
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Product Name*</label>
+                            >Business Name*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Product Name" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" value="Business 1" className="form-control" placeholder="Business Name" aria-label="Select Business" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Business.
@@ -55,11 +58,11 @@ class ProductCreate extends React.Component {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Product Name(in Arabic)*</label
+                            >Business Name(in Arabic)*</label
                             >
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Product Name in Arabic" aria-label="Select Client" aria-describedby="button-addon2" />
+                                <input type="text" className="form-control" placeholder="Business Name in Arabic" aria-label="Select Client" aria-describedby="button-addon2" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Client.
@@ -68,10 +71,86 @@ class ProductCreate extends React.Component {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Item CODE*</label>
+                            >Business Title*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Item CODE" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" placeholder="Business Title" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Business.
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Business Title(in Arabic)*</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" placeholder="Business Title in Arabic" aria-label="Select Client" aria-describedby="button-addon2" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Client.
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Address*</label>
+
+                            <div className="input-group mb-3">
+                                <textarea type="text" className="form-control" placeholder="Address" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Business.
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Address(in Arabic)*</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <textarea type="text" className="form-control" placeholder="Address in Arabic" aria-label="Select Client" aria-describedby="button-addon2" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Client.
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Phone*</label
+                            >
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" placeholder="Phone" aria-label="Select Client" aria-describedby="button-addon2" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Client.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Phone(in Arabic)*</label
+                            >
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" placeholder="Phone in Arabic" aria-label="Select Client" aria-describedby="button-addon2" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Client.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >VAT No.*</label>
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" placeholder="VAT No." aria-label="Select Business" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Business.
@@ -81,83 +160,44 @@ class ProductCreate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Wholsale Unit Price in Business 1*</label
-                            >
+                            >VAT No.(In Arabic)*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Whole Price" aria-label="Select Client" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Client.
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Wholsale Unit Price in Business 2*</label
-                            >
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Whole Price" aria-label="Select Client" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Client.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Retail Unit Price in Business 1*</label
-                            >
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Retail Price" aria-label="Select Client" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Client.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Retail Unit Price in Business 2*</label
-                            >
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Retail Price" aria-label="Select Client" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Client.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Quantity/Stock in Business1*</label>
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Quantity/Stock in Business1" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" placeholder="VAT No. In Arabic" aria-label="Select Business" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Business.
                                 </div>
                             </div>
                         </div>
+
+
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Quantity/Stock in Business2*</label>
+                            >E-mail*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Quantity/Stock in Business2" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" id="validationCustom01" placeholder="E-mail" aria-label="Select Business" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Business.
                                 </div>
                             </div>
                         </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Logo*</label>
+
+                            <div className="input-group mb-3">
+                                <input type="file" className="form-control" id="validationCustom01" placeholder="Logo" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Business.
+                                </div>
+                            </div>
+                        </div>
+
                     </form>
                 </Modal.Body>
                 <Modal.Footer>
@@ -165,7 +205,7 @@ class ProductCreate extends React.Component {
                         Close
                 </Button>
                     <Button variant="primary" onClick={this.handleClose}>
-                        Create
+                        Save Changes
                 </Button>
                 </Modal.Footer>
             </Modal>
@@ -173,4 +213,4 @@ class ProductCreate extends React.Component {
     }
 }
 
-export default ProductCreate;
+export default BusinessUpdate;

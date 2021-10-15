@@ -63,6 +63,14 @@ class QuotationView extends React.Component {
                             <th>Date:</th><td> 14 Oct 2021</td>
 
                         </tr>
+                        <tr>
+                            <th>Created At:</th><td> 14 Oct 2021 12:24:32</td>
+                            <th>Updated At:</th><td> 14 Oct 2021 12:24:32</td>
+                        </tr>
+                        <tr>
+                            <th>Created By:</th><td> User 1</td>
+                            <th>Updated By:</th><td> User 1</td>
+                        </tr>
                         <tr><th colspan="3">Products:</th></tr>
                         <tr>
                             <th>SI No.</th>
@@ -137,6 +145,7 @@ class QuotationView extends React.Component {
                             <th>Net Total:</th>
                             <th>850.00 SAR</th>
                         </tr>
+
                     </Table>
                     {/*
                     <form className="row g-3 needs-validation" >

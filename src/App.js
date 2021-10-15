@@ -19,6 +19,15 @@ function App() {
         <Route path="/dashboard/orders">
           <Dashboard />
         </Route>
+        <Route path="/dashboard/businesses">
+          <Dashboard />
+        </Route>
+        <Route path="/dashboard/clients">
+          <Dashboard />
+        </Route>
+        <Route path="/dashboard/users">
+          <Dashboard />
+        </Route>
         <Route path="/">
           <Login />
         </Route>
