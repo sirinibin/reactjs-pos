@@ -49,7 +49,7 @@ function Sidebar(props) {
                     toggleActive(appState.tabs[1]);
                 }} className={toggleActiveStyles(appState.tabs[1])}>
                     <Link to="/dashboard/orders" className="sidebar-link">
-                        <i className="bi bi-file-earmark-text" />
+                        <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Orders</span>
                     </Link>
                 </li>
@@ -57,7 +57,7 @@ function Sidebar(props) {
                     toggleActive(appState.tabs[2]);
                 }} className={toggleActiveStyles(appState.tabs[2])}>
                     <Link to="/dashboard/businesses" className="sidebar-link">
-                        <i className="bi bi-file-earmark-text" />
+                        <i className="bi bi-shop" />
                         <span className="align-middle">Businesses</span>
                     </Link>
                 </li>
@@ -65,7 +65,7 @@ function Sidebar(props) {
                     toggleActive(appState.tabs[3]);
                 }} className={toggleActiveStyles(appState.tabs[3])}>
                     <Link to="/dashboard/clients" className="sidebar-link">
-                        <i className="bi bi-file-earmark-text" />
+                        <i className="bi bi-people" />
                         <span className="align-middle">Clients</span>
                     </Link>
                 </li>
@@ -73,7 +73,7 @@ function Sidebar(props) {
                     toggleActive(appState.tabs[4]);
                 }} className={toggleActiveStyles(appState.tabs[4])}>
                     <Link to="/dashboard/products" className="sidebar-link">
-                        <i className="bi bi-file-earmark-text" />
+                        <i className="bi bi-cart" />
                         <span className="align-middle">Products</span>
                     </Link>
                 </li>
@@ -81,7 +81,7 @@ function Sidebar(props) {
                     toggleActive(appState.tabs[5]);
                 }} className={toggleActiveStyles(appState.tabs[5])}>
                     <Link to="/dashboard/users" className="sidebar-link">
-                        <i className="bi bi-file-earmark-text" />
+                        <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>
                     </Link>
                 </li>
