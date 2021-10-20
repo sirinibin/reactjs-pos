@@ -11,10 +11,10 @@ class Footer extends React.Component {
                                 href="https://www.startuptech.uk/"
                                 target="_blank"
                                 rel="noreferrer"
-                            ><strong>Startup Tech Consultancy LTD, UK</strong></a
+                            ><strong>&copy; Startup Tech Consultancy LTD, UK</strong></a
                             >
-  &copy;
-</p>
+
+                        </p>
                     </div>
                     <div className="col-6 text-end">
                         <ul className="list-inline">

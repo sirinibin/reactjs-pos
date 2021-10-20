@@ -12,7 +12,7 @@ function Sidebar(props) {
             'quotations',
             'orders',
             'businesses',
-            'clients',
+            'customers',
             'products',
             'users',
         ],
@@ -64,9 +64,9 @@ function Sidebar(props) {
                 <li onClick={() => {
                     toggleActive(appState.tabs[3]);
                 }} className={toggleActiveStyles(appState.tabs[3])}>
-                    <Link to="/dashboard/clients" className="sidebar-link">
+                    <Link to="/dashboard/customers" className="sidebar-link">
                         <i className="bi bi-people" />
-                        <span className="align-middle">Clients</span>
+                        <span className="align-middle">Customers</span>
                     </Link>
                 </li>
                 <li onClick={() => {

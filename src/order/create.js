@@ -2,7 +2,7 @@ import React from 'react';
 import OrderPreview from './preview.js';
 import { Modal, Button } from 'react-bootstrap';
 import BusinessCreate from '../business/create.js';
-import ClientCreate from '../client/create.js';
+import CustomerCreate from '../customer/create.js';
 import ProductCreate from '../product/create.js';
 import UserCreate from '../user/create.js';
 
@@ -64,15 +64,15 @@ class OrderCreate extends React.Component {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Client*</label
+                            >Customer*</label
                             >
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="validationCustom02" placeholder="Select Client" aria-label="Select Client" aria-describedby="button-addon2" />
-                                <ClientCreate showCreateButton={true} />
+                                <input type="text" className="form-control" id="validationCustom02" placeholder="Select Customer" aria-label="Select Customer" aria-describedby="button-addon2" />
+                                <CustomerCreate showCreateButton={true} />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
-                                    Please provide a valid Client.
+                                    Please provide a valid Customer.
                   </div>
                             </div>
                         </div>

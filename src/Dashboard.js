@@ -7,7 +7,7 @@ import {
 import QuotationIndex from './quotation/index.js';
 import OrderIndex from './order/index.js';
 import BusinessIndex from './business/index.js';
-import ClientIndex from './client/index.js';
+import CustomerIndex from './customer/index.js';
 import ProductIndex from './product/index.js';
 import UserIndex from './user/index.js';
 import Footer from './Footer';
@@ -50,8 +50,8 @@ class Dashboard extends React.Component {
                         <Route path="/dashboard/businesses">
                             <BusinessIndex />
                         </Route>
-                        <Route path="/dashboard/clients">
-                            <ClientIndex />
+                        <Route path="/dashboard/customers">
+                            <CustomerIndex />
                         </Route>
                         <Route path="/dashboard/products">
                             <ProductIndex />
