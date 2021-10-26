@@ -28,6 +28,9 @@ function App() {
         <Route path="/dashboard/users">
           <Dashboard />
         </Route>
+        <Route path="/dashboard/signatures">
+          <Dashboard />
+        </Route>
         <Route path="/">
           <Login />
         </Route>

@@ -55,7 +55,7 @@ class ProductCreate extends React.Component {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Product Name(in Arabic)*</label
+                            >Product Name(Optional)</label
                             >
 
                             <div className="input-group mb-3">
@@ -68,7 +68,7 @@ class ProductCreate extends React.Component {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Item CODE*</label>
+                            >Item CODE(Optional)</label>
 
                             <div className="input-group mb-3">
                                 <input type="text" className="form-control" placeholder="Item CODE" aria-label="Select Business" aria-describedby="button-addon1" />
@@ -81,7 +81,7 @@ class ProductCreate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Wholsale Unit Price in Business 1*</label
+                            >Wholsale Unit Price in Business 1(Optional)</label
                             >
 
                             <div className="input-group mb-3">
@@ -94,7 +94,7 @@ class ProductCreate extends React.Component {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Wholsale Unit Price in Business 2*</label
+                            >Wholsale Unit Price in Business 2(Optional)</label
                             >
 
                             <div className="input-group mb-3">
@@ -108,7 +108,7 @@ class ProductCreate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Retail Unit Price in Business 1*</label
+                            >Retail Unit Price in Business 1(Optional)</label
                             >
 
                             <div className="input-group mb-3">
@@ -122,7 +122,7 @@ class ProductCreate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Retail Unit Price in Business 2*</label
+                            >Retail Unit Price in Business 2(Optional)</label
                             >
 
                             <div className="input-group mb-3">
@@ -136,7 +136,7 @@ class ProductCreate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Quantity/Stock in Business1*</label>
+                            >Quantity/Stock in Business1(Optional)</label>
 
                             <div className="input-group mb-3">
                                 <input type="text" className="form-control" placeholder="Quantity/Stock in Business1" aria-label="Select Business" aria-describedby="button-addon1" />
@@ -148,7 +148,7 @@ class ProductCreate extends React.Component {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Quantity/Stock in Business2*</label>
+                            >Quantity/Stock in Business2(Optional)</label>
 
                             <div className="input-group mb-3">
                                 <input type="text" className="form-control" placeholder="Quantity/Stock in Business2" aria-label="Select Business" aria-describedby="button-addon1" />

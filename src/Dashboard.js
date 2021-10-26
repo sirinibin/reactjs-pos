@@ -10,6 +10,7 @@ import BusinessIndex from './business/index.js';
 import CustomerIndex from './customer/index.js';
 import ProductIndex from './product/index.js';
 import UserIndex from './user/index.js';
+import SignatureIndex from './signature/index.js';
 import Footer from './Footer';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
@@ -58,6 +59,9 @@ class Dashboard extends React.Component {
                         </Route>
                         <Route path="/dashboard/users">
                             <UserIndex />
+                        </Route>
+                        <Route path="/dashboard/signatures">
+                            <SignatureIndex />
                         </Route>
                     </Switch>
                 </main>

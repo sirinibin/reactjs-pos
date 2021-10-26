@@ -5,6 +5,7 @@ import BusinessCreate from '../business/create.js';
 import CustomerCreate from '../customer/create.js';
 import ProductCreate from '../product/create.js';
 import UserCreate from '../user/create.js';
+import SignatureCreate from './../signature/create.js';
 
 
 class OrderUpdate extends React.Component {
@@ -91,7 +92,7 @@ class OrderUpdate extends React.Component {
                             </div>
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label"
                             >Qty*</label
                             >
@@ -107,7 +108,25 @@ class OrderUpdate extends React.Component {
                             <div className="valid-feedback">Looks good!</div>
                             <div className="invalid-feedback">
                                 Please provide a valid Quantity.
-                </div>
+                            </div>
+                        </div>
+                        <div className="col-md-2">
+                            <label className="form-label"
+                            >Price*</label
+                            >
+                            <input
+                                type="text"
+                                className="form-control"
+                                id="validationCustom04"
+                                placeholder="Price"
+                                defaultValue="100.00"
+
+                            />
+
+                            <div className="valid-feedback">Looks good!</div>
+                            <div className="invalid-feedback">
+                                Please provide a valid Quantity.
+                            </div>
                         </div>
                         <div className="col-md-2">
                             <label className="form-label">
@@ -127,7 +146,22 @@ class OrderUpdate extends React.Component {
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid User.
-                  </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Delivered By Signature(Optional)</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" id="validationCustom06" placeholder="Select Signature" aria-label="Select User" aria-describedby="button-addon4" />
+                                <SignatureCreate showCreateButton={true} />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid User.
+                               </div>
                             </div>
                         </div>
 
