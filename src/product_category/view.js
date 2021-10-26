@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal, Button, Table } from 'react-bootstrap';
 
 
-class ProductView extends React.Component {
+class ProductCategoryView extends React.Component {
 
     state = {
         show: false,
@@ -29,7 +29,7 @@ class ProductView extends React.Component {
             )}
             <Modal show={this.state.show} size="lg" onHide={this.handleClose} animation={false}>
                 <Modal.Header>
-                    <Modal.Title>Product #123 Details</Modal.Title>
+                    <Modal.Title>ProductCategory #123 Details</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -44,35 +44,19 @@ class ProductView extends React.Component {
                 <Modal.Body>
                     <Table striped bordered hover responsive="lg">
                         <tr>
-                            <th>Product Name:</th><td> ABC</td>
-                            <th>Product Name(in Arabic):</th><td> ABC</td>
-
-                        </tr>
-                        <tr>
-                            <th>Item Code:</th><td> ABC-1</td>
-                            <th>Category:</th><td> Category</td>
-                        </tr>
-                        <tr>
-                            <th>Wholsale Unit Price in Business 1:</th><td> 200 SAR</td>
-                            <th>Retail Unit Price in Business 1:</th><td> 300 SAR</td>
-                        </tr>
-                        <tr>
-                            <th>Wholsale Unit Price in Business 2:</th><td> 250 SAR</td>
-                            <th>Retail Unit Price in Business 2:</th><td> 350 SAR</td>
-                        </tr>
-                        <tr>
-                            <th>Quantity/Stock in Business1:</th><td> 2</td>
-                            <th>Quantity/Stock in Business2:</th><td> 3</td>
+                            <th>ID:</th><td> 123</td>
+                            <th>Name:</th><td> Business1</td>
                         </tr>
                         <tr>
                             <th>Created At:</th><td> 14 Oct 2021 12:24:32</td>
                             <th>Updated At:</th><td> 14 Oct 2021 12:24:32</td>
                         </tr>
                         <tr>
-                            <th>Created By:</th><td> User 1</td>
-                            <th>Updated By:</th><td> User 1</td>
+                            <th>Created By:</th><td> ProductCategory 1</td>
+                            <th>Updated By:</th><td> ProductCategory 1</td>
                         </tr>
                     </Table>
+
                 </Modal.Body>
                 {/*
                 <Modal.Footer>
@@ -89,4 +73,4 @@ class ProductView extends React.Component {
     }
 }
 
-export default ProductView;
+export default ProductCategoryView;

@@ -9,6 +9,7 @@ import OrderIndex from './order/index.js';
 import BusinessIndex from './business/index.js';
 import CustomerIndex from './customer/index.js';
 import ProductIndex from './product/index.js';
+import ProductCategoryIndex from './product_category/index.js';
 import UserIndex from './user/index.js';
 import SignatureIndex from './signature/index.js';
 import Footer from './Footer';
@@ -56,6 +57,9 @@ class Dashboard extends React.Component {
                         </Route>
                         <Route path="/dashboard/products">
                             <ProductIndex />
+                        </Route>
+                        <Route path="/dashboard/product_category">
+                            <ProductCategoryIndex />
                         </Route>
                         <Route path="/dashboard/users">
                             <UserIndex />

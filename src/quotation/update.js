@@ -74,7 +74,32 @@ class QuotationUpdate extends React.Component {
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Customer.
-                  </div>
+                               </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >VAT %*</label>
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" value="10.00" id="validationCustom01" placeholder="VAT %" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Business.
+                                    </div>
+                            </div>
+                        </div>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Discount*</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" value="0.00" id="validationCustom02" placeholder="Discount" aria-label="Select Customer" aria-describedby="button-addon2" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Customer.
+                                </div>
                             </div>
                         </div>
                         <div className="col-md-6">

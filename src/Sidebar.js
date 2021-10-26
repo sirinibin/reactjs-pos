@@ -14,6 +14,7 @@ function Sidebar(props) {
             'businesses',
             'customers',
             'products',
+            'product category',
             'users',
             'signatures'
         ],
@@ -81,14 +82,22 @@ function Sidebar(props) {
                 <li onClick={() => {
                     toggleActive(appState.tabs[5]);
                 }} className={toggleActiveStyles(appState.tabs[5])}>
+                    <Link to="/dashboard/product_category" className="sidebar-link">
+                        <i className="bi bi-diagram-3" />
+                        <span className="align-middle">Product Category</span>
+                    </Link>
+                </li>
+                <li onClick={() => {
+                    toggleActive(appState.tabs[6]);
+                }} className={toggleActiveStyles(appState.tabs[6])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[6]);
-                }} className={toggleActiveStyles(appState.tabs[6])}>
+                    toggleActive(appState.tabs[7]);
+                }} className={toggleActiveStyles(appState.tabs[7])}>
                     <Link to="/dashboard/signatures" className="sidebar-link">
                         <i className="bi bi-vector-pen" />
                         <span className="align-middle">Signatures</span>

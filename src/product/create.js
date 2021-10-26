@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Button } from 'react-bootstrap';
-
+import ProductCategoryCreate from './../product_category/create.js';
 
 class ProductCreate extends React.Component {
 
@@ -78,7 +78,19 @@ class ProductCreate extends React.Component {
                                 </div>
                             </div>
                         </div>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Category*</label>
 
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" id="validationCustom01" placeholder="Select Category" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <ProductCategoryCreate showCreateButton={true} />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Business.
+                                    </div>
+                            </div>
+                        </div>
                         <div className="col-md-6">
                             <label className="form-label"
                             >Wholsale Unit Price in Business 1(Optional)</label

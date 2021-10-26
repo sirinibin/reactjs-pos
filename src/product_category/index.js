@@ -1,19 +1,19 @@
 import React from 'react';
-import ProductCreate from './create.js';
-import ProductView from './view.js';
-import ProductUpdate from './update.js';
+import ProductCategoryCreate from './create.js';
+import ProductCategoryView from './view.js';
+import ProductCategoryUpdate from './update.js';
 
-class ProductIndex extends React.Component {
+class ProductCategoryIndex extends React.Component {
 
     render() {
         return <div className="container-fluid p-0">
             <div className="row">
                 <div className="col">
-                    <h1 className="h3">Products</h1>
+                    <h1 className="h3">Product Categories </h1>
                 </div>
 
                 <div className="col text-end">
-                    <ProductCreate showCreateButton={true} />
+                    <ProductCategoryCreate showCreateButton={true} />
                 </div>
             </div>
 
@@ -30,9 +30,7 @@ class ProductIndex extends React.Component {
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
-                                        <th style={{ width: "16 %" }}>Item Code</th>
-                                        <th style={{ width: "16 %" }}>Name</th>
-                                        <th style={{ width: "16 %" }}>Category</th>
+                                        <th style={{ width: "10 %" }}>Name</th>
                                         <th style={{ width: "40 %" }}>Actions</th>
                                     </tr>
                                 </thead>
@@ -41,24 +39,15 @@ class ProductIndex extends React.Component {
                                         <th>
                                             <input type="text" className="form-control" />
                                         </th>
-                                        <th>
-                                            <input type="text" className="form-control" />
-                                        </th>
-                                        <th>
-                                            <input type="text" className="form-control" />
-                                        </th>
                                         <th></th>
                                     </tr>
                                 </thead>
                                 <tbody className="text-center">
                                     <tr>
-                                        <td>ABC-1</td>
-                                        <td>Product 1</td>
-                                        <td>Category 1</td>
+                                        <td>ProductCategory 1</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -76,13 +65,10 @@ class ProductIndex extends React.Component {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>ABC-1</td>
-                                        <td>Product 1</td>
-                                        <td>Category 2</td>
+                                        <td>ProductCategory 2</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -100,13 +86,10 @@ class ProductIndex extends React.Component {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>ABC-2</td>
-                                        <td>Category 1</td>
-                                        <td>Product 2</td>
+                                        <td>ProductCategory 3</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -124,13 +107,10 @@ class ProductIndex extends React.Component {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>ABC-3</td>
-                                        <td>Product 3</td>
-                                        <td>Category 3</td>
+                                        <td>ProductCategory 4</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -148,13 +128,10 @@ class ProductIndex extends React.Component {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>ABC-4</td>
-                                        <td>Product 4</td>
-                                        <td>Category 4</td>
+                                        <td>ProductCategory 5</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -172,13 +149,10 @@ class ProductIndex extends React.Component {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>ABC-5</td>
-                                        <td>Product 5</td>
-                                        <td>Category 5</td>
+                                        <td>ProductCategory 6</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -196,13 +170,10 @@ class ProductIndex extends React.Component {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>ABC-6</td>
-                                        <td>Product 6</td>
-                                        <td>Category 6</td>
+                                        <td>ProductCategory 7</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -220,13 +191,10 @@ class ProductIndex extends React.Component {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>ABC-7</td>
-                                        <td>Product 7</td>
-                                        <td>Category 7</td>
+                                        <td>ProductCategory 8</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -244,13 +212,10 @@ class ProductIndex extends React.Component {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>ABC-8</td>
-                                        <td>Product 8</td>
-                                        <td>Category 1</td>
+                                        <td>ProductCategory 9</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -268,37 +233,10 @@ class ProductIndex extends React.Component {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>ABC-9</td>
-                                        <td>Product 9</td>
-                                        <td>Category 1</td>
+                                        <td>ProductCategory 10</td>
                                         <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
-                                            <button
-                                                className="btn btn-outline-secondary dropdown-toggle"
-                                                type="button"
-                                                data-bs-toggle="dropdown"
-                                                aria-expanded="false"
-                                            ></button>
-                                            <ul className="dropdown-menu">
-                                                <li>
-                                                    <a href="/" className="dropdown-item" >
-                                                        <i className="bi bi-trash"></i>
-                  Delete</a>
-
-                                                </li>
-                                            </ul>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>ABC-10</td>
-                                        <td>Product 10</td>
-                                        <td>Category 1</td>
-                                        <td>
-                                            <ProductView showViewButton={true} />
-
-                                            <ProductUpdate showUpdateButton={true} />
+                                            <ProductCategoryView showViewButton={true} />
+                                            <ProductCategoryUpdate showUpdateButton={true} />
                                             <button
                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                 type="button"
@@ -344,4 +282,4 @@ class ProductIndex extends React.Component {
     }
 }
 
-export default ProductIndex;
+export default ProductCategoryIndex;

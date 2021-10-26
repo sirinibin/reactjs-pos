@@ -61,7 +61,8 @@ class QuotationView extends React.Component {
                         </tr>
                         <tr>
                             <th>Date:</th><td> 14 Oct 2021</td>
-
+                            <th>VAT %:</th><td> 10.00</td>
+                            <th>Discount %:</th><td> 12.00 SAR</td>
                         </tr>
                         <tr>
                             <th>Created At:</th><td> 14 Oct 2021 12:24:32</td>

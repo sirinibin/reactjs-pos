@@ -171,6 +171,18 @@ class BusinessUpdate extends React.Component {
                             </div>
                         </div>
 
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >VAT %*</label>
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" value="10.00" id="validationCustom01" placeholder="VAT %" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Business.
+                                    </div>
+                            </div>
+                        </div>
 
                         <div className="col-md-6">
                             <label className="form-label"
