@@ -46,7 +46,7 @@ class OrderView extends React.Component {
                 <Modal.Body>
                     <Table striped bordered hover responsive="lg">
                         <tr>
-                            <th>Business:</th><td> Business1</td>
+                            <th>Store:</th><td> Store1</td>
                             <th>Client:</th><td> Client1</td>
                             <th>Delivered by:</th><td> User1</td>
                         </tr>

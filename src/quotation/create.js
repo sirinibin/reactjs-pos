@@ -1,7 +1,7 @@
 import React from 'react';
 import QuotationPreview from './preview.js';
 import { Modal, Button } from 'react-bootstrap';
-import BusinessCreate from './../business/create.js';
+import StoreCreate from '../store/create.js';
 import CustomerCreate from './../customer/create.js';
 import ProductCreate from './../product/create.js';
 import UserCreate from './../user/create.js';
@@ -60,14 +60,14 @@ class QuotationCreate extends React.Component {
                     <form className="row g-3 needs-validation" >
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Business*</label>
+                            >Store*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="validationCustom01" placeholder="Select Business" aria-label="Select Business" aria-describedby="button-addon1" />
-                                <BusinessCreate showCreateButton={true} />
+                                <input type="text" className="form-control" id="validationCustom01" placeholder="Select Store" aria-label="Select Store" aria-describedby="button-addon1" />
+                                <StoreCreate showCreateButton={true} />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
-                                    Please provide a valid Business.
+                                    Please provide a valid Store.
                                     </div>
                             </div>
                         </div>
@@ -90,10 +90,10 @@ class QuotationCreate extends React.Component {
                             >VAT %*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" value="10.00" id="validationCustom01" placeholder="VAT %" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" value="10.00" id="validationCustom01" placeholder="VAT %" aria-label="Select Store" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
-                                    Please provide a valid Business.
+                                    Please provide a valid Store.
                                     </div>
                             </div>
                         </div>

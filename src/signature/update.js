@@ -48,10 +48,10 @@ class SignatureUpdate extends React.Component {
                             >Name*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" value="Signature 1" className="form-control" placeholder="Name" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" value="Signature 1" className="form-control" placeholder="Name" aria-label="Select Store" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
-                                    Please provide a valid Business.
+                                    Please provide a valid Store.
                                 </div>
                             </div>
                         </div>

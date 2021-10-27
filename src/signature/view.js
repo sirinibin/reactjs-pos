@@ -46,7 +46,7 @@ class SignatureView extends React.Component {
                     <Table striped bordered hover responsive="lg">
                         <tr>
                             <th>ID:</th><td> 123</td>
-                            <th>Name:</th><td> Business1</td>
+                            <th>Name:</th><td> Store1</td>
                             <th>Signature:</th><td> <img width="100" src={business_logo} alt="Invoice logo" /> </td>
                         </tr>
                         <tr>

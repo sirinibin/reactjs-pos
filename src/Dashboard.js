@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import QuotationIndex from './quotation/index.js';
 import OrderIndex from './order/index.js';
-import BusinessIndex from './business/index.js';
+import StoreIndex from './store/index.js';
 import CustomerIndex from './customer/index.js';
 import ProductIndex from './product/index.js';
 import ProductCategoryIndex from './product_category/index.js';
@@ -49,8 +49,8 @@ class Dashboard extends React.Component {
                         <Route path="/dashboard/quotations">
                             <QuotationIndex />
                         </Route>
-                        <Route path="/dashboard/businesses">
-                            <BusinessIndex />
+                        <Route path="/dashboard/stores">
+                            <StoreIndex />
                         </Route>
                         <Route path="/dashboard/customers">
                             <CustomerIndex />
