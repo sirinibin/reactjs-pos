@@ -38,7 +38,7 @@ class Dashboard extends React.Component {
 
     render() {
         return <Router><div className="wrapper">
-            <Sidebar isSidebarOpen={this.state.isSidebarOpen} />
+            <Sidebar isSidebarOpen={this.state.isSidebarOpen} parentCallback={this.handleToggle} />
             <div className="main">
                 <Topbar parentCallback={this.handleToggle} />
                 <main className="content">

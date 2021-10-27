@@ -21,7 +21,13 @@ function Sidebar(props) {
     });
 
     function toggleActive(tabName) {
+
         ChangeState({ ...appState, activeTab: tabName });
+
+        if (window.innerWidth <= 991.98) {
+            props.parentCallback();
+        }
+
     };
 
     function toggleActiveStyles(tabName) {
