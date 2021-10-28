@@ -46,10 +46,10 @@ class ProductCreate extends React.Component {
                             >Product Name*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Product Name" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" placeholder="Product Name" aria-label="Select Store" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
-                                    Please provide a valid Business.
+                                    Please provide a valid Store.
                                 </div>
                             </div>
                         </div>
@@ -71,10 +71,10 @@ class ProductCreate extends React.Component {
                             >Item CODE(Optional)</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Item CODE" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" placeholder="Item CODE" aria-label="Select Store" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
-                                    Please provide a valid Business.
+                                    Please provide a valid Store.
                                 </div>
                             </div>
                         </div>
@@ -83,21 +83,22 @@ class ProductCreate extends React.Component {
                             >Category*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="validationCustom01" placeholder="Select Category" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" id="validationCustom01" placeholder="Select Category" aria-label="Select Store" aria-describedby="button-addon1" />
                                 <ProductCategoryCreate showCreateButton={true} />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
-                                    Please provide a valid Business.
+                                    Please provide a valid Store.
                                     </div>
                             </div>
                         </div>
+                        <h4>Unit Price</h4>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Wholsale Unit Price in Business 1(Optional)</label
+                            >Wholsale Unit Price in Store 1(Optional)</label
                             >
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Whole Price" aria-label="Select Client" aria-describedby="button-addon2" />
+                                <input type="text" className="form-control" placeholder="Wholesale Price" aria-label="Select Client" aria-describedby="button-addon2" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Client.
@@ -106,25 +107,11 @@ class ProductCreate extends React.Component {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Wholsale Unit Price in Business 2(Optional)</label
+                            >Wholsale Unit Price in Store 2(Optional)</label
                             >
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Whole Price" aria-label="Select Client" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Client.
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Retail Unit Price in Business 1(Optional)</label
-                            >
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Retail Price" aria-label="Select Client" aria-describedby="button-addon2" />
+                                <input type="text" className="form-control" placeholder="Wholesale Price" aria-label="Select Client" aria-describedby="button-addon2" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Client.
@@ -134,7 +121,7 @@ class ProductCreate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Retail Unit Price in Business 2(Optional)</label
+                            >Retail Unit Price in Store 1(Optional)</label
                             >
 
                             <div className="input-group mb-3">
@@ -148,25 +135,39 @@ class ProductCreate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Quantity/Stock in Business1(Optional)</label>
+                            >Retail Unit Price in Store 2(Optional)</label
+                            >
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Quantity/Stock in Business1" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" placeholder="Retail Price" aria-label="Select Client" aria-describedby="button-addon2" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
-                                    Please provide a valid Business.
+                                    Please provide a valid Client.
+                                </div>
+                            </div>
+                        </div>
+                        <h4>Stock</h4>
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Quantity/Stock in Store1(Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" placeholder="Quantity/Stock in Store1" aria-label="Select Store" aria-describedby="button-addon1" />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Store.
                                 </div>
                             </div>
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Quantity/Stock in Business2(Optional)</label>
+                            >Quantity/Stock in Store2(Optional)</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Quantity/Stock in Business2" aria-label="Select Business" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" placeholder="Quantity/Stock in Store2" aria-label="Select Store" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
-                                    Please provide a valid Business.
+                                    Please provide a valid Store.
                                 </div>
                             </div>
                         </div>

@@ -53,16 +53,16 @@ class ProductView extends React.Component {
                             <th>Category:</th><td> Category</td>
                         </tr>
                         <tr>
-                            <th>Wholsale Unit Price in Business 1:</th><td> 200 SAR</td>
-                            <th>Retail Unit Price in Business 1:</th><td> 300 SAR</td>
+                            <th>Wholsale Unit Price in Store 1:</th><td> 200 SAR</td>
+                            <th>Retail Unit Price in Store 1:</th><td> 300 SAR</td>
                         </tr>
                         <tr>
-                            <th>Wholsale Unit Price in Business 2:</th><td> 250 SAR</td>
-                            <th>Retail Unit Price in Business 2:</th><td> 350 SAR</td>
+                            <th>Wholsale Unit Price in Store 2:</th><td> 250 SAR</td>
+                            <th>Retail Unit Price in Store 2:</th><td> 350 SAR</td>
                         </tr>
                         <tr>
-                            <th>Quantity/Stock in Business1:</th><td> 2</td>
-                            <th>Quantity/Stock in Business2:</th><td> 3</td>
+                            <th>Quantity/Stock in Store1:</th><td> 2</td>
+                            <th>Quantity/Stock in Store2:</th><td> 3</td>
                         </tr>
                         <tr>
                             <th>Created At:</th><td> 14 Oct 2021 12:24:32</td>

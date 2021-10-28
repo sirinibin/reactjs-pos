@@ -1,67 +1,158 @@
 
 import avatar from './../avatar.jpg';
-import React from "react";
-import {
-    Link
-} from "react-router-dom";
+import React, { useState } from "react";
 import Footer from './../Footer.js';
+import Cookies from 'universal-cookie';
+import { useHistory } from "react-router-dom";
 
-class Login extends React.Component {
-    render() {
-        return <>
-            <div className="main">
-                <main className="d-flex w-100" >
+function Login() {
 
-                    <div className="container d-flex flex-column">
-                        <div className="row vh-100">
-                            <div className="col-sm-10 col-md-8 col-lg-6 mx-auto d-table h-100">
-                                <div className="d-table-cell align-middle">
-                                    <div className="text-center mt-4">
-                                        <h1 className="h2">Start POS</h1>
-                                        <p className="lead">Sign in to your account to continue</p>
-                                    </div>
+    const history = useHistory();
+    const [errors, setErrors] = useState({});
+    //let history = useHistory();
 
-                                    <div className="card">
-                                        <div className="card-body">
-                                            <div className="m-sm-4">
-                                                <div className="text-center">
-                                                    <img
-                                                        src={avatar}
-                                                        alt="Charles Hall"
-                                                        className="img-fluid rounded-circle"
-                                                        width="132"
-                                                        height="132"
+    function getAccessToken(authCode) {
+
+
+
+        console.log("Inside get Access token");
+
+        const requestOptions = {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': authCode,
+            },
+        };
+
+        fetch('/v1/accesstoken', requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                const cookies = new Cookies();
+                var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
+                d.setUTCSeconds(data.result.expires_at);
+                cookies.set('access_token', data.result.access_token, { path: '/', expires: d });
+                history.push("/dashboard/quotations");
+            })
+            .catch(error => {
+                setErrors(error);
+            });
+    }
+
+
+    function handleSubmit(event) {
+        console.log("Inside handle Submit");
+        event.preventDefault();
+        var data = {
+            email: event.target[0].value,
+            password: event.target[1].value,
+        };
+
+        const requestOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        };
+
+        fetch('/v1/authorize', requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    // get error message from body or default to response status
+                    const error = (data && data.errors);
+                    //const error = data.errors
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                getAccessToken(data.result.code);
+            })
+            .catch(error => {
+                console.log("Inside catch");
+                console.log(error);
+                setErrors(error);
+                console.error('There was an error!', error);
+            });
+
+
+    }
+
+    return (<>
+        <div className="main">
+            <main className="d-flex w-100" >
+
+                <div className="container d-flex flex-column">
+                    <div className="row vh-100">
+                        <div className="col-sm-10 col-md-8 col-lg-6 mx-auto d-table h-100">
+                            <div className="d-table-cell align-middle">
+                                <div className="text-center mt-4">
+                                    <h1 className="h2">Start POS</h1>
+                                    <p className="lead">Sign in to your account to continue</p>
+                                </div>
+
+                                <div className="card">
+                                    <div className="card-body">
+                                        <div className="m-sm-4">
+                                            <div className="text-center">
+                                                <img
+                                                    src={avatar}
+                                                    alt="Charles Hall"
+                                                    className="img-fluid rounded-circle"
+                                                    width="132"
+                                                    height="132"
+                                                />
+                                            </div>
+                                            <form onSubmit={handleSubmit}>
+                                                <div className="mb-3">
+                                                    <label className="form-label">Email</label>
+                                                    <input
+                                                        className="form-control form-control-lg"
+                                                        type="email"
+                                                        name="email"
+                                                        placeholder="Enter your email"
                                                     />
+                                                    <span style={{ color: "red" }} >{errors.email}</span>
                                                 </div>
-                                                <form>
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Email</label>
-                                                        <input
-                                                            className="form-control form-control-lg"
-                                                            type="email"
-                                                            name="email"
-                                                            placeholder="Enter your email"
-                                                        />
-                                                    </div>
-                                                    <div className="mb-3">
-                                                        <label className="form-label">Password</label>
-                                                        <input
-                                                            className="form-control form-control-lg"
-                                                            type="password"
-                                                            name="password"
-                                                            placeholder="Enter your password"
-                                                        />
-                                                        {/*
+                                                <div className="mb-3">
+                                                    <label className="form-label">Password</label>
+                                                    <input
+                                                        className="form-control form-control-lg"
+                                                        type="password"
+                                                        name="password"
+                                                        placeholder="Enter your password"
+                                                    />
+                                                    <span style={{ color: "red" }} >{errors.password}</span>
+                                                    {/*
                                                 <small>
                                                     <a href="/"
                                                     >Forgot password?</a
                                                     >
                                                 </small>
                                                 */}
-                                                    </div>
-                                                    <div>
-                                                        <label className="form-check">
-                                                            {/*
+                                                </div>
+                                                <div>
+                                                    <label className="form-check">
+                                                        {/*
                                                     <input
                                                         className="form-check-input"
                                                         type="checkbox"
@@ -73,30 +164,29 @@ class Login extends React.Component {
                                                     <span className="form-check-label">
                                                         Remember me next time
                                                     </span> */}
-                                                        </label>
-                                                    </div>
-                                                    <div className="text-center mt-3">
-                                                        <Link to="/dashboard/quotations" className="btn btn-lg btn-primary">
-                                                            Sign in</Link>
+                                                    </label>
+                                                </div>
+                                                <div className="text-center mt-3">
+                                                    <button className="btn btn-lg btn-primary" type="submit">Sign In</button>
 
-                                                    </div>
-                                                </form>
-                                            </div>
 
+                                                </div>
+                                            </form>
                                         </div>
 
                                     </div>
-                                    <Footer />
-                                </div>
 
+                                </div>
+                                <Footer />
                             </div>
 
                         </div>
 
                     </div>
 
-                </main >  </div>   </>;
-    }
+                </div>
+
+            </main >  </div>   </>);
 }
 
 export default Login;
