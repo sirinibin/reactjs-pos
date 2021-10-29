@@ -3,7 +3,6 @@ import {
     Link
 } from "react-router-dom";
 
-
 function Sidebar(props) {
 
     const [appState, ChangeState] = useState({
@@ -19,6 +18,8 @@ function Sidebar(props) {
             'signatures'
         ],
     });
+
+
 
     function toggleActive(tabName) {
 

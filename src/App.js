@@ -1,4 +1,3 @@
-
 import Dashboard from './Dashboard.js';
 import Login from './user/login.js';
 
@@ -7,26 +6,29 @@ import {
   Switch,
   Route,
 } from "react-router-dom";
-import { Redirect } from 'react-router-dom'
+//import { Redirect } from 'react-router-dom'
 
-import Cookies from 'universal-cookie';
+//import Cookies from 'universal-cookie';
 
 function App() {
 
-  const cookies = new Cookies();
+  // const cookies = new Cookies();
 
-  let at = cookies.get("access_token");
+  // let at = cookies.get("access_token");
 
 
   return (
     <Router>
       <Switch>
+        <Route path="/dashboard/orders">
+          <Dashboard />
+        </Route>
+
         <Route path="/dashboard/quotations">
           <Dashboard />
         </Route>
 
         <Route path="/">
-          {at && <Redirect to="/dashboard/quotations" />}
           <Login />
         </Route>
       </Switch>

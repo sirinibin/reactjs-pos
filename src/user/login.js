@@ -1,6 +1,6 @@
 
 import avatar from './../avatar.jpg';
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Footer from './../Footer.js';
 import Cookies from 'universal-cookie';
 import { useHistory } from "react-router-dom";
@@ -11,6 +11,15 @@ function Login() {
     const [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
     const cookies = new Cookies();
+
+    useEffect(() => {
+        let at = cookies.get("access_token");
+        if (at) {
+            // history.push("/dashboard/quotations");
+            window.location = "/dashboard/quotations";
+        }
+    });
+
 
     function me() {
         console.log("inside me");

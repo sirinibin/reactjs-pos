@@ -16,6 +16,8 @@ import Footer from './Footer';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import Cookies from 'universal-cookie';
+import Login from './user/login.js';
+import { Redirect } from 'react-router-dom'
 
 function Dashboard() {
 
@@ -44,42 +46,110 @@ function Dashboard() {
     if (!at) {
         return <></>;
     }
-    return (<Router><div className="wrapper">
-        <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-        <div className="main">
-            <Topbar parentCallback={handleToggle} />
-            <main className="content">
-                <Switch>
-                    <Route path="/dashboard/orders">
-                        <OrderIndex />
-                    </Route>
-                    <Route path="/dashboard/quotations">
-                        <QuotationIndex />
-                    </Route>
-                    <Route path="/dashboard/stores">
-                        <StoreIndex />
-                    </Route>
-                    <Route path="/dashboard/customers">
-                        <CustomerIndex />
-                    </Route>
-                    <Route path="/dashboard/products">
-                        <ProductIndex />
-                    </Route>
-                    <Route path="/dashboard/product_category">
-                        <ProductCategoryIndex />
-                    </Route>
-                    <Route path="/dashboard/users">
-                        <UserIndex />
-                    </Route>
-                    <Route path="/dashboard/signatures">
-                        <SignatureIndex />
-                    </Route>
-                </Switch>
-            </main>
-            <Footer />
-        </div>
+    return (<Router>
+        <Switch>
+            <Route path="/dashboard/orders">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <OrderIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/quotations">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <QuotationIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/stores">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <StoreIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/customers">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <CustomerIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/products">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <ProductIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/product_category">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <ProductCategoryIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/users">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <UserIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/signatures">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <SignatureIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/">
+                {at && <Redirect to="/dashboard/quotations" />}
+                <Login />
+            </Route>
+        </Switch>
 
-    </div>
 
     </Router>);
 }
