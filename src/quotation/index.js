@@ -13,7 +13,7 @@ class QuotationIndex extends React.Component {
                 </div>
 
                 <div className="col text-end">
-                    <QuotationCreate showCreateButton={true} />
+                    <QuotationCreate showCreateButton={"true"} />
                 </div>
             </div>
 
@@ -74,9 +74,9 @@ class QuotationIndex extends React.Component {
                                             <span className="badge bg-success">Accepted</span>
                                         </td>
                                         <td>
-                                            <QuotationView showViewButton={true} />
+                                            <QuotationView showViewButton={"true"} />
 
-                                            <QuotationUpdate showUpdateButton={true} />
+                                            <QuotationUpdate showUpdateButton={"true"} />
 
                                             <button
                                                 className="btn btn-default btn-sm"
@@ -116,9 +116,9 @@ class QuotationIndex extends React.Component {
                                         <td>William Harris</td>
                                         <td><span className="badge bg-danger">Rejected</span></td>
                                         <td>
-                                            <QuotationView showViewButton={true} />
+                                            <QuotationView showViewButton={"true"} />
 
-                                            <QuotationUpdate showUpdateButton={true} />
+                                            <QuotationUpdate showUpdateButton={"true"} />
 
                                             <button
                                                 className="btn btn-default btn-sm"
@@ -161,9 +161,9 @@ class QuotationIndex extends React.Component {
                                         </td>
 
                                         <td>
-                                            <QuotationView showViewButton={true} />
+                                            <QuotationView showViewButton={"true"} />
 
-                                            <QuotationUpdate showUpdateButton={true} />
+                                            <QuotationUpdate showUpdateButton={"true"} />
 
                                             <button
                                                 className="btn btn-default btn-sm"
@@ -205,9 +205,9 @@ class QuotationIndex extends React.Component {
                                             <span className="badge bg-success">Accepted</span>
                                         </td>
                                         <td>
-                                            <QuotationView showViewButton={true} />
+                                            <QuotationView showViewButton={"true"} />
 
-                                            <QuotationUpdate showUpdateButton={true} />
+                                            <QuotationUpdate showUpdateButton={"true"} />
 
                                             <button
                                                 className="btn btn-default btn-sm"
@@ -249,9 +249,9 @@ class QuotationIndex extends React.Component {
                                             <span className="badge bg-success">Accepted</span>
                                         </td>
                                         <td>
-                                            <QuotationView showViewButton={true} />
+                                            <QuotationView showViewButton={"true"} />
 
-                                            <QuotationUpdate showUpdateButton={true} />
+                                            <QuotationUpdate showUpdateButton={"true"} />
                                             <button
                                                 className="btn btn-default btn-sm"
                                                 data-bs-toggle="tooltip"
@@ -292,9 +292,9 @@ class QuotationIndex extends React.Component {
                                             <span className="badge bg-success">Accepted</span>
                                         </td>
                                         <td>
-                                            <QuotationView showViewButton={true} />
+                                            <QuotationView showViewButton={"true"} />
 
-                                            <QuotationUpdate showUpdateButton={true} />
+                                            <QuotationUpdate showUpdateButton={"true"} />
 
                                             <button
                                                 className="btn btn-default btn-sm"
@@ -336,9 +336,9 @@ class QuotationIndex extends React.Component {
                                             <span className="badge bg-warning">In progress</span>
                                         </td>
                                         <td>
-                                            <QuotationView showViewButton={true} />
+                                            <QuotationView showViewButton={"true"} />
 
-                                            <QuotationUpdate showUpdateButton={true} />
+                                            <QuotationUpdate showUpdateButton={"true"} />
 
                                             <button
                                                 className="btn btn-default btn-sm"
@@ -371,8 +371,8 @@ class QuotationIndex extends React.Component {
                                             </ul>
                                         </td>
                                     </tr>
-                                </tbody>
-                            </table>
+                                </tbody >
+                            </table >
                             <nav aria-label="Page navigation example">
                                 <ul className="pagination">
                                     <li className="page-item disabled">
@@ -392,11 +392,11 @@ class QuotationIndex extends React.Component {
                                     </li>
                                 </ul>
                             </nav>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>;
+                        </div >
+                    </div >
+                </div >
+            </div >
+        </div >;
     }
 }
 

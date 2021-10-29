@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from "react";
 import {
     BrowserRouter as Router,
     Switch,
@@ -15,69 +15,73 @@ import SignatureIndex from './signature/index.js';
 import Footer from './Footer';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import Cookies from 'universal-cookie';
 
+function Dashboard() {
 
+    const [isSidebarOpen, SetSidebarOpen] = useState("");
 
-class Dashboard extends React.Component {
+    const cookies = new Cookies();
 
-    state = {
-        isSidebarOpen: ""
-    }
-    handleToggle = () => {
-        if (this.state.isSidebarOpen === "collapsed") {
-            this.setState({
-                isSidebarOpen: ""
-            });
-        } else {
-            this.setState({
-                isSidebarOpen: "collapsed"
-            });
+    let at = cookies.get("access_token");
+
+    useEffect(() => {
+        let at = cookies.get("access_token");
+        if (!at) {
+            window.location = "/";
         }
+    });
 
+    function handleToggle() {
+        if (isSidebarOpen === "collapsed") {
+            SetSidebarOpen("");
+        } else {
+            SetSidebarOpen("collapsed");
+        }
     };
 
-    render() {
-        return <Router><div className="wrapper">
-            <Sidebar isSidebarOpen={this.state.isSidebarOpen} parentCallback={this.handleToggle} />
-            <div className="main">
-                <Topbar parentCallback={this.handleToggle} />
-                <main className="content">
-                    <Switch>
-                        <Route path="/dashboard/orders">
-                            <OrderIndex />
-                        </Route>
-                        <Route path="/dashboard/quotations">
-                            <QuotationIndex />
-                        </Route>
-                        <Route path="/dashboard/stores">
-                            <StoreIndex />
-                        </Route>
-                        <Route path="/dashboard/customers">
-                            <CustomerIndex />
-                        </Route>
-                        <Route path="/dashboard/products">
-                            <ProductIndex />
-                        </Route>
-                        <Route path="/dashboard/product_category">
-                            <ProductCategoryIndex />
-                        </Route>
-                        <Route path="/dashboard/users">
-                            <UserIndex />
-                        </Route>
-                        <Route path="/dashboard/signatures">
-                            <SignatureIndex />
-                        </Route>
-                    </Switch>
-                </main>
-                <Footer />
-            </div>
 
+    if (!at) {
+        return <></>;
+    }
+    return (<Router><div className="wrapper">
+        <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+        <div className="main">
+            <Topbar parentCallback={handleToggle} />
+            <main className="content">
+                <Switch>
+                    <Route path="/dashboard/orders">
+                        <OrderIndex />
+                    </Route>
+                    <Route path="/dashboard/quotations">
+                        <QuotationIndex />
+                    </Route>
+                    <Route path="/dashboard/stores">
+                        <StoreIndex />
+                    </Route>
+                    <Route path="/dashboard/customers">
+                        <CustomerIndex />
+                    </Route>
+                    <Route path="/dashboard/products">
+                        <ProductIndex />
+                    </Route>
+                    <Route path="/dashboard/product_category">
+                        <ProductCategoryIndex />
+                    </Route>
+                    <Route path="/dashboard/users">
+                        <UserIndex />
+                    </Route>
+                    <Route path="/dashboard/signatures">
+                        <SignatureIndex />
+                    </Route>
+                </Switch>
+            </main>
+            <Footer />
         </div>
 
-        </Router>
-            ;
+    </div>
 
-    }
+    </Router>);
 }
 
 export default Dashboard;

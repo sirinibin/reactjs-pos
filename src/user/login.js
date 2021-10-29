@@ -9,14 +9,51 @@ function Login() {
 
     const history = useHistory();
     const [errors, setErrors] = useState({});
-    //let history = useHistory();
+    const [isProcessing, setProcessing] = useState(false);
+    const cookies = new Cookies();
+
+    function me() {
+        console.log("inside me");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/me', requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                cookies.set('user_name', data.result.name);
+                cookies.set('user_id', data.result.id);
+                if (data.result.photo) {
+                    cookies.set('user_photo', data.result.photo);
+                }
+
+                history.push("/dashboard/quotations");
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
 
     function getAccessToken(authCode) {
-
-
-
-        console.log("Inside get Access token");
-
+        console.log("inside access token");
         const requestOptions = {
             method: 'POST',
             headers: {
@@ -45,9 +82,10 @@ function Login() {
                 var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
                 d.setUTCSeconds(data.result.expires_at);
                 cookies.set('access_token', data.result.access_token, { path: '/', expires: d });
-                history.push("/dashboard/quotations");
+                me();
             })
             .catch(error => {
+                setProcessing(false);
                 setErrors(error);
             });
     }
@@ -67,6 +105,7 @@ function Login() {
             body: JSON.stringify(data)
         };
 
+        setProcessing(true);
         fetch('/v1/authorize', requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -88,6 +127,7 @@ function Login() {
                 getAccessToken(data.result.code);
             })
             .catch(error => {
+                setProcessing(false);
                 console.log("Inside catch");
                 console.log(error);
                 setErrors(error);
@@ -134,7 +174,7 @@ function Login() {
                                                     <span style={{ color: "red" }} >{errors.email}</span>
                                                 </div>
                                                 <div className="mb-3">
-                                                    <label className="form-label">Password</label>
+                                                    <label className="form-label">Password {isProcessing}</label>
                                                     <input
                                                         className="form-control form-control-lg"
                                                         type="password"
@@ -167,8 +207,16 @@ function Login() {
                                                     </label>
                                                 </div>
                                                 <div className="text-center mt-3">
-                                                    <button className="btn btn-lg btn-primary" type="submit">Sign In</button>
 
+                                                    {isProcessing ?
+                                                        <button class="btn btn-lg btn-primary" type="button" disabled>
+                                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                         Logging In...
+                                                    </button> : null}
+
+                                                    {!isProcessing ?
+                                                        <button className="btn btn-lg btn-primary" type="submit">Login</button>
+                                                        : null}
 
                                                 </div>
                                             </form>
