@@ -6,6 +6,8 @@ import {
 } from "react-router-dom";
 import QuotationIndex from './quotation/index.js';
 import OrderIndex from './order/index.js';
+import PurchaseIndex from './purchase/index.js';
+import VendorIndex from './vendor/index.js';
 import StoreIndex from './store/index.js';
 import CustomerIndex from './customer/index.js';
 import ProductIndex from './product/index.js';
@@ -48,18 +50,6 @@ function Dashboard() {
     }
     return (<Router>
         <Switch>
-            <Route path="/dashboard/orders">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <OrderIndex />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
-            </Route>
             <Route path="/dashboard/quotations">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
@@ -72,6 +62,44 @@ function Dashboard() {
                     </div>
                 </div>
             </Route>
+            <Route path="/dashboard/orders">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <OrderIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/purchases">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <PurchaseIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/vendors">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <VendorIndex />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
             <Route path="/dashboard/stores">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
