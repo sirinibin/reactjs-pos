@@ -190,6 +190,76 @@ class OrderCreate extends React.Component {
                             </div>
                         </div>
 
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Order Status*</label>
+
+                            <div className="input-group mb-3">
+                                <select className="form-control">
+                                    <option>Delivered</option>
+                                    <option>Order Placed</option>
+                                    <option>Pending</option>
+                                    <option>Cancelled</option>
+                                    <option>Dispatched</option>
+                                </select>
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Store.
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Payment Status*</label>
+
+                            <div className="input-group mb-3">
+                                <select className="form-control">
+                                    <option>Paid</option>
+                                    <option>Pending</option>
+                                    <option>Paid Partially</option>
+                                </select>
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Store.
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Partial Payment Amount(Optional)</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" id="validationCustom06" placeholder="Amount" aria-label="Select User" aria-describedby="button-addon4" />
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid User.
+                               </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Payment Method*</label>
+
+                            <div className="input-group mb-3">
+                                <select className="form-control">
+                                    <option>Cash</option>
+                                    <option>Account transfer</option>
+                                    <option>Credit/Debit Card</option>
+                                </select>
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Store.
+                                    </div>
+                            </div>
+                        </div>
 
                     </form>
                 </Modal.Body>

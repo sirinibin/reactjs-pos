@@ -9,7 +9,7 @@ class OrderIndex extends React.Component {
         return <div className="container-fluid p-0">
             <div className="row">
                 <div className="col">
-                    <h1 className="h3">Purchase Orders</h1>
+                    <h1 className="h3">Orders</h1>
                 </div>
 
                 <div className="col text-end">

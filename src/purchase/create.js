@@ -120,8 +120,10 @@ class PurchaseCreate extends React.Component {
                             <div className="input-group mb-3">
                                 <select className="form-control">
                                     <option>Order Placed</option>
-                                    <option>In Progress</option>
                                     <option>Delivered</option>
+                                    <option>Pending</option>
+                                    <option>Cancelled</option>
+                                    <option>Dispatched</option>
                                 </select>
 
                                 <div className="valid-feedback">Looks good!</div>
@@ -208,7 +210,7 @@ class PurchaseCreate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Purchased By*</label
+                            >Order Placed By*</label
                             >
 
                             <div className="input-group mb-3">
@@ -223,7 +225,7 @@ class PurchaseCreate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Purchased By Signature(Optional)</label
+                            >Order placed By Signature(Optional)</label
                             >
 
                             <div className="input-group mb-3">

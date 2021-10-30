@@ -208,7 +208,7 @@ class PurchaseUpdate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Purchased By*</label
+                            >Order Placed By*</label
                             >
 
                             <div className="input-group mb-3">
@@ -223,7 +223,7 @@ class PurchaseUpdate extends React.Component {
 
                         <div className="col-md-6">
                             <label className="form-label"
-                            >Purchased By Signature(Optional)</label
+                            >Order Placed By Signature(Optional)</label
                             >
 
                             <div className="input-group mb-3">

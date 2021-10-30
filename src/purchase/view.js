@@ -47,8 +47,8 @@ class PurchaseView extends React.Component {
                     <Table striped bordered hover responsive="lg">
                         <tr>
                             <th>Vendor/Supplier:</th><td> Supplier1</td>
-                            <th>Purchased to Store:</th><td> Store1</td>
-                            <th>Purchased by:</th><td> User1</td>
+                            <th>Purchase to Store:</th><td> Store1</td>
+                            <th>Order Placed By:</th><td> User1</td>
                         </tr>
                         <tr>
                             <th>Date:</th><td> 14 Oct 2021</td>

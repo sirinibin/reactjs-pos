@@ -152,7 +152,7 @@ class ProductCreate extends React.Component {
                             >Quantity/Stock in Store1(Optional)</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Quantity/Stock in Store1" aria-label="Select Store" aria-describedby="button-addon1" />
+                                <input type="text" disabled className="form-control" placeholder="Quantity/Stock in Store1" aria-label="Select Store" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Store.
@@ -164,7 +164,7 @@ class ProductCreate extends React.Component {
                             >Quantity/Stock in Store2(Optional)</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Quantity/Stock in Store2" aria-label="Select Store" aria-describedby="button-addon1" />
+                                <input type="text" disabled className="form-control" placeholder="Quantity/Stock in Store2" aria-label="Select Store" aria-describedby="button-addon1" />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Store.

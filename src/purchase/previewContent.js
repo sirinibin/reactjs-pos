@@ -351,7 +351,7 @@ class PurchasePreviewContent extends React.Component {
                                                 style={{ fontSize: "3mm", marginBottom: "0px" }}
                                             >
                                                 <li>سلمت بواسطة:</li>
-                                                <li>Purchased By:</li>
+                                                <li>Order Placed By:</li>
                                             </ul>
                                         </th>
                                         <th style={{ width: "37%" }}></th>

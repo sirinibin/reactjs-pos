@@ -55,7 +55,7 @@ class OrderUpdate extends React.Component {
                             >Store*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" value="Store1" className="form-control" placeholder="Select Store" aria-label="Select Store" aria-describedby="button-addon1" />
+                                <input type="text" className="form-control" id="validationCustom01" placeholder="Select Store" aria-label="Select Store" aria-describedby="button-addon1" />
                                 <StoreCreate showCreateButton={true} />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
@@ -69,7 +69,7 @@ class OrderUpdate extends React.Component {
                             >
 
                             <div className="input-group mb-3">
-                                <input type="text" value="Customer1" className="form-control" id="validationCustom02" placeholder="Select Customer" aria-label="Select Customer" aria-describedby="button-addon2" />
+                                <input type="text" className="form-control" id="validationCustom02" placeholder="Select Customer" aria-label="Select Customer" aria-describedby="button-addon2" />
                                 <CustomerCreate showCreateButton={true} />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
@@ -108,7 +108,7 @@ class OrderUpdate extends React.Component {
                             >
 
                             <div className="input-group mb-3">
-                                <input type="text" value="ABC" className="form-control" id="validationCustom03" placeholder="Select Product" aria-label="Select Product" aria-describedby="button-addon3" />
+                                <input type="text" className="form-control" id="validationCustom03" placeholder="Select Product" aria-label="Select Product" aria-describedby="button-addon3" />
                                 <ProductCreate showCreateButton={true} />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
@@ -166,7 +166,7 @@ class OrderUpdate extends React.Component {
                             >
 
                             <div className="input-group mb-3">
-                                <input type="text" value="User1" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
+                                <input type="text" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
                                 <UserCreate showCreateButton={true} />
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
@@ -187,6 +187,77 @@ class OrderUpdate extends React.Component {
                                 <div className="invalid-feedback">
                                     Please provide a valid User.
                                </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Order Status*</label>
+
+                            <div className="input-group mb-3">
+                                <select className="form-control">
+                                    <option>Delivered</option>
+                                    <option>Order Placed</option>
+                                    <option>Pending</option>
+                                    <option>Cancelled</option>
+                                    <option>Dispatched</option>
+                                </select>
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Store.
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Payment Status*</label>
+
+                            <div className="input-group mb-3">
+                                <select className="form-control">
+                                    <option>Paid</option>
+                                    <option>Pending</option>
+                                    <option>Paid Partially</option>
+                                </select>
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Store.
+                                    </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Partial Payment Amount(Optional)</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" id="validationCustom06" placeholder="Amount" aria-label="Select User" aria-describedby="button-addon4" />
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid User.
+                               </div>
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Payment Method*</label>
+
+                            <div className="input-group mb-3">
+                                <select className="form-control">
+                                    <option>Cash</option>
+                                    <option>Account transfer</option>
+                                    <option>Credit/Debit Card</option>
+                                </select>
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Store.
+                                    </div>
                             </div>
                         </div>
 
