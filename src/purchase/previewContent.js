@@ -55,7 +55,7 @@ class PurchasePreviewContent extends React.Component {
                     <div className="col">
                         <u
                         ><h1 className="text-center" style={{ fontSize: "4mm" }}>
-                                PURCHASE / اقتباس
+                                PURCHASE ORDER / اقتباس
                         </h1>
                         </u>
                     </div>

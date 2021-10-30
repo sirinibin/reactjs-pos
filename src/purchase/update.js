@@ -115,6 +115,23 @@ class PurchaseUpdate extends React.Component {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label"
+                            >Status*</label>
+
+                            <div className="input-group mb-3">
+                                <select className="form-control">
+                                    <option>Order Placed</option>
+                                    <option>In Progress</option>
+                                    <option>Delivered</option>
+                                </select>
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Store.
+                                    </div>
+                            </div>
+                        </div>
+                        <div className="col-md-4">
+                            <label className="form-label"
                             >Product*</label
                             >
 
@@ -124,11 +141,11 @@ class PurchaseUpdate extends React.Component {
                                 <div className="valid-feedback">Looks good!</div>
                                 <div className="invalid-feedback">
                                     Please provide a valid Product.
-                  </div>
+                               </div>
                             </div>
                         </div>
 
-                        <div className="col-md-2">
+                        <div className="col-md-1">
                             <label className="form-label"
                             >Qty*</label
                             >
@@ -148,7 +165,25 @@ class PurchaseUpdate extends React.Component {
                         </div>
                         <div className="col-md-2">
                             <label className="form-label"
-                            >Price*</label
+                            >Unit Price*</label
+                            >
+                            <input
+                                type="text"
+                                className="form-control"
+                                id="validationCustom04"
+                                placeholder="Price"
+                                defaultValue="100.00"
+
+                            />
+
+                            <div className="valid-feedback">Looks good!</div>
+                            <div className="invalid-feedback">
+                                Please provide a valid Quantity.
+                            </div>
+                        </div>
+                        <div className="col-md-3">
+                            <label className="form-label"
+                            >Selling Unit Price*</label
                             >
                             <input
                                 type="text"
@@ -168,7 +203,7 @@ class PurchaseUpdate extends React.Component {
                             <label className="form-label">
                                 &nbsp;</label
                             >
-                            <a href="/" className="btn-primary form-control"><i className="align-middle me-1" data-feather="plus"></i> ADD</a>
+                            <button className="btn-primary form-control"><i className="bi bi-plus-lg"></i> ADD</button>
                         </div>
 
                         <div className="col-md-6">
@@ -200,6 +235,7 @@ class PurchaseUpdate extends React.Component {
                                </div>
                             </div>
                         </div>
+
 
                     </form>
                 </Modal.Body>
