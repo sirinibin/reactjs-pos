@@ -198,6 +198,25 @@ class QuotationCreate extends React.Component {
                             </div>
                         </div>
 
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Status*</label>
+
+                            <div className="input-group mb-3">
+                                <select className="form-control">
+                                    <option>Sent</option>
+                                    <option>Pending</option>
+                                    <option>Accepted</option>
+                                    <option>Rejected</option>
+                                    <option>Cancelled</option>
+                                </select>
+
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid Store.
+                                    </div>
+                            </div>
+                        </div>
 
                     </form>
                 </Modal.Body>
