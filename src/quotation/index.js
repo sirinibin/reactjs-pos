@@ -18,6 +18,10 @@ function QuotationIndex() {
     const [customerOptions, SetCustomerOptions] = useState([]);
     const [selectedCustomers, SetSelectedCustomers] = useState([]);
 
+    //Created By User Auto Suggestion
+    const [userOptions, SetUserOptions] = useState([]);
+    const [selectedUsers, SetSelectedUsers] = useState([]);
+
     //Status Auto Suggestion
     const [statusOptions, SetStatusOptions] = useState([
         {
@@ -94,6 +98,40 @@ function QuotationIndex() {
         SetCustomerOptions(data.result);
     }
 
+    async function suggestUsers(searchTerm) {
+        console.log("Inside handle suggestUsers");
+        SetCustomerOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            return
+        }
+
+        var params = {
+            name: searchTerm,
+        };
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+
+        let Select = "select=id,name";
+        let result = await fetch('/v1/user?' + Select + queryString, requestOptions);
+        let data = await result.json();
+
+        SetUserOptions(data.result);
+    }
+
 
 
     function handleSearch(id, value) {
@@ -103,6 +141,11 @@ function QuotationIndex() {
         if (id === "customer_id") {
             searchParams[id] = Object.values(value).map(function (customer) {
                 return customer.id;
+            }).join(",");
+
+        } else if (id === "created_by") {
+            searchParams[id] = Object.values(value).map(function (user) {
+                return user.id;
             }).join(",");
 
         } else if (id === "status") {
@@ -133,7 +176,7 @@ function QuotationIndex() {
 
         SetListLoading(true);
 
-        let Select = "select=id,code,status,created_at,net_total,customer_id,customer.id,customer.name";
+        let Select = "select=id,code,status,created_at,net_total,customer_id,customer.id,customer.name,created_by,created_by_user.id,created_by_user.name";
 
         fetch('/v1/quotation?' + Select + params, requestOptions)
             .then(async response => {
@@ -186,6 +229,7 @@ function QuotationIndex() {
                                     <th style={{ width: "10 %" }}>#</th>
                                     <th style={{ width: "16 %" }}>Date</th>
                                     <th style={{ width: "16 %" }}>Net Total</th>
+                                    <th style={{ width: "40 %" }}>Created By</th>
                                     <th style={{ width: "40 %" }}>Customer</th>
                                     <th style={{ width: "6 %" }}>Status</th>
                                     <th style={{ width: "40 %" }}>Actions</th>
@@ -204,6 +248,20 @@ function QuotationIndex() {
                                     </th>
                                     <th>
                                         <input type="text" id="net_total" onChange={(e) => handleSearch("net_total", e.target.value)} className="form-control" />
+                                    </th>
+                                    <th>
+                                        <Typeahead
+                                            id="created_by"
+                                            labelKey="name"
+
+                                            onChange={(selectedItems) => { SetSelectedUsers(selectedItems); handleSearch("created_by", selectedItems); }}
+                                            options={userOptions}
+                                            placeholder="Select Users"
+                                            selected={selectedUsers}
+                                            highlightOnlyResult="true"
+                                            onInputChange={(searchTerm, e) => { suggestUsers(searchTerm); }}
+                                            multiple
+                                        />
                                     </th>
                                     <th>
                                         <Typeahead
@@ -244,6 +302,7 @@ function QuotationIndex() {
                                             <td>{quotation.code}</td>
                                             <td>{quotation.created_at}</td>
                                             <td>{quotation.net_total} SAR</td>
+                                            <td>{quotation.created_by_user.name}</td>
                                             <td>{quotation.customer.name}</td>
                                             <td>
                                                 <span className="badge bg-success">{quotation.status}</span>
