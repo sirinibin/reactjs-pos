@@ -356,6 +356,8 @@ function QuotationIndex() {
                                 <button className="btn btn-primary" onClick={() => { handleSearch(); }}><i className="fa fa-refresh" ></i></button>
                             </div>
                         </div>
+
+                        <br />
                         <ReactPaginate
                             breakLabel="..."
                             nextLabel="next >"
@@ -373,6 +375,7 @@ function QuotationIndex() {
                             previousLinkClassName="page-link"
                             nextLinkClassName="page-link"
                         />
+
                         <div className="row">
                             {totalItems > 0 &&
                                 <>
