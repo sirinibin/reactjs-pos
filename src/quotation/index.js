@@ -7,7 +7,7 @@ import { Typeahead } from 'react-bootstrap-typeahead';
 import { format } from 'date-fns';
 import DatePicker from "react-datepicker";
 import 'react-datepicker/dist/react-datepicker.css'
-import Pagination from 'react-bootstrap/Pagination';
+import { Button, Spinner } from 'react-bootstrap';
 import ReactPaginate from 'react-paginate';
 
 
@@ -323,7 +323,24 @@ function QuotationIndex() {
                         </div>
                         <div className="row" style={{ border: "solid 0px" }} >
                             <div className="col text-start" style={{ border: "solid 0px" }} >
-                                <button className="btn btn-primary" onClick={() => { handleSearch(); }}><i className="fa fa-refresh" ></i></button>
+                                <Button onClick={() => { handleSearch(); }} variant="primary" disabled={isListLoading}>
+                                    {isListLoading ?
+                                        <Spinner
+                                            as="span"
+                                            animation="border"
+                                            size="sm"
+                                            role="status"
+                                            aria-hidden="true"
+                                        />
+                                        : <i className="fa fa-refresh" ></i>
+                                    }
+                                    <span className="visually-hidden">Loading...</span>
+                                </Button>
+                            </div>
+                            <div className="col text-center">
+                                {isListLoading &&
+                                    <Spinner animation="grow" />
+                                }
                             </div>
                             <div className="col text-end">
                                 <label className="form-label">
