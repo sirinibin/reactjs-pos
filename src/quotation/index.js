@@ -16,7 +16,7 @@ function QuotationIndex() {
     const cookies = new Cookies();
 
     //pagination
-    const [pageSize, SetPageSize] = useState(10);
+    let [pageSize, SetPageSize] = useState(5);
     let [page, SetPage] = useState(1);
     const [totalPages, SetTotalPages] = useState(0);
     const [totalItems, SetTotalItems] = useState(1);
@@ -85,45 +85,12 @@ function QuotationIndex() {
         list();
     }, []);
 
-    const [paginationItems, SetPaginationItems] = useState([]);
 
-
-    /*
-    useEffect(() => {
-        console.log("inside use effect of paginationItems");
-    }, [paginationItems]);
-    */
 
     let [searchParams, SetSearchParams] = useState({});
     let [sortField, SetSortField] = useState("date");
     let [sortOrder, SetSortOrder] = useState("-");
 
-
-    let active = 2;
-    //let items = [];
-    /*
-    for (let number = 1; number <= totalPages; number++) {
-        paginationItems.push(
-            <Pagination.Item key={number} active={number === active}>
-                {number}
-            </Pagination.Item>,
-        );
-    }
-    */
-
-
-    function LoadPagination() {
-        console.log("Inside load pagination");
-        //SetPaginationItems([]);
-        for (let number = 1; number <= totalPages; number++) {
-            paginationItems.push(
-                <Pagination.Item key={number} active={number === active}>
-                    {number}
-                </Pagination.Item>,
-            );
-        }
-
-    }
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object).map(function (key) {
@@ -266,6 +233,9 @@ function QuotationIndex() {
         } else if (id === "page") {
             page = value;
             SetPage(page);
+        } else if (id === "page_size") {
+            pageSize = parseInt(value);
+            SetPageSize(pageSize);
         } else if (id) {
             searchParams[id] = value;
         }
@@ -351,31 +321,46 @@ function QuotationIndex() {
                                 </div>
                             }
                         </div>
-                        <div className="row">
-                            <div className="col text-start">
+                        <div className="row" style={{ border: "solid 0px" }} >
+                            <div className="col text-start" style={{ border: "solid 0px" }} >
                                 <button className="btn btn-primary" onClick={() => { handleSearch(); }}><i className="fa fa-refresh" ></i></button>
+                            </div>
+                            <div className="col text-end">
+                                <label className="form-label">
+                                    Size:&nbsp;</label>
+                                <select value={pageSize} onChange={(e) => handleSearch('page_size', e.target.value)} className="form-control pull-right" style={{ border: "solid 1px", borderColor: "silver", width: "55px" }} >
+                                    <option value="5" selected>5</option>
+                                    <option value="10" selected>10</option>
+                                    <option value="20">20</option>
+                                    <option value="40">40</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
                             </div>
                         </div>
 
                         <br />
-                        <ReactPaginate
-                            breakLabel="..."
-                            nextLabel="next >"
-                            onPageChange={(event) => { handleSearch('page', (event.selected + 1)); }}
-                            pageRangeDisplayed={5}
-                            pageCount={totalPages}
-                            previousLabel="< previous"
-                            renderOnZeroPageCount={null}
-                            className="pagination"
-                            pageClassName="page-item"
-                            pageLinkClassName="page-link"
-                            activeClassName="active"
-                            previousClassName="page-item"
-                            nextClassName="page-item"
-                            previousLinkClassName="page-link"
-                            nextLinkClassName="page-link"
-                        />
-
+                        <div className="row">
+                            <div className="col" style={{ border: "solid 0px" }} >
+                                <ReactPaginate
+                                    breakLabel="..."
+                                    nextLabel="next >"
+                                    onPageChange={(event) => { handleSearch('page', (event.selected + 1)); }}
+                                    pageRangeDisplayed={5}
+                                    pageCount={totalPages}
+                                    previousLabel="< previous"
+                                    renderOnZeroPageCount={null}
+                                    className="pagination"
+                                    pageClassName="page-item"
+                                    pageLinkClassName="page-link"
+                                    activeClassName="active"
+                                    previousClassName="page-item"
+                                    nextClassName="page-item"
+                                    previousLinkClassName="page-link"
+                                    nextLinkClassName="page-link"
+                                />
+                            </div>
+                        </div>
                         <div className="row">
                             {totalItems > 0 &&
                                 <>
