@@ -15,44 +15,47 @@ function QuotationIndex() {
 
     const cookies = new Cookies();
 
+    //list
+    const [quotationList, setQuotationList] = useState([]);
+
     //pagination
-    let [pageSize, SetPageSize] = useState(5);
-    let [page, SetPage] = useState(1);
-    const [totalPages, SetTotalPages] = useState(0);
-    const [totalItems, SetTotalItems] = useState(1);
-    const [currentPageItemsCount, SetCurrentPageItemsCount] = useState(0);
-    const [offset, SetOffset] = useState(0);
-    const [paginationItemsContent, SetPaginationItemsContent] = useState([]);
-    let [pageNumbers, SetPageNumbers] = useState([]);
+    let [pageSize, setPageSize] = useState(5);
+    let [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalItems, setTotalItems] = useState(1);
+    const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
+    const [offset, setOffset] = useState(0);
 
 
     //Date filter
-    const [showDateRange, SetShowDateRange,] = useState(false);
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const [dateValue, SetDateValue] = useState("");
-    const [fromDateValue, SetFromDateValue] = useState("");
-    const [toDateValue, SetToDateValue] = useState("");
+    const [showDateRange, setShowDateRange,] = useState(false);
+    const selectedDate = new Date();
+    const [dateValue, setDateValue] = useState("");
+    const [fromDateValue, setFromDateValue] = useState("");
+    const [toDateValue, setToDateValue] = useState("");
 
     //Created At filter
-    const [showCreatedAtDateRange, SetShowCreatedAtDateRange,] = useState(false);
-    const [createdAtValue, SetCreatedAtValue] = useState("");
-    const [createdAtFromValue, SetCreatedAtFromValue] = useState("");
-    const [createdAtToValue, SetCreatedAtToValue] = useState("");
+    const [showCreatedAtDateRange, setShowCreatedAtDateRange,] = useState(false);
+    const [createdAtValue, setCreatedAtValue] = useState("");
+    const [createdAtFromValue, setCreatedAtFromValue] = useState("");
+    const [createdAtToValue, setCreatedAtToValue] = useState("");
 
-    const [errors, SetErrors] = useState({});
-    const [isListLoading, SetListLoading] = useState(false);
+    //loader flag
+    const [isListLoading, setIsListLoading] = useState(false);
+    const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
-    const [quotationList, SetQuotationList] = useState([]);
+
+
     //Customer Auto Suggestion
-    const [customerOptions, SetCustomerOptions] = useState([]);
-    const [selectedCustomers, SetSelectedCustomers] = useState([]);
+    const [customerOptions, setCustomerOptions] = useState([]);
+    const [selectedCustomers, setSelectedCustomers] = useState([]);
 
     //Created By User Auto Suggestion
-    const [userOptions, SetUserOptions] = useState([]);
-    const [selectedUsers, SetSelectedUsers] = useState([]);
+    const [userOptions, setUserOptions] = useState([]);
+    const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
 
     //Status Auto Suggestion
-    const [statusOptions, SetStatusOptions] = useState([
+    const statusOptions = [
         {
             "id": "sent",
             "name": "Sent"
@@ -77,24 +80,27 @@ function QuotationIndex() {
             "id": "deleted",
             "name": "Deleted"
         },
-    ]);
-    const [selectedStatusList, SetSelectedStatusList] = useState([]);
+    ];
+
+    const [selectedStatusList, setSelectedStatusList] = useState([]);
 
 
     useEffect(() => {
         list();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
 
-    let [searchParams, SetSearchParams] = useState({});
-    let [sortField, SetSortField] = useState("date");
-    let [sortOrder, SetSortOrder] = useState("-");
+    //Search params
+    const [searchParams, setSearchParams] = useState({});
+    let [sortField, setSortField] = useState("date");
+    let [sortOrder, setSortOrder] = useState("-");
 
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object).map(function (key) {
-            return "search[" + key + "]" + '=' + object[key]
+            return `search[${key}]=${object[key]}`;
         }).join('&');
     }
 
@@ -106,7 +112,7 @@ function QuotationIndex() {
         };
         var queryString = ObjectToSearchQueryParams(params);
         if (queryString !== "") {
-            queryString = "&" + queryString;
+            queryString = `&${queryString}`;
         }
 
 
@@ -120,15 +126,15 @@ function QuotationIndex() {
 
 
         let Select = "select=id,name";
-        let result = await fetch('/v1/customer?' + Select + queryString, requestOptions);
+        let result = await fetch(`/v1/customer?${Select} ${queryString}`, requestOptions);
         let data = await result.json();
 
-        SetCustomerOptions(data.result);
+        setCustomerOptions(data.result);
     }
 
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggestUsers");
-        SetCustomerOptions([]);
+        setCustomerOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -157,98 +163,82 @@ function QuotationIndex() {
         let result = await fetch('/v1/user?' + Select + queryString, requestOptions);
         let data = await result.json();
 
-        SetUserOptions(data.result);
+        setUserOptions(data.result);
     }
 
+    function searchByFieldValue(field, value) {
+        searchParams[field] = value;
 
+        page = 1;
+        setPage(page);
+        list();
+    }
 
-    function handleSearch(id, value) {
-        console.log("Inside handle Submit");
+    function searchByDateField(field, value) {
+        value = format(new Date(value), 'MMM dd yyyy');
 
-
-        if (id === "customer_id") {
-            searchParams[id] = Object.values(value).map(function (customer) {
-                return customer.id;
-            }).join(",");
-
-        } else if (id === "created_by") {
-            searchParams[id] = Object.values(value).map(function (user) {
-                return user.id;
-            }).join(",");
-
-        } else if (id === "status") {
-            searchParams[id] = Object.values(value).map(function (status) {
-                return status.id;
-            }).join(",");
-        } else if (id === "date_str") {
-            value = format(new Date(value), 'MMM dd yyyy');
-            SetDateValue(value);
-            SetFromDateValue("");
-            SetToDateValue("");
+        if (field === "date_str") {
+            setDateValue(value);
+            setFromDateValue("");
+            setToDateValue("");
             searchParams["from_date"] = "";
             searchParams["to_date"] = "";
-            searchParams[id] = value;
-        } else if (id === "from_date") {
-            value = format(new Date(value), 'MMM dd yyyy');
-            SetFromDateValue(value);
-            SetDateValue("");
+            searchParams[field] = value;
+        } else if (field === "from_date") {
+            setFromDateValue(value);
+            setDateValue("");
             searchParams["date"] = "";
-            searchParams[id] = value;
-        } else if (id === "to_date") {
-            value = format(new Date(value), 'MMM dd yyyy');
-            SetToDateValue(value);
-            SetDateValue("");
+            searchParams[field] = value;
+        } else if (field === "to_date") {
+            setToDateValue(value);
+            setDateValue("");
             searchParams["date"] = "";
-            searchParams[id] = value;
-        } else if (id === "created_at") {
-            value = format(new Date(value), 'MMM dd yyyy');
-            SetCreatedAtValue(value);
-            SetCreatedAtFromValue("");
-            SetCreatedAtToValue("");
+            searchParams[field] = value;
+        } else if (field === "created_at") {
+            setCreatedAtValue(value);
+            setCreatedAtFromValue("");
+            setCreatedAtToValue("");
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
-            searchParams[id] = value;
-        } else if (id === "created_at_from") {
-            value = format(new Date(value), 'MMM dd yyyy');
-            SetCreatedAtFromValue(value);
-            SetCreatedAtValue("");
+            searchParams[field] = value;
+        } if (field === "created_at_from") {
+            setCreatedAtFromValue(value);
+            setCreatedAtValue("");
             searchParams["created_at"] = "";
-            searchParams[id] = value;
-        } else if (id === "created_at_to") {
-            value = format(new Date(value), 'MMM dd yyyy');
-            SetCreatedAtToValue(value);
-            SetCreatedAtValue("");
+            searchParams[field] = value;
+        } else if (field === "created_at_to") {
+            setCreatedAtToValue(value);
+            setCreatedAtValue("");
             searchParams["created_at"] = "";
-            searchParams[id] = value;
-        } else if (id === "sort") {
-            sortField = value;
-            SetSortField(value);
-            if (sortOrder === "-") {
-                sortOrder = "";
-                SetSortOrder("");
-            } else {
-                sortOrder = "-";
-                SetSortOrder("-");
-            }
-        } else if (id === "page") {
-            page = value;
-            SetPage(page);
-        } else if (id === "page_size") {
-            pageSize = parseInt(value);
-            SetPageSize(pageSize);
-        } else if (id) {
-            searchParams[id] = value;
+            searchParams[field] = value;
         }
 
-        var queryString = ObjectToSearchQueryParams(searchParams);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
+        page = 1;
+        setPage(page);
 
-
-        list(queryString);
+        list();
     }
-    function list(params = "") {
+
+    function searchByMultipleValuesField(field, values) {
+        if (field === "created_by") {
+            setSelectedCreatedByUsers(values);
+        } else if (field === "customer_id") {
+            setSelectedCustomers(values);
+        } else if (field === "status") {
+            setSelectedStatusList(values);
+        }
+
+        searchParams[field] = Object.values(values).map(function (model) {
+            return model.id;
+        }).join(",");
+
+        page = 1;
+        setPage(page);
+
+        list();
+    }
+
+    function list() {
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -258,14 +248,15 @@ function QuotationIndex() {
 
         };
 
-        SetListLoading(true);
-
         let Select = "select=id,code,date,net_total,created_by_name,customer_name,status,created_at";
-        console.log("sortField:" + sortField);
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
 
-
-        console.log("sortOrder:" + sortOrder);
-        fetch('/v1/quotation?' + Select + params + "&sort=" + sortOrder + sortField + "&page=" + page + "&limit=" + pageSize, requestOptions)
+        setIsListLoading(true);
+        fetch('/v1/quotation?' + Select + queryParams + "&sort=" + sortOrder + sortField + "&page=" + page + "&limit=" + pageSize, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -276,23 +267,44 @@ function QuotationIndex() {
                     return Promise.reject(error);
                 }
 
-                SetErrors({});
+                setIsListLoading(false);
+                setIsRefreshInProcess(false);
+                setQuotationList(data.result);
 
-                SetListLoading(false);
-                SetQuotationList(data.result);
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
-                SetTotalPages(pageCount);
-                SetTotalItems(data.total_count);
-                SetOffset(((page - 1) * pageSize));
-                SetCurrentPageItemsCount(data.result.length);
+                setTotalPages(pageCount);
+                setTotalItems(data.total_count);
+                setOffset(((page - 1) * pageSize));
+                setCurrentPageItemsCount(data.result.length);
             })
             .catch(error => {
-                SetListLoading(false);
-                SetErrors(error);
+                setIsListLoading(false);
+                setIsRefreshInProcess(false);
+                console.log(error);
             });
     }
 
+
+    function sort(field) {
+        sortField = field;
+        setSortField(sortField);
+        sortOrder = (sortOrder === "-") ? "" : "-";
+        setSortOrder(sortOrder);
+        list();
+    }
+
+    function changePageSize(size) {
+        pageSize = parseInt(size);
+        setPageSize(pageSize);
+        list();
+    }
+
+    function changePage(newPage) {
+        page = parseInt(newPage);
+        setPage(page);
+        list();
+    }
 
     return (<div className="container-fluid p-0">
         <div className="row">
@@ -315,7 +327,7 @@ function QuotationIndex() {
                     */}
                     <div className="card-body">
                         <div className="row">
-                            {totalItems == 0 &&
+                            {totalItems === 0 &&
                                 <div className="col">
                                     <p className="text-start">No Records to display</p>
                                 </div>
@@ -323,8 +335,8 @@ function QuotationIndex() {
                         </div>
                         <div className="row" style={{ border: "solid 0px" }} >
                             <div className="col text-start" style={{ border: "solid 0px" }} >
-                                <Button onClick={() => { handleSearch(); }} variant="primary" disabled={isListLoading}>
-                                    {isListLoading ?
+                                <Button onClick={() => { setIsRefreshInProcess(true); list(); }} variant="primary" disabled={isRefreshInProcess}>
+                                    {isRefreshInProcess ?
                                         <Spinner
                                             as="span"
                                             animation="border"
@@ -339,13 +351,13 @@ function QuotationIndex() {
                             </div>
                             <div className="col text-center">
                                 {isListLoading &&
-                                    <Spinner animation="grow" />
+                                    <Spinner animation="grow" variant="primary" />
                                 }
                             </div>
                             <div className="col text-end">
                                 <label className="form-label">
                                     Size:&nbsp;</label>
-                                <select value={pageSize} onChange={(e) => handleSearch('page_size', e.target.value)} className="form-control pull-right" style={{ border: "solid 1px", borderColor: "silver", width: "55px" }} >
+                                <select value={pageSize} onChange={(e) => { changePageSize(e.target.value); }} className="form-control pull-right" style={{ border: "solid 1px", borderColor: "silver", width: "55px" }} >
                                     <option value="5" selected>5</option>
                                     <option value="10" selected>10</option>
                                     <option value="20">20</option>
@@ -362,7 +374,7 @@ function QuotationIndex() {
                                 <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
-                                    onPageChange={(event) => { handleSearch('page', (event.selected + 1)); }}
+                                    onPageChange={(event) => { changePage((event.selected + 1)); }}
                                     pageRangeDisplayed={5}
                                     pageCount={totalPages}
                                     previousLabel="< previous"
@@ -375,6 +387,7 @@ function QuotationIndex() {
                                     nextClassName="page-item"
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
+                                    forcePage={page - 1}
                                 />
                             </div>
                         </div>
@@ -397,92 +410,83 @@ function QuotationIndex() {
                             <thead>
                                 <tr className="text-center">
                                     <th >
-                                        <a style={{ "text-decoration": "underline" }} onClick={() => { handleSearch('sort', 'code'); }}>
+                                        <b style={{ "text-decoration": "underline", cursor: "pointer" }} onClick={() => { sort("code"); }}>
                                             ID
-                                            {sortField == "code" && sortOrder == "-" ?
+                                            {sortField === "code" && sortOrder === "-" ?
                                                 <i class="bi bi-sort-alpha-up-alt"></i> : null
                                             }
-                                            {sortField == "code" && sortOrder == "" ?
+                                            {sortField === "code" && sortOrder === "" ?
                                                 <i class="bi bi-sort-alpha-up"></i> : null
                                             }
-                                        </a>
+                                        </b>
                                     </th>
                                     <th >
-                                        <a style={{ "text-decoration": "underline" }} onClick={() => { handleSearch('sort', 'date'); }}>
+                                        <b style={{ "text-decoration": "underline", cursor: "pointer" }} onClick={() => { sort("date"); }}>
                                             Date
-                                            {sortField == "date" && sortOrder == "-" ?
+                                            {sortField === "date" && sortOrder === "-" ?
                                                 <i class="bi bi-sort-down"></i> : null
                                             }
-                                            {sortField == "date" && sortOrder == "" ?
+                                            {sortField === "date" && sortOrder === "" ?
                                                 <i class="bi bi-sort-up"></i> : null
                                             }
-                                        </a>
+                                        </b>
                                     </th>
                                     <th >
-                                        <a style={{ "text-decoration": "underline" }} onClick={() => { handleSearch('sort', 'net_total'); }}>
+                                        <b style={{ "text-decoration": "underline", cursor: "pointer" }} onClick={() => { sort("net_total"); }}>
                                             Net Total
-                                            {sortField == "net_total" && sortOrder == "-" ?
+                                            {sortField === "net_total" && sortOrder === "-" ?
                                                 <i class="bi bi-sort-numeric-down"></i> : null
                                             }
-                                            {sortField == "net_total" && sortOrder == "" ?
+                                            {sortField === "net_total" && sortOrder === "" ?
                                                 <i class="bi bi-sort-numeric-up"></i> : null
                                             }
-                                        </a>
+                                        </b>
                                     </th>
                                     <th >
-                                        <a style={{ "text-decoration": "underline" }} onClick={() => { handleSearch('sort', 'created_by'); }}>
+                                        <b style={{ "text-decoration": "underline", cursor: "pointer" }} onClick={() => { sort("created_by"); }}>
                                             Created By
-                                            {sortField == "created_by" && sortOrder == "-" ?
+                                            {sortField === "created_by" && sortOrder === "-" ?
                                                 <i class="bi bi-sort-alpha-up-alt"></i> : null
                                             }
-                                            {sortField == "created_by" && sortOrder == "" ?
+                                            {sortField === "created_by" && sortOrder === "" ?
                                                 <i class="bi bi-sort-alpha-up"></i> : null
                                             }
-                                        </a>
+                                        </b>
                                     </th>
                                     <th>
-                                        <a style={{ "text-decoration": "underline" }} onClick={() => { handleSearch('sort', 'customer_name'); }}>
+                                        <b style={{ "text-decoration": "underline", cursor: "pointer" }} onClick={() => { sort("customer_name"); }}>
                                             Customer
-                                            {sortField == "customer_name" && sortOrder == "-" ?
+                                            {sortField === "customer_name" && sortOrder === "-" ?
                                                 <i class="bi bi-sort-alpha-up-alt"></i> : null
                                             }
-                                            {sortField == "customer_name" && sortOrder == "" ?
+                                            {sortField === "customer_name" && sortOrder === "" ?
                                                 <i class="bi bi-sort-alpha-up"></i> : null
                                             }
-                                        </a>
+                                        </b>
                                     </th>
                                     <th >
-                                        <a style={{ "text-decoration": "underline" }} onClick={() => { handleSearch('sort', 'status'); }}>
+                                        <b style={{ "text-decoration": "underline", cursor: "pointer" }} onClick={() => { sort("status"); }}>
                                             Status
-                                            {sortField == "status" && sortOrder == "-" ?
+                                            {sortField === "status" && sortOrder === "-" ?
                                                 <i class="bi bi-sort-alpha-up-alt"></i> : null
                                             }
-                                            {sortField == "status" && sortOrder == "" ?
+                                            {sortField === "status" && sortOrder === "" ?
                                                 <i class="bi bi-sort-alpha-up"></i> : null
                                             }
-                                        </a>
+                                        </b>
                                     </th>
                                     <th >
-                                        <a style={{ "text-decoration": "underline" }} onClick={() => { handleSearch('sort', 'created_at'); }}>
+                                        <b style={{ "text-decoration": "underline", cursor: "pointer" }} onClick={() => { sort("created_at"); }}>
                                             Created At
-                                            {sortField == "created_at" && sortOrder == "-" ?
+                                            {sortField === "created_at" && sortOrder === "-" ?
                                                 <i class="bi bi-sort-down"></i> : null
                                             }
-                                            {sortField == "created_at" && sortOrder == "" ?
+                                            {sortField === "created_at" && sortOrder === "" ?
                                                 <i class="bi bi-sort-up"></i> : null
                                             }
-                                        </a>
+                                        </b>
                                     </th>
                                     <th >Actions</th>
-                                    {/*
-                                    <th style={{ width: "2 %" }}>#</th>
-                                    <th style={{ width: "16 %" }}>Date</th>
-                                    <th style={{ width: "16 %" }}>Net Total</th>
-                                    <th style={{ width: "40 %" }}>Created By</th>
-                                    <th style={{ width: "40 %" }}>Customer</th>
-                                    <th style={{ width: "6 %" }}>Status</th>
-                                    <th style={{ width: "40 %" }}>Actions</th>
-                                    */}
                                 </tr>
                             </thead>
 
@@ -491,35 +495,33 @@ function QuotationIndex() {
                                 <tr className="text-center">
 
                                     <th>
-                                        <input type="text" id="code" onChange={(e) => handleSearch("code", e.target.value)} className="form-control" />
+                                        <input type="text" id="code" onChange={(e) => searchByFieldValue("code", e.target.value)} className="form-control" />
                                     </th>
                                     <th >
-                                        <DatePicker id="date_str" value={dateValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => handleSearch("date_str", date)} />
-                                        <a style={{ color: "blue", "text-decoration": "underline" }} onClick={(e) => SetShowDateRange(!showDateRange)}>{showDateRange ? "Less.." : "More.."}</a><br />
+                                        <DatePicker id="date_str" value={dateValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => { searchByDateField("date_str", date); }} />
+                                        <small style={{ color: "blue", "text-decoration": "underline", cursor: "pointer" }} onClick={(e) => setShowDateRange(!showDateRange)}>{showDateRange ? "Less.." : "More.."}</small><br />
 
                                         {showDateRange ?
 
                                             <span className="text-left">
-                                                From: <DatePicker id="from_date" value={fromDateValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => handleSearch("from_date", date)} />
-                                               To: <DatePicker id="to_date" value={toDateValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => handleSearch("to_date", date)} />
+                                                From: <DatePicker id="from_date" value={fromDateValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => { searchByDateField("from_date", date); }} />
+                                               To: <DatePicker id="to_date" value={toDateValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => { searchByDateField("to_date", date); }} />
                                             </span>
 
                                             : null}
-
-
                                     </th>
                                     <th>
-                                        <input type="text" id="net_total" onChange={(e) => handleSearch("net_total", e.target.value)} className="form-control" />
+                                        <input type="text" id="net_total" onChange={(e) => searchByFieldValue("net_total", e.target.value)} className="form-control" />
                                     </th>
                                     <th>
                                         <Typeahead
                                             id="created_by"
                                             labelKey="name"
 
-                                            onChange={(selectedItems) => { SetSelectedUsers(selectedItems); handleSearch("created_by", selectedItems); }}
+                                            onChange={(selectedItems) => { searchByMultipleValuesField("created_by", selectedItems); }}
                                             options={userOptions}
                                             placeholder="Select Users"
-                                            selected={selectedUsers}
+                                            selected={selectedCreatedByUsers}
                                             highlightOnlyResult="true"
                                             onInputChange={(searchTerm, e) => { suggestUsers(searchTerm); }}
                                             multiple
@@ -530,7 +532,7 @@ function QuotationIndex() {
                                             id="customer_id"
                                             labelKey="name"
 
-                                            onChange={(selectedItems) => { SetSelectedCustomers(selectedItems); handleSearch("customer_id", selectedItems); }}
+                                            onChange={(selectedItems) => { searchByMultipleValuesField("customer_id", selectedItems); }}
                                             options={customerOptions}
                                             placeholder="Select customers"
                                             selected={selectedCustomers}
@@ -543,7 +545,7 @@ function QuotationIndex() {
                                         <Typeahead
                                             id="status"
                                             labelKey="name"
-                                            onChange={(selectedItems) => { SetSelectedStatusList(selectedItems); handleSearch("status", selectedItems); }}
+                                            onChange={(selectedItems) => { searchByMultipleValuesField("status", selectedItems); }}
                                             options={statusOptions}
                                             placeholder="Select Status"
                                             selected={selectedStatusList}
@@ -552,14 +554,14 @@ function QuotationIndex() {
                                         />
                                     </th>
                                     <th >
-                                        <DatePicker id="created_at" value={createdAtValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => handleSearch("created_at", date)} />
-                                        <a style={{ color: "blue", "text-decoration": "underline" }} onClick={(e) => SetShowCreatedAtDateRange(!showCreatedAtDateRange)}>{showCreatedAtDateRange ? "Less.." : "More.."}</a><br />
+                                        <DatePicker id="created_at" value={createdAtValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => { searchByDateField("created_at", date); }} />
+                                        <small style={{ color: "blue", "text-decoration": "underline", cursor: "pointer" }} onClick={(e) => setShowCreatedAtDateRange(!showCreatedAtDateRange)}>{showCreatedAtDateRange ? "Less.." : "More.."}</small><br />
 
                                         {showCreatedAtDateRange ?
 
                                             <span className="text-left">
-                                                From: <DatePicker id="created_at_from" value={createdAtFromValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => handleSearch("created_at_from", date)} />
-                                               To: <DatePicker id="created_at_to" value={createdAtToValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => handleSearch("created_at_to", date)} />
+                                                From: <DatePicker id="created_at_from" value={createdAtFromValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => { searchByDateField("created_at_from", date); }} />
+                                               To: <DatePicker id="created_at_to" value={createdAtToValue} selected={selectedDate} className="form-control" dateFormat="MMM dd yyyy" onChange={(date) => { searchByDateField("created_at_to", date); }} />
                                             </span>
 
                                             : null}
@@ -631,7 +633,7 @@ Delete</a>
                         <ReactPaginate
                             breakLabel="..."
                             nextLabel="next >"
-                            onPageChange={(event) => { handleSearch('page', (event.selected + 1)); }}
+                            onPageChange={(event) => { changePage((event.selected + 1)); }}
                             pageRangeDisplayed={5}
                             pageCount={totalPages}
                             previousLabel="< previous"
@@ -644,6 +646,7 @@ Delete</a>
                             nextClassName="page-item"
                             previousLinkClassName="page-link"
                             nextLinkClassName="page-link"
+                            forcePage={page - 1}
                         />
                     </div >
                 </div >
