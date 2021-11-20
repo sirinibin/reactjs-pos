@@ -18,7 +18,18 @@ function QuotationCreate(props) {
     const cookies = new Cookies();
 
     //fields
-    let [formData, setFormData] = useState({});
+    let [formData, setFormData] = useState({
+        products: [
+            {
+                product_id: "",
+                quantity: 1,
+                price: "",
+            }
+        ]
+    });
+
+    let [unitPriceList, setUnitPriceList] = useState([]);
+
 
     //Store Auto Suggestion
     const [storeOptions, setStoreOptions] = useState([]);
@@ -32,6 +43,7 @@ function QuotationCreate(props) {
 
     //Product Auto Suggestion
     const [productOptions, setProductOptions] = useState([]);
+    let [selectedProduct, setSelectedProduct] = useState([]);
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [isProductsLoading, setIsProductsLoading] = useState(false);
 
@@ -149,6 +161,43 @@ function QuotationCreate(props) {
         setIsCustomersLoading(false);
     }
 
+    function GetProductUnitPriceInStore(storeId, unitPriceListArray) {
+        if (!unitPriceListArray) {
+            return;
+        }
+
+        for (var i = 0; i < unitPriceListArray.length; i++) {
+            console.log("unitPriceListArray[i]:", unitPriceListArray[i]);
+            console.log("store_id:", storeId);
+
+            if (unitPriceListArray[i].store_id === storeId) {
+                console.log("macthed")
+                console.log("unitPrice.retail_unit_price:", unitPriceListArray[i].retail_unit_price);
+                return unitPriceListArray[i].retail_unit_price;
+            } else {
+                console.log("not matched");
+            }
+        }
+    }
+
+    function GetProductStockInStore(storeId, stockList) {
+
+        for (var i = 0; i < stockList.length; i++) {
+            if (stockList[i].store_id === storeId) {
+                return stockList[i].stock;
+            }
+        }
+        return 0;
+    }
+
+    function SetPriceOfAllProducts(storeId) {
+        console.log("inside set price of all products:");
+        for (var i = 0; i < formData.products.length; i++) {
+            formData.products[i].price = GetProductUnitPriceInStore(storeId, unitPriceList[formData.products[i].product_id]);
+            console.log("formData.products[i].price:", formData.products[i].price);
+        }
+        setFormData({ ...formData });
+    }
 
     async function suggestProducts(searchTerm) {
         console.log("Inside handle suggestProducts");
@@ -177,7 +226,7 @@ function QuotationCreate(props) {
         };
 
 
-        let Select = "select=id,name";
+        let Select = "select=id,name,unit_prices,stock";
         setIsProductsLoading(true);
         let result = await fetch('/v1/product?' + Select + queryString, requestOptions);
         let data = await result.json();
@@ -304,6 +353,28 @@ function QuotationCreate(props) {
     }
 
 
+    function addNewProductForm() {
+
+        formData.products.push({
+            "product_id": "",
+            "quantity": 1,
+            "price": "",
+
+        });
+        setFormData({ ...formData });
+
+        errors.products.push({
+            "product_id": "",
+            "quantity": "",
+            "price": "",
+
+        });
+        setErrors({ ...errors });
+
+        // setFormData({ ...formData });
+
+        console.log("formData.products:", formData.products);
+    }
 
     return (<>
         {props.showCreateButton && (
@@ -352,12 +423,13 @@ function QuotationCreate(props) {
                                     if (selectedItems.length === 0) {
                                         errors.store_id = "Invalid Store selected";
                                         setErrors(errors);
-                                        setFormData(formData);
+                                        setFormData({ ...formData });
                                         setSelectedStores([]);
                                         return;
                                     }
                                     formData.store_id = selectedItems[0].id;
-                                    setFormData(formData);
+                                    SetPriceOfAllProducts(formData.store_id);
+                                    setFormData({ ...formData });
                                     setSelectedStores(selectedItems);
                                 }}
                                 options={storeOptions}
@@ -368,9 +440,13 @@ function QuotationCreate(props) {
                             />
 
                             <StoreCreate showCreateButton={true} />
-                            <div style={{ color: "red" }} >{errors.store_id}</div>
+                            <div style={{ color: "red" }} >
+                                <i class="bi x-lg"> </i>
+                                {errors.store_id}</div>
                             {formData.store_id && !errors.store_id &&
-                                <div style={{ color: "green" }} >Looks good!</div>
+                                <div style={{ color: "green" }} >
+                                    <i class="bi bi-check-lg"> </i>
+                                    Looks good!</div>
                             }
                         </div>
                     </div>
@@ -392,12 +468,12 @@ function QuotationCreate(props) {
                                         errors.customer_id = "Invalid Customer selected";
                                         setErrors(errors);
                                         formData.customer_id = "";
-                                        setFormData(formData);
+                                        setFormData({ ...formData });
                                         setSelectedCustomers([]);
                                         return;
                                     }
                                     formData.customer_id = selectedItems[0].id;
-                                    setFormData(formData);
+                                    setFormData({ ...formData });
                                     setSelectedCustomers(selectedItems);
                                 }}
                                 options={customerOptions}
@@ -407,9 +483,15 @@ function QuotationCreate(props) {
                                 onInputChange={(searchTerm, e) => { suggestCustomers(searchTerm); }}
                             />
                             <CustomerCreate showCreateButton={true} />
-                            <div style={{ color: "red" }} >{errors.customer_id}</div>
+                            {errors.customer_id &&
+                                <div style={{ color: "red" }} >
+                                    <i class="bi bi-x-lg"> </i>
+                                    {errors.customer_id}</div>
+                            }
                             {formData.customer_id && !errors.customer_id &&
-                                <div style={{ color: "green" }} >Looks good!</div>
+                                <div style={{ color: "green" }} >
+                                    <i class="bi bi-check-lg"> </i>
+                                    Looks good!</div>
                             }
                         </div>
                     </div>
@@ -438,43 +520,93 @@ function QuotationCreate(props) {
                                 </div>
                         </div>
                     </div>
+                    {formData.products.map(function (product, i) {
+
+                        <div>{"p" + i}</div>
+                    })}
                     <div className="col-md-6">
                         <label className="form-label"
                         >Product*</label
                         >
 
                         <div className="input-group mb-3">
+
                             <Typeahead
                                 id="product_id"
                                 labelKey="name"
                                 isLoading={isProductsLoading}
                                 isInvalid={errors.product_id ? true : false}
                                 onChange={(selectedItems) => {
-                                    errors.product_id = "";
-                                    setErrors(errors);
+
                                     if (selectedItems.length === 0) {
-                                        errors.product_id = "Invalid Product selected";
+                                        errors["product_id"] = "Invalid Product selected";
+                                        console.log(errors);
                                         setErrors(errors);
-                                        formData.product_id = "";
-                                        setFormData(formData);
-                                        setSelectedProducts([]);
+                                        // formData.products[i].product_id = "";
+                                        // formData.products[i].price = "";
+                                        // setFormData({ ...formData });
+                                        setSelectedProduct([]);
+                                        console.log(errors);
                                         return;
                                     }
-                                    formData.product_id = selectedItems[0].id;
-                                    setFormData(formData);
+
+                                    errors["product_id"] = "";
+                                    setErrors({ ...errors });
+
+
+                                    if (formData.store_id) {
+                                        selectedItems[0].unit_price = GetProductUnitPriceInStore(formData.store_id, selectedItems[0].unit_prices);
+                                    }
+
+                                    selectedProduct = selectedItems
+                                    console.log("selectedItems:", selectedItems);
+                                    setSelectedProduct([...selectedItems]);
+                                    console.log("selectedProduct:", selectedProduct);
+                                    unitPriceList[selectedItems[0].product_id] = selectedItems[0].unit_prices;
+                                    setUnitPriceList(unitPriceList);
+                                    // unitPriceList[newProduct.product_id] = selectedItems[0].unit_price;
+                                    // setUnitPriceList(unitPriceList);
+                                    /*
+                                    let newProduct = {
+                                        "product_id": selectedItems[0].id,
+                                        "name": selectedItems[0].name,
+                                    };
+
+                                    if (formData.store_id) {
+                                        newProduct.price = GetProductUnitPriceInStore(formData.store_id, selectedItems[0].unit_price);
+                                        //formData.products[i].price = GetProductUnitPriceInStore(formData.store_id, selectedItems[0].unit_price);
+                                        //setFormData({ ...formData });
+                                    }
+                                    unitPriceList[newProduct.product_id] = selectedItems[0].unit_price;
+                                    setUnitPriceList(unitPriceList);
+                                    */
+
+
+                                    /*
+                                    console.log("unitPriceList(on product select):", unitPriceList);
+                                    setFormData({ ...formData });
                                     setSelectedProducts(selectedItems);
+                                    console.log(formData);
+                                    */
                                 }}
                                 options={productOptions}
                                 placeholder="Select Product"
-                                selected={selectedProducts}
+                                selected={selectedProduct}
                                 highlightOnlyResult="true"
                                 onInputChange={(searchTerm, e) => { suggestProducts(searchTerm); }}
                             />
                             <ProductCreate showCreateButton={true} />
-                            <div style={{ color: "red" }} >{errors.product_id}</div>
-                            {formData.product_id && !errors.product_id &&
-                                <div style={{ color: "green" }} >Looks good!</div>
+                            {errors.product_id ?
+                                <div style={{ color: "red" }} >
+                                    <i class="bi bi-x-lg"> </i>
+                                    {errors.product_id}</div>
+                                : null}
+                            {selectedProduct[0] && selectedProduct[0].id && !errors.product_id &&
+                                <div style={{ color: "green" }} >
+                                    <i class="bi bi-check-lg"> </i>
+                                    Looks good!</div>
                             }
+
                         </div>
                     </div>
 
@@ -483,43 +615,90 @@ function QuotationCreate(props) {
                         >Qty*</label
                         >
                         <input
+                            onChange={(e) => {
+                                console.log("Inside onchange qty");
+                                if (isNaN(e.target.value) || e.target.value === "0") {
+                                    errors["quantity"] = "Invalid Quantity";
+                                    setErrors({ ...errors });
+                                    return;
+                                }
+
+                                errors["quantity"] = "";
+                                setErrors({ ...errors });
+
+                                selectedProduct[0].quantity = e.target.value;
+                                setSelectedProduct({ ...selectedProduct });
+                                console.log(selectedProduct);
+                            }}
                             type="text"
                             className="form-control"
-                            id="validationCustom04"
+                            id="quantity"
                             placeholder="Quantity"
                             defaultValue="1"
 
                         />
+                        {errors.quantity ?
+                            <div style={{ color: "red" }} >
+                                <i class="bi bi-x-lg"> </i>
+                                {errors.quantity}</div> : null}
 
-                        <div className="valid-feedback">Looks good!</div>
-                        <div className="invalid-feedback">
-                            Please provide a valid Quantity.
-                            </div>
+                        {selectedProduct[0] && selectedProduct[0].quantity && !errors["quantity"] &&
+                            <div style={{ color: "green" }} >
+                                <i class="bi bi-check-lg"> </i>
+                                Looks good!
+                                </div>
+                        }
                     </div>
                     <div className="col-md-2">
                         <label className="form-label"
-                        >Price*</label
+                        >Unit Price*</label
                         >
                         <input
                             type="text"
+                            value={selectedProduct[0] ? selectedProduct[0].unit_price : null}
+                            onChange={(e) => {
+                                console.log("Inside onchange unit price:");
+
+                                if (isNaN(e.target.value) || e.target.value === "0") {
+                                    errors["unit_price"] = "Invalid Unit Price";
+                                    setErrors({ ...errors });
+                                    return;
+                                }
+
+                                //setFormData({ ...formData });
+                                selectedProduct[0].unit_price = e.target.value;
+                                setSelectedProduct([...selectedProduct]);
+
+                                errors["unit_price"] = "";
+                                setErrors({ ...errors });
+
+                                //console.log(formData);
+                            }}
                             className="form-control"
-                            id="validationCustom04"
-                            placeholder="Price"
-                            defaultValue="100.00"
+                            id="unit_price"
+                            placeholder="Unit Price"
+                            defaultValue=""
 
                         />
 
-                        <div className="valid-feedback">Looks good!</div>
-                        <div className="invalid-feedback">
-                            Please provide a valid Quantity.
-                            </div>
+                        {errors.unit_price ?
+                            <div style={{ color: "red" }} >
+                                <i class="bi bi-x-lg"> </i>{errors.unit_price}</div> : null}
+                        {selectedProduct[0] && selectedProduct[0].unit_price && !errors.unit_price &&
+                            <div style={{ color: "green" }} >
+                                <i class="bi bi-check-lg"> </i>Looks good!</div>
+                        }
                     </div>
                     <div className="col-md-2">
                         <label className="form-label">
                             &nbsp;</label
                         >
-                        <a href="/" className="btn-primary form-control"><i className="align-middle me-1" data-feather="plus"></i> ADD</a>
+                        <Button variant="primary" className="btn btn-primary form-control" onClick={addNewProductForm}>
+                            <i className="bi bi-plus-lg"></i> ADD
+                                </Button>
                     </div>
+
+
 
                     <div className="col-md-6">
                         <label className="form-label"
@@ -538,12 +717,12 @@ function QuotationCreate(props) {
                                     if (selectedItems.length === 0) {
                                         errors.delivered_by_user_id = "Invalid User Selected";
                                         setErrors(errors);
-                                        setFormData(formData);
+                                        setFormData({ ...formData });
                                         setSelectedDeliveredByUsers([]);
                                         return;
                                     }
                                     formData.delivered_by_user_id = selectedItems[0].id;
-                                    setFormData(formData);
+                                    setFormData({ ...formData });
                                     setSelectedDeliveredByUsers(selectedItems);
                                 }}
                                 options={deliveredByUserOptions}
@@ -555,9 +734,13 @@ function QuotationCreate(props) {
 
 
                             <UserCreate showCreateButton={true} />
-                            <div style={{ color: "red" }} >{errors.delivered_by_user_id}</div>
+                            {errors.delivered_by_user_id ?
+                                <div style={{ color: "red" }} >
+                                    <i class="bi bi-x-lg"> </i> {errors.delivered_by_user_id}</div>
+                                : null}
                             {formData.delivered_by_user_id && !errors.delivered_by_user_id &&
-                                <div style={{ color: "green" }} >Looks good!</div>
+                                <div style={{ color: "green" }} >
+                                    <i class="bi bi-check-lg"> </i>Looks good!</div>
                             }
                         </div>
                     </div>
@@ -579,12 +762,12 @@ function QuotationCreate(props) {
                                     if (selectedItems.length === 0) {
                                         errors.delivered_by_signature_id = "Invalid Signature Selected";
                                         setErrors(errors);
-                                        setFormData(formData);
+                                        setFormData({ ...formData });
                                         setSelectedDeliveredBySignatures([]);
                                         return;
                                     }
                                     formData.delivered_by_signature_id = selectedItems[0].id;
-                                    setFormData(formData);
+                                    setFormData({ ...formData });
                                     setSelectedDeliveredBySignatures(selectedItems);
                                 }}
                                 options={deliveredBySignatureOptions}
@@ -596,9 +779,13 @@ function QuotationCreate(props) {
 
 
                             <SignatureCreate showCreateButton={true} />
-                            <div style={{ color: "red" }} >{errors.delivered_by_signature_id}</div>
+                            {errors.delivered_by_signature_id ?
+                                <div style={{ color: "red" }} >
+                                    <i class="bi bi-x-lg"> </i> {errors.delivered_by_signature_id}</div>
+                                : null}
                             {formData.delivered_by_signature_id && !errors.delivered_by_signature_id &&
-                                <div style={{ color: "green" }} >Looks good!</div>
+                                <div style={{ color: "green" }} >
+                                    <i class="bi bi-check-lg"> </i> Looks good!</div>
                             }
                         </div>
                     </div>
