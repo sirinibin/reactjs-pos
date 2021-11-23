@@ -18,15 +18,7 @@ function QuotationCreate(props) {
     const cookies = new Cookies();
 
     //fields
-    let [formData, setFormData] = useState({
-        products: [
-            {
-                product_id: "",
-                quantity: 1,
-                price: "",
-            }
-        ]
-    });
+    let [formData, setFormData] = useState({});
 
     let [unitPriceList, setUnitPriceList] = useState([]);
 
@@ -163,7 +155,7 @@ function QuotationCreate(props) {
 
     function GetProductUnitPriceInStore(storeId, unitPriceListArray) {
         if (!unitPriceListArray) {
-            return;
+            return "";
         }
 
         for (var i = 0; i < unitPriceListArray.length; i++) {
@@ -178,6 +170,7 @@ function QuotationCreate(props) {
                 console.log("not matched");
             }
         }
+      return "";
     }
 
     function GetProductStockInStore(storeId, stockList) {
@@ -192,11 +185,15 @@ function QuotationCreate(props) {
 
     function SetPriceOfAllProducts(storeId) {
         console.log("inside set price of all products:");
-        for (var i = 0; i < formData.products.length; i++) {
-            formData.products[i].price = GetProductUnitPriceInStore(storeId, unitPriceList[formData.products[i].product_id]);
-            console.log("formData.products[i].price:", formData.products[i].price);
+        selectedProduct[0].unit_price = GetProductUnitPriceInStore(storeId, selectedProduct.unit_prices);
+        setSelectedProduct([...selectedProduct ]);
+        console.log("selectedProduct.unit_price:", selectedProduct.unit_price);
+        for (var i = 0; i < selectedProducts.length; i++) {
+            selectedProducts[i].unit_price = GetProductUnitPriceInStore(storeId, selectedProducts[i].unit_prices);
+            console.log("selectedProducts[i].unit_price:", selectedProducts[i].unit_price);
         }
-        setFormData({ ...formData });
+       
+        setSelectedProducts([ ...selectedProducts ]);
     }
 
     async function suggestProducts(searchTerm) {
@@ -353,27 +350,30 @@ function QuotationCreate(props) {
     }
 
 
-    function addNewProductForm() {
+    function addProduct() {
+        if(!selectedProduct[0]){
+            return;
+        }
+    
+        selectedProducts.push(selectedProduct[0]);
+        selectedProduct=[];
+        setFormData([ ...selectedProducts ]);
+        setFormData([ ...selectedProduct ]);
+    }
 
-        formData.products.push({
-            "product_id": "",
-            "quantity": 1,
-            "price": "",
+    function removeProduct(product) {
+        /*
+        for (var i = 0; i < selectedProducts.length; i++) {
+            if (selectedProducts[i].id===product_id){
 
-        });
-        setFormData({ ...formData });
-
-        errors.products.push({
-            "product_id": "",
-            "quantity": "",
-            "price": "",
-
-        });
-        setErrors({ ...errors });
-
-        // setFormData({ ...formData });
-
-        console.log("formData.products:", formData.products);
+            }
+        }
+        */
+        const index = selectedProducts.indexOf(product);
+        if (index >-1) {
+            selectedProducts.splice(index,1)
+        }
+        setSelectedProducts([ ...selectedProducts ])
     }
 
     return (<>
@@ -428,9 +428,9 @@ function QuotationCreate(props) {
                                         return;
                                     }
                                     formData.store_id = selectedItems[0].id;
-                                    SetPriceOfAllProducts(formData.store_id);
                                     setFormData({ ...formData });
                                     setSelectedStores(selectedItems);
+                                    SetPriceOfAllProducts(selectedItems[0].id);
                                 }}
                                 options={storeOptions}
                                 placeholder="Select Store"
@@ -500,30 +500,64 @@ function QuotationCreate(props) {
                         >VAT %*</label>
 
                         <div className="input-group mb-3">
-                            <input type="text" className="form-control" value="10.00" id="validationCustom01" placeholder="VAT %" aria-label="Select Store" aria-describedby="button-addon1" />
-                            <div className="valid-feedback">Looks good!</div>
-                            <div className="invalid-feedback">
-                                Please provide a valid Store.
-                                    </div>
+                            <input type="text"  onChange={(e) => {
+                                console.log("Inside onchange vat percent");
+                                if (isNaN(e.target.value)) {
+                                    errors["vat_percent"] = "Invalid Quantity";
+                                    setErrors({ ...errors });
+                                    return;
+                                }
+
+                                errors["vat_percent"] = "";
+                                setErrors({ ...errors });
+
+                                formData.vat_percent = e.target.value;
+                                setFormData({ ...formData });
+                                console.log(formData);
+                            }} className="form-control" defaultValue="10.00" id="validationCustom01" placeholder="VAT %" aria-label="Select Store" aria-describedby="button-addon1" />
+                            {errors.vat_percent &&
+                                <div style={{ color: "red" }} >
+                                    <i class="bi bi-x-lg"> </i>
+                                    {errors.vat_percent}</div>
+                            }
+                            {formData.vat_percent && !errors.vat_percent &&
+                                <div style={{ color: "green" }} >
+                                    <i class="bi bi-check-lg"> </i>
+                                    Looks good!</div>
+                            }
                         </div>
                     </div>
                     <div className="col-md-6">
                         <label className="form-label"
-                        >Discount*</label
-                        >
-
+                        >Discount*</label>
                         <div className="input-group mb-3">
-                            <input type="text" className="form-control" value="0.00" id="validationCustom02" placeholder="Discount" aria-label="Select Customer" aria-describedby="button-addon2" />
-                            <div className="valid-feedback">Looks good!</div>
-                            <div className="invalid-feedback">
-                                Please provide a valid Customer.
-                                </div>
+                            <input type="text" onChange={(e) => {
+                                console.log("Inside onchange vat discount");
+                                if (isNaN(e.target.value)) {
+                                    errors["discount"] = "Invalid Discount";
+                                    setErrors({ ...errors });
+                                    return;
+                                }
+
+                                errors["discount"] = "";
+                                setErrors({ ...errors });
+
+                                formData.discount = e.target.value;
+                                setFormData({ ...formData });
+                                console.log(formData);
+                            }}   className="form-control" defaultValue="0.00" id="validationCustom02" placeholder="Discount" aria-label="Select Customer" aria-describedby="button-addon2" />
+                            {errors.discount &&
+                                <div style={{ color: "red" }} >
+                                    <i class="bi bi-x-lg"> </i>
+                                    {errors.discount}</div>
+                            }
+                            {formData.discount && !errors.discount &&
+                                <div style={{ color: "green" }} >
+                                    <i class="bi bi-check-lg"> </i>
+                                    Looks good!</div>
+                            }
                         </div>
                     </div>
-                    {formData.products.map(function (product, i) {
-
-                        <div>{"p" + i}</div>
-                    })}
                     <div className="col-md-6">
                         <label className="form-label"
                         >Product*</label
@@ -627,7 +661,7 @@ function QuotationCreate(props) {
                                 setErrors({ ...errors });
 
                                 selectedProduct[0].quantity = e.target.value;
-                                setSelectedProduct({ ...selectedProduct });
+                                setSelectedProduct([ ...selectedProduct ]);
                                 console.log(selectedProduct);
                             }}
                             type="text"
@@ -693,11 +727,34 @@ function QuotationCreate(props) {
                         <label className="form-label">
                             &nbsp;</label
                         >
-                        <Button variant="primary" className="btn btn-primary form-control" onClick={addNewProductForm}>
+                        <Button variant="primary" className="btn btn-primary form-control" onClick={addProduct}>
                             <i className="bi bi-plus-lg"></i> ADD
                                 </Button>
                     </div>
 
+                    <table className="table table-striped table-sm table-bordered">
+                            <thead>
+                                <tr className="text-center">
+                                    <th>Name</th> 
+                                    <th>Qty</th>
+                                    <th>Unit Price</th>
+                                    <th>Price</th>   
+                                 </tr>
+                           </thead>
+                            <tbody>     
+                                {/*
+                                 {selectedProducts && selectedProducts.map((product)=>
+                                    <tr className="text-center">
+                                     <td>{product.name}</td> 
+                                     <td>{product.quantity}</td>
+                                     <td>{product.unit_price}</td>
+                                     <td>{(product.quantity*product.unit_price)}</td>   
+                                  </tr>
+                                 )}
+                                 */}                               
+                            </tbody>
+ 
+                    </table>                                   
 
 
                     <div className="col-md-6">
@@ -795,7 +852,22 @@ function QuotationCreate(props) {
                         >Status*</label>
 
                         <div className="input-group mb-3">
-                            <select className="form-control">
+                            <select onChange={(e) => {
+                                console.log("Inside onchange status");
+                                if (!e.target.value) {
+                                    errors["status"] = "Invalid Status";
+                                    setErrors({ ...errors });
+                                    return;
+                                }
+
+                                errors["status"] = "";
+                                setErrors({ ...errors });
+
+                                formData.status = e.target.value;
+                                setFormData({ ...formData });
+                                console.log(formData);
+
+                            }}  className="form-control">
                                 <option value="created">Created</option>
                                 <option vaue="delivered">Delivered</option>
                                 <option value="pending">Pending</option>
@@ -803,11 +875,16 @@ function QuotationCreate(props) {
                                 <option value="rejected">Rejected</option>
                                 <option value="cancelled" >Cancelled</option>
                             </select>
-
-                            <div className="valid-feedback">Looks good!</div>
-                            <div className="invalid-feedback">
-                                Please provide a valid Store.
-                                    </div>
+                            {errors.status &&
+                                <div style={{ color: "red" }} >
+                                    <i class="bi bi-x-lg"> </i>
+                                    {errors.status}</div>
+                            }
+                            {formData.status && !errors.status &&
+                                <div style={{ color: "green" }} >
+                                    <i class="bi bi-check-lg"> </i>
+                                    Looks good!</div>
+                            }
                         </div>
                     </div>
 
