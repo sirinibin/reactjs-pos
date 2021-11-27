@@ -799,7 +799,7 @@ function QuotationIndex(props) {
                               )}
                             </td>
                             <td>
-                              <QuotationUpdate showUpdateButton={"true"} />
+                              <QuotationUpdate id={quotation.id} showUpdateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
 
                               <QuotationView showViewButton={"true"} />
 

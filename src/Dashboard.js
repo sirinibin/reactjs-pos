@@ -84,7 +84,7 @@ function Dashboard() {
                     markShow(index, false);
                     removeToastMessage(index);
                     message.show = false;
-                }} bg={message.variant} key={"toast" + index} show={message.show} delay={3000} autohide>
+                }} bg={message.variant} key={"toast" + index} show={message.show} delay={4000} autohide>
                     <Toast.Header>
 
                         <img

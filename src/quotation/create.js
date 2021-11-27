@@ -80,16 +80,6 @@ function QuotationCreate(props) {
     }
   });
 
-  useEffect(() => {
-    console.log("Re calculating1");
-    findVatPrice();
-    findNetTotal();
-  }, [formData.vat_percent]);
-
-  useEffect(() => {
-    console.log("Re calculating2");
-    findNetTotal();
-  }, [formData.discount]);
 
   function ObjectToSearchQueryParams(object) {
     return Object.keys(object)
@@ -726,6 +716,8 @@ function QuotationCreate(props) {
                     setErrors({ ...errors });
 
                     formData.vat_percent = e.target.value;
+                    findVatPrice();
+                    findNetTotal();
                     setFormData({ ...formData });
                     console.log(formData);
                   }}
@@ -768,6 +760,7 @@ function QuotationCreate(props) {
                     setErrors({ ...errors });
 
                     formData.discount = e.target.value;
+                    findNetTotal();
                     setFormData({ ...formData });
                     console.log(formData);
                   }}
