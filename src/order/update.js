@@ -889,6 +889,7 @@ function OrderUpdate(props) {
 
                             <div className="input-group mb-3">
                                 <select
+                                    value={formData.status}
                                     onChange={(e) => {
                                         console.log("Inside onchange status");
                                         if (!e.target.value) {
@@ -1330,7 +1331,7 @@ function OrderUpdate(props) {
                                     onChange={(e) => {
                                         console.log("Inside onchange payment method");
                                         if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Method";
+                                            errors["payment_method"] = "Invalid Payment Method";
                                             setErrors({ ...errors });
                                             return;
                                         }

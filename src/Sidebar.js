@@ -6,7 +6,7 @@ import {
 function Sidebar(props) {
 
     const [appState, ChangeState] = useState({
-        activeTab: 'quotations',
+        activeTab: '',
         tabs: [
             'quotations',
             'orders',
