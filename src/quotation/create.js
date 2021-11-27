@@ -11,6 +11,10 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
+import Toast from 'react-bootstrap/Toast'
+import ToastContainer from 'react-bootstrap/ToastContainer'
+import { Spinner } from "react-bootstrap";
+
 
 function QuotationCreate(props) {
   const selectedDate = new Date();
@@ -24,6 +28,8 @@ function QuotationCreate(props) {
   let [formData, setFormData] = useState({
     vat_percent: 10.0,
     discount: 0.0,
+    date_str: format(new Date(), "MMM dd yyyy"),
+    status: "created",
   });
 
   let [unitPriceList, setUnitPriceList] = useState([]);
@@ -200,50 +206,51 @@ function QuotationCreate(props) {
     }
     return 0;
   }
-
-  function SetPriceOfAllProducts(storeId) {
-    console.log("inside set price of all products:");
-
-    if (selectedProduct[0] && selectedProduct[0].id) {
-      let unitPrice = GetProductUnitPriceInStore(
-        storeId,
-        selectedProduct[0].unit_prices
-      );
-      if (unitPrice) {
-        selectedProduct[0].unit_price = GetProductUnitPriceInStore(
+  /*
+    function SetPriceOfAllProducts(storeId) {
+      console.log("inside set price of all products:");
+  
+      if (selectedProduct[0] && selectedProduct[0].id) {
+        let unitPrice = GetProductUnitPriceInStore(
           storeId,
           selectedProduct[0].unit_prices
         );
-        setSelectedProduct([...selectedProduct]);
+        if (unitPrice) {
+          selectedProduct[0].unit_price = GetProductUnitPriceInStore(
+            storeId,
+            selectedProduct[0].unit_prices
+          );
+          setSelectedProduct([...selectedProduct]);
+        }
+  
+        console.log(
+          "selectedProduct[0].unit_price:",
+          selectedProduct[0].unit_price
+        );
       }
-
-      console.log(
-        "selectedProduct[0].unit_price:",
-        selectedProduct[0].unit_price
-      );
-    }
-
-    for (var i = 0; i < selectedProducts.length; i++) {
-      let unitPrice = GetProductUnitPriceInStore(
-        storeId,
-        selectedProducts[i].unit_prices
-      );
-
-      if (unitPrice) {
-        selectedProducts[i].unit_price = GetProductUnitPriceInStore(
+  
+      for (var i = 0; i < selectedProducts.length; i++) {
+        let unitPrice = GetProductUnitPriceInStore(
           storeId,
           selectedProducts[i].unit_prices
         );
+  
+        if (unitPrice) {
+          selectedProducts[i].unit_price = GetProductUnitPriceInStore(
+            storeId,
+            selectedProducts[i].unit_prices
+          );
+        }
+  
+        console.log(
+          "selectedProducts[i].unit_price:",
+          selectedProducts[i].unit_price
+        );
       }
-
-      console.log(
-        "selectedProducts[i].unit_price:",
-        selectedProducts[i].unit_price
-      );
+  
+      setSelectedProducts([...selectedProducts]);
     }
-
-    setSelectedProducts([...selectedProducts]);
-  }
+    */
 
   async function suggestProducts(searchTerm) {
     console.log("Inside handle suggestProducts");
@@ -356,19 +363,31 @@ function QuotationCreate(props) {
     setIsDeliveredBySignaturesLoading(false);
   }
 
-  function handleSubmit(event) {
-    console.log("Inside handle Submit");
+  function handleCreate(event) {
     event.preventDefault();
-    var data = {
-      email: event.target[0].value,
-      password: event.target[1].value,
-    };
+    console.log("Inside handle Create");
+    console.log("selectedProducts:", selectedProducts);
+
+    formData.products = [];
+    for (var i = 0; i < selectedProducts.length; i++) {
+      formData.products.push({
+        product_id: selectedProducts[i].product_id,
+        quantity: parseInt(selectedProducts[i].quantity),
+        unit_price: parseFloat(selectedProducts[i].unit_price),
+      });
+    }
 
     const requestOptions = {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
+      headers: {
+        'Accept': 'application/json',
+        "Content-Type": "application/json",
+        Authorization: cookies.get("access_token"),
+      },
+      body: JSON.stringify(formData),
     };
+
+    console.log("formData:", formData);
 
     setProcessing(true);
     fetch("/v1/quotation", requestOptions)
@@ -387,16 +406,21 @@ function QuotationCreate(props) {
         }
 
         setErrors({});
+        setProcessing(false);
 
         console.log("Response:");
         console.log(data);
+        showToastMessage("Quotation Created Successfully!", "success");
+        props.refreshList();
+        handleClose();
       })
       .catch((error) => {
         setProcessing(false);
         console.log("Inside catch");
         console.log(error);
-        setErrors(error);
+        setErrors({ ...error });
         console.error("There was an error!", error);
+        showToastMessage("Error Creating Quotation!", "danger");
       });
   }
 
@@ -517,20 +541,71 @@ function QuotationCreate(props) {
     netTotal = totalPrice + vatPrice - formData.discount;
     setNetTotal(netTotal);
   }
+  let [toastMessages, setToastMessages] = useState([]);
+
+  function showToastMessage(message, variant) {
+    toastMessages.push({
+      text: message,
+      variant: variant,
+      show: true,
+    });
+    setToastMessages([...toastMessages]);
+  }
+
+  function removeToastMessage(index) {
+    toastMessages = toastMessages.splice(index, 1);
+    setToastMessages([...toastMessages]);
+    console.log("toastMessages:", toastMessages);
+  }
+
+  function markShow(index, show) {
+    toastMessages[index].show = show;
+    setToastMessages([...toastMessages]);
+  }
+
 
   return (
     <>
-      {props.showCreateButton && (
-        <Button
-          hide={true}
-          variant="primary"
-          className="btn btn-primary mb-3"
-          onClick={handleShow}
-        >
-          <i className="bi bi-plus-lg"></i> Create
-        </Button>
-      )}
-      <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+      <ToastContainer position="top-end" className="p-3" style={{
+        zIndex: 1,
+        position: "absolute",
+      }}>
+        {toastMessages.map((message, index) =>
+
+          <Toast onClose={() => {
+            markShow(index, false);
+            removeToastMessage(index);
+            message.show = false;
+          }} bg={message.variant} key={"toast" + index} show={message.show} delay={3000} autohide>
+            <Toast.Header>
+
+              <img
+                src="holder.js/20x20?text=%20"
+                className="rounded me-2"
+                alt=""
+              />
+
+              <strong className="me-auto">Message</strong>
+              <small>1 sec ago </small>
+            </Toast.Header>
+            <Toast.Body>{message.text}</Toast.Body>
+          </Toast>
+        )}
+
+      </ToastContainer>
+      {
+        props.showCreateButton && (
+          <Button
+            hide={true}
+            variant="primary"
+            className="btn btn-primary mb-3"
+            onClick={handleShow}
+          >
+            <i className="bi bi-plus-lg"></i> Create
+          </Button>
+        )
+      }
+      <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
         <Modal.Header>
           <Modal.Title>Create New Quotation</Modal.Title>
 
@@ -553,7 +628,7 @@ function QuotationCreate(props) {
           </div>
         </Modal.Header>
         <Modal.Body>
-          <form className="row g-3 needs-validation">
+          <form className="row g-3 needs-validation" onSubmit={handleCreate}>
             <div className="col-md-6">
               <label className="form-label">Store*</label>
 
@@ -576,7 +651,7 @@ function QuotationCreate(props) {
                     formData.store_id = selectedItems[0].id;
                     setFormData({ ...formData });
                     setSelectedStores(selectedItems);
-                    SetPriceOfAllProducts(selectedItems[0].id);
+                    //SetPriceOfAllProducts(selectedItems[0].id);
                   }}
                   options={storeOptions}
                   placeholder="Select Store"
@@ -1017,9 +1092,11 @@ function QuotationCreate(props) {
                 ))}
                 <tr>
                   <td colSpan="3"></td>
-                  <td>{totalQuantity}</td>
-                  <td className="text-end">Total</td>
-                  <td>
+                  <td className="text-center">
+                    <b>{totalQuantity}</b>
+                  </td>
+                  <th className="text-end">Total</th>
+                  <td className="text-center">
                     <NumberFormat
                       value={totalPrice}
                       displayType={"text"}
@@ -1030,11 +1107,11 @@ function QuotationCreate(props) {
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan="4" className="text-end">
+                  <th colSpan="4" className="text-end">
                     VAT
-                  </td>
-                  <td>{formData.vat_percent + "%"}</td>
-                  <td>
+                  </th>
+                  <td className="text-center">{formData.vat_percent + "%"}</td>
+                  <td className="text-center">
                     <NumberFormat
                       value={vatPrice}
                       displayType={"text"}
@@ -1045,10 +1122,10 @@ function QuotationCreate(props) {
                   </td>
                 </tr>
                 <tr>
-                  <td colSpan="5" className="text-end">
+                  <th colSpan="5" className="text-end">
                     Discount
-                  </td>
-                  <td>
+                  </th>
+                  <td className="text-center">
                     <NumberFormat
                       value={formData.discount}
                       displayType={"text"}
@@ -1060,8 +1137,8 @@ function QuotationCreate(props) {
                 </tr>
                 <tr>
                   <td colSpan="4"></td>
-                  <td>Net Total</td>
-                  <td>
+                  <th className="text-end">Net Total</th>
+                  <th className="text-center">
                     <NumberFormat
                       value={netTotal}
                       displayType={"text"}
@@ -1069,7 +1146,7 @@ function QuotationCreate(props) {
                       suffix={" SAR"}
                       renderText={(value, props) => value}
                     />
-                  </td>
+                  </th>
                 </tr>
               </tbody>
             </table>
@@ -1079,21 +1156,21 @@ function QuotationCreate(props) {
 
               <div className="input-group mb-3">
                 <Typeahead
-                  id="delivered_by_user_id"
+                  id="delivered_by"
                   labelKey="name"
                   isLoading={isDeliveredByUsersLoading}
-                  isInvalid={errors.delivered_by_user_id ? true : false}
+                  isInvalid={errors.delivered_by ? true : false}
                   onChange={(selectedItems) => {
-                    errors.delivered_by_user_id = "";
+                    errors.delivered_by = "";
                     setErrors(errors);
                     if (selectedItems.length === 0) {
-                      errors.delivered_by_user_id = "Invalid User Selected";
+                      errors.delivered_by = "Invalid User Selected";
                       setErrors(errors);
                       setFormData({ ...formData });
                       setSelectedDeliveredByUsers([]);
                       return;
                     }
-                    formData.delivered_by_user_id = selectedItems[0].id;
+                    formData.delivered_by = selectedItems[0].id;
                     setFormData({ ...formData });
                     setSelectedDeliveredByUsers(selectedItems);
                   }}
@@ -1107,12 +1184,12 @@ function QuotationCreate(props) {
                 />
 
                 <UserCreate showCreateButton={true} />
-                {errors.delivered_by_user_id ? (
+                {errors.delivered_by ? (
                   <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i> {errors.delivered_by_user_id}
+                    <i class="bi bi-x-lg"> </i> {errors.delivered_by}
                   </div>
                 ) : null}
-                {formData.delivered_by_user_id && !errors.delivered_by_user_id && (
+                {formData.delivered_by && !errors.delivered_by && (
                   <div style={{ color: "green" }}>
                     <i class="bi bi-check-lg"> </i>Looks good!
                   </div>
@@ -1170,17 +1247,30 @@ function QuotationCreate(props) {
                   )}
               </div>
             </div>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleClose}>
+                Close
+              </Button>
+              <Button variant="primary" type="submit" >
+                {isProcessing ?
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                  /> + " Creating..."
+
+                  : "Create"
+                }
+              </Button>
+            </Modal.Footer>
           </form>
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleClose}>
-            Close
-          </Button>
-          <Button variant="primary" onClick={handleClose}>
-            Save Changes
-          </Button>
-        </Modal.Footer>
+
       </Modal>
+
+
     </>
   );
 }
