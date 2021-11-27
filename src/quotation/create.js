@@ -11,8 +11,6 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
-import Toast from 'react-bootstrap/Toast'
-import ToastContainer from 'react-bootstrap/ToastContainer'
 import { Spinner } from "react-bootstrap";
 
 
@@ -377,6 +375,10 @@ function QuotationCreate(props) {
       });
     }
 
+    formData.discount = parseFloat(formData.discount);
+    formData.vat_percent = parseFloat(formData.vat_percent);
+    console.log("formData.discount:", formData.discount);
+
     const requestOptions = {
       method: "POST",
       headers: {
@@ -410,7 +412,7 @@ function QuotationCreate(props) {
 
         console.log("Response:");
         console.log(data);
-        showToastMessage("Quotation Created Successfully!", "success");
+        props.showToastMessage("Quotation Created Successfully!", "success");
         props.refreshList();
         handleClose();
       })
@@ -420,7 +422,7 @@ function QuotationCreate(props) {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
-        showToastMessage("Error Creating Quotation!", "danger");
+        props.showToastMessage("Error Creating Quotation!", "danger");
       });
   }
 
@@ -473,7 +475,7 @@ function QuotationCreate(props) {
       code: selectedProduct[0].item_code,
       name: selectedProduct[0].name,
       quantity: selectedProduct[0].quantity,
-      unit_price: selectedProduct[0].unit_price,
+      unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
     });
 
     selectedProduct[0].name = "";
@@ -508,12 +510,13 @@ function QuotationCreate(props) {
   let [totalPrice, setTotalPrice] = useState(0.0);
 
   function findTotalPrice() {
-    totalPrice = 0.0;
+    totalPrice = 0.00;
     for (var i = 0; i < selectedProducts.length; i++) {
       totalPrice +=
         parseFloat(selectedProducts[i].unit_price) *
         parseInt(selectedProducts[i].quantity);
     }
+    totalPrice = totalPrice.toFixed(2);
     setTotalPrice(totalPrice);
   }
 
@@ -527,72 +530,23 @@ function QuotationCreate(props) {
     setTotalQuantity(totalQuantity);
   }
 
-  let [vatPrice, setVatPrice] = useState(0.0);
+  let [vatPrice, setVatPrice] = useState(0.00);
 
   function findVatPrice() {
-    vatPrice = (formData.vat_percent / 100) * totalPrice;
+    vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
     console.log("vatPrice:", vatPrice);
     setVatPrice(vatPrice);
   }
 
-  let [netTotal, setNetTotal] = useState(0.0);
+  let [netTotal, setNetTotal] = useState(0.00);
 
   function findNetTotal() {
-    netTotal = totalPrice + vatPrice - formData.discount;
+    netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
     setNetTotal(netTotal);
   }
-  let [toastMessages, setToastMessages] = useState([]);
-
-  function showToastMessage(message, variant) {
-    toastMessages.push({
-      text: message,
-      variant: variant,
-      show: true,
-    });
-    setToastMessages([...toastMessages]);
-  }
-
-  function removeToastMessage(index) {
-    toastMessages = toastMessages.splice(index, 1);
-    setToastMessages([...toastMessages]);
-    console.log("toastMessages:", toastMessages);
-  }
-
-  function markShow(index, show) {
-    toastMessages[index].show = show;
-    setToastMessages([...toastMessages]);
-  }
-
 
   return (
     <>
-      <ToastContainer position="top-end" className="p-3" style={{
-        zIndex: 1,
-        position: "absolute",
-      }}>
-        {toastMessages.map((message, index) =>
-
-          <Toast onClose={() => {
-            markShow(index, false);
-            removeToastMessage(index);
-            message.show = false;
-          }} bg={message.variant} key={"toast" + index} show={message.show} delay={3000} autohide>
-            <Toast.Header>
-
-              <img
-                src="holder.js/20x20?text=%20"
-                className="rounded me-2"
-                alt=""
-              />
-
-              <strong className="me-auto">Message</strong>
-              <small>1 sec ago </small>
-            </Toast.Header>
-            <Toast.Body>{message.text}</Toast.Body>
-          </Toast>
-        )}
-
-      </ToastContainer>
       {
         props.showCreateButton && (
           <Button
@@ -759,7 +713,7 @@ function QuotationCreate(props) {
               <div className="input-group mb-3">
                 <input
                   value={formData.vat_percent}
-                  type="text"
+                  type='number'
                   onChange={(e) => {
                     console.log("Inside onchange vat percent");
                     if (isNaN(e.target.value)) {
@@ -801,7 +755,7 @@ function QuotationCreate(props) {
               <div className="input-group mb-3">
                 <input
                   value={formData.discount}
-                  type="text"
+                  type='number'
                   onChange={(e) => {
                     console.log("Inside onchange vat discount");
                     if (isNaN(e.target.value)) {
@@ -1071,7 +1025,7 @@ function QuotationCreate(props) {
                     </td>
                     <td>
                       <NumberFormat
-                        value={product.unit_price * product.quantity}
+                        value={(product.unit_price * product.quantity).toFixed(2)}
                         displayType={"text"}
                         thousandSeparator={true}
                         suffix={" SAR"}

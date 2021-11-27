@@ -20,6 +20,8 @@ import Topbar from './Topbar';
 import Cookies from 'universal-cookie';
 import Login from './user/login.js';
 import { Redirect } from 'react-router-dom'
+import Toast from 'react-bootstrap/Toast'
+import ToastContainer from 'react-bootstrap/ToastContainer'
 
 function Dashboard() {
 
@@ -45,10 +47,60 @@ function Dashboard() {
     };
 
 
+
+    let [toastMessages, setToastMessages] = useState([]);
+
+    function showToastMessage(message, variant) {
+        toastMessages.push({
+            text: message,
+            variant: variant,
+            show: true,
+        });
+        setToastMessages([...toastMessages]);
+    }
+
+    function removeToastMessage(index) {
+        toastMessages = toastMessages.splice(index, 1);
+        setToastMessages([...toastMessages]);
+        console.log("toastMessages:", toastMessages);
+    }
+
+    function markShow(index, show) {
+        toastMessages[index].show = show;
+        setToastMessages([...toastMessages]);
+    }
+
     if (!at) {
         return <></>;
     }
     return (<Router>
+        <ToastContainer position="top-end" className="p-3" style={{
+            zIndex: 1,
+            position: "absolute",
+        }}>
+            {toastMessages.map((message, index) =>
+
+                <Toast onClose={() => {
+                    markShow(index, false);
+                    removeToastMessage(index);
+                    message.show = false;
+                }} bg={message.variant} key={"toast" + index} show={message.show} delay={3000} autohide>
+                    <Toast.Header>
+
+                        <img
+                            src="holder.js/20x20?text=%20"
+                            className="rounded me-2"
+                            alt=""
+                        />
+
+                        <strong className="me-auto">Message</strong>
+                        <small>1 sec ago </small>
+                    </Toast.Header>
+                    <Toast.Body>{message.text}</Toast.Body>
+                </Toast>
+            )}
+
+        </ToastContainer>
         <Switch>
             <Route path="/dashboard/quotations">
                 <div className="wrapper">
@@ -56,7 +108,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <QuotationIndex />
+                            <QuotationIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
