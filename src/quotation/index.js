@@ -118,7 +118,7 @@ function QuotationIndex(props) {
 
     let Select = "select=id,name";
     let result = await fetch(
-      `/v1/customer?${Select} ${queryString}`,
+      `/v1/customer?${Select}${queryString}`,
       requestOptions
     );
     let data = await result.json();
@@ -449,395 +449,395 @@ function QuotationIndex(props) {
                     </>
                   )}
                 </div>
-                {totalItems > 0 && (
-                  <table className="table table-striped table-sm table-bordered">
-                    <thead>
-                      <tr className="text-center">
-                        <th>
-                          <b
-                            style={{
-                              "text-decoration": "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("code");
-                            }}
-                          >
-                            ID
-                            {sortField === "code" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-alpha-up-alt"></i>
-                            ) : null}
-                            {sortField === "code" && sortOrder === "" ? (
-                              <i class="bi bi-sort-alpha-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
-                        <th>
-                          <b
-                            style={{
-                              "text-decoration": "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("date");
-                            }}
-                          >
-                            Date
-                            {sortField === "date" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-down"></i>
-                            ) : null}
-                            {sortField === "date" && sortOrder === "" ? (
-                              <i class="bi bi-sort-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
-                        <th>
-                          <b
-                            style={{
-                              "text-decoration": "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("net_total");
-                            }}
-                          >
-                            Net Total
-                            {sortField === "net_total" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-numeric-down"></i>
-                            ) : null}
-                            {sortField === "net_total" && sortOrder === "" ? (
-                              <i class="bi bi-sort-numeric-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
-                        <th>
-                          <b
-                            style={{
-                              "text-decoration": "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("created_by");
-                            }}
-                          >
-                            Created By
-                            {sortField === "created_by" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-alpha-up-alt"></i>
-                            ) : null}
-                            {sortField === "created_by" && sortOrder === "" ? (
-                              <i class="bi bi-sort-alpha-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
-                        <th>
-                          <b
-                            style={{
-                              "text-decoration": "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("customer_name");
-                            }}
-                          >
-                            Customer
-                            {sortField === "customer_name" &&
-                              sortOrder === "-" ? (
-                              <i class="bi bi-sort-alpha-up-alt"></i>
-                            ) : null}
-                            {sortField === "customer_name" && sortOrder === "" ? (
-                              <i class="bi bi-sort-alpha-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
-                        <th>
-                          <b
-                            style={{
-                              "text-decoration": "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("status");
-                            }}
-                          >
-                            Status
-                            {sortField === "status" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-alpha-up-alt"></i>
-                            ) : null}
-                            {sortField === "status" && sortOrder === "" ? (
-                              <i class="bi bi-sort-alpha-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
-                        <th>
-                          <b
-                            style={{
-                              "text-decoration": "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("created_at");
-                            }}
-                          >
-                            Created At
-                            {sortField === "created_at" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-down"></i>
-                            ) : null}
-                            {sortField === "created_at" && sortOrder === "" ? (
-                              <i class="bi bi-sort-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-
-                    <thead>
-                      <tr className="text-center">
-                        <th>
-                          <input
-                            type="text"
-                            id="code"
-                            onChange={(e) =>
-                              searchByFieldValue("code", e.target.value)
-                            }
-                            className="form-control"
-                          />
-                        </th>
-                        <th>
-                          <DatePicker
-                            id="date_str"
-                            value={dateValue}
-                            selected={selectedDate}
-                            className="form-control"
-                            dateFormat="MMM dd yyyy"
-                            onChange={(date) => {
-                              searchByDateField("date_str", date);
-                            }}
-                          />
-                          <small
-                            style={{
-                              color: "blue",
-                              "text-decoration": "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={(e) => setShowDateRange(!showDateRange)}
-                          >
-                            {showDateRange ? "Less.." : "More.."}
-                          </small>
-                          <br />
-
-                          {showDateRange ? (
-                            <span className="text-left">
-                              From:{" "}
-                              <DatePicker
-                                id="from_date"
-                                value={fromDateValue}
-                                selected={selectedDate}
-                                className="form-control"
-                                dateFormat="MMM dd yyyy"
-                                onChange={(date) => {
-                                  searchByDateField("from_date", date);
-                                }}
-                              />
-                              To:{" "}
-                              <DatePicker
-                                id="to_date"
-                                value={toDateValue}
-                                selected={selectedDate}
-                                className="form-control"
-                                dateFormat="MMM dd yyyy"
-                                onChange={(date) => {
-                                  searchByDateField("to_date", date);
-                                }}
-                              />
-                            </span>
+                <table className="table table-striped table-sm table-bordered">
+                  <thead>
+                    <tr className="text-center">
+                      <th>
+                        <b
+                          style={{
+                            "text-decoration": "underline",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            sort("code");
+                          }}
+                        >
+                          ID
+                          {sortField === "code" && sortOrder === "-" ? (
+                            <i class="bi bi-sort-alpha-up-alt"></i>
                           ) : null}
-                        </th>
-                        <th>
-                          <input
-                            type="text"
-                            id="net_total"
-                            onChange={(e) =>
-                              searchByFieldValue("net_total", e.target.value)
-                            }
-                            className="form-control"
-                          />
-                        </th>
-                        <th>
-                          <Typeahead
-                            id="created_by"
-                            labelKey="name"
-                            onChange={(selectedItems) => {
-                              searchByMultipleValuesField(
-                                "created_by",
-                                selectedItems
-                              );
-                            }}
-                            options={userOptions}
-                            placeholder="Select Users"
-                            selected={selectedCreatedByUsers}
-                            highlightOnlyResult="true"
-                            onInputChange={(searchTerm, e) => {
-                              suggestUsers(searchTerm);
-                            }}
-                            multiple
-                          />
-                        </th>
-                        <th>
-                          <Typeahead
-                            id="customer_id"
-                            labelKey="name"
-                            onChange={(selectedItems) => {
-                              searchByMultipleValuesField(
-                                "customer_id",
-                                selectedItems
-                              );
-                            }}
-                            options={customerOptions}
-                            placeholder="Select customers"
-                            selected={selectedCustomers}
-                            highlightOnlyResult="true"
-                            onInputChange={(searchTerm, e) => {
-                              suggestCustomers(searchTerm);
-                            }}
-                            multiple
-                          />
-                        </th>
-                        <th>
-                          <Typeahead
-                            id="status"
-                            labelKey="name"
-                            onChange={(selectedItems) => {
-                              searchByMultipleValuesField(
-                                "status",
-                                selectedItems
-                              );
-                            }}
-                            options={statusOptions}
-                            placeholder="Select Status"
-                            selected={selectedStatusList}
-                            highlightOnlyResult="true"
-                            multiple
-                          />
-                        </th>
-                        <th>
-                          <DatePicker
-                            id="created_at"
-                            value={createdAtValue}
-                            selected={selectedDate}
-                            className="form-control"
-                            dateFormat="MMM dd yyyy"
-                            onChange={(date) => {
-                              searchByDateField("created_at", date);
-                            }}
-                          />
-                          <small
-                            style={{
-                              color: "blue",
-                              "text-decoration": "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={(e) =>
-                              setShowCreatedAtDateRange(!showCreatedAtDateRange)
-                            }
-                          >
-                            {showCreatedAtDateRange ? "Less.." : "More.."}
-                          </small>
-                          <br />
-
-                          {showCreatedAtDateRange ? (
-                            <span className="text-left">
-                              From:{" "}
-                              <DatePicker
-                                id="created_at_from"
-                                value={createdAtFromValue}
-                                selected={selectedDate}
-                                className="form-control"
-                                dateFormat="MMM dd yyyy"
-                                onChange={(date) => {
-                                  searchByDateField("created_at_from", date);
-                                }}
-                              />
-                              To:{" "}
-                              <DatePicker
-                                id="created_at_to"
-                                value={createdAtToValue}
-                                selected={selectedDate}
-                                className="form-control"
-                                dateFormat="MMM dd yyyy"
-                                onChange={(date) => {
-                                  searchByDateField("created_at_to", date);
-                                }}
-                              />
-                            </span>
+                          {sortField === "code" && sortOrder === "" ? (
+                            <i class="bi bi-sort-alpha-up"></i>
                           ) : null}
-                        </th>
-                        <th></th>
-                      </tr>
-                    </thead>
+                        </b>
+                      </th>
+                      <th>
+                        <b
+                          style={{
+                            "text-decoration": "underline",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            sort("date");
+                          }}
+                        >
+                          Date
+                          {sortField === "date" && sortOrder === "-" ? (
+                            <i class="bi bi-sort-down"></i>
+                          ) : null}
+                          {sortField === "date" && sortOrder === "" ? (
+                            <i class="bi bi-sort-up"></i>
+                          ) : null}
+                        </b>
+                      </th>
+                      <th>
+                        <b
+                          style={{
+                            "text-decoration": "underline",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            sort("net_total");
+                          }}
+                        >
+                          Net Total
+                          {sortField === "net_total" && sortOrder === "-" ? (
+                            <i class="bi bi-sort-numeric-down"></i>
+                          ) : null}
+                          {sortField === "net_total" && sortOrder === "" ? (
+                            <i class="bi bi-sort-numeric-up"></i>
+                          ) : null}
+                        </b>
+                      </th>
+                      <th>
+                        <b
+                          style={{
+                            "text-decoration": "underline",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            sort("created_by");
+                          }}
+                        >
+                          Created By
+                          {sortField === "created_by" && sortOrder === "-" ? (
+                            <i class="bi bi-sort-alpha-up-alt"></i>
+                          ) : null}
+                          {sortField === "created_by" && sortOrder === "" ? (
+                            <i class="bi bi-sort-alpha-up"></i>
+                          ) : null}
+                        </b>
+                      </th>
+                      <th>
+                        <b
+                          style={{
+                            "text-decoration": "underline",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            sort("customer_name");
+                          }}
+                        >
+                          Customer
+                          {sortField === "customer_name" &&
+                            sortOrder === "-" ? (
+                            <i class="bi bi-sort-alpha-up-alt"></i>
+                          ) : null}
+                          {sortField === "customer_name" && sortOrder === "" ? (
+                            <i class="bi bi-sort-alpha-up"></i>
+                          ) : null}
+                        </b>
+                      </th>
+                      <th>
+                        <b
+                          style={{
+                            "text-decoration": "underline",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            sort("status");
+                          }}
+                        >
+                          Status
+                          {sortField === "status" && sortOrder === "-" ? (
+                            <i class="bi bi-sort-alpha-up-alt"></i>
+                          ) : null}
+                          {sortField === "status" && sortOrder === "" ? (
+                            <i class="bi bi-sort-alpha-up"></i>
+                          ) : null}
+                        </b>
+                      </th>
+                      <th>
+                        <b
+                          style={{
+                            "text-decoration": "underline",
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            sort("created_at");
+                          }}
+                        >
+                          Created At
+                          {sortField === "created_at" && sortOrder === "-" ? (
+                            <i class="bi bi-sort-down"></i>
+                          ) : null}
+                          {sortField === "created_at" && sortOrder === "" ? (
+                            <i class="bi bi-sort-up"></i>
+                          ) : null}
+                        </b>
+                      </th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
 
-                    <tbody className="text-center">
-                      {quotationList &&
-                        quotationList.map((quotation) => (
-                          <tr>
-                            <td>{quotation.code}</td>
-                            <td>
-                              {format(new Date(quotation.date), "MMM dd yyyy")}
-                            </td>
-                            <td>{quotation.net_total} SAR</td>
-                            <td>{quotation.created_by_name}</td>
-                            <td>{quotation.customer_name}</td>
-                            <td>
-                              <span className="badge bg-success">
-                                {quotation.status}
-                              </span>
-                            </td>
-                            <td>
-                              {format(
-                                new Date(quotation.created_at),
-                                "MMM dd yyyy H:mma"
-                              )}
-                            </td>
-                            <td>
-                              <QuotationUpdate id={quotation.id} showUpdateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+                  <thead>
+                    <tr className="text-center">
+                      <th>
+                        <input
+                          type="text"
+                          id="code"
+                          onChange={(e) =>
+                            searchByFieldValue("code", e.target.value)
+                          }
+                          className="form-control"
+                        />
+                      </th>
+                      <th>
+                        <DatePicker
+                          id="date_str"
+                          value={dateValue}
+                          selected={selectedDate}
+                          className="form-control"
+                          dateFormat="MMM dd yyyy"
+                          onChange={(date) => {
+                            searchByDateField("date_str", date);
+                          }}
+                        />
+                        <small
+                          style={{
+                            color: "blue",
+                            "text-decoration": "underline",
+                            cursor: "pointer",
+                          }}
+                          onClick={(e) => setShowDateRange(!showDateRange)}
+                        >
+                          {showDateRange ? "Less.." : "More.."}
+                        </small>
+                        <br />
 
-                              <QuotationView showViewButton={"true"} />
+                        {showDateRange ? (
+                          <span className="text-left">
+                            From:{" "}
+                            <DatePicker
+                              id="from_date"
+                              value={fromDateValue}
+                              selected={selectedDate}
+                              className="form-control"
+                              dateFormat="MMM dd yyyy"
+                              onChange={(date) => {
+                                searchByDateField("from_date", date);
+                              }}
+                            />
+                            To:{" "}
+                            <DatePicker
+                              id="to_date"
+                              value={toDateValue}
+                              selected={selectedDate}
+                              className="form-control"
+                              dateFormat="MMM dd yyyy"
+                              onChange={(date) => {
+                                searchByDateField("to_date", date);
+                              }}
+                            />
+                          </span>
+                        ) : null}
+                      </th>
+                      <th>
+                        <input
+                          type="text"
+                          id="net_total"
+                          onChange={(e) =>
+                            searchByFieldValue("net_total", e.target.value)
+                          }
+                          className="form-control"
+                        />
+                      </th>
+                      <th>
+                        <Typeahead
+                          id="created_by"
+                          labelKey="name"
+                          onChange={(selectedItems) => {
+                            searchByMultipleValuesField(
+                              "created_by",
+                              selectedItems
+                            );
+                          }}
+                          options={userOptions}
+                          placeholder="Select Users"
+                          selected={selectedCreatedByUsers}
+                          highlightOnlyResult="true"
+                          onInputChange={(searchTerm, e) => {
+                            suggestUsers(searchTerm);
+                          }}
+                          multiple
+                        />
+                      </th>
+                      <th>
+                        <Typeahead
+                          id="customer_id"
+                          labelKey="name"
+                          onChange={(selectedItems) => {
+                            searchByMultipleValuesField(
+                              "customer_id",
+                              selectedItems
+                            );
+                          }}
+                          options={customerOptions}
+                          placeholder="Select customers"
+                          selected={selectedCustomers}
+                          highlightOnlyResult="true"
+                          onInputChange={(searchTerm, e) => {
+                            suggestCustomers(searchTerm);
+                          }}
+                          multiple
+                        />
+                      </th>
+                      <th>
+                        <Typeahead
+                          id="status"
+                          labelKey="name"
+                          onChange={(selectedItems) => {
+                            searchByMultipleValuesField(
+                              "status",
+                              selectedItems
+                            );
+                          }}
+                          options={statusOptions}
+                          placeholder="Select Status"
+                          selected={selectedStatusList}
+                          highlightOnlyResult="true"
+                          multiple
+                        />
+                      </th>
+                      <th>
+                        <DatePicker
+                          id="created_at"
+                          value={createdAtValue}
+                          selected={selectedDate}
+                          className="form-control"
+                          dateFormat="MMM dd yyyy"
+                          onChange={(date) => {
+                            searchByDateField("created_at", date);
+                          }}
+                        />
+                        <small
+                          style={{
+                            color: "blue",
+                            "text-decoration": "underline",
+                            cursor: "pointer",
+                          }}
+                          onClick={(e) =>
+                            setShowCreatedAtDateRange(!showCreatedAtDateRange)
+                          }
+                        >
+                          {showCreatedAtDateRange ? "Less.." : "More.."}
+                        </small>
+                        <br />
 
-                              <button
-                                className="btn btn-default btn-sm"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                title="Download"
-                              >
-                                <i className="bi bi-download"></i>
-                              </button>
+                        {showCreatedAtDateRange ? (
+                          <span className="text-left">
+                            From:{" "}
+                            <DatePicker
+                              id="created_at_from"
+                              value={createdAtFromValue}
+                              selected={selectedDate}
+                              className="form-control"
+                              dateFormat="MMM dd yyyy"
+                              onChange={(date) => {
+                                searchByDateField("created_at_from", date);
+                              }}
+                            />
+                            To:{" "}
+                            <DatePicker
+                              id="created_at_to"
+                              value={createdAtToValue}
+                              selected={selectedDate}
+                              className="form-control"
+                              dateFormat="MMM dd yyyy"
+                              onChange={(date) => {
+                                searchByDateField("created_at_to", date);
+                              }}
+                            />
+                          </span>
+                        ) : null}
+                      </th>
+                      <th></th>
+                    </tr>
+                  </thead>
 
-                              <button
-                                className="btn btn-outline-secondary dropdown-toggle"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                              ></button>
-                              <ul className="dropdown-menu">
-                                <li>
-                                  <a href="/" className="dropdown-item">
-                                    <i className="bi bi-download"></i>
-                                    Download
-                                  </a>
-                                </li>
-                                <li>
-                                  <a href="/" className="dropdown-item">
-                                    <i className="bi bi-trash"></i>
-                                    Delete
-                                  </a>
-                                </li>
-                              </ul>
-                            </td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
-                )}
+                  <tbody className="text-center">
+                    {quotationList &&
+                      quotationList.map((quotation) => (
+                        <tr>
+                          <td>{quotation.code}</td>
+                          <td>
+                            {format(new Date(quotation.date), "MMM dd yyyy")}
+                          </td>
+                          <td>{quotation.net_total} SAR</td>
+                          <td>{quotation.created_by_name}</td>
+                          <td>{quotation.customer_name}</td>
+                          <td>
+                            <span className="badge bg-success">
+                              {quotation.status}
+                            </span>
+                          </td>
+                          <td>
+                            {format(
+                              new Date(quotation.created_at),
+                              "MMM dd yyyy H:mma"
+                            )}
+                          </td>
+                          <td>
+                            <QuotationUpdate id={quotation.id} showUpdateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+
+                            <QuotationView id={quotation.id} showViewButton={"true"} />
+
+                            <button
+                              className="btn btn-default btn-sm"
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              title="Download"
+                            >
+                              <i className="bi bi-download"></i>
+                            </button>
+
+                            <button
+                              className="btn btn-outline-secondary dropdown-toggle"
+                              type="button"
+                              data-bs-toggle="dropdown"
+                              aria-expanded="false"
+                            ></button>
+                            <ul className="dropdown-menu">
+                              <li>
+                                <a href="/" className="dropdown-item">
+                                  <i className="bi bi-download"></i>
+                                  Download
+                                </a>
+                              </li>
+                              {/*
+                              <li>
+                                <a href="/" className="dropdown-item">
+                                  <i className="bi bi-trash"></i>
+                                  Delete
+                                </a>
+                              </li>
+                              */}
+                            </ul>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
 
                 <ReactPaginate
                   breakLabel="..."

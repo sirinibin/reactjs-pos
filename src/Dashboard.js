@@ -120,7 +120,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <OrderIndex />
+                            <OrderIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -132,7 +132,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <PurchaseIndex />
+                            <PurchaseIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -145,7 +145,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <VendorIndex />
+                            <VendorIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -158,7 +158,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <StoreIndex />
+                            <StoreIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -170,7 +170,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <CustomerIndex />
+                            <CustomerIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -182,7 +182,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <ProductIndex />
+                            <ProductIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -194,7 +194,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <ProductCategoryIndex />
+                            <ProductCategoryIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -206,7 +206,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <UserIndex />
+                            <UserIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -218,7 +218,7 @@ function Dashboard() {
                     <div className="main">
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
-                            <SignatureIndex />
+                            <SignatureIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import QuotationPreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
-
-
+import Cookies from "universal-cookie";
+import NumberFormat from "react-number-format";
 
 function QuotationView(props) {
 
+
+    let [model, setModel] = useState({});
+    const cookies = new Cookies();
 
     const [show, SetShow] = useState(false);
 
@@ -14,8 +17,115 @@ function QuotationView(props) {
     };
 
     function handleShow() {
+        getQuotation();
         SetShow(true);
     };
+
+    const [isProcessing, setProcessing] = useState(false);
+    let [totalPrice, setTotalPrice] = useState(0.0);
+    let [netTotal, setNetTotal] = useState(0.00);
+    let [totalQuantity, setTotalQuantity] = useState(0);
+    let [vatPrice, setVatPrice] = useState(0.00);
+
+    function findTotalPrice() {
+        totalPrice = 0.00;
+        console.log("model.products:", model.products);
+        for (var i = 0; i < model.products.length; i++) {
+            totalPrice +=
+                parseFloat(model.products[i].unit_price) *
+                parseInt(model.products[i].quantity);
+        }
+        totalPrice = totalPrice.toFixed(2);
+        console.log("totalPrice:", totalPrice);
+        setTotalPrice(totalPrice);
+    }
+
+    function findTotalQuantity() {
+        totalQuantity = 0;
+        for (var i = 0; i < model.products.length; i++) {
+            totalQuantity += parseInt(model.products[i].quantity);
+        }
+        console.log("totalQuantity:", totalQuantity);
+        setTotalQuantity(totalQuantity);
+    }
+
+
+    function findVatPrice() {
+        vatPrice = ((parseFloat(model.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
+        console.log("vatPrice:", vatPrice);
+        setVatPrice(vatPrice);
+    }
+
+    function findNetTotal() {
+        netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(model.discount)).toFixed(2);
+        setNetTotal(netTotal);
+    }
+
+    function getQuotation() {
+        console.log("inside get Quotation");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        setProcessing(true);
+        fetch('/v1/quotation/' + props.id, requestOptions)
+            .then(async response => {
+                setProcessing(false);
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                // setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                /*
+                let quotation = data.result;
+                model = {
+                    id: quotation.id,
+                    code: quotation.code,
+                    store_id: quotation.store_id,
+                    store_name: quotation.store_name,
+                    customer_id: quotation.customer_id,
+                    customer_name: quotation.customer_name,
+                    date_str: quotation.date_str,
+                    date: quotation.date,
+                    vat_percent: quotation.vat_percent,
+                    discount: quotation.discount,
+                    status: quotation.status,
+                    delivered_by: quotation.delivered_by,
+                    delivered_by_name: quotation.delivered_by_name,
+                    delivered_by_signature_id: quotation.delivered_by_signature_id,
+                    delivered_by_signature_name: quotation.delivered_by_signature_name,
+                    products: quotation.products,
+                    created_at:
+                };
+                */
+
+                model = data.result;
+
+                setModel({ ...model });
+
+                findTotalPrice();
+                findTotalQuantity();
+                findVatPrice();
+                findNetTotal();
+            })
+            .catch(error => {
+                setProcessing(false);
+                // setErrors(error);
+            });
+    }
 
 
     return (<>
@@ -26,7 +136,7 @@ function QuotationView(props) {
         )}
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Quotation #123 Details</Modal.Title>
+                <Modal.Title>Details of Quotation #{model.code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     <QuotationPreview />
@@ -50,99 +160,126 @@ function QuotationView(props) {
             <Modal.Body>
                 <Table striped bordered hover responsive="lg">
                     <tr>
-                        <th>Store:</th><td> Store1</td>
-                        <th>Client:</th><td> Client1</td>
-                        <th>Delivered by:</th><td> User1</td>
+                        <th>Store:</th><td> {model.store_name}</td>
+                        <th>Customer:</th><td> {model.customer_name}</td>
+                        <th>Delivered by:</th><td> {model.delivered_by_name}</td>
                     </tr>
                     <tr>
-                        <th>Date:</th><td> 14 Oct 2021</td>
-                        <th>VAT %:</th><td> 10.00</td>
-                        <th>Discount %:</th><td> 12.00 SAR</td>
+                        <th>Date:</th><td> {model.date_str}</td>
+                        <th>VAT %:</th><td> {model.vat_percent}%</td>
+                        <th>Discount :</th><td> {model.discount} SAR</td>
                     </tr>
                     <tr>
-                        <th>Created At:</th><td> 14 Oct 2021 12:24:32</td>
-                        <th>Updated At:</th><td> 14 Oct 2021 12:24:32</td>
+                        <th>Status:</th><td> {model.status}</td>
+                        <th>Created At:</th><td> {model.created_at}</td>
+                        <th>Updated At:</th><td> {model.updated_at}</td>
                     </tr>
                     <tr>
-                        <th>Created By:</th><td> User 1</td>
-                        <th>Updated By:</th><td> User 1</td>
-                    </tr>
-                    <tr><th colspan="3">Products:</th></tr>
-                    <tr>
-                        <th>SI No.</th>
-                        <th>Item Code</th>
-                        <th>Name</th>
-                        <th>Quantity</th>
-                        <th>Unit Price</th>
-                        <th>Total Amount</th>
-
-                    </tr>
-                    <tr>
-                        <td>1</td>
-                        <td>P1</td>
-                        <td>ABC-1</td>
-                        <td>1</td>
-                        <td>50.00 SAR</td>
-                        <td>50.00 SAR</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>P2</td>
-                        <td>ABC-2</td>
-                        <td>2</td>
-                        <td>100.00 SAR</td>
-                        <td>200.00 SAR</td>
-                    </tr>
-                    <tr>
-                        <td>3</td>
-                        <td>P3</td>
-                        <td>ABC-3</td>
-                        <td>2</td>
-                        <td>150.00 SAR</td>
-                        <td>300.00 SAR</td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td>P4</td>
-                        <td>ABC-4</td>
-                        <td>2</td>
-                        <td>200.00 SAR</td>
-                        <td>400.00 SAR</td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <th></th>
-                        <th>7</th>
-                        <th>Total:</th>
-                        <th>950.00 SAR</th>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <th></th>
-                        <th>VAT:</th>
-                        <th>10%</th>
-                        <th>95.00 SAR</th>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <th></th>
-                        <th></th>
-                        <th>Discount:</th>
-                        <th>100.00 SAR</th>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td></td>
-                        <th></th>
-                        <th></th>
-                        <th>Net Total:</th>
-                        <th>850.00 SAR</th>
+                        <th>Created By:</th><td> {model.created_by_name}</td>
+                        <th>Updated By:</th><td> {model.updated_by_name}</td>
                     </tr>
 
                 </Table>
+
+                <table className="table table-striped table-sm table-bordered">
+                    <thead>
+                        <tr className="text-center">
+                            <th>SI No.</th>
+                            <th>CODE</th>
+                            <th>Name</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {model.products && model.products.map((product, index) => (
+                            <tr className="text-center">
+                                <td>{index + 1}</td>
+                                <td>{product.item_code}</td>
+                                <td>{product.name}</td>
+                                <td>{product.quantity}</td>
+                                <td>
+                                    <NumberFormat
+                                        value={product.unit_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td>
+                                    <NumberFormat
+                                        value={(product.unit_price * product.quantity).toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                        <tr>
+                            <td colSpan="3"></td>
+                            <td className="text-center">
+                                <b>{totalQuantity}</b>
+                            </td>
+                            <th className="text-end">Total</th>
+                            <td className="text-center">
+                                <NumberFormat
+                                    value={totalPrice}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colSpan="4" className="text-end">
+                                VAT
+                            </th>
+                            <td className="text-center">{model.vat_percent + "%"}</td>
+                            <td className="text-center">
+                                <NumberFormat
+                                    value={vatPrice}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colSpan="5" className="text-end">
+                                Discount
+                            </th>
+                            <td className="text-center">
+                                <NumberFormat
+                                    value={model.discount}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colSpan="4"></td>
+                            <th className="text-end">Net Total</th>
+                            <th className="text-center">
+                                <NumberFormat
+                                    value={netTotal}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </th>
+                        </tr>
+                    </tbody>
+                </table>
+
                 {/*
                     <form className="row g-3 needs-validation" >
                         

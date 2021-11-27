@@ -149,14 +149,16 @@ function QuotationUpdate(props) {
                     }
                 ];
 
-                let selectedDeliveredBySignatures = [
-                    {
-                        id: quotation.delivered_by_signature_id,
-                        name: quotation.delivered_by_signature_name,
-                    }
-                ];
+                if (quotation.delivered_by_signature_id) {
+                    let selectedDeliveredBySignatures = [
+                        {
+                            id: quotation.delivered_by_signature_id,
+                            name: quotation.delivered_by_signature_name,
+                        }
+                    ];
+                    setSelectedDeliveredBySignatures([...selectedDeliveredBySignatures]);
+                }
 
-                setSelectedDeliveredBySignatures([...selectedDeliveredBySignatures]);
                 setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
 
                 setSelectedStores([...selectedStores]);
@@ -169,17 +171,6 @@ function QuotationUpdate(props) {
                 findTotalQuantity();
                 findVatPrice();
                 findNetTotal();
-
-
-                /*
-                cookies.set('user_name', data.result.name);
-                cookies.set('user_id', data.result.id);
-                if (data.result.photo) {
-                    cookies.set('user_photo', data.result.photo);
-                }
-
-                history.push("/dashboard/quotations");
-                */
             })
             .catch(error => {
                 setProcessing(false);

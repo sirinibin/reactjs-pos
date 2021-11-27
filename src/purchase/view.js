@@ -1,144 +1,264 @@
-import React from 'react';
+import React, { useState } from "react";
 import PurchasePreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
+import Cookies from "universal-cookie";
+import NumberFormat from "react-number-format";
+
+function PurchaseView(props) {
 
 
-class PurchaseView extends React.Component {
+    let [model, setModel] = useState({});
+    const cookies = new Cookies();
 
-    state = {
-        show: false,
+    const [show, SetShow] = useState(false);
+
+    function handleClose() {
+        SetShow(false);
     };
 
-    handleClose = () => {
-        this.setState({
-            show: false,
-        });
+    function handleShow() {
+        getPurchase();
+        SetShow(true);
     };
 
-    handleShow = () => {
-        this.setState({
-            show: true,
-        });
-    };
+    const [isProcessing, setProcessing] = useState(false);
+    let [totalPrice, setTotalPrice] = useState(0.0);
+    let [netTotal, setNetTotal] = useState(0.00);
+    let [totalQuantity, setTotalQuantity] = useState(0);
+    let [vatPrice, setVatPrice] = useState(0.00);
 
-    render() {
-        return <>
-            {this.props.showViewButton && (
-                <Button className="btn btn-primary btn-sm" onClick={this.handleShow} >
-                    <i className="bi bi-eye"></i>
-                </Button>
-            )}
-            <Modal show={this.state.show} size="lg" onHide={this.handleClose} animation={false}>
-                <Modal.Header>
-                    <Modal.Title>Purchase #123 Details</Modal.Title>
+    function findTotalPrice() {
+        totalPrice = 0.00;
+        console.log("model.products:", model.products);
+        for (var i = 0; i < model.products.length; i++) {
+            totalPrice +=
+                parseFloat(model.products[i].unit_price) *
+                parseInt(model.products[i].quantity);
+        }
+        totalPrice = totalPrice.toFixed(2);
+        console.log("totalPrice:", totalPrice);
+        setTotalPrice(totalPrice);
+    }
 
-                    <div className="col align-self-end text-end">
-                        <PurchasePreview />
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={this.handleClose}
-                            aria-label="Close"
-                        ></button>
+    function findTotalQuantity() {
+        totalQuantity = 0;
+        for (var i = 0; i < model.products.length; i++) {
+            totalQuantity += parseInt(model.products[i].quantity);
+        }
+        console.log("totalQuantity:", totalQuantity);
+        setTotalQuantity(totalQuantity);
+    }
 
-                    </div>
-                </Modal.Header>
-                <Modal.Body>
-                    <Table striped bordered hover responsive="lg">
-                        <tr>
-                            <th>Vendor/Supplier:</th><td> Supplier1</td>
-                            <th>Purchase to Store:</th><td> Store1</td>
-                            <th>Order Placed By:</th><td> User1</td>
-                        </tr>
-                        <tr>
-                            <th>Date:</th><td> 14 Oct 2021</td>
-                            <th>VAT %:</th><td> 10.00</td>
-                            <th>Discount %:</th><td> 12.00 SAR</td>
-                        </tr>
-                        <tr>
-                            <th>Created At:</th><td> 14 Oct 2021 12:24:32</td>
-                            <th>Updated At:</th><td> 14 Oct 2021 12:24:32</td>
-                        </tr>
-                        <tr>
-                            <th>Created By:</th><td> User 1</td>
-                            <th>Updated By:</th><td> User 1</td>
-                        </tr>
-                        <tr><th colspan="3">Products:</th></tr>
-                        <tr>
-                            <th>SI No.</th>
-                            <th>Item Code</th>
-                            <th>Name</th>
-                            <th>Quantity</th>
-                            <th>Unit Price</th>
-                            <th>Total Amount</th>
 
-                        </tr>
-                        <tr>
-                            <td>1</td>
-                            <td>P1</td>
-                            <td>ABC-1</td>
-                            <td>1</td>
-                            <td>50.00 SAR</td>
-                            <td>50.00 SAR</td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>P2</td>
-                            <td>ABC-2</td>
-                            <td>2</td>
-                            <td>100.00 SAR</td>
-                            <td>200.00 SAR</td>
-                        </tr>
-                        <tr>
-                            <td>3</td>
-                            <td>P3</td>
-                            <td>ABC-3</td>
-                            <td>2</td>
-                            <td>150.00 SAR</td>
-                            <td>300.00 SAR</td>
-                        </tr>
-                        <tr>
-                            <td>4</td>
-                            <td>P4</td>
-                            <td>ABC-4</td>
-                            <td>2</td>
-                            <td>200.00 SAR</td>
-                            <td>400.00 SAR</td>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <th></th>
-                            <th>7</th>
-                            <th>Total:</th>
-                            <th>950.00 SAR</th>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <th></th>
-                            <th>VAT:</th>
-                            <th>10%</th>
-                            <th>95.00 SAR</th>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <th></th>
-                            <th></th>
-                            <th>Discount:</th>
-                            <th>100.00 SAR</th>
-                        </tr>
-                        <tr>
-                            <td></td>
-                            <td></td>
-                            <th></th>
-                            <th></th>
-                            <th>Net Total:</th>
-                            <th>850.00 SAR</th>
-                        </tr>
-                    </Table>
+    function findVatPrice() {
+        vatPrice = ((parseFloat(model.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
+        console.log("vatPrice:", vatPrice);
+        setVatPrice(vatPrice);
+    }
+
+    function findNetTotal() {
+        netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(model.discount)).toFixed(2);
+        setNetTotal(netTotal);
+    }
+
+    function getPurchase() {
+        console.log("inside get Purchase");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        setProcessing(true);
+        fetch('/v1/purchase/' + props.id, requestOptions)
+            .then(async response => {
+                setProcessing(false);
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                // setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+
+                model = data.result;
+
+                setModel({ ...model });
+
+                findTotalPrice();
+                findTotalQuantity();
+                findVatPrice();
+                findNetTotal();
+            })
+            .catch(error => {
+                setProcessing(false);
+                // setErrors(error);
+            });
+    }
+
+
+    return (<>
+        {props.showViewButton && (
+            <Button className="btn btn-primary btn-sm" onClick={handleShow} >
+                <i className="bi bi-eye"></i>
+            </Button>
+        )}
+        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+            <Modal.Header>
+                <Modal.Title>Details of Purchase #{model.code} </Modal.Title>
+
+                <div className="col align-self-end text-end">
+                    <PurchasePreview />
                     {/*
+                        <button
+                            className="btn btn-primary mb-3"
+                            data-bs-toggle="modal"
+                            data-bs-target="#previewPurchaseModal"
+                        >
+                            <i className="bi bi-display"></i> Preview
+                        </button> */}
+                    <button
+                        type="button"
+                        className="btn-close"
+                        onClick={handleClose}
+                        aria-label="Close"
+                    ></button>
+
+                </div>
+            </Modal.Header>
+            <Modal.Body>
+                <Table striped bordered hover responsive="lg">
+                    <tr>
+                        <th>Store:</th><td> {model.store_name}</td>
+                        <th>Vendor:</th><td> {model.vendor_name}</td>
+                        <th>Order Placed by:</th><td> {model.order_placed_by_name}</td>
+                    </tr>
+                    <tr>
+                        <th>Date:</th><td> {model.date_str}</td>
+                        <th>VAT %:</th><td> {model.vat_percent}%</td>
+                        <th>Discount :</th><td> {model.discount} SAR</td>
+                    </tr>
+                    <tr>
+                        <th>Status:</th><td> {model.status}</td>
+                        <th>Created At:</th><td> {model.created_at}</td>
+                        <th>Updated At:</th><td> {model.updated_at}</td>
+                    </tr>
+                    <tr>
+                        <th>Created By:</th><td> {model.created_by_name}</td>
+                        <th>Updated By:</th><td> {model.updated_by_name}</td>
+                    </tr>
+
+                </Table>
+
+                <table className="table table-striped table-sm table-bordered">
+                    <thead>
+                        <tr className="text-center">
+                            <th>SI No.</th>
+                            <th>CODE</th>
+                            <th>Name</th>
+                            <th>Qty</th>
+                            <th>Unit Price</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {model.products && model.products.map((product, index) => (
+                            <tr className="text-center">
+                                <td>{index + 1}</td>
+                                <td>{product.item_code}</td>
+                                <td>{product.name}</td>
+                                <td>{product.quantity}</td>
+                                <td>
+                                    <NumberFormat
+                                        value={product.unit_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td>
+                                    <NumberFormat
+                                        value={(product.unit_price * product.quantity).toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                        <tr>
+                            <td colSpan="3"></td>
+                            <td className="text-center">
+                                <b>{totalQuantity}</b>
+                            </td>
+                            <th className="text-end">Total</th>
+                            <td className="text-center">
+                                <NumberFormat
+                                    value={totalPrice}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colSpan="4" className="text-end">
+                                VAT
+                            </th>
+                            <td className="text-center">{model.vat_percent + "%"}</td>
+                            <td className="text-center">
+                                <NumberFormat
+                                    value={vatPrice}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <th colSpan="5" className="text-end">
+                                Discount
+                            </th>
+                            <td className="text-center">
+                                <NumberFormat
+                                    value={model.discount}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colSpan="4"></td>
+                            <th className="text-end">Net Total</th>
+                            <th className="text-center">
+                                <NumberFormat
+                                    value={netTotal}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </th>
+                        </tr>
+                    </tbody>
+                </table>
+
+                {/*
                     <form className="row g-3 needs-validation" >
                         
                   
@@ -160,8 +280,8 @@ class PurchaseView extends React.Component {
 
                     </form>
                     */}
-                </Modal.Body>
-                {/*
+            </Modal.Body>
+            {/*
                 <Modal.Footer>
                     <Button variant="secondary" onClick={this.handleClose}>
                         Close
@@ -171,9 +291,9 @@ class PurchaseView extends React.Component {
                 </Button>
                 </Modal.Footer>
                 */}
-            </Modal>
-        </>;
-    }
+        </Modal>
+    </>);
+
 }
 
 export default PurchaseView;
