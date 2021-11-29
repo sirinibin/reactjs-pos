@@ -1,12 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import VendorView from "./view.js";
 
 
-function VendorCreate(props) {
-    const selectedDate = new Date();
+
+const VendorCreate = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open() {
+            setShow(true);
+        },
+
+    }));
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -15,14 +22,10 @@ function VendorCreate(props) {
     //fields
     let [formData, setFormData] = useState({});
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
 
     function handleClose() {
-        SetShow(false);
-    }
-
-    function handleShow() {
-        SetShow(true);
+        setShow(false);
     }
 
     useEffect(() => {
@@ -82,7 +85,10 @@ function VendorCreate(props) {
                 console.log("Response:");
                 console.log(data);
                 props.showToastMessage("Vendor Created Successfully!", "success");
-                props.refreshList();
+                if (props.refreshList) {
+                    props.refreshList();
+                }
+
                 handleClose();
                 openDetailsView(data.result.id);
             })
@@ -106,18 +112,6 @@ function VendorCreate(props) {
     return (
         <>
             <VendorView ref={DetailsViewRef} />
-            {
-                props.showCreateButton && (
-                    <Button
-                        hide={true}
-                        variant="primary"
-                        className="btn btn-primary mb-3"
-                        onClick={handleShow}
-                    >
-                        <i className="bi bi-plus-lg"></i> Create
-                    </Button>
-                )
-            }
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Create New Vendor</Modal.Title>
@@ -569,6 +563,6 @@ function VendorCreate(props) {
 
         </>
     );
-}
+});
 
 export default VendorCreate;

@@ -515,9 +515,22 @@ const PurchaseCreate = forwardRef((props, ref) => {
         DetailsViewRef.current.open(id);
     }
 
+
+    const StoreCreateFormRef = useRef();
+    function openStoreCreateForm() {
+        StoreCreateFormRef.current.open();
+    }
+
+    const VendorCreateFormRef = useRef();
+    function openVendorCreateForm() {
+        VendorCreateFormRef.current.open();
+    }
+
     return (
         <>
             <PurchaseView ref={DetailsViewRef} />
+            <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
+            <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Create New Purchase</Modal.Title>
@@ -574,8 +587,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         suggestStores(searchTerm);
                                     }}
                                 />
+                                <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
 
-                                <StoreCreate showCreateButton={true} />
                                 <div style={{ color: "red" }}>
                                     <i class="bi x-lg"> </i>
                                     {errors.store_id}
@@ -620,7 +633,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         suggestVendors(searchTerm);
                                     }}
                                 />
-                                <VendorCreate showCreateButton={true} />
+                                <Button hide={true} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.vendor_id && (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i>
