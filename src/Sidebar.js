@@ -44,7 +44,7 @@ function Sidebar(props) {
     return <nav id="sidebar" className={'sidebar ' + props.isSidebarOpen + ' js-sidebar'}>
         <div className="sidebar-content js-simplebar">
             <a className="sidebar-brand" href="index.html">
-                <span className="align-middle">GULF UNION OZONE CO.</span>
+                <span className="align-middle">Start POS</span>
             </a>
 
             <ul className="sidebar-nav">

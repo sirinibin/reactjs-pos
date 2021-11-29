@@ -241,9 +241,14 @@ function VendorIndex(props) {
         DetailsViewRef.current.open(id);
     }
 
+    const CreateFormRef = useRef();
+    function openCreateForm() {
+        CreateFormRef.current.open();
+    }
 
     return (
         <>
+            <VendorCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <VendorUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <VendorView ref={DetailsViewRef} />
 
@@ -255,7 +260,15 @@ function VendorIndex(props) {
                     </div>
 
                     <div className="col text-end">
-                        <VendorCreate showCreateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+                        <Button
+                            hide={true}
+                            variant="primary"
+                            className="btn btn-primary mb-3"
+                            onClick={openCreateForm}
+                        >
+                            <i className="bi bi-plus-lg"></i> Create
+                        </Button>
+
                     </div>
                 </div>
 
