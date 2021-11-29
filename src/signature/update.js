@@ -1,87 +1,296 @@
-import React from 'react';
-import { Modal, Button } from 'react-bootstrap';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
+import { Modal, Button } from "react-bootstrap";
+import Cookies from "universal-cookie";
+import { Spinner } from "react-bootstrap";
+import SignatureView from "./view.js";
+
+const SignatureUpdate = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open(id) {
+            if (id) {
+                getSignature(id);
+                SetShow(true);
+            }
+
+        },
+
+    }));
 
 
-class SignatureUpdate extends React.Component {
+    let [errors, setErrors] = useState({});
+    const [isProcessing, setProcessing] = useState(false);
+    const cookies = new Cookies();
 
-    state = {
-        show: false,
-    };
+    //fields
+    let [formData, setFormData] = useState({});
 
-    handleClose = () => {
-        this.setState({
-            show: false,
-        });
-    };
+    const [show, SetShow] = useState(false);
 
-    handleShow = () => {
-        this.setState({
-            show: true,
-        });
-    };
+    function handleClose() {
+        SetShow(false);
+    }
 
-    render() {
-        return <>
-            {this.props.showUpdateButton && (
-                <button className="btn btn-default btn-sm" onClick={this.handleShow}>
-                    <i className="bi bi-pencil"></i>
-                </button>
-            )}
-            <Modal show={this.state.show} scrollable={true} size="lg" onHide={this.handleClose} animation={false}>
+    useEffect(() => {
+        let at = cookies.get("access_token");
+        if (!at) {
+            window.location = "/";
+        }
+    });
+
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
+
+    function getBase64(file, cb) {
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+            cb(reader.result);
+        };
+        reader.onerror = function (error) {
+            console.log('Error: ', error);
+        };
+    }
+
+    function handleUpdate(event) {
+        event.preventDefault();
+        console.log("Inside handle Update");
+
+
+
+        console.log("formData.signature:", formData.signature);
+        console.log("formData.signature_content:", formData.signature_content);
+
+
+        const requestOptions = {
+            method: "PUT",
+            headers: {
+                'Accept': 'application/json',
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+            body: JSON.stringify(formData),
+        };
+
+        console.log("formData:", formData);
+
+        setProcessing(true);
+        fetch("/v1/signature/" + formData.id, requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    // get error message from body or default to response status
+                    const error = data && data.errors;
+                    //const error = data.errors
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+                setProcessing(false);
+
+                console.log("Response:");
+                console.log(data);
+                props.showToastMessage("Signature Updated Successfully!", "success");
+                props.refreshList();
+                handleClose();
+                openDetailsView(data.result.id);
+            })
+            .catch((error) => {
+                setProcessing(false);
+                console.log("Inside catch");
+                console.log(error);
+                setErrors({ ...error });
+                console.error("There was an error!", error);
+                props.showToastMessage("Error Creating Signature!", "danger");
+            });
+    }
+
+    function getSignature(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/signature/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+                let signatureData = data.result;
+                signatureData.signature = "";
+                setFormData({ ...signatureData });
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
+
+
+    const DetailsViewRef = useRef();
+    function openDetailsView(id) {
+        console.log("id:", id);
+        DetailsViewRef.current.open(id);
+    }
+
+    return (
+        <>
+            <SignatureView ref={DetailsViewRef} />
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Update Signature #Signature1</Modal.Title>
+                    <Modal.Title>Update Signature #{formData.name}</Modal.Title>
 
                     <div className="col align-self-end text-end">
+                        {/*
+                        <button
+                            className="btn btn-primary mb-3"
+                            data-bs-toggle="modal"
+                            data-bs-target="#previewSignatureModal"
+                        >
+                            <i className="bi bi-display"></i> Preview
+                        </button> */}
                         <button
                             type="button"
                             className="btn-close"
-                            onClick={this.handleClose}
+                            onClick={handleClose}
                             aria-label="Close"
                         ></button>
-
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <form className="row g-3 needs-validation" >
+                    <form className="row g-3 needs-validation" onSubmit={handleUpdate}>
+
                         <div className="col-md-6">
-                            <label className="form-label"
-                            >Name*</label>
+                            <label className="form-label">Name*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" value="Signature 1" className="form-control" placeholder="Name" aria-label="Select Store" aria-describedby="button-addon1" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Store.
-                                </div>
+                                <input
+                                    value={formData.name}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["name"] = "";
+                                        setErrors({ ...errors });
+                                        formData.name = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="name"
+                                    placeholder="Name"
+                                />
+                                {errors.name && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.name}
+                                    </div>
+                                )}
+                                {formData.name && !errors.name && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label"
-                            >Signature</label
-                            >
+                            <label className="form-label">Signature*</label>
 
                             <div className="input-group mb-3">
-                                <input type="file" className="form-control" placeholder="Password" aria-label="Select Client" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Client.
-                                </div>
+                                <input
+                                    value={formData.signature}
+                                    type='file'
+                                    onChange={(e) => {
+                                        errors["signature_content"] = "";
+                                        setErrors({ ...errors });
+
+                                        if (!e.target.value) {
+                                            errors["signature_content"] = "Invalid Signature File";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        formData.signature = e.target.value;
+
+                                        let file = document.querySelector('#signature').files[0];
+
+                                        getBase64(file, (result) => {
+                                            formData.signature_content = result;
+                                            setFormData({ ...formData });
+                                        });
+
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="signature"
+                                />
+                                {errors.signature_content && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.signature_content}
+                                    </div>
+                                )}
+                                {formData.signature_content && !errors.signature_content && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
                             </div>
                         </div>
+
+                        <Modal.Footer>
+                            <Button variant="secondary" onClick={handleClose}>
+                                Close
+                            </Button>
+                            <Button variant="primary" type="submit" >
+                                {isProcessing ?
+                                    <Spinner
+                                        as="span"
+                                        animation="border"
+                                        size="sm"
+                                        role="status"
+                                        aria-hidden="true"
+                                    /> + " Creating..."
+
+                                    : "Update"
+                                }
+                            </Button>
+                        </Modal.Footer>
                     </form>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={this.handleClose}>
-                        Close
-                </Button>
-                    <Button variant="primary" onClick={this.handleClose}>
-                        Save Changes
-                </Button>
-                </Modal.Footer>
+
             </Modal>
-        </>;
-    }
-}
+
+
+        </>
+    );
+});
 
 export default SignatureUpdate;

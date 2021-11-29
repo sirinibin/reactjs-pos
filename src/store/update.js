@@ -611,7 +611,7 @@ const StoreUpdate = forwardRef((props, ref) => {
                                     value={formData.logo}
                                     type='file'
                                     onChange={(e) => {
-                                        errors["logo"] = "";
+                                        errors["logo_content"] = "";
                                         setErrors({ ...errors });
 
                                         if (!e.target.value) {
