@@ -230,20 +230,24 @@ function StoreIndex(props) {
 
     const UpdateFormRef = useRef();
     function openUpdateForm(id) {
-        console.log("id:", id);
         UpdateFormRef.current.open(id);
     }
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        console.log("id:", id);
         DetailsViewRef.current.open(id);
+    }
+
+    const CreateFormRef = useRef();
+    function openCreateForm() {
+        CreateFormRef.current.open();
     }
 
 
 
     return (
         <>
+            <StoreCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <StoreUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <StoreView ref={DetailsViewRef} />
 
@@ -254,7 +258,14 @@ function StoreIndex(props) {
                     </div>
 
                     <div className="col text-end">
-                        <StoreCreate showCreateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+                        <Button
+                            hide={true}
+                            variant="primary"
+                            className="btn btn-primary mb-3"
+                            onClick={openCreateForm}
+                        >
+                            <i className="bi bi-plus-lg"></i> Create
+                        </Button>
                     </div>
                 </div>
 

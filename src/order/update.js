@@ -444,7 +444,7 @@ function OrderUpdate(props) {
                 props.showToastMessage("Order Updated Successfully!", "success");
                 props.refreshList();
                 handleClose();
-                openOrderView(data.result.id);
+                openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -599,16 +599,14 @@ function OrderUpdate(props) {
         setNetTotal(netTotal);
     }
 
-    function openOrderView(id) {
-        OrderViewRef.current.open(id);
+    const DetailsViewRef = useRef();
+    function openDetailsView(id) {
+        DetailsViewRef.current.open(id);
     }
-
-
-    const OrderViewRef = useRef();
 
     return (
         <>
-            <OrderView ref={OrderViewRef} />
+            <OrderView ref={DetailsViewRef} />
             {props.showUpdateButton && (
                 <Button className="btn btn-primary btn-sm" onClick={handleShow} >
                     <i className="bi bi-pencil"></i>

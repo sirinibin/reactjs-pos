@@ -1,174 +1,477 @@
-import React from 'react';
-import { Modal, Button } from 'react-bootstrap';
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { Modal, Button } from "react-bootstrap";
+import Cookies from "universal-cookie";
+import { Spinner } from "react-bootstrap";
+import CustomerView from "./view.js";
 
 
-class CustomerCreate extends React.Component {
+const CustomerCreate = forwardRef((props, ref) => {
 
-    state = {
-        show: false,
-    };
+    useImperativeHandle(ref, () => ({
+        open() {
+            SetShow(true);
+        },
 
-    handleClose = () => {
-        this.setState({
-            show: false,
-        });
-    };
+    }));
 
-    handleShow = () => {
-        this.setState({
-            show: true,
-        });
-    };
+    const selectedDate = new Date();
 
-    render() {
-        return <>
-            {this.props.showCreateButton && (
-                <Button hide={true} onClick={this.handleShow} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-            )}
-            <Modal show={this.state.show} scrollable={true} size="lg" onHide={this.handleClose} animation={false}>
+    let [errors, setErrors] = useState({});
+    const [isProcessing, setProcessing] = useState(false);
+    const cookies = new Cookies();
+
+    //fields
+    let [formData, setFormData] = useState({});
+
+    const [show, SetShow] = useState(false);
+
+    function handleClose() {
+        SetShow(false);
+    }
+
+    useEffect(() => {
+        let at = cookies.get("access_token");
+        if (!at) {
+            window.location = "/";
+        }
+    });
+
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
+
+    function getBase64(file, cb) {
+        let reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = function () {
+            cb(reader.result);
+        };
+        reader.onerror = function (error) {
+            console.log('Error: ', error);
+        };
+    }
+
+    function handleCreate(event) {
+        event.preventDefault();
+        console.log("Inside handle Create");
+
+
+        if (formData.vat_percent) {
+            formData.vat_percent = parseFloat(formData.vat_percent);
+        } else {
+            formData.vat_percent = null;
+        }
+
+        console.log("formData.logo:", formData.logo);
+
+
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                'Accept': 'application/json',
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+            body: JSON.stringify(formData),
+        };
+
+        console.log("formData:", formData);
+
+        setProcessing(true);
+        fetch("/v1/customer", requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    // get error message from body or default to response status
+                    const error = data && data.errors;
+                    //const error = data.errors
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+                setProcessing(false);
+
+                console.log("Response:");
+                console.log(data);
+                props.showToastMessage("Customer Created Successfully!", "success");
+                props.refreshList();
+                handleClose();
+                openDetailsView(data.result.id);
+            })
+            .catch((error) => {
+                setProcessing(false);
+                console.log("Inside catch");
+                console.log(error);
+                setErrors({ ...error });
+                console.error("There was an error!", error);
+                props.showToastMessage("Error Creating Customer!", "danger");
+            });
+    }
+
+    const DetailsViewRef = useRef();
+    function openDetailsView(id) {
+        console.log("id:", id);
+        DetailsViewRef.current.open(id);
+    }
+    return (
+        <>
+            <CustomerView ref={DetailsViewRef} />
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Create New Customer</Modal.Title>
 
                     <div className="col align-self-end text-end">
+                        {/*
+                        <button
+                            className="btn btn-primary mb-3"
+                            data-bs-toggle="modal"
+                            data-bs-target="#previewCustomerModal"
+                        >
+                            <i className="bi bi-display"></i> Preview
+                        </button> */}
                         <button
                             type="button"
                             className="btn-close"
-                            onClick={this.handleClose}
+                            onClick={handleClose}
                             aria-label="Close"
                         ></button>
-
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <form className="row g-3 needs-validation" >
+                    <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+
                         <div className="col-md-6">
-                            <label className="form-label"
-                            >Customer Name*</label>
+                            <label className="form-label">Name*</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Customer Name" aria-label="Select Business" aria-describedby="button-addon1" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Business.
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Customer Name(in Arabic)</label
-                            >
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Customer Name in Arabic" aria-label="Select Customer" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Customer.
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >VAT No.</label>
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="VAT No." aria-label="Select Business" aria-describedby="button-addon1" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Business.
-                                </div>
-                            </div>
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >VAT No.(in Arabic)</label
-                            >
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="VAT No. in Arabic" aria-label="Select Customer" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Customer.
-                                </div>
+                                <input
+                                    value={formData.name}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["name"] = "";
+                                        setErrors({ ...errors });
+                                        formData.name = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="name"
+                                    placeholder="Name"
+                                />
+                                {errors.name && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.name}
+                                    </div>
+                                )}
+                                {formData.name && !errors.name && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label"
-                            >Phone</label
-                            >
+                            <label className="form-label">Name In Arabic (Optional)</label>
+
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Phone" aria-label="Select Customer" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Customer.
-                                </div>
+                                <input
+                                    value={formData.name_in_arabic}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["v"] = "";
+                                        setErrors({ ...errors });
+                                        formData.name_in_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="name_in_arabic"
+                                    placeholder="Name In Arabic"
+                                />
+                                {errors.name_in_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.name_in_arabic}
+                                    </div>
+                                )}
+                                {formData.name_in_arabic && !errors.name_in_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label"
-                            >Phone(in Arabic)</label
-                            >
+                            <label className="form-label">Phone*</label>
+
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Phone in Arabic" aria-label="Select Customer" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Customer.
-                                </div>
+                                <input
+                                    value={formData.phone}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["phone"] = "";
+                                        setErrors({ ...errors });
+                                        formData.phone = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="phone"
+                                    placeholder="Phone"
+                                />
+                                {errors.phone && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.phone}
+                                    </div>
+                                )}
+                                {formData.phone && !errors.phone && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label"
-                            >E-mail</label>
+                            <label className="form-label">Phone In Arabic(Optional)</label>
 
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="validationCustom01" placeholder="E-mail" aria-label="Select Business" aria-describedby="button-addon1" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Business.
-                                </div>
+                                <input
+                                    value={formData.phone_in_arabic}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["phone_in_arabic"] = "";
+                                        setErrors({ ...errors });
+                                        formData.phone_in_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="phone_in_arabic"
+                                    placeholder="Phone NO. In Arabic"
+                                />
+                                {errors.phone_in_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.phone_in_arabic}
+                                    </div>
+                                )}
+                                {formData.phone_in_arabic && !errors.phone_in_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
                             </div>
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label"
-                            >Address</label>
+                            <label className="form-label">Address(Optional)</label>
 
                             <div className="input-group mb-3">
-                                <textarea type="text" className="form-control" placeholder="Address" aria-label="Select Business" aria-describedby="button-addon1" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Business.
-                                </div>
+                                <textarea
+                                    value={formData.address}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address"
+                                    placeholder="Address"
+                                />
+                                {errors.address && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.address}
+                                    </div>
+                                )}
+                                {formData.address && !errors.address && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Address In Arabic(Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.address_in_arabic}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address_in_arabic"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address_in_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address_in_arabic"
+                                    placeholder="Address In Arabic"
+                                />
+                                {errors.address_in_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.address_in_arabic}
+                                    </div>
+                                )}
+                                {formData.address_in_arabic && !errors.address_in_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">VAT NO.(Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vat_no}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["vat_no"] = "";
+                                        setErrors({ ...errors });
+                                        formData.vat_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="vat_no"
+                                    placeholder="VAT NO."
+                                />
+                                {errors.vat_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.vat_no}
+                                    </div>
+                                )}
+                                {formData.vat_no && !errors.vat_no && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">VAT NO. In Arabic (Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vat_no_in_arabic}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["vat_no_in_arabic"] = "";
+                                        setErrors({ ...errors });
+                                        formData.vat_no_in_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="vat_no_in_arabic"
+                                    placeholder="VAT NO. In Arabic"
+                                />
+                                {errors.vat_no_in_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.vat_no_in_arabic}
+                                    </div>
+                                )}
+                                {formData.vat_no_in_arabic && !errors.vat_no_in_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className="col-md-6">
-                            <label className="form-label"
-                            >Address(in Arabic)</label
-                            >
+                            <label className="form-label">Email (Optional)</label>
 
                             <div className="input-group mb-3">
-                                <textarea type="text" className="form-control" placeholder="Address in Arabic" aria-label="Select Customer" aria-describedby="button-addon2" />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid Customer.
-                                </div>
+                                <input
+                                    value={formData.email}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["email"] = "";
+
+                                        formData.email = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="email"
+                                    placeholder="Email"
+                                />
+
+                                {errors.email && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.email}
+                                    </div>
+                                )}
+                                {formData.email && !errors.email && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
                             </div>
                         </div>
+                        <Modal.Footer>
+                            <Button variant="secondary" onClick={handleClose}>
+                                Close
+                            </Button>
+                            <Button variant="primary" type="submit" >
+                                {isProcessing ?
+                                    <Spinner
+                                        as="span"
+                                        animation="bcustomer"
+                                        size="sm"
+                                        role="status"
+                                        aria-hidden="true"
+                                    /> + " Creating..."
+
+                                    : "Create"
+                                }
+                            </Button>
+                        </Modal.Footer>
                     </form>
                 </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={this.handleClose}>
-                        Close
-                </Button>
-                    <Button variant="primary" onClick={this.handleClose}>
-                        Save Changes
-                </Button>
-                </Modal.Footer>
+
             </Modal>
-        </>;
-    }
-}
+
+
+        </>
+    );
+});
 
 export default CustomerCreate;

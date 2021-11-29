@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import PurchasePreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -12,9 +12,19 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
+import PurchaseView from "./view.js";
 
 
-function PurchaseCreate(props) {
+const PurchaseCreate = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open() {
+            setShow(true);
+        },
+
+    }));
+
+
     const selectedDate = new Date();
 
     //const history = useHistory();
@@ -61,14 +71,10 @@ function PurchaseCreate(props) {
     const [isOrderPlacedBySignaturesLoading, setIsOrderPlacedBySignaturesLoading] =
         useState(false);
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
 
     function handleClose() {
-        SetShow(false);
-    }
-
-    function handleShow() {
-        SetShow(true);
+        setShow(false);
     }
 
     useEffect(() => {
@@ -360,6 +366,7 @@ function PurchaseCreate(props) {
                 props.showToastMessage("Purchase Created Successfully!", "success");
                 props.refreshList();
                 handleClose();
+                openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -503,20 +510,14 @@ function PurchaseCreate(props) {
         setNetTotal(netTotal);
     }
 
+    const DetailsViewRef = useRef();
+    function openDetailsView(id) {
+        DetailsViewRef.current.open(id);
+    }
+
     return (
         <>
-            {
-                props.showCreateButton && (
-                    <Button
-                        hide={true}
-                        variant="primary"
-                        className="btn btn-primary mb-3"
-                        onClick={handleShow}
-                    >
-                        <i className="bi bi-plus-lg"></i> Create
-                    </Button>
-                )
-            }
+            <PurchaseView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Create New Purchase</Modal.Title>
@@ -1232,6 +1233,6 @@ function PurchaseCreate(props) {
 
         </>
     );
-}
+});
 
 export default PurchaseCreate;

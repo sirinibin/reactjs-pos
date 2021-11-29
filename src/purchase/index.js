@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PurchaseCreate from "./create.js";
 import PurchaseView from "./view.js";
 import PurchaseUpdate from "./update.js";
@@ -313,8 +313,28 @@ function PurchaseIndex(props) {
         list();
     }
 
+
+    const UpdateFormRef = useRef();
+    function openUpdateForm(id) {
+        UpdateFormRef.current.open(id);
+    }
+
+    const DetailsViewRef = useRef();
+    function openDetailsView(id) {
+        DetailsViewRef.current.open(id);
+    }
+
+    const CreateFormRef = useRef();
+    function openCreateForm() {
+        CreateFormRef.current.open();
+    }
+
     return (
         <>
+            <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+            <PurchaseUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+            <PurchaseView ref={DetailsViewRef} />
+
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
@@ -322,7 +342,14 @@ function PurchaseIndex(props) {
                     </div>
 
                     <div className="col text-end">
-                        <PurchaseCreate showCreateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+                        <Button
+                            hide={true}
+                            variant="primary"
+                            className="btn btn-primary mb-3"
+                            onClick={openCreateForm}
+                        >
+                            <i className="bi bi-plus-lg"></i> Create
+                        </Button>
                     </div>
                 </div>
 
@@ -795,9 +822,18 @@ function PurchaseIndex(props) {
                                                         )}
                                                     </td>
                                                     <td>
-                                                        <PurchaseUpdate id={purchase.id} showUpdateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+                                                        <Button className="btn btn-light btn-sm" onClick={() => {
+                                                            openUpdateForm(purchase.id);
+                                                        }}>
+                                                            <i className="bi bi-pencil"></i>
+                                                        </Button>
 
-                                                        <PurchaseView id={purchase.id} showViewButton={"true"} />
+                                                        <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                            openDetailsView(purchase.id);
+                                                        }}>
+                                                            <i className="bi bi-eye"></i>
+                                                        </Button>
+
 
                                                         <button
                                                             className="btn btn-default btn-sm"

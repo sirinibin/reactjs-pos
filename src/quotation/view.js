@@ -1,24 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import QuotationPreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
 
-function QuotationView(props) {
 
+const QuotationView = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open(id) {
+            if (id) {
+                getQuotation(id);
+                setShow(true);
+            }
+
+        },
+
+    }));
 
     let [model, setModel] = useState({});
     const cookies = new Cookies();
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
 
     function handleClose() {
-        SetShow(false);
-    };
-
-    function handleShow() {
-        getQuotation();
-        SetShow(true);
+        setShow(false);
     };
 
     const [isProcessing, setProcessing] = useState(false);
@@ -61,7 +67,7 @@ function QuotationView(props) {
         setNetTotal(netTotal);
     }
 
-    function getQuotation() {
+    function getQuotation(id) {
         console.log("inside get Quotation");
         const requestOptions = {
             method: 'GET',
@@ -72,7 +78,7 @@ function QuotationView(props) {
         };
 
         setProcessing(true);
-        fetch('/v1/quotation/' + props.id, requestOptions)
+        fetch('/v1/quotation/' + id, requestOptions)
             .then(async response => {
                 setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -84,33 +90,9 @@ function QuotationView(props) {
                     return Promise.reject(error);
                 }
 
-                // setErrors({});
-
                 console.log("Response:");
                 console.log(data);
 
-                /*
-                let quotation = data.result;
-                model = {
-                    id: quotation.id,
-                    code: quotation.code,
-                    store_id: quotation.store_id,
-                    store_name: quotation.store_name,
-                    customer_id: quotation.customer_id,
-                    customer_name: quotation.customer_name,
-                    date_str: quotation.date_str,
-                    date: quotation.date,
-                    vat_percent: quotation.vat_percent,
-                    discount: quotation.discount,
-                    status: quotation.status,
-                    delivered_by: quotation.delivered_by,
-                    delivered_by_name: quotation.delivered_by_name,
-                    delivered_by_signature_id: quotation.delivered_by_signature_id,
-                    delivered_by_signature_name: quotation.delivered_by_signature_name,
-                    products: quotation.products,
-                    created_at:
-                };
-                */
 
                 model = data.result;
 
@@ -129,11 +111,6 @@ function QuotationView(props) {
 
 
     return (<>
-        {props.showViewButton && (
-            <Button className="btn btn-primary btn-sm" onClick={handleShow} >
-                <i className="bi bi-eye"></i>
-            </Button>
-        )}
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Quotation #{model.code} </Modal.Title>
@@ -316,6 +293,6 @@ function QuotationView(props) {
         </Modal>
     </>);
 
-}
+});
 
 export default QuotationView;

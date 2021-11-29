@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import QuotationPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -12,9 +12,18 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
+import QuotationView from "./view.js";
+
+const QuotationCreate = forwardRef((props, ref) => {
+
+  useImperativeHandle(ref, () => ({
+    open() {
+      SetShow(true);
+    },
+
+  }));
 
 
-function QuotationCreate(props) {
   const selectedDate = new Date();
 
   //const history = useHistory();
@@ -68,9 +77,6 @@ function QuotationCreate(props) {
     SetShow(false);
   }
 
-  function handleShow() {
-    SetShow(true);
-  }
 
   useEffect(() => {
     let at = cookies.get("access_token");
@@ -194,51 +200,7 @@ function QuotationCreate(props) {
     }
     return 0;
   }
-  /*
-    function SetPriceOfAllProducts(storeId) {
-      console.log("inside set price of all products:");
-  
-      if (selectedProduct[0] && selectedProduct[0].id) {
-        let unitPrice = GetProductUnitPriceInStore(
-          storeId,
-          selectedProduct[0].unit_prices
-        );
-        if (unitPrice) {
-          selectedProduct[0].unit_price = GetProductUnitPriceInStore(
-            storeId,
-            selectedProduct[0].unit_prices
-          );
-          setSelectedProduct([...selectedProduct]);
-        }
-  
-        console.log(
-          "selectedProduct[0].unit_price:",
-          selectedProduct[0].unit_price
-        );
-      }
-  
-      for (var i = 0; i < selectedProducts.length; i++) {
-        let unitPrice = GetProductUnitPriceInStore(
-          storeId,
-          selectedProducts[i].unit_prices
-        );
-  
-        if (unitPrice) {
-          selectedProducts[i].unit_price = GetProductUnitPriceInStore(
-            storeId,
-            selectedProducts[i].unit_prices
-          );
-        }
-  
-        console.log(
-          "selectedProducts[i].unit_price:",
-          selectedProducts[i].unit_price
-        );
-      }
-  
-      setSelectedProducts([...selectedProducts]);
-    }
-    */
+
 
   async function suggestProducts(searchTerm) {
     console.log("Inside handle suggestProducts");
@@ -405,6 +367,7 @@ function QuotationCreate(props) {
         props.showToastMessage("Quotation Created Successfully!", "success");
         props.refreshList();
         handleClose();
+        openDetailsView(data.result.id);
       })
       .catch((error) => {
         setProcessing(false);
@@ -535,20 +498,14 @@ function QuotationCreate(props) {
     setNetTotal(netTotal);
   }
 
+  const DetailsViewRef = useRef();
+  function openDetailsView(id) {
+    DetailsViewRef.current.open(id);
+  }
+
   return (
     <>
-      {
-        props.showCreateButton && (
-          <Button
-            hide={true}
-            variant="primary"
-            className="btn btn-primary mb-3"
-            onClick={handleShow}
-          >
-            <i className="bi bi-plus-lg"></i> Create
-          </Button>
-        )
-      }
+      <QuotationView ref={DetailsViewRef} />
       <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
         <Modal.Header>
           <Modal.Title>Create New Quotation</Modal.Title>
@@ -1220,6 +1177,6 @@ function QuotationCreate(props) {
 
     </>
   );
-}
+});
 
 export default QuotationCreate;

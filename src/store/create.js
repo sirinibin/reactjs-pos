@@ -1,11 +1,19 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import StoreView from "./view.js";
 
 
-function StoreCreate(props) {
+const StoreCreate = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open() {
+            SetShow(true);
+        },
+
+    }));
+
     const selectedDate = new Date();
 
     let [errors, setErrors] = useState({});
@@ -19,10 +27,6 @@ function StoreCreate(props) {
 
     function handleClose() {
         SetShow(false);
-    }
-
-    function handleShow() {
-        SetShow(true);
     }
 
     useEffect(() => {
@@ -122,18 +126,6 @@ function StoreCreate(props) {
     return (
         <>
             <StoreView ref={DetailsViewRef} />
-            {
-                props.showCreateButton && (
-                    <Button
-                        hide={true}
-                        variant="primary"
-                        className="btn btn-primary mb-3"
-                        onClick={handleShow}
-                    >
-                        <i className="bi bi-plus-lg"></i> Create
-                    </Button>
-                )
-            }
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Create New Store</Modal.Title>
@@ -644,6 +636,6 @@ function StoreCreate(props) {
 
         </>
     );
-}
+});
 
 export default StoreCreate;

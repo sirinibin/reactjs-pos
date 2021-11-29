@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import PurchasePreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -12,9 +12,23 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
+import PurchaseView from "./view.js";
 
 
-function PurchaseUpdate(props) {
+const PurchaseUpdate = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open(id) {
+            if (id) {
+                getPurchase(id);
+                setShow(true);
+            }
+
+        },
+
+    }));
+
+
     const selectedDate = new Date();
 
     //const history = useHistory();
@@ -62,15 +76,10 @@ function PurchaseUpdate(props) {
     const [isOrderPlacedBySignaturesLoading, setIsOrderPlacedBySignaturesLoading] =
         useState(false);
 
-    const [show, SetShow] = useState(props.show);
+    const [show, setShow] = useState(props.show);
 
     function handleClose() {
-        SetShow(false);
-    }
-
-    function handleShow() {
-        getPurchase();
-        SetShow(true);
+        setShow(false);
     }
 
     useEffect(() => {
@@ -83,7 +92,7 @@ function PurchaseUpdate(props) {
 
 
 
-    function getPurchase() {
+    function getPurchase(id) {
         console.log("inside get Purchase");
         const requestOptions = {
             method: 'GET',
@@ -93,7 +102,7 @@ function PurchaseUpdate(props) {
             },
         };
 
-        fetch('/v1/purchase/' + props.id, requestOptions)
+        fetch('/v1/purchase/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -461,6 +470,7 @@ function PurchaseUpdate(props) {
                 props.showToastMessage("Purchase Updated Successfully!", "success");
                 props.refreshList();
                 handleClose();
+                openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -595,13 +605,14 @@ function PurchaseUpdate(props) {
         setNetTotal(netTotal);
     }
 
+    const DetailsViewRef = useRef();
+    function openDetailsView(id) {
+        DetailsViewRef.current.open(id);
+    }
+
     return (
         <>
-            {props.showUpdateButton && (
-                <Button className="btn btn-secondary btn-sm" onClick={handleShow} >
-                    <i className="bi bi-pencil"></i>
-                </Button>
-            )}
+            <PurchaseView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Update Purchase #{formData.code}</Modal.Title>
@@ -1318,6 +1329,6 @@ function PurchaseUpdate(props) {
 
         </>
     );
-}
+});
 
 export default PurchaseUpdate;

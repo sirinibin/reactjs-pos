@@ -317,18 +317,21 @@ function OrderIndex(props) {
     }
 
 
+    const DetailsViewRef = useRef();
+    function openDetailsView(id) {
+        DetailsViewRef.current.open(id);
+    }
 
-    const OrderViewRef = useRef();
-
-    function openOrderView(id) {
-        console.log("id:", id);
-        OrderViewRef.current.open(id);
+    const CreateFormRef = useRef();
+    function openCreateForm() {
+        CreateFormRef.current.open();
     }
 
 
     return (
         <>
-            <OrderView ref={OrderViewRef} />
+            <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+            <OrderView ref={DetailsViewRef} />
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
@@ -336,7 +339,14 @@ function OrderIndex(props) {
                     </div>
 
                     <div className="col text-end">
-                        <OrderCreate showCreateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+                        <Button
+                            hide={true}
+                            variant="primary"
+                            className="btn btn-primary mb-3"
+                            onClick={openCreateForm}
+                        >
+                            <i className="bi bi-plus-lg"></i> Create
+                        </Button>
                     </div>
                 </div>
 
@@ -813,14 +823,12 @@ function OrderIndex(props) {
                                                         <OrderUpdate id={order.id} showUpdateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
                                                           <OrderView id={order.id} showViewButton={"true"} show={false} />
                                                         */}
+
                                                         <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                            openOrderView(order.id);
+                                                            openDetailsView(order.id);
                                                         }}>
                                                             <i className="bi bi-eye"></i>
                                                         </Button>
-
-
-
                                                         <button
                                                             className="btn btn-default btn-sm"
                                                             data-bs-toggle="tooltip"

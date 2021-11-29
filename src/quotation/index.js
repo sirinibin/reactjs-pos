@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import QuotationCreate from "./create.js";
 import QuotationView from "./view.js";
 import QuotationUpdate from "./update.js";
@@ -316,8 +316,26 @@ function QuotationIndex(props) {
     list();
   }
 
+  const UpdateFormRef = useRef();
+  function openUpdateForm(id) {
+    UpdateFormRef.current.open(id);
+  }
+
+  const DetailsViewRef = useRef();
+  function openDetailsView(id) {
+    DetailsViewRef.current.open(id);
+  }
+
+  const CreateFormRef = useRef();
+  function openCreateForm() {
+    CreateFormRef.current.open();
+  }
+
   return (
     <>
+      <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+      <QuotationUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+      <QuotationView ref={DetailsViewRef} />
       <div className="container-fluid p-0">
         <div className="row">
           <div className="col">
@@ -325,7 +343,14 @@ function QuotationIndex(props) {
           </div>
 
           <div className="col text-end">
-            <QuotationCreate showCreateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+            <Button
+              hide={true}
+              variant="primary"
+              className="btn btn-primary mb-3"
+              onClick={openCreateForm}
+            >
+              <i className="bi bi-plus-lg"></i> Create
+            </Button>
           </div>
         </div>
 
@@ -798,9 +823,17 @@ function QuotationIndex(props) {
                             )}
                           </td>
                           <td>
-                            <QuotationUpdate id={quotation.id} showUpdateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+                            <Button className="btn btn-light btn-sm" onClick={() => {
+                              openUpdateForm(quotation.id);
+                            }}>
+                              <i className="bi bi-pencil"></i>
+                            </Button>
 
-                            <QuotationView id={quotation.id} showViewButton={"true"} />
+                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                              openDetailsView(quotation.id);
+                            }}>
+                              <i className="bi bi-eye"></i>
+                            </Button>
 
                             <button
                               className="btn btn-default btn-sm"

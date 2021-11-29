@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import QuotationPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -12,9 +12,23 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
+import QuotationView from "./view.js";
 
 
-function QuotationUpdate(props) {
+const QuotationUpdate = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open(id) {
+            if (id) {
+                getQuotation(id);
+                setShow(true);
+            }
+
+        },
+
+    }));
+
+
     const selectedDate = new Date();
 
     //const history = useHistory();
@@ -62,15 +76,10 @@ function QuotationUpdate(props) {
     const [isDeliveredBySignaturesLoading, setIsDeliveredBySignaturesLoading] =
         useState(false);
 
-    const [show, SetShow] = useState(props.show);
+    const [show, setShow] = useState(props.show);
 
     function handleClose() {
-        SetShow(false);
-    }
-
-    function handleShow() {
-        getQuotation();
-        SetShow(true);
+        setShow(false);
     }
 
     useEffect(() => {
@@ -83,7 +92,7 @@ function QuotationUpdate(props) {
 
 
 
-    function getQuotation() {
+    function getQuotation(id) {
         console.log("inside get Quotation");
         const requestOptions = {
             method: 'GET',
@@ -93,7 +102,7 @@ function QuotationUpdate(props) {
             },
         };
 
-        fetch('/v1/quotation/' + props.id, requestOptions)
+        fetch('/v1/quotation/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -270,26 +279,6 @@ function QuotationUpdate(props) {
         for (var i = 0; i < unitPriceListArray.length; i++) {
             console.log("unitPriceListArray[i]:", unitPriceListArray[i]);
             console.log("store_id:", storeId);
-
-            if (unitPriceListArray[i].store_id === storeId) {
-                console.log("macthed");
-                console.log(
-                    "unitPrice.retail_unit_price:",
-                    unitPriceListArray[i].retail_unit_price
-                );
-                return unitPriceListArray[i].retail_unit_price;
-            } else {
-                console.log("not matched");
-            }
-        }
-        return "";
-    }
-
-    function GetProductStockInStore(storeId, stockList) {
-        for (var i = 0; i < stockList.length; i++) {
-            if (stockList[i].store_id === storeId) {
-                return stockList[i].stock;
-            }
         }
         return 0;
     }
@@ -459,6 +448,7 @@ function QuotationUpdate(props) {
                 props.showToastMessage("Quotation Updated Successfully!", "success");
                 props.refreshList();
                 handleClose();
+                openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -591,13 +581,15 @@ function QuotationUpdate(props) {
         setNetTotal(netTotal);
     }
 
+    const DetailsViewRef = useRef();
+    function openDetailsView(id) {
+        // console.log("data.result.id:" + id);
+        DetailsViewRef.current.open(id);
+    }
+
     return (
         <>
-            {props.showUpdateButton && (
-                <Button className="btn btn-secondary btn-sm" onClick={handleShow} >
-                    <i className="bi bi-pencil"></i>
-                </Button>
-            )}
+            <QuotationView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Update Quotation #{formData.code}</Modal.Title>
@@ -1268,6 +1260,6 @@ function QuotationUpdate(props) {
 
         </>
     );
-}
+});
 
 export default QuotationUpdate;

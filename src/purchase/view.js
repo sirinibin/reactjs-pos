@@ -1,24 +1,30 @@
-import React, { useState } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import PurchasePreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
 
-function PurchaseView(props) {
 
+const PurchaseView = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open(id) {
+            if (id) {
+                getPurchase(id);
+                setShow(true);
+            }
+
+        },
+
+    }));
 
     let [model, setModel] = useState({});
     const cookies = new Cookies();
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
 
     function handleClose() {
-        SetShow(false);
-    };
-
-    function handleShow() {
-        getPurchase();
-        SetShow(true);
+        setShow(false);
     };
 
     const [isProcessing, setProcessing] = useState(false);
@@ -61,7 +67,7 @@ function PurchaseView(props) {
         setNetTotal(netTotal);
     }
 
-    function getPurchase() {
+    function getPurchase(id) {
         console.log("inside get Purchase");
         const requestOptions = {
             method: 'GET',
@@ -72,7 +78,7 @@ function PurchaseView(props) {
         };
 
         setProcessing(true);
-        fetch('/v1/purchase/' + props.id, requestOptions)
+        fetch('/v1/purchase/' + id, requestOptions)
             .then(async response => {
                 setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -107,11 +113,6 @@ function PurchaseView(props) {
 
 
     return (<>
-        {props.showViewButton && (
-            <Button className="btn btn-primary btn-sm" onClick={handleShow} >
-                <i className="bi bi-eye"></i>
-            </Button>
-        )}
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Purchase #{model.code} </Modal.Title>
@@ -294,6 +295,6 @@ function PurchaseView(props) {
         </Modal>
     </>);
 
-}
+});
 
 export default PurchaseView;

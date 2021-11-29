@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -14,7 +14,15 @@ import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import OrderView from "./view.js";
 
-function OrderCreate(props) {
+const OrderCreate = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open() {
+            setShow(true);
+        },
+
+    }));
+
     const selectedDate = new Date();
 
     //const history = useHistory();
@@ -64,14 +72,10 @@ function OrderCreate(props) {
     const [isDeliveredBySignaturesLoading, setIsDeliveredBySignaturesLoading] =
         useState(false);
 
-    const [show, SetShow] = useState(false);
+    const [show, setShow] = useState(false);
 
     function handleClose() {
-        SetShow(false);
-    }
-
-    function handleShow() {
-        SetShow(true);
+        setShow(false);
     }
 
     useEffect(() => {
@@ -358,7 +362,7 @@ function OrderCreate(props) {
                 props.refreshList();
                 handleClose();
 
-                openOrderView(data.result.id);
+                openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -511,27 +515,14 @@ function OrderCreate(props) {
         setNetTotal(netTotal);
     }
 
-    function openOrderView(id) {
-        OrderViewRef.current.open(id);
+    const DetailsViewRef = useRef();
+    function openDetailsView(id) {
+        DetailsViewRef.current.open(id);
     }
-
-    const OrderViewRef = useRef();
 
     return (
         <>
-            <OrderView ref={OrderViewRef} />
-            {
-                props.showCreateButton && (
-                    <Button
-                        hide={true}
-                        variant="primary"
-                        className="btn btn-primary mb-3"
-                        onClick={handleShow}
-                    >
-                        <i className="bi bi-plus-lg"></i> Create
-                    </Button>
-                )
-            }
+            <OrderView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Create New Order</Modal.Title>
@@ -1401,6 +1392,6 @@ function OrderCreate(props) {
 
         </>
     );
-}
+});
 
 export default OrderCreate;
