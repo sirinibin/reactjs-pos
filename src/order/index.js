@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
 import OrderUpdate from "./update.js";
@@ -316,8 +316,19 @@ function OrderIndex(props) {
         list();
     }
 
+
+
+    const OrderViewRef = useRef();
+
+    function openOrderView(id) {
+        console.log("id:", id);
+        OrderViewRef.current.open(id);
+    }
+
+
     return (
         <>
+            <OrderView ref={OrderViewRef} />
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
@@ -798,9 +809,17 @@ function OrderIndex(props) {
                                                         )}
                                                     </td>
                                                     <td>
+                                                        {/*
                                                         <OrderUpdate id={order.id} showUpdateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
+                                                          <OrderView id={order.id} showViewButton={"true"} show={false} />
+                                                        */}
+                                                        <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                            openOrderView(order.id);
+                                                        }}>
+                                                            <i className="bi bi-eye"></i>
+                                                        </Button>
 
-                                                        <OrderView id={order.id} showViewButton={"true"} />
+
 
                                                         <button
                                                             className="btn btn-default btn-sm"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -12,7 +12,7 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
-
+import OrderView from "./view.js";
 
 function OrderCreate(props) {
     const selectedDate = new Date();
@@ -27,7 +27,7 @@ function OrderCreate(props) {
         vat_percent: 10.0,
         discount: 0.0,
         date_str: format(new Date(), "MMM dd yyyy"),
-        status: "created",
+        status: "delivered",
         payment_status: "paid",
         payment_method: "cash",
     });
@@ -357,6 +357,8 @@ function OrderCreate(props) {
                 props.showToastMessage("Order Created Successfully!", "success");
                 props.refreshList();
                 handleClose();
+
+                openOrderView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -509,8 +511,15 @@ function OrderCreate(props) {
         setNetTotal(netTotal);
     }
 
+    function openOrderView(id) {
+        OrderViewRef.current.open(id);
+    }
+
+    const OrderViewRef = useRef();
+
     return (
         <>
+            <OrderView ref={OrderViewRef} />
             {
                 props.showCreateButton && (
                     <Button
@@ -808,6 +817,7 @@ function OrderCreate(props) {
 
                             <div className="input-group mb-3">
                                 <select
+                                    value={formData.status}
                                     onChange={(e) => {
                                         console.log("Inside onchange status");
                                         if (!e.target.value) {
@@ -826,7 +836,7 @@ function OrderCreate(props) {
                                     className="form-control"
                                 >
                                     <option value="order_placed">Order Placed</option>
-                                    <option vaue="delivered">Delivered</option>
+                                    <option value="delivered">Delivered</option>
                                     <option value="pending">Pending</option>
                                     <option value="cancelled">Cancelled</option>
                                     <option value="dispatched">Dispatched</option>

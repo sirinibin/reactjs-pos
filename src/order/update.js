@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -12,6 +12,7 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
+import OrderView from "./view.js";
 
 
 function OrderUpdate(props) {
@@ -443,6 +444,7 @@ function OrderUpdate(props) {
                 props.showToastMessage("Order Updated Successfully!", "success");
                 props.refreshList();
                 handleClose();
+                openOrderView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -597,8 +599,16 @@ function OrderUpdate(props) {
         setNetTotal(netTotal);
     }
 
+    function openOrderView(id) {
+        OrderViewRef.current.open(id);
+    }
+
+
+    const OrderViewRef = useRef();
+
     return (
         <>
+            <OrderView ref={OrderViewRef} />
             {props.showUpdateButton && (
                 <Button className="btn btn-primary btn-sm" onClick={handleShow} >
                     <i className="bi bi-pencil"></i>

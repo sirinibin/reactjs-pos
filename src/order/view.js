@@ -1,25 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import OrderPreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
 
-function OrderView(props) {
+const OrderView = forwardRef((props, ref) => {
+
+
+    useImperativeHandle(ref, () => ({
+        open(id) {
+            if (id) {
+                getOrder(id);
+                SetShow(true);
+            }
+
+        },
+
+    }));
 
 
     let [model, setModel] = useState({});
     const cookies = new Cookies();
 
-    const [show, SetShow] = useState(false);
 
-    function handleClose() {
-        SetShow(false);
-    };
-
-    function handleShow() {
-        getOrder();
-        SetShow(true);
-    };
 
     const [isProcessing, setProcessing] = useState(false);
     let [totalPrice, setTotalPrice] = useState(0.0);
@@ -61,7 +64,7 @@ function OrderView(props) {
         setNetTotal(netTotal);
     }
 
-    function getOrder() {
+    function getOrder(id) {
         console.log("inside get Order");
         const requestOptions = {
             method: 'GET',
@@ -72,7 +75,7 @@ function OrderView(props) {
         };
 
         setProcessing(true);
-        fetch('/v1/order/' + props.id, requestOptions)
+        fetch('/v1/order/' + id, requestOptions)
             .then(async response => {
                 setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -89,29 +92,6 @@ function OrderView(props) {
                 console.log("Response:");
                 console.log(data);
 
-                /*
-                let order = data.result;
-                model = {
-                    id: order.id,
-                    code: order.code,
-                    store_id: order.store_id,
-                    store_name: order.store_name,
-                    customer_id: order.customer_id,
-                    customer_name: order.customer_name,
-                    date_str: order.date_str,
-                    date: order.date,
-                    vat_percent: order.vat_percent,
-                    discount: order.discount,
-                    status: order.status,
-                    delivered_by: order.delivered_by,
-                    delivered_by_name: order.delivered_by_name,
-                    delivered_by_signature_id: order.delivered_by_signature_id,
-                    delivered_by_signature_name: order.delivered_by_signature_name,
-                    products: order.products,
-                    created_at:
-                };
-                */
-
                 model = data.result;
 
                 setModel({ ...model });
@@ -127,16 +107,17 @@ function OrderView(props) {
             });
     }
 
+    const [show, SetShow] = useState(false);
+
+    function handleClose() {
+        SetShow(false);
+    };
+
 
     return (<>
-        {props.showViewButton && (
-            <Button className="btn btn-primary btn-sm" onClick={handleShow} >
-                <i className="bi bi-eye"></i>
-            </Button>
-        )}
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Details of Order #{model.code} </Modal.Title>
+                <Modal.Title>Details of Order #{model.code}</Modal.Title>
 
                 <div className="col align-self-end text-end">
                     <OrderPreview />
@@ -316,6 +297,6 @@ function OrderView(props) {
         </Modal>
     </>);
 
-}
+});
 
 export default OrderView;
