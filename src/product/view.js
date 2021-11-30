@@ -1,80 +1,145 @@
-import React from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
+import Cookies from "universal-cookie";
+
+const ProductView = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open(id) {
+            if (id) {
+                getProduct(id);
+                SetShow(true);
+            }
+
+        },
+
+    }));
 
 
-class ProductView extends React.Component {
+    let [model, setModel] = useState({});
+    const cookies = new Cookies();
 
-    state = {
-        show: false,
+    const [show, SetShow] = useState(false);
+
+    function handleClose() {
+        SetShow(false);
     };
 
-    handleClose = () => {
-        this.setState({
-            show: false,
-        });
-    };
+    const [isProcessing, setProcessing] = useState(false);
 
-    handleShow = () => {
-        this.setState({
-            show: true,
-        });
-    };
 
-    render() {
-        return <>
-            {this.props.showViewButton && (
-                <Button className="btn btn-primary btn-sm" onClick={this.handleShow} >
-                    <i className="bi bi-eye"></i>
-                </Button>
-            )}
-            <Modal show={this.state.show} size="lg" onHide={this.handleClose} animation={false}>
-                <Modal.Header>
-                    <Modal.Title>Product #123 Details</Modal.Title>
+    function getProduct(id) {
+        console.log("inside get Product");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
 
-                    <div className="col align-self-end text-end">
+        setProcessing(true);
+        fetch('/v1/product/' + id, requestOptions)
+            .then(async response => {
+                setProcessing(false);
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                model = data.result;
+
+                setModel({ ...model });
+            })
+            .catch(error => {
+                setProcessing(false);
+                // setErrors(error);
+            });
+    }
+
+
+    return (<>
+        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+            <Modal.Header>
+                <Modal.Title>Details of Product #{model.name} </Modal.Title>
+
+                <div className="col align-self-end text-end">
+                    {/*
                         <button
-                            type="button"
-                            className="btn-close"
-                            onClick={this.handleClose}
-                            aria-label="Close"
-                        ></button>
+                            className="btn btn-primary mb-3"
+                            data-bs-toggle="modal"
+                            data-bs-target="#previewProductModal"
+                        >
+                            <i className="bi bi-display"></i> Preview
+                        </button> */}
+                    <button
+                        type="button"
+                        className="btn-close"
+                        onClick={handleClose}
+                        aria-label="Close"
+                    ></button>
 
-                    </div>
-                </Modal.Header>
-                <Modal.Body>
-                    <Table striped bordered hover responsive="lg">
-                        <tr>
-                            <th>Product Name:</th><td> ABC</td>
-                            <th>Product Name(in Arabic):</th><td> ABC</td>
+                </div>
+            </Modal.Header>
+            <Modal.Body>
+                <Table striped bordered hover responsive="lg">
+                    <tr>
+                        <th>Name:</th><td> {model.name}</td>
+                        <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
+                    </tr>
+                    <tr>
+                        <th>Item Code:</th><td> {model.item_code}</td>
+                        <th>Categories:</th><td>
+                            <ul>
+                                {model.category_name &&
+                                    model.category_name.map((name) => (
+                                        <li>{name}</li>
+                                    ))}
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Created At:</th><td> {model.created_at}</td>
+                        <th>Updated At:</th><td> {model.updated_at}</td>
+                    </tr>
+                    <tr>
+                        <th>Created By:</th><td> {model.created_by_name}</td>
+                        <th>Updated By:</th><td> {model.updated_by_name}</td>
+                    </tr>
 
-                        </tr>
-                        <tr>
-                            <th>Item Code:</th><td> ABC-1</td>
-                            <th>Category:</th><td> Category</td>
-                        </tr>
-                        <tr>
-                            <th>Wholsale Unit Price in Store 1:</th><td> 200 SAR</td>
-                            <th>Retail Unit Price in Store 1:</th><td> 300 SAR</td>
-                        </tr>
-                        <tr>
-                            <th>Wholsale Unit Price in Store 2:</th><td> 250 SAR</td>
-                            <th>Retail Unit Price in Store 2:</th><td> 350 SAR</td>
-                        </tr>
-                        <tr>
-                            <th>Quantity/Stock in Store1:</th><td> 2</td>
-                            <th>Quantity/Stock in Store2:</th><td> 3</td>
-                        </tr>
-                        <tr>
-                            <th>Created At:</th><td> 14 Oct 2021 12:24:32</td>
-                            <th>Updated At:</th><td> 14 Oct 2021 12:24:32</td>
-                        </tr>
-                        <tr>
-                            <th>Created By:</th><td> User 1</td>
-                            <th>Updated By:</th><td> User 1</td>
-                        </tr>
-                    </Table>
-                </Modal.Body>
+                </Table>
+
                 {/*
+                    <form className="row g-3 needs-validation" >
+                        
+                  
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Delivered By*</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
+                                <UserCreate showCreateButton={true} />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid User.
+                  </div>
+                            </div>
+                        </div>
+                       
+
+                    </form>
+                    */}
+            </Modal.Body>
+            {/*
                 <Modal.Footer>
                     <Button variant="secondary" onClick={this.handleClose}>
                         Close
@@ -84,9 +149,9 @@ class ProductView extends React.Component {
                 </Button>
                 </Modal.Footer>
                 */}
-            </Modal>
-        </>;
-    }
-}
+        </Modal>
+    </>);
+
+});
 
 export default ProductView;
