@@ -1,64 +1,133 @@
-import React from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
+import Cookies from "universal-cookie";
+
+const ProductCategoryView = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open(id) {
+            if (id) {
+                getProductCategory(id);
+                SetShow(true);
+            }
+
+        },
+
+    }));
 
 
-class ProductCategoryView extends React.Component {
+    let [model, setModel] = useState({});
+    const cookies = new Cookies();
 
-    state = {
-        show: false,
+    const [show, SetShow] = useState(false);
+
+    function handleClose() {
+        SetShow(false);
     };
 
-    handleClose = () => {
-        this.setState({
-            show: false,
-        });
-    };
+    const [isProcessing, setProcessing] = useState(false);
 
-    handleShow = () => {
-        this.setState({
-            show: true,
-        });
-    };
 
-    render() {
-        return <>
-            {this.props.showViewButton && (
-                <Button className="btn btn-primary btn-sm" onClick={this.handleShow} >
-                    <i className="bi bi-eye"></i>
-                </Button>
-            )}
-            <Modal show={this.state.show} size="lg" onHide={this.handleClose} animation={false}>
-                <Modal.Header>
-                    <Modal.Title>ProductCategory #123 Details</Modal.Title>
+    function getProductCategory(id) {
+        console.log("inside get ProductCategory");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
 
-                    <div className="col align-self-end text-end">
+        setProcessing(true);
+        fetch('/v1/product-category/' + id, requestOptions)
+            .then(async response => {
+                setProcessing(false);
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                model = data.result;
+
+                setModel({ ...model });
+            })
+            .catch(error => {
+                setProcessing(false);
+                // setErrors(error);
+            });
+    }
+
+
+    return (<>
+        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+            <Modal.Header>
+                <Modal.Title>Details of Product Category #{model.name} </Modal.Title>
+
+                <div className="col align-self-end text-end">
+                    {/*
                         <button
-                            type="button"
-                            className="btn-close"
-                            onClick={this.handleClose}
-                            aria-label="Close"
-                        ></button>
+                            className="btn btn-primary mb-3"
+                            data-bs-toggle="modal"
+                            data-bs-target="#previewProductCategoryModal"
+                        >
+                            <i className="bi bi-display"></i> Preview
+                        </button> */}
+                    <button
+                        type="button"
+                        className="btn-close"
+                        onClick={handleClose}
+                        aria-label="Close"
+                    ></button>
 
-                    </div>
-                </Modal.Header>
-                <Modal.Body>
-                    <Table striped bordered hover responsive="lg">
-                        <tr>
-                            <th>ID:</th><td> 123</td>
-                            <th>Name:</th><td> Business1</td>
-                        </tr>
-                        <tr>
-                            <th>Created At:</th><td> 14 Oct 2021 12:24:32</td>
-                            <th>Updated At:</th><td> 14 Oct 2021 12:24:32</td>
-                        </tr>
-                        <tr>
-                            <th>Created By:</th><td> ProductCategory 1</td>
-                            <th>Updated By:</th><td> ProductCategory 1</td>
-                        </tr>
-                    </Table>
+                </div>
+            </Modal.Header>
+            <Modal.Body>
+                <Table striped bordered hover responsive="lg">
+                    <tr>
+                        <th>Name:</th><td> {model.name}</td>
+                        <th>Parent Category Name:</th><td> {model.parent_name}</td>
+                    </tr>
+                    <tr>
+                        <th>Created At:</th><td> {model.created_at}</td>
+                        <th>Updated At:</th><td> {model.updated_at}</td>
+                    </tr>
+                    <tr>
+                        <th>Created By:</th><td> {model.created_by_name}</td>
+                        <th>Updated By:</th><td> {model.updated_by_name}</td>
+                    </tr>
+                </Table>
 
-                </Modal.Body>
                 {/*
+                    <form className="row g-3 needs-validation" >
+                        
+                  
+                        <div className="col-md-6">
+                            <label className="form-label"
+                            >Delivered By*</label
+                            >
+
+                            <div className="input-group mb-3">
+                                <input type="text" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
+                                <UserCreate showCreateButton={true} />
+                                <div className="valid-feedback">Looks good!</div>
+                                <div className="invalid-feedback">
+                                    Please provide a valid User.
+                  </div>
+                            </div>
+                        </div>
+                       
+
+                    </form>
+                    */}
+            </Modal.Body>
+            {/*
                 <Modal.Footer>
                     <Button variant="secondary" onClick={this.handleClose}>
                         Close
@@ -68,9 +137,9 @@ class ProductCategoryView extends React.Component {
                 </Button>
                 </Modal.Footer>
                 */}
-            </Modal>
-        </>;
-    }
-}
+        </Modal>
+    </>);
+
+});
 
 export default ProductCategoryView;
