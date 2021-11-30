@@ -4,6 +4,8 @@ import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import ProductView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
+import StoreCreate from "../store/create.js";
+import NumberFormat from "react-number-format";
 
 
 const ProductCreate = forwardRef((props, ref) => {
@@ -18,6 +20,44 @@ const ProductCreate = forwardRef((props, ref) => {
         },
 
     }));
+
+    /*
+     {
+            id: "",
+            name: "",
+            retial_unit_price: 0,
+            wholesale_unit_price: 0,
+        }
+           {
+            id: "",
+            name: "",
+            stock: 0,
+        }
+         */
+
+
+    let [selectedUnitPrice, setSelectedUnitPrice] = useState([
+        {
+            id: "",
+            name: "",
+            retail_unit_price: "",
+            wholesale_unit_price: "",
+        },
+    ]);
+
+    let [selectedUnitPrices, setSelectedUnitPrices] = useState([]);
+    let [selectedStock, setSelectedStock] = useState([
+        {
+            id: "",
+            name: "",
+            stock: "",
+        },
+    ]);
+    let [selectedStocks, setSelectedStocks] = useState([]);
+
+
+
+    let [storeOptions, setStoreOptions] = useState([]);
 
     let [selectedCategories, setSelectedCategories] = useState([]);
     let [categoryOptions, setCategoryOptions] = useState([]);
@@ -67,6 +107,40 @@ const ProductCreate = forwardRef((props, ref) => {
         let data = await result.json();
 
         setCategoryOptions(data.result);
+    }
+
+    async function suggestStores(searchTerm) {
+        console.log("Inside handle suggest Stores");
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            return;
+        }
+
+        var params = {
+            name: searchTerm,
+        };
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = "select=id,name";
+        let result = await fetch(
+            "/v1/store?" + Select + queryString,
+            requestOptions
+        );
+        let data = await result.json();
+
+        setStoreOptions(data.result);
     }
 
     useEffect(() => {
@@ -155,13 +229,73 @@ const ProductCreate = forwardRef((props, ref) => {
             });
     }
 
+    function addStock() {
+        if (!selectedStock[0].id) {
+            errors.store_id2 = "Store is required";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (!selectedStock[0].stock) {
+            errors.stock = "Stock is required";
+            setErrors({ ...errors });
+            return;
+        }
+
+        selectedStocks.push({
+            store_id: selectedStock[0].id,
+            store_name: selectedStock[0].name,
+            stock: parseInt(selectedStock[0].stock),
+        });
+
+        setSelectedStocks([...selectedStocks]);
+    }
+
+    function addUnitPrice() {
+
+        if (!selectedUnitPrice[0].id) {
+            errors.store_id1 = "Store is required";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (!selectedUnitPrice[0].wholesale_unit_price) {
+            errors.wholesale_unit_price = "Wholesale Unit Price is required";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (!selectedUnitPrice[0].retail_unit_price) {
+            errors.retail_unit_price = "Retail Unit Price is required";
+            setErrors({ ...errors });
+            return;
+        }
+
+
+        selectedUnitPrices.push({
+            store_id: selectedUnitPrice[0].id,
+            store_name: selectedUnitPrice[0].name,
+            retail_unit_price: parseFloat(selectedUnitPrice[0].retail_unit_price),
+            wholesale_unit_price: parseFloat(selectedUnitPrice[0].wholesale_unit_price),
+        });
+        setSelectedUnitPrices([...selectedUnitPrices]);
+    }
+
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
         console.log("id:", id);
         DetailsViewRef.current.open(id);
     }
+
+    const StoreCreateFormRef = useRef();
+    function openStoreCreateForm() {
+        StoreCreateFormRef.current.open();
+    }
+
+
     return (
         <>
+            <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
@@ -334,6 +468,314 @@ const ProductCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+
+                        <h4>Unit Price</h4>
+                        <div className="col-md-5">
+                            <label className="form-label">Select Store*</label>
+
+                            <div className="input-group mb-3">
+                                <Typeahead
+                                    id="store_id1"
+                                    labelKey="name"
+                                    isInvalid={errors.store_id1 ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.store_id1 = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            errors.store_id1 = "Invalid Store selected";
+                                            setErrors(errors);
+                                            selectedUnitPrice[0].id = "";
+                                            selectedUnitPrice[0].name = "";
+                                            setSelectedUnitPrice(selectedUnitPrice);
+                                            return;
+                                        }
+
+                                        selectedUnitPrice[0].id = selectedItems[0].id;
+                                        selectedUnitPrice[0].name = selectedItems[0].name;
+                                        console.log("selectedUnitPrice:", selectedUnitPrice);
+
+                                        setSelectedUnitPrice([...selectedUnitPrice]);
+                                    }}
+                                    options={storeOptions}
+                                    placeholder="Select Store"
+                                    selected={selectedUnitPrice}
+                                    highlightOnlyResult="true"
+                                    onInputChange={(searchTerm, e) => {
+                                        suggestStores(searchTerm);
+                                    }}
+                                />
+                                <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+
+                                {errors.store_id1 && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.store_id1}
+                                    </div>
+                                )}
+                                {selectedUnitPrice[0].id && !errors.store_id1 && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Retail*</label>
+
+                            <div className="input-group mb-3">
+
+                                <input
+                                    value={selectedUnitPrice[0].retail_unit_price}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["retail_unit_price"] = "";
+                                        setErrors({ ...errors });
+                                        selectedUnitPrice[0].retail_unit_price = e.target.value;
+                                    }}
+                                    className="form-control"
+                                    id="retail_unit_price"
+                                    placeholder="Unit Price"
+                                />
+                                {errors.retail_unit_price && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.retail_unit_price}
+                                    </div>
+                                )}
+                                {selectedUnitPrice[0].retail_unit_price && !errors.retail_unit_price && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+
+                            </div>
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Wholesale*</label>
+
+                            <div className="input-group mb-3">
+
+                                <input
+                                    value={selectedUnitPrice[0].wholesale_unit_price}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["wholesale_unit_price"] = "";
+                                        setErrors({ ...errors });
+                                        selectedUnitPrice[0].wholesale_unit_price = e.target.value;
+                                    }}
+                                    className="form-control"
+                                    id="wholesale_unit_price"
+                                    placeholder=" Unit Price"
+                                />
+                                {errors.wholesale_unit_price && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.wholesale_unit_price}
+                                    </div>
+                                )}
+                                {selectedUnitPrice[0].wholesale_unit_price && !errors.wholesale_unit_price && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+
+
+                            </div>
+
+
+
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Action</label>
+                            <div className="input-group mb-3">
+
+                                <Button hide={true} onClick={addUnitPrice} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> Add Price</Button>
+                            </div>
+                        </div>
+                        <table className="table table-striped table-sm table-bordered">
+                            <thead>
+                                <tr className="text-center">
+                                    <th>SI No.</th>
+                                    <th>Store Name</th>
+                                    <th>Wholesale Unit Price</th>
+                                    <th>Retail Unit Price</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {selectedUnitPrices.map((unitPrice, index) => (
+                                    <tr className="text-center">
+                                        <td>{index + 1}</td>
+                                        <td>{unitPrice.store_name}</td>
+                                        <td>
+                                            <NumberFormat
+                                                value={unitPrice.wholesale_unit_price}
+                                                displayType={"text"}
+                                                thousandSeparator={true}
+                                                renderText={(value, props) => value}
+                                                suffix={" SAR"}
+                                            />
+                                        </td>
+                                        <td>
+                                            <NumberFormat
+                                                value={unitPrice.retail_unit_price}
+                                                displayType={"text"}
+                                                thousandSeparator={true}
+                                                renderText={(value, props) => value}
+                                                suffix={" SAR"}
+                                            />
+                                        </td>
+                                        <td>
+                                            <div
+                                                style={{ color: "red", cursor: "pointer" }}
+                                                onClick={() => {
+                                                    // removeProduct(product);
+                                                }}
+                                            >
+                                                <i class="bi bi-x-lg"> </i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <h4>Stock</h4>
+                        <div className="col-md-5">
+                            <label className="form-label">Select Store*</label>
+
+                            <div className="input-group mb-3">
+                                <Typeahead
+                                    id="store_id2"
+                                    labelKey="name"
+                                    isInvalid={errors.store_id2 ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.store_id2 = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            errors.store_id2 = "Invalid Store selected";
+                                            setErrors(errors);
+                                            selectedStock[0].id = "";
+                                            selectedStock[0].name = "";
+                                            setSelectedStock(selectedStock);
+                                            return;
+                                        }
+
+                                        selectedStock[0].id = selectedItems[0].id;
+                                        selectedStock[0].name = selectedItems[0].name;
+                                        console.log("selectedStock:", selectedStock);
+
+                                        setSelectedStock([...selectedStock]);
+                                    }}
+                                    options={storeOptions}
+                                    placeholder="Select Store"
+                                    selected={selectedStock}
+                                    highlightOnlyResult="true"
+                                    onInputChange={(searchTerm, e) => {
+                                        suggestStores(searchTerm);
+                                    }}
+                                />
+
+                                <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="b1"> <i className="bi bi-plus-lg"></i> New</Button>
+
+                                {errors.store_id2 && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.store_id2}
+                                    </div>
+                                )}
+                                {selectedStock[0].id && !errors.store_id2 && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Stock*</label>
+
+                            <div className="input-group mb-3">
+
+                                <input
+                                    value={selectedStock[0].stock}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["stock"] = "";
+                                        setErrors({ ...errors });
+                                        selectedStock[0].stock = e.target.value;
+                                    }}
+                                    className="form-control"
+                                    id="stock"
+                                    placeholder="Stock"
+                                />
+                                {errors.stock && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.stock}
+                                    </div>
+                                )}
+                                {selectedStock[0].stock && !errors.stock && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+
+                            </div>
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Action</label>
+                            <div className="input-group mb-3">
+                                <Button hide={true} onClick={addStock} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> Add Stock</Button>
+                            </div>
+                        </div>
+
+                        <table className="table table-striped table-sm table-bordered">
+                            <thead>
+                                <tr className="text-center">
+                                    <th>SI No.</th>
+                                    <th>Store Name</th>
+                                    <th>Stock</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {selectedStocks.map((stock, index) => (
+                                    <tr className="text-center">
+                                        <td>{index + 1}</td>
+                                        <td>{stock.store_name}</td>
+                                        <td>
+                                            <NumberFormat
+                                                value={stock.stock}
+                                                displayType={"text"}
+                                                thousandSeparator={true}
+                                                renderText={(value, props) => value}
+                                                suffix={" Units"}
+                                            />
+                                        </td>
+                                        <td>
+                                            <div
+                                                style={{ color: "red", cursor: "pointer" }}
+                                                onClick={() => {
+                                                    // removeProduct(product);
+                                                }}
+                                            >
+                                                <i class="bi bi-x-lg"> </i>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>

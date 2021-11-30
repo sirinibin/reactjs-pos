@@ -10,6 +10,11 @@ const ProductUpdate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
+            formData = {};
+            selectedCategories = [];
+            setSelectedCategories(selectedCategories);
+            setFormData(formData);
+
             getProduct(id);
             SetShow(true);
         },
@@ -62,12 +67,15 @@ const ProductUpdate = forwardRef((props, ref) => {
                 let categoryNames = data.result.category_name;
 
                 selectedCategories = [];
-                for (var i = 0; i < categoryIds.length; i++) {
-                    selectedCategories.push({
-                        id: categoryIds[i],
-                        name: categoryNames[i],
-                    });
+                if (categoryIds && categoryNames) {
+                    for (var i = 0; i < categoryIds.length; i++) {
+                        selectedCategories.push({
+                            id: categoryIds[i],
+                            name: categoryNames[i],
+                        });
+                    }
                 }
+
                 setSelectedCategories(selectedCategories);
 
                 setFormData({ ...data.result });
