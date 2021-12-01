@@ -172,8 +172,12 @@ const ProductView = forwardRef((props, ref) => {
             <Modal.Body>
                 <Table striped bordered hover responsive="lg">
                     <tr>
-                        <th>Barcode (Note:Click on Image to Print):</th><td> <div ref={barcodeRef} onClick={printBarCode}>  <Barcode value={model.item_code} width={2} /> </div></td>
-                        <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode}> {model.item_code ? <QRCode value={model.item_code} size={128} /> : null}</div> </td>
+                        <th>Barcode (Note:Click on Image to Print):</th><td> <div ref={barcodeRef} onClick={printBarCode} style={{
+                            cursor: "pointer",
+                        }}>  <Barcode value={model.item_code} width={2} /> </div></td>
+                        <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode} style={{
+                            cursor: "pointer",
+                        }} > {model.item_code ? <QRCode value={model.item_code} size={128} /> : null}</div> </td>
                     </tr>
                     <tr>
                         <th>Name:</th><td> {model.name}</td>
