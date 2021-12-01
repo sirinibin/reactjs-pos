@@ -1,7 +1,10 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
+import Barcode from 'react-barcode';
+import QRCode from "react-qr-code";
+import html2canvas from 'html2canvas';
 
 const ProductView = forwardRef((props, ref) => {
 
@@ -66,6 +69,83 @@ const ProductView = forwardRef((props, ref) => {
     }
 
 
+    const barcodeRef = useRef();
+    const qrcodeRef = useRef();
+
+
+    function printBarCode(e) {
+
+        const opt = {
+            scale: 4
+        }
+        const elem = barcodeRef.current;
+        html2canvas(elem, opt).then(canvas => {
+            const iframe = document.createElement('iframe')
+            iframe.name = 'printf'
+            iframe.id = 'printf'
+            iframe.height = 0;
+            iframe.width = 0;
+            document.body.appendChild(iframe)
+
+            const imgUrl = canvas.toDataURL({
+                format: 'jpeg',
+                quality: '1.0'
+            })
+
+            const style = `
+                height:20vh;
+                width:20vw;
+                position:absolute;
+                left:0:
+                top:0;
+            `;
+
+            const url = `<img style="${style}" src="${imgUrl}"/>`;
+            var newWin = window.frames["printf"];
+            newWin.document.write(`<body onload="window.print()">${url}</body>`);
+            newWin.document.close();
+
+        });
+
+    }
+
+    function printQrCode(e) {
+
+        const opt = {
+            scale: 4
+        }
+        const elem = qrcodeRef.current;
+        html2canvas(elem, opt).then(canvas => {
+            const iframe = document.createElement('iframe')
+            iframe.name = 'printf'
+            iframe.id = 'printf'
+            iframe.height = 0;
+            iframe.width = 0;
+            document.body.appendChild(iframe)
+
+            const imgUrl = canvas.toDataURL({
+                format: 'jpeg',
+                quality: '1.0'
+            })
+
+            const style = `
+                height:20vh;
+                width:20vw;
+                position:absolute;
+                left:0:
+                top:0;
+            `;
+
+            const url = `<img style="${style}" src="${imgUrl}"/>`;
+            var newWin = window.frames["printf"];
+            newWin.document.write(`<body onload="window.print()">${url}</body>`);
+            newWin.document.close();
+
+        });
+
+    }
+
+
     return (<>
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
@@ -91,6 +171,10 @@ const ProductView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <Table striped bordered hover responsive="lg">
+                    <tr>
+                        <th>Barcode (Note:Click on Image to Print):</th><td> <div ref={barcodeRef} onClick={printBarCode}>  <Barcode value={model.item_code} width={2} /> </div></td>
+                        <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode}> {model.item_code ? <QRCode value={model.item_code} size={128} /> : null}</div> </td>
+                    </tr>
                     <tr>
                         <th>Name:</th><td> {model.name}</td>
                         <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
