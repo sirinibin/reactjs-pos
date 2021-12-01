@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
+import NumberFormat from "react-number-format";
 
 const ProductView = forwardRef((props, ref) => {
 
@@ -115,6 +116,71 @@ const ProductView = forwardRef((props, ref) => {
                     </tr>
 
                 </Table>
+                <h4>Unit Prices</h4>
+                <table className="table table-striped table-sm table-bordered">
+                    <thead>
+                        <tr className="text-center">
+                            <th>SI No.</th>
+                            <th>Store Name</th>
+                            <th>Wholesale Unit Price</th>
+                            <th>Retail Unit Price</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {model.unit_prices && model.unit_prices.map((unitPrice, index) => (
+                            <tr className="text-center">
+                                <td>{index + 1}</td>
+                                <td>{unitPrice.store_name}</td>
+                                <td>
+                                    <NumberFormat
+                                        value={unitPrice.wholesale_unit_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                        suffix={" SAR"}
+                                    />
+                                </td>
+                                <td>
+                                    <NumberFormat
+                                        value={unitPrice.retail_unit_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                        suffix={" SAR"}
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <h4>Stocks</h4>
+                <table className="table table-striped table-sm table-bordered">
+                    <thead>
+                        <tr className="text-center">
+                            <th>SI No.</th>
+                            <th>Store Name</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {model.stock && model.stock.map((stock, index) => (
+                            <tr className="text-center">
+                                <td>{index + 1}</td>
+                                <td>{stock.store_name}</td>
+                                <td>
+                                    <NumberFormat
+                                        value={stock.stock}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                        suffix={" Units"}
+                                    />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+
 
                 {/*
                     <form className="row g-3 needs-validation" >

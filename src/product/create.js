@@ -179,6 +179,10 @@ const ProductCreate = forwardRef((props, ref) => {
             formData.category_id.push(selectedCategories[i].id);
         }
 
+
+        formData.stock = selectedStocks;
+        formData.unit_prices = selectedUnitPrices;
+
         console.log("category_id:", formData.category_id);
 
         const requestOptions = {
@@ -229,6 +233,58 @@ const ProductCreate = forwardRef((props, ref) => {
             });
     }
 
+    function isStockAddedToStore(storeID) {
+        for (var i = 0; i < selectedStocks.length; i++) {
+            if (selectedStocks[i].store_id === storeID) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function findStockByStoreID(storeID) {
+        for (var i = 0; i < selectedStocks.length; i++) {
+            if (selectedStocks[i].store_id === storeID) {
+                return selectedStocks[i];
+            }
+        }
+        return undefined;
+    }
+
+    function findStockIndexByStoreID(storeID) {
+        for (var i = 0; i < selectedStocks.length; i++) {
+            if (selectedStocks[i].store_id === storeID) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    function isUnitPriceAddedToStore(storeID) {
+        for (var i = 0; i < selectedUnitPrices.length; i++) {
+            if (selectedUnitPrices[i].store_id === storeID) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function removeStock(stock) {
+        const index = selectedStocks.indexOf(stock);
+        if (index > -1) {
+            selectedStocks.splice(index, 1);
+        }
+        setSelectedStocks([...selectedStocks]);
+    }
+
+    function removeUnitPrice(unitPrice) {
+        const index = selectedUnitPrices.indexOf(unitPrice);
+        if (index > -1) {
+            selectedUnitPrices.splice(index, 1);
+        }
+        setSelectedUnitPrices([...selectedUnitPrices]);
+    }
+
     function addStock() {
         if (!selectedStock[0].id) {
             errors.store_id2 = "Store is required";
@@ -242,16 +298,40 @@ const ProductCreate = forwardRef((props, ref) => {
             return;
         }
 
-        selectedStocks.push({
-            store_id: selectedStock[0].id,
-            store_name: selectedStock[0].name,
-            stock: parseInt(selectedStock[0].stock),
-        });
+        if (isNaN(selectedStock[0].stock)) {
+            errors.stock = "Invalid Stock";
+            setErrors({ ...errors });
+            return;
+        }
+
+
+        if (isStockAddedToStore(selectedStock[0].id)) {
+
+            const index = findStockIndexByStoreID(selectedStock[0].id);
+            selectedStocks[index].stock += parseInt(selectedStock[0].stock);
+        } else {
+            selectedStocks.push({
+                store_id: selectedStock[0].id,
+                store_name: selectedStock[0].name,
+                stock: parseInt(selectedStock[0].stock),
+            });
+        }
 
         setSelectedStocks([...selectedStocks]);
+
+        selectedStock[0].id = "";
+        selectedStock[0].name = "";
+        selectedStock[0].stock = "";
+
+        setSelectedStock([...selectedStock]);
+
     }
 
     function addUnitPrice() {
+
+        errors.retail_unit_price = "";
+        errors.store_id1 = "";
+        setErrors({ ...errors });
 
         if (!selectedUnitPrice[0].id) {
             errors.store_id1 = "Store is required";
@@ -265,12 +345,32 @@ const ProductCreate = forwardRef((props, ref) => {
             return;
         }
 
+
+        if (isNaN(selectedUnitPrice[0].wholesale_unit_price)) {
+            errors.wholesale_unit_price = "Invalid Wholesale Unit Price";
+            setErrors({ ...errors });
+            return;
+        }
+
+
         if (!selectedUnitPrice[0].retail_unit_price) {
             errors.retail_unit_price = "Retail Unit Price is required";
             setErrors({ ...errors });
             return;
         }
 
+        if (isNaN(selectedUnitPrice[0].retail_unit_price)) {
+            errors.retail_unit_price = "Invalid Retail Unit Price";
+            setErrors({ ...errors });
+            return;
+        }
+
+
+        if (isUnitPriceAddedToStore(selectedUnitPrice[0].id)) {
+            errors.store_id1 = "Unit Price Already added to Store:" + selectedUnitPrice[0].name;
+            setErrors({ ...errors });
+            return;
+        }
 
         selectedUnitPrices.push({
             store_id: selectedUnitPrice[0].id,
@@ -279,6 +379,13 @@ const ProductCreate = forwardRef((props, ref) => {
             wholesale_unit_price: parseFloat(selectedUnitPrice[0].wholesale_unit_price),
         });
         setSelectedUnitPrices([...selectedUnitPrices]);
+
+        selectedUnitPrice[0].id = "";
+        selectedUnitPrice[0].name = "";
+        selectedUnitPrice[0].retail_unit_price = "";
+        selectedUnitPrice[0].wholesale_unit_price = "";
+
+        setSelectedUnitPrice([...selectedUnitPrice]);
     }
 
     const DetailsViewRef = useRef();
@@ -613,29 +720,77 @@ const ProductCreate = forwardRef((props, ref) => {
                                     <tr className="text-center">
                                         <td>{index + 1}</td>
                                         <td>{unitPrice.store_name}</td>
-                                        <td>
-                                            <NumberFormat
-                                                value={unitPrice.wholesale_unit_price}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                renderText={(value, props) => value}
-                                                suffix={" SAR"}
-                                            />
+                                        <td style={{ width: "150px" }}>
+
+                                            <input type="number" value={unitPrice.wholesale_unit_price} className="form-control"
+
+                                                placeholder="Wholesale Unit Price" onChange={(e) => {
+                                                    errors["wholesale_unit_price_" + index] = "";
+                                                    setErrors({ ...errors });
+                                                    if (!e.target.value || e.target.value == 0) {
+                                                        errors["wholesale_unit_price_" + index] = "Invalid Unit Price";
+                                                        selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                        setSelectedUnitPrices([...selectedUnitPrices]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+                                                    selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                    console.log("selectedUnitPrices[index].wholesale_unit_price:", selectedUnitPrices[index].wholesale_unit_price);
+                                                    setSelectedUnitPrices([...selectedUnitPrices]);
+
+                                                }} /> SAR
+                                            {errors["wholesale_unit_price_" + index] && (
+                                                <div style={{ color: "red" }}>
+                                                    <i class="bi bi-x-lg"> </i>
+                                                    {errors["wholesale_unit_price_" + index]}
+                                                </div>
+                                            )}
+                                            {(selectedUnitPrices[index].wholesale_unit_price && !errors["wholesale_unit_price_" + index]) ? (
+                                                <div style={{ color: "green" }}>
+                                                    <i class="bi bi-check-lg"> </i>
+                                                    Looks good!
+                                                </div>
+                                            ) : null}
                                         </td>
-                                        <td>
-                                            <NumberFormat
-                                                value={unitPrice.retail_unit_price}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                renderText={(value, props) => value}
-                                                suffix={" SAR"}
-                                            />
+                                        <td style={{ width: "150px" }}>
+
+                                            <input type="number" value={unitPrice.retail_unit_price} className="form-control"
+
+                                                placeholder="Retail Unit Price" onChange={(e) => {
+                                                    errors["retail_unit_price_" + index] = "";
+                                                    setErrors({ ...errors });
+                                                    if (!e.target.value || e.target.value == 0) {
+                                                        errors["retail_unit_price_" + index] = "Invalid Unit Price";
+                                                        selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
+                                                        setSelectedUnitPrices([...selectedUnitPrices]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+                                                    selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
+                                                    console.log("selectedUnitPrices[index].retail_unit_price:", selectedUnitPrices[index].retail_unit_price);
+                                                    setSelectedUnitPrices([...selectedUnitPrices]);
+
+                                                }} /> SAR
+                                            {errors["retail_unit_price_" + index] && (
+                                                <div style={{ color: "red" }}>
+                                                    <i class="bi bi-x-lg"> </i>
+                                                    {errors["retail_unit_price_" + index]}
+                                                </div>
+                                            )}
+                                            {(selectedUnitPrices[index].retail_unit_price && !errors["retail_unit_price_" + index]) ? (
+                                                <div style={{ color: "green" }}>
+                                                    <i class="bi bi-check-lg"> </i>
+                                                    Looks good!
+                                                </div>
+                                            ) : null}
                                         </td>
                                         <td>
                                             <div
                                                 style={{ color: "red", cursor: "pointer" }}
                                                 onClick={() => {
-                                                    // removeProduct(product);
+                                                    removeUnitPrice(unitPrice);
                                                 }}
                                             >
                                                 <i class="bi bi-x-lg"> </i>
@@ -752,20 +907,45 @@ const ProductCreate = forwardRef((props, ref) => {
                                     <tr className="text-center">
                                         <td>{index + 1}</td>
                                         <td>{stock.store_name}</td>
-                                        <td>
-                                            <NumberFormat
-                                                value={stock.stock}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                renderText={(value, props) => value}
-                                                suffix={" Units"}
-                                            />
+                                        <td style={{ width: "125px" }}>
+
+                                            <input type="number" value={stock.stock} className="form-control"
+
+                                                placeholder="Stock" onChange={(e) => {
+                                                    errors["stock_" + index] = "";
+                                                    setErrors({ ...errors });
+                                                    if (!e.target.value) {
+                                                        errors["stock_" + index] = "Invalid Stock";
+                                                        selectedStocks[index].stock = "";
+                                                        setSelectedStocks([...selectedStocks]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+                                                    //  stock.stock = parseInt(e.target.value);
+                                                    selectedStocks[index].stock = parseInt(e.target.value);
+                                                    console.log("selectedStocks[index].stock:", selectedStocks[index].stock);
+                                                    setSelectedStocks([...selectedStocks]);
+
+                                                }} /> Units
+                                            {errors["stock_" + index] && (
+                                                <div style={{ color: "red" }}>
+                                                    <i class="bi bi-x-lg"> </i>
+                                                    {errors["stock_" + index]}
+                                                </div>
+                                            )}
+                                            {((selectedStocks[index].stock || selectedStocks[index].stock === 0) && !errors["stock_" + index]) ? (
+                                                <div style={{ color: "green" }}>
+                                                    <i class="bi bi-check-lg"> </i>
+                                                    Looks good!
+                                                </div>
+                                            ) : null}
                                         </td>
                                         <td>
                                             <div
                                                 style={{ color: "red", cursor: "pointer" }}
                                                 onClick={() => {
-                                                    // removeProduct(product);
+                                                    removeStock(stock);
                                                 }}
                                             >
                                                 <i class="bi bi-x-lg"> </i>
