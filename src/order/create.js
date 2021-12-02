@@ -15,6 +15,7 @@ import { Spinner } from "react-bootstrap";
 import OrderView from "./view.js";
 import BarcodeScannerComponent from "react-qr-barcode-scanner";
 import Quagga from 'quagga';
+import ProductView from "./../product/view.js";
 
 const OrderCreate = forwardRef((props, ref) => {
 
@@ -625,13 +626,53 @@ const OrderCreate = forwardRef((props, ref) => {
     function openDetailsView(id) {
         DetailsViewRef.current.open(id);
     }
+
     const camref = useRef();
+
+    const StoreCreateFormRef = useRef();
+    function openStoreCreateForm() {
+        StoreCreateFormRef.current.open();
+    }
+
+    const CustomerCreateFormRef = useRef();
+    function openCustomerCreateForm() {
+        CustomerCreateFormRef.current.open();
+    }
+
+    const ProductCreateFormRef = useRef();
+    function openProductCreateForm() {
+        ProductCreateFormRef.current.open();
+    }
+
+    const VendorCreateFormRef = useRef();
+    function openVendorCreateForm() {
+        VendorCreateFormRef.current.open();
+    }
+
+    const UserCreateFormRef = useRef();
+    function openUserCreateForm() {
+        UserCreateFormRef.current.open();
+    }
+
+
+    const SignatureCreateFormRef = useRef();
+    function openSignatureCreateForm() {
+        SignatureCreateFormRef.current.open();
+    }
+
+
+    const ProductDetailsViewRef = useRef();
+    function openProductDetailsView(id) {
+        ProductDetailsViewRef.current.open(id);
+    }
+
+
     return (
         <>
             {/*
             <div ref={camref}></div>
         */}
-            <OrderView ref={DetailsViewRef} />
+
             {/*
             <BarcodeScannerComponent
                 width={500}
@@ -641,6 +682,14 @@ const OrderCreate = forwardRef((props, ref) => {
                 }}
             />
             */}
+
+            <OrderView ref={DetailsViewRef} />
+            <ProductView ref={ProductDetailsViewRef} />
+            <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
+            <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
+            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
+            <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
+            <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
@@ -744,7 +793,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                 />
 
-                                <StoreCreate showCreateButton={true} />
+                                <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 <div style={{ color: "red" }}>
                                     <i class="bi x-lg"> </i>
                                     {errors.store_id}
@@ -789,7 +838,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         suggestCustomers(searchTerm);
                                     }}
                                 />
-                                <CustomerCreate showCreateButton={true} />
+                                <Button hide={true} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.customer_id && (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i>
@@ -1026,7 +1075,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         suggestProducts(searchTerm);
                                     }}
                                 />
-                                <ProductCreate showCreateButton={true} />
+                                <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.product_id ? (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i>
@@ -1169,7 +1218,15 @@ const OrderCreate = forwardRef((props, ref) => {
                                     <tr className="text-center">
                                         <td>{index + 1}</td>
                                         <td>{product.code}</td>
-                                        <td>{product.name}</td>
+                                        <td style={{
+                                            "text-decoration": "underline",
+                                            color: "blue",
+                                            cursor: "pointer",
+                                        }}
+                                            onClick={() => {
+                                                openProductDetailsView(product.product_id);
+                                            }}>{product.name}
+                                        </td>
                                         <td style={{ width: "125px" }}>
 
                                             <input type="number" value={product.quantity} className="form-control"
@@ -1367,7 +1424,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                 />
 
-                                <UserCreate showCreateButton={true} />
+                                <Button hide={true} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.delivered_by ? (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i> {errors.delivered_by}
@@ -1416,7 +1473,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                 />
 
-                                <SignatureCreate showCreateButton={true} />
+                                <Button hide={true} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.delivered_by_signature_id ? (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i>{" "}

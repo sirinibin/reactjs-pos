@@ -13,6 +13,7 @@ import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import QuotationView from "./view.js";
+import ProductView from "./../product/view.js";
 
 const QuotationCreate = forwardRef((props, ref) => {
 
@@ -511,9 +512,53 @@ const QuotationCreate = forwardRef((props, ref) => {
     DetailsViewRef.current.open(id);
   }
 
+  const StoreCreateFormRef = useRef();
+  function openStoreCreateForm() {
+    StoreCreateFormRef.current.open();
+  }
+
+  const CustomerCreateFormRef = useRef();
+  function openCustomerCreateForm() {
+    CustomerCreateFormRef.current.open();
+  }
+
+
+  const ProductCreateFormRef = useRef();
+  function openProductCreateForm() {
+    ProductCreateFormRef.current.open();
+  }
+
+  const VendorCreateFormRef = useRef();
+  function openVendorCreateForm() {
+    VendorCreateFormRef.current.open();
+  }
+
+  const UserCreateFormRef = useRef();
+  function openUserCreateForm() {
+    UserCreateFormRef.current.open();
+  }
+
+
+  const SignatureCreateFormRef = useRef();
+  function openSignatureCreateForm() {
+    SignatureCreateFormRef.current.open();
+  }
+
+
+  const ProductDetailsViewRef = useRef();
+  function openProductDetailsView(id) {
+    ProductDetailsViewRef.current.open(id);
+  }
+
   return (
     <>
       <QuotationView ref={DetailsViewRef} />
+      <ProductView ref={ProductDetailsViewRef} />
+      <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
+      <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
+      <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
+      <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
+      <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
       <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
         <Modal.Header>
           <Modal.Title>Create New Quotation</Modal.Title>
@@ -571,7 +616,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   }}
                 />
 
-                <StoreCreate showCreateButton={true} />
+                <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                 <div style={{ color: "red" }}>
                   <i class="bi x-lg"> </i>
                   {errors.store_id}
@@ -616,7 +661,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     suggestCustomers(searchTerm);
                   }}
                 />
-                <CustomerCreate showCreateButton={true} />
+                <Button hide={true} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                 {errors.customer_id && (
                   <div style={{ color: "red" }}>
                     <i class="bi bi-x-lg"> </i>
@@ -836,7 +881,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     suggestProducts(searchTerm);
                   }}
                 />
-                <ProductCreate showCreateButton={true} />
+                <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                 {errors.product_id ? (
                   <div style={{ color: "red" }}>
                     <i class="bi bi-x-lg"> </i>
@@ -968,7 +1013,16 @@ const QuotationCreate = forwardRef((props, ref) => {
                   <tr className="text-center">
                     <td>{index + 1}</td>
                     <td>{product.code}</td>
-                    <td>{product.name}</td>
+                    <td style={{
+                      "text-decoration": "underline",
+                      color: "blue",
+                      cursor: "pointer",
+                    }}
+                      onClick={() => {
+                        openProductDetailsView(product.product_id);
+                        console.log("okk,id:", product.product_id);
+                      }}>{product.name}
+                    </td>
                     <td style={{ width: "125px" }}>
 
                       <input type="number" value={product.quantity} className="form-control"
@@ -1155,7 +1209,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   }}
                 />
 
-                <UserCreate showCreateButton={true} />
+                <Button hide={true} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                 {errors.delivered_by ? (
                   <div style={{ color: "red" }}>
                     <i class="bi bi-x-lg"> </i> {errors.delivered_by}
@@ -1204,7 +1258,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   }}
                 />
 
-                <SignatureCreate showCreateButton={true} />
+                <Button hide={true} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                 {errors.delivered_by_signature_id ? (
                   <div style={{ color: "red" }}>
                     <i class="bi bi-x-lg"> </i>{" "}

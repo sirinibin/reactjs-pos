@@ -6,6 +6,7 @@ import ProductView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import NumberFormat from "react-number-format";
+import ProductCategoryCreate from "../product_category/create.js";
 
 
 const ProductCreate = forwardRef((props, ref) => {
@@ -399,12 +400,19 @@ const ProductCreate = forwardRef((props, ref) => {
         StoreCreateFormRef.current.open();
     }
 
+    const ProductCategoryCreateFormRef = useRef();
+    function openProductCategoryCreateForm() {
+        ProductCategoryCreateFormRef.current.open();
+    }
+
 
     return (
         <>
 
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} />
+            <ProductCategoryCreate ref={ProductCategoryCreateFormRef} showToastMessage={props.showToastMessage} />
+
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Create New Product</Modal.Title>
@@ -561,7 +569,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                     }}
                                     multiple
                                 />
-
+                                <Button hide={true} onClick={openProductCategoryCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.category_id && (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i>
