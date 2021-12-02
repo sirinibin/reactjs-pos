@@ -124,7 +124,7 @@ const StoreView = forwardRef((props, ref) => {
                     </tr>
 
                 </Table>
-                <div>Logo:<img src={model.logo} style={{ width: 200, height: 200 }} /></div>
+                <div>Logo:<img src={process.env.REACT_APP_API_URL+model.logo} style={{ width: 200, height: 200 }} /></div>
 
                 {/*
                     <form className="row g-3 needs-validation" >

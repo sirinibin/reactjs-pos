@@ -104,7 +104,7 @@ const SignatureView = forwardRef((props, ref) => {
 
 
                 </Table>
-                <div>Signature:<img src={model.signature} style={{ width: 200, height: 200 }} /></div>
+                <div>Signature:<img src={process.env.REACT_APP_API_URL+model.signature} style={{ width: 200, height: 200 }} /></div>
 
                 {/*
                     <form className="row g-3 needs-validation" >
