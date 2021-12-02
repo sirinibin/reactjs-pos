@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -13,15 +13,113 @@ import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import OrderView from "./view.js";
+import BarcodeScannerComponent from "react-qr-barcode-scanner";
+import Quagga from 'quagga';
 
 const OrderCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open() {
             setShow(true);
+            // addListener();
+
+            /*
+            const elem = camref.current;
+              
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    // target: document.querySelector('#yourElement')    // Or '#yourElement' (optional)
+                    target: elem,
+                },
+                decoder: {
+                    readers: ["code_128_reader"]
+                }
+            }, function (err) {
+                if (err) {
+                    console.log(err);
+                    return
+                }
+                console.log("Initialization finished. Ready to start");
+                Quagga.start();
+            });
+
+            Quagga.onDetected(function (data) {
+                console.log("Detected:", data);
+
+            });
+            Quagga.stop();
+            */
+
         },
 
     }));
+
+    /*
+    let [barcode, setBarcode] = useState("");
+    let [barcodeEnded, setBarcodeEnded] = useState(false);
+    const keyPress = useCallback(
+        (e) => {
+            console.log("e.key:", e.key);
+
+            if (!barcodeEnded && e.key != "Enter") {
+                console.log()
+                barcode += e.key;
+                setBarcode(barcode);
+            }
+
+            if (e.key === "Enter") {
+                document.removeEventListener("keydown", keyPress);
+                console.log("barcode:", barcode);
+                barcodeEnded = true;
+                setBarcodeEnded(true);
+            }
+
+        },
+        []
+    );
+
+    function addListener() {
+        //barcode = "";
+        //setBarcode(barcode);
+        document.addEventListener("keydown", keyPress);
+        console.log("Listener added, barcode:", barcode);
+    }
+    */
+    /*
+    useEffect(() => {
+        document.addEventListener("keydown", keyPress);
+        return () => document.removeEventListener("keydown", keyPress);
+    }, [keyPress]);
+    */
+    /*
+    useEffect(() => {
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    });
+    let [barcode, setBarcode] = useState("");
+    function handleKeyDown(event) {
+        console.log("event.key:", event.key);
+
+        /*
+        if (event.key == "Enter") {
+            barcode = "";
+            setBarcode(barcode);
+        }
+        else if (event.key == "Shift") {
+            console.log("barcode:", barcode);
+        } else {
+            barcode += event.key;
+            setBarcode(barcode);
+        }
+        */
+
+    /*
+    if (event.keyCode === KEY_ESCAPE) {
+        /* do your action here */
+    // }  
+    // }
 
     const selectedDate = new Date();
 
@@ -445,6 +543,7 @@ const OrderCreate = forwardRef((props, ref) => {
             code: selectedProduct[0].item_code,
             name: selectedProduct[0].name,
             quantity: selectedProduct[0].quantity,
+            stock: selectedProduct[0].stock,
             unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
         });
 
@@ -515,14 +614,35 @@ const OrderCreate = forwardRef((props, ref) => {
         setNetTotal(netTotal);
     }
 
+    function reCalculate() {
+        findTotalPrice();
+        findTotalQuantity();
+        findVatPrice();
+        findNetTotal();
+    }
+
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
         DetailsViewRef.current.open(id);
     }
-
+    const camref = useRef();
     return (
         <>
+            {/*
+            <div ref={camref}></div>
+        */}
             <OrderView ref={DetailsViewRef} />
+            {/*
+            <BarcodeScannerComponent
+                width={500}
+                height={500}
+                onUpdate={(err, result) => {
+                    console.log("Result:", result);
+                }}
+            />
+            */}
+
+
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>Create New Order</Modal.Title>
@@ -893,12 +1013,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }
 
                                         selectedProduct = selectedItems;
+                                        selectedProduct[0].quantity = 1;
                                         console.log("selectedItems:", selectedItems);
                                         setSelectedProduct([...selectedItems]);
                                         console.log("selectedProduct:", selectedProduct);
-                                        unitPriceList[selectedItems[0].product_id] =
-                                            selectedItems[0].unit_prices;
-                                        setUnitPriceList(unitPriceList);
                                     }}
                                     options={productOptions}
                                     placeholder="Select Product"
@@ -932,7 +1050,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 value={selectedProduct[0] ? selectedProduct[0].quantity : null}
                                 onChange={(e) => {
                                     console.log("Inside onchange qty");
-                                    if (isNaN(e.target.value) || e.target.value === "0") {
+                                    if (e.target.value == 0) {
                                         errors["quantity"] = "Invalid Quantity";
                                         setErrors({ ...errors });
                                         return;
@@ -943,7 +1061,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     setErrors({ ...errors });
 
                                     if (selectedProduct[0]) {
-                                        selectedProduct[0].quantity = e.target.value;
+                                        selectedProduct[0].quantity = parseInt(e.target.value);
                                         setSelectedProduct([...selectedProduct]);
                                         console.log(selectedProduct);
 
@@ -958,7 +1076,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }
                                     }
                                 }}
-                                type="text"
+                                type="number"
                                 className="form-control"
                                 id="quantity"
                                 placeholder="Quantity"
@@ -1052,15 +1170,88 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <td>{index + 1}</td>
                                         <td>{product.code}</td>
                                         <td>{product.name}</td>
-                                        <td>{product.quantity}</td>
-                                        <td>
-                                            <NumberFormat
-                                                value={product.unit_price}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={" SAR"}
-                                                renderText={(value, props) => value}
-                                            />
+                                        <td style={{ width: "125px" }}>
+
+                                            <input type="number" value={product.quantity} className="form-control"
+
+                                                placeholder="Quantity" onChange={(e) => {
+                                                    errors["quantity_" + index] = "";
+                                                    setErrors({ ...errors });
+                                                    if (!e.target.value || e.target.value == 0) {
+                                                        errors["quantity_" + index] = "Invalid Quantity";
+                                                        selectedProducts[index].quantity = e.target.value;
+                                                        setSelectedProducts([...selectedProducts]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+
+                                                    product.quantity = parseInt(e.target.value);
+                                                    reCalculate();
+
+                                                    let stock = 0;
+                                                    if (selectedProducts[index].stock) {
+                                                        stock = GetProductStockInStore(formData.store_id, selectedProducts[index].stock);
+                                                    }
+
+                                                    if (stock < parseInt(e.target.value)) {
+                                                        errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
+                                                        setErrors({ ...errors });
+                                                        return;
+                                                    }
+
+                                                    selectedProducts[index].quantity = parseInt(e.target.value);
+                                                    console.log("selectedProducts[index].stock:", selectedProducts[index].quantity);
+                                                    setSelectedProducts([...selectedProducts]);
+                                                    reCalculate();
+
+                                                }} /> Units
+                                            {errors["quantity_" + index] && (
+                                                <div style={{ color: "red" }}>
+                                                    <i class="bi bi-x-lg"> </i>
+                                                    {errors["quantity_" + index]}
+                                                </div>
+                                            )}
+                                            {((selectedProducts[index].quantity) && !errors["quantity_" + index]) ? (
+                                                <div style={{ color: "green" }}>
+                                                    <i class="bi bi-check-lg"> </i>
+                                                    Looks good!
+                                                </div>
+                                            ) : null}
+                                        </td>
+                                        <td style={{ width: "150px" }}>
+
+                                            <input type="number" value={product.unit_price} className="form-control"
+
+                                                placeholder="Unit Price" onChange={(e) => {
+                                                    errors["unit_price_" + index] = "";
+                                                    setErrors({ ...errors });
+                                                    if (!e.target.value || e.target.value == 0) {
+                                                        errors["unit_price_" + index] = "Invalid Unit Price";
+                                                        selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                        setSelectedProducts([...selectedProducts]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+                                                    selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                    console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
+                                                    setSelectedProducts([...selectedProducts]);
+                                                    reCalculate();
+
+                                                }} /> SAR
+                                            {errors["unit_price_" + index] && (
+                                                <div style={{ color: "red" }}>
+                                                    <i class="bi bi-x-lg"> </i>
+                                                    {errors["unit_price_" + index]}
+                                                </div>
+                                            )}
+                                            {(selectedProducts[index].unit_price && !errors["unit_price_" + index]) ? (
+                                                <div style={{ color: "green" }}>
+                                                    <i class="bi bi-check-lg"> </i>
+                                                    Looks good!
+                                                </div>
+                                            ) : null}
                                         </td>
                                         <td>
                                             <NumberFormat

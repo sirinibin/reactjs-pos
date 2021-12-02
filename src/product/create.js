@@ -402,6 +402,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
     return (
         <>
+
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
