@@ -411,6 +411,8 @@ const QuotationUpdate = forwardRef((props, ref) => {
 
         formData.discount = parseFloat(formData.discount);
         formData.vat_percent = parseFloat(formData.vat_percent);
+
+
         console.log("formData.discount:", formData.discount);
 
         const requestOptions = {
@@ -635,8 +637,24 @@ const QuotationUpdate = forwardRef((props, ref) => {
     }
 
 
+    const PreviewRef = useRef();
+    function openPreview() {
+        let model = {};
+        model = JSON.parse(JSON.stringify(formData));
+        model.products = selectedProducts;
+        model.net_total = netTotal;
+        model.vat_price = vatPrice;
+        model.total_quantity = totalQuantity;
+        model.total = totalPrice;
+
+        //setFormData({ ...formData });
+        PreviewRef.current.open(model);
+    }
+
+
     return (
         <>
+            <QuotationPreview ref={PreviewRef} />
             <QuotationView ref={DetailsViewRef} />
             <ProductView ref={ProductDetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -650,7 +668,9 @@ const QuotationUpdate = forwardRef((props, ref) => {
                     <Modal.Title>Update Quotation #{formData.code}</Modal.Title>
 
                     <div className="col align-self-end text-end">
-                        <QuotationPreview />
+                        <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
+                            <i className="bi bi-display"></i> Preview
+                        </Button>
                         {/*
                         <button
                             className="btn btn-primary mb-3"
@@ -1360,6 +1380,38 @@ const QuotationUpdate = forwardRef((props, ref) => {
                                     )}
                             </div>
                         </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Signature Date(Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <DatePicker
+                                    id="signature_date"
+                                    value={formData.signature_date}
+                                    selected={selectedDate}
+                                    className="form-control"
+                                    dateFormat="MMM dd yyyy"
+                                    onChange={(value) => {
+                                        formData.date_str = format(new Date(value), "MMM dd yyyy");
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+
+                                {errors.signature_date_str && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.signature_date_str}
+                                    </div>
+                                )}
+                                {formData.signature_date_str && !errors.signature_date_str && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close

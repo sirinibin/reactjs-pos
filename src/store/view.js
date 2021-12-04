@@ -99,8 +99,16 @@ const StoreView = forwardRef((props, ref) => {
                         <th>Title(in Arabic):</th><td> {model.title_in_arabic}</td>
                     </tr>
                     <tr>
+                        <th>Registration Number(C.R NO.):</th><td> {model.registration_number}</td>
+                        <th>Registration Number(C.R NO.)(in Arabic):</th><td> {model.registration_number_in_arabic}</td>
+                    </tr>
+                    <tr>
                         <th>Address:</th><td> {model.address}</td>
                         <th>Address in Arabic:</th><td> {model.address_in_arabic}</td>
+                    </tr>
+                    <tr>
+                        <th>ZIP/PIN Code:</th><td> {model.zipcode}</td>
+                        <th>ZIP/PIN Code in Arabic:</th><td> {model.zipcode_in_arabic}</td>
                     </tr>
                     <tr>
                         <th>Phone:</th><td> {model.phone}</td>
@@ -124,7 +132,7 @@ const StoreView = forwardRef((props, ref) => {
                     </tr>
 
                 </Table>
-                <div>Logo:<img src={process.env.REACT_APP_API_URL + model.logo} style={{ width: 100, height: 100 }} /></div>
+                <div>Logo:<img src={process.env.REACT_APP_API_URL + model.logo + "?" + (Date.now())} key={model.logo} style={{ width: 100, height: 100 }} ></img></div>
 
                 {/*
                     <form className="row g-3 needs-validation" >

@@ -67,8 +67,6 @@ const UserCreate = forwardRef((props, ref) => {
             formData.vat_percent = null;
         }
 
-        console.log("formData.logo:", formData.logo);
-
 
         const requestOptions = {
             method: "POST",

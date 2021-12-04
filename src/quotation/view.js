@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import QuotationPreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
@@ -109,14 +109,33 @@ const QuotationView = forwardRef((props, ref) => {
             });
     }
 
+    const PreviewRef = useRef();
+    function openPreview() {
+        /*
+        formData.products = selectedProducts;
+        formData.net_total = netTotal;
+        formData.vat_price = vatPrice;
+        formData.discount = formData.discount;
+        formData.total_quantity = totalQuantity;
+        formData.total_price = totalPrice;
+        */
+
+        //  setFormData({ ...formData });
+        PreviewRef.current.open(model);
+    }
+
 
     return (<>
+        <QuotationPreview ref={PreviewRef} />
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Quotation #{model.code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
-                    <QuotationPreview />
+                    <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
+                        <i className="bi bi-display"></i> Preview
+                    </Button>
+
                     {/*
                         <button
                             className="btn btn-primary mb-3"

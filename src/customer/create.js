@@ -118,6 +118,22 @@ const CustomerCreate = forwardRef((props, ref) => {
             });
     }
 
+    let persianDigits = "۰۱۲۳٤۵٦۷۸۹";
+    let persianMap = persianDigits.split("");
+
+    function convertToEnglishNumber(input) {
+        return input.replace(/[\u06F0-\u06F90]/g, function (m) {
+            return persianDigits.indexOf(m);
+        });
+    }
+
+    function convertToPersianNumber(input) {
+        return input.replace(/\d/g, function (m) {
+            return persianMap[parseInt(m)];
+        });
+    }
+
+
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
         console.log("id:", id);
@@ -227,6 +243,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         errors["phone"] = "";
                                         setErrors({ ...errors });
                                         formData.phone = e.target.value;
+                                        formData.phone_in_arabic = convertToPersianNumber(formData.phone);
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -260,6 +277,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         errors["phone_in_arabic"] = "";
                                         setErrors({ ...errors });
                                         formData.phone_in_arabic = e.target.value;
+                                        formData.phone = convertToEnglishNumber(formData.phone_in_arabic);
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -359,6 +377,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         errors["vat_no"] = "";
                                         setErrors({ ...errors });
                                         formData.vat_no = e.target.value;
+                                        formData.vat_no_in_arabic = convertToPersianNumber(formData.vat_no);
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -392,6 +411,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         errors["vat_no_in_arabic"] = "";
                                         setErrors({ ...errors });
                                         formData.vat_no_in_arabic = e.target.value;
+                                        formData.vat_no = convertToPersianNumber(formData.vat_no_in_arabic);
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}

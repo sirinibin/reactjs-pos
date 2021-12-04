@@ -4,6 +4,7 @@ import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import StoreView from "./view.js";
 import Resizer from "react-image-file-resizer";
+import { toArabic } from 'arabic-digits';
 
 const StoreCreate = forwardRef((props, ref) => {
 
@@ -136,6 +137,23 @@ const StoreCreate = forwardRef((props, ref) => {
             });
     }
 
+    //let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    let persianDigits = "۰۱۲۳٤۵٦۷۸۹";
+    //["١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩", "٠"]
+    let persianMap = persianDigits.split("");
+
+    function convertToEnglishNumber(input) {
+        return input.replace(/[\u06F0-\u06F90]/g, function (m) {
+            return persianDigits.indexOf(m);
+        });
+    }
+
+    function convertToPersianNumber(input) {
+        return input.replace(/\d/g, function (m) {
+            return persianMap[parseInt(m)];
+        });
+    }
+
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
         console.log("id:", id);
@@ -233,7 +251,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-
                         <div className="col-md-6">
                             <label className="form-label">Title(Optional)</label>
 
@@ -292,6 +309,74 @@ const StoreCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                                 {formData.title_in_arabic && !errors.title_in_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Registration Number(C.R NO.)*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.registration_number}
+                                    type='number'
+                                    onChange={(e) => {
+                                        errors["registration_number"] = "";
+                                        setErrors({ ...errors });
+                                        formData.registration_number = e.target.value;
+                                        formData.registration_number_in_arabic = convertToPersianNumber(formData.registration_number.toString());
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="registration_number"
+                                    placeholder="Registration Number(C.R NO.)"
+                                />
+                                {errors.registration_number && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.registration_number}
+                                    </div>
+                                )}
+                                {formData.registration_number && !errors.registration_number && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Registration Number(C.R NO.) In Arabic*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.registration_number_in_arabic}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["registration_number"] = "";
+                                        setErrors({ ...errors });
+                                        formData.registration_number_in_arabic = e.target.value;
+                                        formData.registration_number = convertToEnglishNumber(formData.registration_number_in_arabic.toString());
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="registration_number_in_arabic"
+                                    placeholder="Registration Number(C.R NO.) In Arabic"
+                                />
+                                {errors.registration_number_in_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.registration_number}
+                                    </div>
+                                )}
+                                {formData.registration_number_in_arabic && !errors.registration_number_in_arabic && (
                                     <div style={{ color: "green" }}>
                                         <i class="bi bi-check-lg"> </i>
                                         Looks good!
@@ -367,6 +452,73 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+                        <div className="col-md-6">
+                            <label className="form-label">ZIP/PIN Code*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.zipcode}
+                                    type='number'
+                                    onChange={(e) => {
+                                        errors["zipcode"] = "";
+                                        setErrors({ ...errors });
+                                        formData.zipcode = e.target.value;
+                                        formData.zipcode_in_arabic = convertToPersianNumber(formData.zipcode.toString());
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="zipcode"
+                                    placeholder="ZIP/PIN Code"
+                                />
+                                {errors.zipcode && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.zipcode}
+                                    </div>
+                                )}
+                                {formData.zipcode && !errors.zipcode && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">ZIP/PIN Code In Arabic*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.zipcode_in_arabic}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["zipcode_in_arabic"] = "";
+                                        setErrors({ ...errors });
+                                        formData.zipcode_in_arabic = e.target.value;
+                                        formData.zipcode = convertToEnglishNumber(formData.zipcode_in_arabic.toString());
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="zipcode_in_arabic"
+                                    placeholder="ZIP/PIN Code In Arabic"
+                                />
+                                {errors.zipcode_in_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.zipcode_in_arabic}
+                                    </div>
+                                )}
+                                {formData.zipcode_in_arabic && !errors.zipcod_in_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
                         <div className="col-md-6">
                             <label className="form-label">Phone*</label>
@@ -379,6 +531,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         errors["phone"] = "";
                                         setErrors({ ...errors });
                                         formData.phone = e.target.value;
+                                        formData.phone_in_arabic = convertToPersianNumber(formData.phone);
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -412,6 +565,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         errors["phone_in_arabic"] = "";
                                         setErrors({ ...errors });
                                         formData.phone_in_arabic = e.target.value;
+                                        formData.phone = convertToEnglishNumber(formData.phone_in_arabic.toString());
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -446,6 +600,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         errors["vat_no"] = "";
                                         setErrors({ ...errors });
                                         formData.vat_no = e.target.value;
+                                        formData.vat_no_in_arabic = convertToPersianNumber(formData.vat_no.toString());
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -479,6 +634,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         errors["vat_no_in_arabic"] = "";
                                         setErrors({ ...errors });
                                         formData.vat_no_in_arabic = e.target.value;
+                                        formData.vat_no = convertToEnglishNumber(formData.vat_no_in_arabic.toString());
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}

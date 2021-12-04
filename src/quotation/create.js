@@ -34,9 +34,10 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   //fields
   let [formData, setFormData] = useState({
-    vat_percent: 10.0,
+    vat_percent: 15.0,
     discount: 0.0,
     date_str: format(new Date(), "MMM dd yyyy"),
+    signature_date_str: format(new Date(), "MMM dd yyyy"),
     status: "created",
   });
 
@@ -228,7 +229,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,item_code,name,unit_prices,stock";
+    let Select = "select=id,item_code,name,name_in_arabic,part_number,unit_prices,stock";
     setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString,
@@ -323,13 +324,17 @@ const QuotationCreate = forwardRef((props, ref) => {
     for (var i = 0; i < selectedProducts.length; i++) {
       formData.products.push({
         product_id: selectedProducts[i].product_id,
+        name: selectedProducts[i].name,
+        name_in_arabic: selectedProducts[i].name_in_arabic,
         quantity: parseInt(selectedProducts[i].quantity),
         unit_price: parseFloat(selectedProducts[i].unit_price),
+        part_number: selectedProducts[i].part_number,
       });
     }
 
     formData.discount = parseFloat(formData.discount);
     formData.vat_percent = parseFloat(formData.vat_percent);
+
     console.log("formData.discount:", formData.discount);
 
     const requestOptions = {
@@ -427,7 +432,9 @@ const QuotationCreate = forwardRef((props, ref) => {
     selectedProducts.push({
       product_id: selectedProduct[0].id,
       code: selectedProduct[0].item_code,
+      part_number: selectedProduct[0].part_number,
       name: selectedProduct[0].name,
+      name_in_arabic: selectedProduct[0].name_in_arabic,
       quantity: selectedProduct[0].quantity,
       unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
     });
@@ -487,7 +494,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   let [vatPrice, setVatPrice] = useState(0.00);
 
   function findVatPrice() {
-    vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
+    vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);
     console.log("vatPrice:", vatPrice);
     setVatPrice(vatPrice);
   }
@@ -550,8 +557,23 @@ const QuotationCreate = forwardRef((props, ref) => {
     ProductDetailsViewRef.current.open(id);
   }
 
+  const PreviewRef = useRef();
+  function openPreview() {
+    let model = {};
+    model = JSON.parse(JSON.stringify(formData));
+    model.products = selectedProducts;
+    model.net_total = netTotal;
+    model.vat_price = vatPrice;
+    model.total_quantity = totalQuantity;
+    model.total = totalPrice;
+
+    //setFormData({ ...formData });
+    PreviewRef.current.open(model);
+  }
+
   return (
     <>
+      <QuotationPreview ref={PreviewRef} />
       <QuotationView ref={DetailsViewRef} />
       <ProductView ref={ProductDetailsViewRef} />
       <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -564,7 +586,10 @@ const QuotationCreate = forwardRef((props, ref) => {
           <Modal.Title>Create New Quotation</Modal.Title>
 
           <div className="col align-self-end text-end">
-            <QuotationPreview />
+            <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
+              <i className="bi bi-display"></i> Preview
+            </Button>
+
             {/*
                         <button
                             className="btn btn-primary mb-3"
@@ -598,6 +623,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     if (selectedItems.length === 0) {
                       errors.store_id = "Invalid Store selected";
                       setErrors(errors);
+                      formData.store_id = "";
                       setFormData({ ...formData });
                       setSelectedStores([]);
                       return;
@@ -732,7 +758,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                     console.log(formData);
                   }}
                   className="form-control"
-                  defaultValue="10.00"
                   id="validationCustom01"
                   placeholder="VAT %"
                   aria-label="Select Store"
@@ -1192,6 +1217,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     if (selectedItems.length === 0) {
                       errors.delivered_by = "Invalid User Selected";
                       setErrors(errors);
+                      formData.delivered_by = "";
                       setFormData({ ...formData });
                       setSelectedDeliveredByUsers([]);
                       return;
@@ -1273,6 +1299,38 @@ const QuotationCreate = forwardRef((props, ref) => {
                   )}
               </div>
             </div>
+
+            <div className="col-md-6">
+              <label className="form-label">Signature Date(Optional)</label>
+
+              <div className="input-group mb-3">
+                <DatePicker
+                  id="signature_date_str"
+                  value={formData.signature_date_str}
+                  selected={selectedDate}
+                  className="form-control"
+                  dateFormat="MMM dd yyyy"
+                  onChange={(value) => {
+                    formData.signature_date_str = format(new Date(value), "MMM dd yyyy");
+                    setFormData({ ...formData });
+                  }}
+                />
+
+                {errors.signature_date_str && (
+                  <div style={{ color: "red" }}>
+                    <i class="bi bi-x-lg"> </i>
+                    {errors.signature_date_str}
+                  </div>
+                )}
+                {formData.signature_date_str && !errors.signature_date_str && (
+                  <div style={{ color: "green" }}>
+                    <i class="bi bi-check-lg"> </i>
+                    Looks good!
+                  </div>
+                )}
+              </div>
+            </div>
+
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>
                 Close
