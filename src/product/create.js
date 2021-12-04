@@ -531,7 +531,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                     value={formData.item_code}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["phone"] = "";
+                                        errors["item_code"] = "";
                                         setErrors({ ...errors });
                                         formData.item_code = e.target.value;
                                         setFormData({ ...formData });
@@ -548,6 +548,39 @@ const ProductCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                                 {formData.item_code && !errors.item_code && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Part Number(Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.part_number}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["part_number"] = "";
+                                        setErrors({ ...errors });
+                                        formData.part_number = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="part_number"
+                                    placeholder="Part Number"
+                                />
+                                {errors.part_number && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.part_number}
+                                    </div>
+                                )}
+                                {formData.part_number && !errors.part_number && (
                                     <div style={{ color: "green" }}>
                                         <i class="bi bi-check-lg"> </i>
                                         Looks good!
