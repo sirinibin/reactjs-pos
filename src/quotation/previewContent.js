@@ -30,7 +30,7 @@ class QuotationPreviewContent extends React.Component {
                     </div>
                     <div className="col">
                         <div className="invoice-logo text-center">
-                            <img width="100" src={business_logo} alt="Invoice logo" />
+                            <img width="100" height="100" src={business_logo} alt="Invoice logo" />
                         </div>
                     </div>
                     <div className="col">

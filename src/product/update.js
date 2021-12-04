@@ -7,6 +7,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import StoreUpdate from "../store/update.js";
 import NumberFormat from "react-number-format";
 import ProductCategoryCreate from "../product_category/create.js";
+import Resizer from "react-image-file-resizer";
 
 
 const ProductUpdate = forwardRef((props, ref) => {
@@ -30,6 +31,24 @@ const ProductUpdate = forwardRef((props, ref) => {
         },
 
     }));
+
+    function resizeFIle(file, cb) {
+        Resizer.imageFileResizer(
+            file,
+            400,
+            400,
+            "JPEG",
+            100,
+            0,
+            (uri) => {
+                cb(uri);
+            },
+            "base64"
+        );
+    }
+
+
+    let [selectedImage, setSelectedImage] = useState("");
 
     let [selectedUnitPrice, setSelectedUnitPrice] = useState([
         {
@@ -62,7 +81,9 @@ const ProductUpdate = forwardRef((props, ref) => {
     const cookies = new Cookies();
 
     //fields
-    let [formData, setFormData] = useState({});
+    let [formData, setFormData] = useState({
+        images_content: [],
+    });
 
     const [show, SetShow] = useState(false);
 
@@ -121,7 +142,9 @@ const ProductUpdate = forwardRef((props, ref) => {
 
                 setSelectedCategories(selectedCategories);
 
-                setFormData({ ...data.result });
+                formData = data.result;
+                formData.images_content = [];
+                setFormData({ ...formData });
             })
             .catch(error => {
                 setProcessing(false);
@@ -1017,6 +1040,53 @@ const ProductUpdate = forwardRef((props, ref) => {
                                 ))}
                             </tbody>
                         </table>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Image(Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={selectedImage}
+                                    type='file'
+                                    onChange={(e) => {
+                                        errors["image"] = "";
+                                        setErrors({ ...errors });
+
+                                        if (!e.target.value) {
+                                            errors["image"] = "Invalid Image File";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        selectedImage = e.target.value;
+                                        setSelectedImage(selectedImage);
+
+                                        let file = document.querySelector('#image').files[0];
+
+                                        resizeFIle(file, (result) => {
+                                            formData.images_content[0] = result;
+                                            setFormData({ ...formData });
+
+                                            console.log("formData.images_content[0]:", formData.images_content[0]);
+                                        });
+                                    }}
+                                    className="form-control"
+                                    id="image"
+                                />
+                                {errors.image && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.image}
+                                    </div>
+                                )}
+                                {selectedImage && !errors.image && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
 
                         <Modal.Footer>

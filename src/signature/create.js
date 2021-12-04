@@ -3,6 +3,7 @@ import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import SignatureView from "./view.js";
+import Resizer from "react-image-file-resizer";
 
 
 const SignatureCreate = forwardRef((props, ref) => {
@@ -36,6 +37,21 @@ const SignatureCreate = forwardRef((props, ref) => {
         }
     });
 
+
+    function resizeFIle(file, cb) {
+        Resizer.imageFileResizer(
+            file,
+            100,
+            100,
+            "JPEG",
+            100,
+            0,
+            (uri) => {
+                cb(uri);
+            },
+            "base64"
+        );
+    }
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -204,11 +220,12 @@ const SignatureCreate = forwardRef((props, ref) => {
 
                                         let file = document.querySelector('#signature').files[0];
 
-                                        getBase64(file, (result) => {
+                                        resizeFIle(file, (result) => {
                                             formData.signature_content = result;
                                             setFormData({ ...formData });
-                                        });
 
+                                            console.log("formData.logo_content:", formData.logo_content);
+                                        });
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}

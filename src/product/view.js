@@ -269,7 +269,25 @@ const ProductView = forwardRef((props, ref) => {
                     </tbody>
                 </table>
 
-
+                <h4>Images</h4>
+                <table className="table table-striped table-sm table-bordered">
+                    <thead>
+                        <tr className="text-center">
+                            <th>SI No.</th>
+                            <th>Image</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {model.images && model.images.map((image, index) => (
+                            <tr className="text-center">
+                                <td>{index + 1}</td>
+                                <td>
+                                    <img src={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
                 {/*
                     <form className="row g-3 needs-validation" >
                         

@@ -3,7 +3,7 @@ import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import StoreView from "./view.js";
-
+import Resizer from "react-image-file-resizer";
 
 const StoreCreate = forwardRef((props, ref) => {
 
@@ -43,6 +43,21 @@ const StoreCreate = forwardRef((props, ref) => {
                 return `search[${key}]=${object[key]}`;
             })
             .join("&");
+    }
+
+    function resizeFIle(file, cb) {
+        Resizer.imageFileResizer(
+            file,
+            100,
+            100,
+            "JPEG",
+            100,
+            0,
+            (uri) => {
+                cb(uri);
+            },
+            "base64"
+        );
     }
 
     function getBase64(file, cb) {
@@ -586,13 +601,13 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                         let file = document.querySelector('#logo').files[0];
 
-                                        getBase64(file, (result) => {
+                                        resizeFIle(file, (result) => {
                                             formData.logo_content = result;
+
+                                            console.log("formData.logo_content:", formData.logo_content);
+
                                             setFormData({ ...formData });
                                         });
-
-                                        setFormData({ ...formData });
-                                        console.log(formData);
                                     }}
                                     className="form-control"
                                     id="logo"
