@@ -28,7 +28,10 @@ const QuotationPreview = forwardRef((props, ref) => {
                 }
 
                 console.log("model.products:", model.products);
-                setModel({ ...model });
+                getQRCodeContents();
+                //model.qr_content = getQRCodeContents();
+                //setModel({ ...model });
+
                 setShow(true);
                 console.log("model:", model);
             }
@@ -49,6 +52,38 @@ const QuotationPreview = forwardRef((props, ref) => {
         setShow(false);
     }
 
+
+    let [qrContent, setQrContent] = useState("");
+    let [qrContentLoaded, setQrContentLoaded] = useState(false);
+
+    function getQRCodeContents() {
+        qrContent = "";
+
+        if (model.code) {
+            qrContent += "Quotation #: " + model.code + "<br />";
+        }
+
+        if (model.store) {
+            qrContent += "Store: " + model.store.name + "<br />";
+        }
+
+        if (model.customer) {
+            qrContent += "Customer: " + model.customer.name + "<br />";
+        }
+
+
+        if (model.net_total) {
+            qrContent += "Net Total: " + model.net_total + "<br />";
+        }
+        qrContent += "Store: Test <br />";
+
+        setQrContent(qrContent);
+        model.qr_content = qrContent;
+        setModel({ ...model });
+        console.log("QR content:", model.qr_content);
+
+        return model.qr_content;
+    }
 
     function getStore(id) {
         console.log("inside get Store");

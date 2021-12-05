@@ -4,6 +4,7 @@ import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import converter from 'number-to-words';
 import n2words from 'n2words'
+import QRCode from "react-qr-code";
 
 const QuotationPreviewContent = forwardRef((props, ref) => {
 
@@ -455,7 +456,10 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                 </div>
             </div>
             <div className="row" style={{ fontSize: "3mm" }}>
-                <div className="col">
+                <div className="col-md-2 text-start">
+                    {props.model.store && props.model.customer ? <QRCode value={"Quotation #: " + props.model.code + "<br/> Store: " + props.model.store.name + "<br/> Net Total: " + props.model.net_total + "<br/> Customer: " + props.model.customer.name} size={128} /> : null}
+                </div>
+                <div className="col-md-8 text-center">
                     <ul className="list-unstyled mb0 text-center">
                         <li>
                             <b
