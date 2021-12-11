@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import PurchasePreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
@@ -112,13 +112,21 @@ const PurchaseView = forwardRef((props, ref) => {
     }
 
 
+    const PreviewRef = useRef();
+    function openPreview() {
+        PreviewRef.current.open(model);
+    }
+
     return (<>
+        <PurchasePreview ref={PreviewRef} />
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Purchase #{model.code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
-                    <PurchasePreview />
+                    <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
+                        <i className="bi bi-display"></i> Preview
+                    </Button>
                     {/*
                         <button
                             className="btn btn-primary mb-3"
@@ -150,6 +158,7 @@ const PurchaseView = forwardRef((props, ref) => {
                     </tr>
                     <tr>
                         <th>Status:</th><td> {model.status}</td>
+                        <th>Signature Date:</th><td> {model.signature_date_str}</td>
                         <th>Created At:</th><td> {model.created_at}</td>
                         <th>Updated At:</th><td> {model.updated_at}</td>
                     </tr>

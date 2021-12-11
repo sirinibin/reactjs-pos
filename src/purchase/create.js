@@ -41,6 +41,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 vat_percent: 10.0,
                 discount: 0.0,
                 date_str: format(new Date(), "MMM dd yyyy"),
+                signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "created",
             };
 
@@ -68,6 +69,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         vat_percent: 10.0,
         discount: 0.0,
         date_str: format(new Date(), "MMM dd yyyy"),
+        signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "created",
     });
 
@@ -1454,6 +1456,38 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     )}
                             </div>
                         </div>
+                        <div className="col-md-6">
+                            <label className="form-label">Signature Date(Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <DatePicker
+                                    id="signature_date_str"
+                                    value={formData.signature_date_str}
+                                    selected={selectedDate}
+                                    className="form-control"
+                                    dateFormat="MMM dd yyyy"
+                                    onChange={(value) => {
+                                        formData.signature_date_str = format(new Date(value), "MMM dd yyyy");
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+
+                                {errors.signature_date_str && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.signature_date_str}
+                                    </div>
+                                )}
+                                {formData.signature_date_str && !errors.signature_date_str && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
