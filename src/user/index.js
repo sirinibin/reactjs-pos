@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import UserCreate from "./create.js";
 import UserView from "./view.js";
-import UserUpdate from "./update.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -229,9 +228,8 @@ function UserIndex(props) {
         list();
     }
 
-    const UpdateFormRef = useRef();
     function openUpdateForm(id) {
-        UpdateFormRef.current.open(id);
+        CreateFormRef.current.open(id);
     }
 
     const DetailsViewRef = useRef();
@@ -249,7 +247,6 @@ function UserIndex(props) {
     return (
         <>
             <UserCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <UserUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <UserView ref={DetailsViewRef} />
 
             <div className="container-fluid p-0">

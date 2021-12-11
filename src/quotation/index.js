@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import QuotationCreate from "./create.js";
 import QuotationView from "./view.js";
-import QuotationUpdate from "./update.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -316,9 +315,8 @@ function QuotationIndex(props) {
     list();
   }
 
-  const UpdateFormRef = useRef();
   function openUpdateForm(id) {
-    UpdateFormRef.current.open(id);
+    CreateFormRef.current.open(id);
   }
 
   const DetailsViewRef = useRef();
@@ -334,7 +332,6 @@ function QuotationIndex(props) {
   return (
     <>
       <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-      <QuotationUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
       <QuotationView ref={DetailsViewRef} />
       <div className="container-fluid p-0">
         <div className="row">

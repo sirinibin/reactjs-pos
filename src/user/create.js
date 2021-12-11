@@ -8,7 +8,13 @@ import UserView from "./view.js";
 const UserCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
+            formData = {};
+            setFormData({});
+            if (id) {
+                getUser(id);
+            }
+
             SetShow(true);
         },
 
@@ -37,6 +43,41 @@ const UserCreate = forwardRef((props, ref) => {
     });
 
 
+    function getUser(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/user/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+                let userData = data.result;
+                userData.logo = "";
+                setFormData({ ...userData });
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
+
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
             .map(function (key) {
@@ -61,15 +102,16 @@ const UserCreate = forwardRef((props, ref) => {
         console.log("Inside handle Create");
 
 
-        if (formData.vat_percent) {
-            formData.vat_percent = parseFloat(formData.vat_percent);
-        } else {
-            formData.vat_percent = null;
+        let endPoint = "/v1/user";
+        let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/user/" + formData.id;
+            method = "PUT";
         }
 
 
         const requestOptions = {
-            method: "POST",
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
@@ -81,7 +123,7 @@ const UserCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         setProcessing(true);
-        fetch("/v1/user", requestOptions)
+        fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -126,7 +168,9 @@ const UserCreate = forwardRef((props, ref) => {
             <UserView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Create New User</Modal.Title>
+                    <Modal.Title>
+                        {formData.id ? "Update User #" + formData.name : "Create New User"}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         {/*
@@ -295,7 +339,7 @@ const UserCreate = forwardRef((props, ref) => {
                                         aria-hidden="true"
                                     /> + " Creating..."
 
-                                    : "Create"
+                                    : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

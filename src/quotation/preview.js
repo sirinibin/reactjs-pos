@@ -2,6 +2,7 @@ import { React, useState, useRef, forwardRef, useImperativeHandle } from "react"
 import { Modal, Button } from 'react-bootstrap';
 import QuotationPreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
+import { useReactToPrint } from 'react-to-print';
 
 const QuotationPreview = forwardRef((props, ref) => {
 
@@ -216,13 +217,40 @@ const QuotationPreview = forwardRef((props, ref) => {
             });
     }
 
+
+
+    /*
+    function print() {
+        console.log("Print");
+    }
+    */
+
+    const printAreaRef = useRef();
+
+    function getFileName() {
+        let filename = "Quotation";
+
+        if (model.id) {
+            filename += "_#" + model.code;
+        }
+
+        return filename;
+    }
+
+    const handlePrint = useReactToPrint({
+        content: () => printAreaRef.current,
+        documentTitle: getFileName(),
+    });
+
+
     return (<>
         <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Quotation Preview</Modal.Title>
-
                 <div className="col align-self-end text-end">
-
+                    <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
+                        <i className="bi bi-printer"></i> Print
+                    </Button>
                     <button
                         type="button"
                         className="btn-close"
@@ -234,7 +262,9 @@ const QuotationPreview = forwardRef((props, ref) => {
 
             </Modal.Header>
             <Modal.Body>
-                <QuotationPreviewContent model={model} />
+                <div ref={printAreaRef}>
+                    <QuotationPreviewContent model={model} />
+                </div>
             </Modal.Body>
             <Modal.Footer>
                 {/*

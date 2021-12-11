@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import PurchaseCreate from "./create.js";
 import PurchaseView from "./view.js";
-import PurchaseUpdate from "./update.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -314,9 +313,8 @@ function PurchaseIndex(props) {
     }
 
 
-    const UpdateFormRef = useRef();
     function openUpdateForm(id) {
-        UpdateFormRef.current.open(id);
+        CreateFormRef.current.open(id);
     }
 
     const DetailsViewRef = useRef();
@@ -332,7 +330,6 @@ function PurchaseIndex(props) {
     return (
         <>
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <PurchaseUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <PurchaseView ref={DetailsViewRef} />
 
             <div className="container-fluid p-0">

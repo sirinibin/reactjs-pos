@@ -43,9 +43,9 @@ function Sidebar(props) {
 
     return <nav id="sidebar" className={'sidebar ' + props.isSidebarOpen + ' js-sidebar'}>
         <div className="sidebar-content js-simplebar">
-            <a className="sidebar-brand" href="index.html">
+            <div className="sidebar-brand">
                 <span className="align-middle">Start POS</span>
-            </a>
+            </div>
 
             <ul className="sidebar-nav">
                 <li onClick={() => {

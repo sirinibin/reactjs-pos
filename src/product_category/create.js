@@ -9,7 +9,15 @@ import { Typeahead } from "react-bootstrap-typeahead";
 const ProductCategoryCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
+            formData = {};
+            setFormData(formData);
+            selectedParentCategories = [];
+            setSelectedParentCategories(selectedParentCategories);
+
+            if (id) {
+                getProductCategory(id);
+            }
             SetShow(true);
         },
 
@@ -21,7 +29,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
     const cookies = new Cookies();
 
     const [parentCategoryOptions, setParentCategoryOptions] = useState([]);
-    const [selectedParentCategories, setSelectedParentCategories] = useState([]);
+    let [selectedParentCategories, setSelectedParentCategories] = useState([]);
     const [isProductCategoriesLoading, setIsProductCategoriesLoading] = useState(false);
 
     //fields
@@ -40,6 +48,60 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
         }
     });
 
+
+    function getProductCategory(id) {
+        console.log("inside get Product Category");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+        formData = {};
+        setFormData({ ...formData });
+        selectedParentCategories = [];
+        setSelectedParentCategories([...selectedParentCategories]);
+        fetch('/v1/product-category/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                formData = data.result;
+                console.log("formData:", formData);
+
+
+                if (formData.parent_id) {
+                    selectedParentCategories = [
+                        {
+                            id: formData.parent_id,
+                            name: formData.parent_name,
+                        },
+                    ];
+                    setSelectedParentCategories([...selectedParentCategories]);
+
+                }
+
+                setFormData({ ...formData });
+                console.log("formData:", formData);
+
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -65,17 +127,20 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
         console.log("Inside handle Create");
 
 
-        if (formData.vat_percent) {
-            formData.vat_percent = parseFloat(formData.vat_percent);
-        } else {
-            formData.vat_percent = null;
-        }
-
         console.log("formData.logo:", formData.logo);
+
+        setIsProductCategoriesLoading(true);
+
+        let endPoint = "/v1/product-category";
+        let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/product-category/" + formData.id;
+            method = "PUT";
+        }
 
 
         const requestOptions = {
-            method: "POST",
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
@@ -86,9 +151,8 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
 
         console.log("formData:", formData);
 
-        setIsProductCategoriesLoading(true);
         setProcessing(true);
-        fetch("/v1/product-category", requestOptions)
+        fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -173,7 +237,9 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
             <ProductCategoryView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Create New Product Category</Modal.Title>
+                    <Modal.Title>
+                        {formData.id ? "Update Product Category #" + formData.name : "Create New Product Category"}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         {/*
@@ -239,18 +305,20 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                     isInvalid={errors.parent_id ? true : false}
                                     onChange={(selectedItems) => {
                                         errors.parent__id = "";
-                                        setErrors(errors);
+                                        setErrors({ errors });
                                         if (selectedItems.length === 0) {
                                             errors.parent_id = "Invalid Parent Category Selected";
                                             setErrors(errors);
                                             formData.parent_id = "";
+                                            formData.parent_name = "";
                                             setFormData({ ...formData });
                                             setSelectedParentCategories([]);
                                             return;
                                         }
+
                                         formData.parent_id = selectedItems[0].id;
                                         setFormData({ ...formData });
-                                        setSelectedParentCategories(selectedItems);
+                                        setSelectedParentCategories([...selectedItems]);
                                     }}
                                     options={parentCategoryOptions}
                                     placeholder="Select Parent Category"
@@ -264,7 +332,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                 {errors.parent_id && (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i>
-                                        {errors.customer_id}
+                                        {errors.parent_id}
                                     </div>
                                 )}
                                 {formData.parent_id && !errors.parent_id && (
@@ -287,9 +355,9 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden="true"
-                                    /> + " Creating..."
+                                    /> + " Processing..."
 
-                                    : "Create"
+                                    : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

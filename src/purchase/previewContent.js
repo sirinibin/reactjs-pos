@@ -1,5 +1,4 @@
 import React from "react";
-import business_logo from './business_logo.png';
 class PurchasePreviewContent extends React.Component {
 
 
@@ -30,7 +29,7 @@ class PurchasePreviewContent extends React.Component {
                     </div>
                     <div className="col">
                         <div className="invoice-logo text-center">
-                            <img width="100" src={business_logo} alt="Invoice logo" />
+                            <img width="100" src="" alt="Invoice logo" />
                         </div>
                     </div>
                     <div className="col">
@@ -56,7 +55,7 @@ class PurchasePreviewContent extends React.Component {
                         <u
                         ><h1 className="text-center" style={{ fontSize: "4mm" }}>
                                 PURCHASE ORDER / اقتباس
-                        </h1>
+                            </h1>
                         </u>
                     </div>
                 </div>
@@ -67,8 +66,8 @@ class PurchasePreviewContent extends React.Component {
                             <li><strong>Purchase Date: </strong>October 10th, 2015</li>
                             <li>
                                 <strong>Vendor/Supplier: </strong>CHINA HARBOUR ENGINEERING ARABIA CO.
-              LTD.
-                           </li>
+                                LTD.
+                            </li>
                             <li><strong>VAT Number: </strong>300451376400003</li>
                         </ul>
                     </div>
@@ -78,7 +77,7 @@ class PurchasePreviewContent extends React.Component {
                             <li><strong>تاريخ الاقتباس: </strong>10 أكتوبر - 2015</li>
                             <li>
                                 <strong>‫لعميل‬ ‫اسم‬: </strong>‫املحدودة‬ ‫العربية‬ ‫انجنيرنج‬
-              ‫هاربور‬ ‫شاين‬ ‫شركة‬
+                                ‫هاربور‬ ‫شاين‬ ‫شركة‬
                             </li>
                             <li><strong>ظريبه الشراء: </strong>۳۰۰٤٥۱۳۷٦٤۰۰۰۰۳</li>
                         </ul>
@@ -420,7 +419,7 @@ class PurchasePreviewContent extends React.Component {
                                 <b
                                 >جدةه ٢٢٥٢٥-٢٢٣١ - رقم الوحدةع - حي الربوة - شارع يحي العلمي
                                     جوال:٩٦٦٥٤٣٢٢٧٨٤
-              </b>
+                                </b>
                             </li>
                             <li>
                                 <strong

@@ -9,8 +9,14 @@ import Resizer from "react-image-file-resizer";
 const SignatureCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
+            formData = {};
+            setFormData({ ...formData });
+            if (id) {
+                getSignature(id);
+            }
             SetShow(true);
+
         },
 
     }));
@@ -38,11 +44,11 @@ const SignatureCreate = forwardRef((props, ref) => {
     });
 
 
-    function resizeFIle(file, cb) {
+    function resizeFIle(file, w, h, cb) {
         Resizer.imageFileResizer(
             file,
-            100,
-            100,
+            w,
+            h,
             "JPEG",
             100,
             0,
@@ -51,6 +57,41 @@ const SignatureCreate = forwardRef((props, ref) => {
             },
             "base64"
         );
+    }
+
+    function getSignature(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/signature/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+                let signatureData = data.result;
+                signatureData.signature = "";
+                setFormData({ ...signatureData });
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
     }
 
     function ObjectToSearchQueryParams(object) {
@@ -85,9 +126,16 @@ const SignatureCreate = forwardRef((props, ref) => {
 
         console.log("formData.logo:", formData.logo);
 
+        let endPoint = "/v1/signature";
+        let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/signature/" + formData.id;
+            method = "PUT";
+        }
+
 
         const requestOptions = {
-            method: "POST",
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
@@ -99,7 +147,9 @@ const SignatureCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         setProcessing(true);
-        fetch("/v1/signature", requestOptions)
+
+
+        fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -120,7 +170,10 @@ const SignatureCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 props.showToastMessage("Signature Created Successfully!", "success");
-                props.refreshList();
+                if (props.refreshList) {
+                    props.refreshList();
+                }
+
                 handleClose();
                 openDetailsView(data.result.id);
             })
@@ -139,12 +192,60 @@ const SignatureCreate = forwardRef((props, ref) => {
         console.log("id:", id);
         DetailsViewRef.current.open(id);
     }
+
+    function getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight) {
+
+        let ratio = parseFloat(originaleWidth / originalHeight);
+
+        targetWidth = parseInt(targetHeight * ratio);
+        targetHeight = parseInt(targetWidth * ratio);
+
+        return { targetWidth: targetWidth, targetHeight: targetHeight };
+    }
+
+    /*
+        function getTargetDimension(file, targetWidth, targetHeight) {
+    
+            console.log("Inside getTargetDimension");
+    
+            new Promise((resolve, reject) => {
+    
+    
+                let url = URL.createObjectURL(file);
+                let img = new Image;
+    
+                img.onload = function () {
+                    console.log("Inside onload ");
+                    let originaleWidth = img.width;
+                    let originalHeight = img.height;
+    
+                    let ratio = parseFloat(originaleWidth / originalHeight);
+    
+                    URL.revokeObjectURL(img.src);
+    
+                    targetWidth = parseInt(targetHeight * ratio);
+                    targetHeight = parseInt(targetWidth * ratio);
+    
+                    return resolve({ targetWidth: targetWidth, targetHeight: targetHeight });
+                }
+                img.src = url;
+    
+            });
+    
+    
+        }
+        */
+
+
+
     return (
         <>
             <SignatureView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Create New Signature</Modal.Title>
+                    <Modal.Title>
+                        {formData.id ? "Update Signature #" + formData.name : "Create New Signature"}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         {/*
@@ -161,8 +262,8 @@ const SignatureCreate = forwardRef((props, ref) => {
                             onClick={handleClose}
                             aria-label="Close"
                         ></button>
-                    </div>
-                </Modal.Header>
+                    </div >
+                </Modal.Header >
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
@@ -220,14 +321,30 @@ const SignatureCreate = forwardRef((props, ref) => {
 
                                         let file = document.querySelector('#signature').files[0];
 
-                                        resizeFIle(file, (result) => {
-                                            formData.signature_content = result;
-                                            setFormData({ ...formData });
+                                        let targetHeight = 100;
+                                        let targetWidth = 80;
 
-                                            console.log("formData.logo_content:", formData.logo_content);
-                                        });
-                                        setFormData({ ...formData });
-                                        console.log(formData);
+
+                                        let url = URL.createObjectURL(file);
+                                        let img = new Image;
+
+                                        img.onload = function () {
+                                            let originaleWidth = img.width;
+                                            let originalHeight = img.height;
+
+                                            let targetDimensions = getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight);
+                                            targetWidth = targetDimensions.targetWidth;
+                                            targetHeight = targetDimensions.targetHeight;
+
+                                            resizeFIle(file, targetWidth, targetHeight, (result) => {
+                                                formData.signature_content = result;
+                                                setFormData({ ...formData });
+
+                                                console.log("formData.logo_content:", formData.logo_content);
+                                            });
+
+                                        };
+                                        img.src = url;
                                     }}
                                     className="form-control"
                                     id="signature"
@@ -259,16 +376,16 @@ const SignatureCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden="true"
-                                    /> + " Creating..."
+                                    /> + " Processing..."
 
-                                    : "Create"
+                                    : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>
                     </form>
                 </Modal.Body>
 
-            </Modal>
+            </Modal >
 
 
         </>

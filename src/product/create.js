@@ -13,11 +13,24 @@ import Resizer from "react-image-file-resizer";
 const ProductCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
             formData = {};
             selectedCategories = [];
             setSelectedCategories(selectedCategories);
+
+            selectedUnitPrices = [];
+            setSelectedUnitPrices(selectedUnitPrices);
+
+            selectedStocks = [];
+            setSelectedStocks(selectedStocks);
+
             setFormData(formData);
+
+
+            if (id) {
+                getProduct(id);
+            }
+
             SetShow(true);
         },
 
@@ -38,19 +51,6 @@ const ProductCreate = forwardRef((props, ref) => {
             "base64"
         );
     }
-    /*
-     {
-            id: "",
-            name: "",
-            retial_unit_price: 0,
-            wholesale_unit_price: 0,
-        }
-           {
-            id: "",
-            name: "",
-            stock: 0,
-        }
-         */
 
     let [selectedImage, setSelectedImage] = useState("");
 
@@ -95,6 +95,68 @@ const ProductCreate = forwardRef((props, ref) => {
     function handleClose() {
         SetShow(false);
     }
+
+
+    function getProduct(id) {
+        console.log("inside get Product");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/product/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+                let categoryIds = data.result.category_id;
+                let categoryNames = data.result.category_name;
+
+                selectedCategories = [];
+                if (categoryIds && categoryNames) {
+                    for (var i = 0; i < categoryIds.length; i++) {
+                        selectedCategories.push({
+                            id: categoryIds[i],
+                            name: categoryNames[i],
+                        });
+                    }
+                }
+
+                if (data.result.stock) {
+                    selectedStocks = data.result.stock;
+                    setSelectedStocks([...selectedStocks]);
+                }
+
+                if (data.result.unit_prices) {
+                    selectedUnitPrices = data.result.unit_prices;
+                    setSelectedUnitPrices([...selectedUnitPrices]);
+                }
+
+                setSelectedCategories(selectedCategories);
+
+                formData = data.result;
+                formData.images_content = [];
+                setFormData({ ...formData });
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
+
 
     async function suggestCategories(searchTerm) {
         console.log("Inside handle suggest Categories");
@@ -206,8 +268,17 @@ const ProductCreate = forwardRef((props, ref) => {
 
         console.log("category_id:", formData.category_id);
 
+
+        let endPoint = "/v1/product";
+        let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/product/" + formData.id;
+            method = "PUT";
+        }
+
+
         const requestOptions = {
-            method: "POST",
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
@@ -219,7 +290,7 @@ const ProductCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         setProcessing(true);
-        fetch("/v1/product", requestOptions)
+        fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -435,7 +506,9 @@ const ProductCreate = forwardRef((props, ref) => {
 
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Create New Product</Modal.Title>
+                    <Modal.Title>
+                        {formData.id ? "Update Product #" + formData.name : "Create New Product"}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         {/*
@@ -1082,9 +1155,9 @@ const ProductCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden="true"
-                                    /> + " Creating..."
+                                    /> + " Processing..."
 
-                                    : "Create"
+                                    : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

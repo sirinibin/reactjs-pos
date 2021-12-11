@@ -1,5 +1,4 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
-import business_logo from './business_logo.png';
 import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import converter from 'number-to-words';

@@ -9,7 +9,13 @@ import { toArabic } from 'arabic-digits';
 const StoreCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
+            formData = {};
+            setFormData({});
+            if (id) {
+                getStore(id);
+            }
+
             SetShow(true);
         },
 
@@ -36,6 +42,43 @@ const StoreCreate = forwardRef((props, ref) => {
             window.location = "/";
         }
     });
+
+
+    function getStore(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+                let storeData = data.result;
+                storeData.logo = "";
+                setFormData({ ...storeData });
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
+
 
 
     function ObjectToSearchQueryParams(object) {
@@ -86,8 +129,16 @@ const StoreCreate = forwardRef((props, ref) => {
         console.log("formData.logo:", formData.logo);
 
 
+        let endPoint = "/v1/store";
+        let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/store/" + formData.id;
+            method = "PUT";
+        }
+
+
         const requestOptions = {
-            method: "POST",
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
@@ -99,7 +150,7 @@ const StoreCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         setProcessing(true);
-        fetch("/v1/store", requestOptions)
+        fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -139,7 +190,6 @@ const StoreCreate = forwardRef((props, ref) => {
 
     //let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
     let persianDigits = "۰۱۲۳٤۵٦۷۸۹";
-    //["١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩", "٠"]
     let persianMap = persianDigits.split("");
 
     function convertToEnglishNumber(input) {
@@ -164,7 +214,9 @@ const StoreCreate = forwardRef((props, ref) => {
             <StoreView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Create New Store</Modal.Title>
+                    <Modal.Title>
+                        {formData.id ? "Update Store #" + formData.name : "Create New Store"}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         {/*
@@ -798,7 +850,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         aria-hidden="true"
                                     /> + " Creating..."
 
-                                    : "Create"
+                                    : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

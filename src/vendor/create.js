@@ -9,7 +9,12 @@ import VendorView from "./view.js";
 const VendorCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
+            formData = {};
+            setFormData({});
+            if (id) {
+                getVendor(id);
+            }
             setShow(true);
         },
 
@@ -36,6 +41,41 @@ const VendorCreate = forwardRef((props, ref) => {
     });
 
 
+    function getVendor(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/vendor/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                setFormData({ ...data.result });
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
+
+
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
             .map(function (key) {
@@ -51,8 +91,16 @@ const VendorCreate = forwardRef((props, ref) => {
 
         formData.vat_percent = parseFloat(formData.vat_percent);
 
+        let endPoint = "/v1/vendor";
+        let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/vendor/" + formData.id;
+            method = "PUT";
+        }
+
+
         const requestOptions = {
-            method: "POST",
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
@@ -64,7 +112,7 @@ const VendorCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         setProcessing(true);
-        fetch("/v1/vendor", requestOptions)
+        fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -114,7 +162,9 @@ const VendorCreate = forwardRef((props, ref) => {
             <VendorView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Create New Vendor</Modal.Title>
+                    <Modal.Title>
+                        {formData.id ? "Update Vendor #" + formData.name : "Create New Vendor"}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         {/*
@@ -551,7 +601,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         aria-hidden="true"
                                     /> + " Creating..."
 
-                                    : "Create"
+                                    : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

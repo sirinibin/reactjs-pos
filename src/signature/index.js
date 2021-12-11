@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import SignatureCreate from "./create.js";
 import SignatureView from "./view.js";
-import SignatureUpdate from "./update.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -230,7 +229,7 @@ function SignatureIndex(props) {
 
     const UpdateFormRef = useRef();
     function openUpdateForm(id) {
-        UpdateFormRef.current.open(id);
+        CreateFormRef.current.open(id);
     }
 
     const DetailsViewRef = useRef();
@@ -248,7 +247,6 @@ function SignatureIndex(props) {
     return (
         <>
             <SignatureCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <SignatureUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <SignatureView ref={DetailsViewRef} />
 
             <div className="container-fluid p-0">

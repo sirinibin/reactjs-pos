@@ -20,42 +20,109 @@ import ProductView from "./../product/view.js";
 const OrderCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
+            formData = {
+                vat_percent: 15.0,
+                discount: 0.0,
+                date_str: format(new Date(), "MMM dd yyyy"),
+                status: "delivered",
+                payment_status: "paid",
+                payment_method: "cash",
+            };
+            setFormData({ ...formData });
+            if (id) {
+                getOrder(id);
+            }
             setShow(true);
-            // addListener();
-
-            /*
-            const elem = camref.current;
-              
-            Quagga.init({
-                inputStream: {
-                    name: "Live",
-                    type: "LiveStream",
-                    // target: document.querySelector('#yourElement')    // Or '#yourElement' (optional)
-                    target: elem,
-                },
-                decoder: {
-                    readers: ["code_128_reader"]
-                }
-            }, function (err) {
-                if (err) {
-                    console.log(err);
-                    return
-                }
-                console.log("Initialization finished. Ready to start");
-                Quagga.start();
-            });
-
-            Quagga.onDetected(function (data) {
-                console.log("Detected:", data);
-
-            });
-            Quagga.stop();
-            */
 
         },
 
     }));
+
+    function getOrder() {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/order/' + props.id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                let order = data.result;
+
+                selectedProducts = order.products;
+                setSelectedProducts([...selectedProducts]);
+
+
+                formData = order;
+                setFormData({ ...formData });
+
+                selectedStores = [
+                    {
+                        id: order.store_id,
+                        name: order.store_name,
+                    }
+                ];
+
+                setSelectedStores(selectedStores);
+
+                let selectedCustomers = [
+                    {
+                        id: order.customer_id,
+                        name: order.customer_name,
+                    }
+                ];
+
+                let selectedDeliveredByUsers = [
+                    {
+                        id: order.delivered_by,
+                        name: order.delivered_by_name
+                    }
+                ];
+
+                if (order.delivered_by_signature_id) {
+                    let selectedDeliveredBySignatures = [
+                        {
+                            id: order.delivered_by_signature_id,
+                            name: order.delivered_by_signature_name,
+                        }
+                    ];
+                    setSelectedDeliveredBySignatures([...selectedDeliveredBySignatures]);
+                }
+
+                setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
+
+
+                setSelectedCustomers([...selectedCustomers]);
+
+
+                findTotalPrice();
+                findTotalQuantity();
+                findVatPrice();
+                findNetTotal();
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
 
     /*
     let [barcode, setBarcode] = useState("");
@@ -131,7 +198,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     //fields
     let [formData, setFormData] = useState({
-        vat_percent: 10.0,
+        vat_percent: 15.0,
         discount: 0.0,
         date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
@@ -424,8 +491,16 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.partial_payment_amount = parseFloat(formData.partial_payment_amount);
         console.log("formData.discount:", formData.discount);
 
+
+        let endPoint = "/v1/order";
+        let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/order/" + formData.id;
+            method = "PUT";
+        }
+
         const requestOptions = {
-            method: "POST",
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
@@ -437,7 +512,7 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         setProcessing(true);
-        fetch("/v1/order", requestOptions)
+        fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -694,7 +769,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Create New Order</Modal.Title>
+                    <Modal.Title>
+                        {formData.id ? "Update Order #" + formData.code : "Create New Order"}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <OrderPreview />
@@ -1628,7 +1705,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         aria-hidden="true"
                                     /> + " Creating..."
 
-                                    : "Create"
+                                    : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

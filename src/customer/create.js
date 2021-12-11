@@ -8,8 +8,14 @@ import CustomerView from "./view.js";
 const CustomerCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
+            formData = {};
+            setFormData({ ...formData });
+            if (id) {
+                getCustomer(id);
+            }
             SetShow(true);
+
         },
 
     }));
@@ -36,6 +42,41 @@ const CustomerCreate = forwardRef((props, ref) => {
         }
     });
 
+
+    function getCustomer(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/customer/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+                let customerData = data.result;
+                customerData.logo = "";
+                setFormData({ ...customerData });
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -69,9 +110,16 @@ const CustomerCreate = forwardRef((props, ref) => {
 
         console.log("formData.logo:", formData.logo);
 
+        let endPoint = "/v1/customer";
+        let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/customer/" + formData.id;
+            method = "PUT";
+        }
+
 
         const requestOptions = {
-            method: "POST",
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
@@ -83,7 +131,7 @@ const CustomerCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         setProcessing(true);
-        fetch("/v1/customer", requestOptions)
+        fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -144,7 +192,9 @@ const CustomerCreate = forwardRef((props, ref) => {
             <CustomerView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Create New Customer</Modal.Title>
+                    <Modal.Title>
+                        {formData.id ? "Update Customer #" + formData.name : "Create New Customer"}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         {/*
@@ -478,9 +528,9 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden="true"
-                                    /> + " Creating..."
+                                    /> + " Processing..."
 
-                                    : "Create"
+                                    : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

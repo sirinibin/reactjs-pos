@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
-import OrderUpdate from "./update.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";

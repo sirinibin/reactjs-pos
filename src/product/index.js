@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ProductCreate from "./create.js";
 import ProductView from "./view.js";
-import ProductUpdate from "./update.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -272,7 +271,7 @@ function ProductIndex(props) {
 
     const UpdateFormRef = useRef();
     function openUpdateForm(id) {
-        UpdateFormRef.current.open(id);
+        CreateFormRef.current.open(id);
     }
 
     const DetailsViewRef = useRef();
@@ -290,7 +289,6 @@ function ProductIndex(props) {
     return (
         <>
             <ProductCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <ProductUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} />
 
             <div className="container-fluid p-0">

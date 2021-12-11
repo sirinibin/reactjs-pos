@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import VendorCreate from "./create.js";
 import VendorView from "./view.js";
-import VendorUpdate from "./update.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -229,10 +228,8 @@ function VendorIndex(props) {
     }
 
 
-    const UpdateFormRef = useRef();
     function openUpdateForm(id) {
-        console.log("id:", id);
-        UpdateFormRef.current.open(id);
+        CreateFormRef.current.open(id);
     }
 
     const DetailsViewRef = useRef();
@@ -249,7 +246,6 @@ function VendorIndex(props) {
     return (
         <>
             <VendorCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <VendorUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <VendorView ref={DetailsViewRef} />
 
 

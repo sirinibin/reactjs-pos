@@ -19,7 +19,37 @@ import ProductView from "./../product/view.js";
 const PurchaseCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
+
+            selectedProducts = [];
+            setSelectedProducts([]);
+
+            selectedStores = [];
+            setSelectedStores([]);
+
+            selectedVendors = [];
+            setSelectedVendors([]);
+
+            selectedOrderPlacedByUsers = [];
+            setSelectedOrderPlacedByUsers([]);
+
+            selectedOrderPlacedBySignatures = [];
+            setSelectedOrderPlacedBySignatures([]);
+
+
+            formData = {
+                vat_percent: 10.0,
+                discount: 0.0,
+                date_str: format(new Date(), "MMM dd yyyy"),
+                status: "created",
+            };
+
+            setFormData({ ...formData });
+
+            if (id) {
+                getPurchase(id);
+            }
+            reCalculate();
             setShow(true);
         },
 
@@ -41,33 +71,31 @@ const PurchaseCreate = forwardRef((props, ref) => {
         status: "created",
     });
 
-    let [unitPriceList, setUnitPriceList] = useState([]);
-
     //Store Auto Suggestion
     const [storeOptions, setStoreOptions] = useState([]);
-    const [selectedStores, setSelectedStores] = useState([]);
+    let [selectedStores, setSelectedStores] = useState([]);
     const [isStoresLoading, setIsStoresLoading] = useState(false);
 
     //Vendor Auto Suggestion
     const [vendorOptions, setVendorOptions] = useState([]);
-    const [selectedVendors, setSelectedVendors] = useState([]);
+    let [selectedVendors, setSelectedVendors] = useState([]);
     const [isVendorsLoading, setIsVendorsLoading] = useState(false);
 
     //Product Auto Suggestion
     const [productOptions, setProductOptions] = useState([]);
     let [selectedProduct, setSelectedProduct] = useState([]);
-    const [selectedProducts, setSelectedProducts] = useState([]);
+    let [selectedProducts, setSelectedProducts] = useState([]);
     const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     //Order Placed By Auto Suggestion
     const [orderPlacedByUserOptions, setOrderPlacedByUserOptions] = useState([]);
-    const [selectedOrderPlacedByUsers, setSelectedOrderPlacedByUsers] = useState([]);
+    let [selectedOrderPlacedByUsers, setSelectedOrderPlacedByUsers] = useState([]);
     const [isOrderPlacedByUsersLoading, setIsOrderPlacedByUsersLoading] = useState(false);
 
     //Order Placed By Signature Auto Suggestion
     const [orderPlacedBySignatureOptions, setOrderPlacedBySignatureOptions] =
         useState([]);
-    const [selectedOrderPlacedBySignatures, setSelectedOrderPlacedBySignatures] =
+    let [selectedOrderPlacedBySignatures, setSelectedOrderPlacedBySignatures] =
         useState([]);
     const [isOrderPlacedBySignaturesLoading, setIsOrderPlacedBySignaturesLoading] =
         useState(false);
@@ -86,6 +114,99 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }
     });
 
+
+    function getPurchase(id) {
+        console.log("inside get Purchase");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/purchase/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                let purchase = data.result;
+                formData = {
+                    id: purchase.id,
+                    code: purchase.code,
+                    store_id: purchase.store_id,
+                    vendor_id: purchase.vendor_id,
+                    date_str: purchase.date_str,
+                    date: purchase.date,
+                    vat_percent: purchase.vat_percent,
+                    discount: purchase.discount,
+                    status: purchase.status,
+                    order_placed_by: purchase.order_placed_by,
+                    order_placed_by_signature_id: purchase.order_placed_by_signature_id,
+                };
+
+                selectedProducts = purchase.products;
+                setSelectedProducts([...selectedProducts]);
+
+
+                let selectedStores = [
+                    {
+                        id: purchase.store_id,
+                        name: purchase.store_name,
+                    }
+                ];
+
+                let selectedVendors = [
+                    {
+                        id: purchase.vendor_id,
+                        name: purchase.vendor_name,
+                    }
+                ];
+
+                let selectedOrderPlacedByUsers = [
+                    {
+                        id: purchase.order_placed_by,
+                        name: purchase.order_placed_by_name
+                    }
+                ];
+
+                if (purchase.order_placed_by_signature_id) {
+                    let selectedOrderPlacedBySignatures = [
+                        {
+                            id: purchase.order_placed_by_signature_id,
+                            name: purchase.order_placed_by_signature_name,
+                        }
+                    ];
+
+                    setSelectedOrderPlacedBySignatures([...selectedOrderPlacedBySignatures]);
+                }
+
+                setSelectedOrderPlacedByUsers([...selectedOrderPlacedByUsers]);
+
+                setSelectedStores([...selectedStores]);
+                setSelectedVendors([...selectedVendors]);
+
+                reCalculate();
+                setFormData({ ...formData });
+
+
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -331,8 +452,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
         formData.vat_percent = parseFloat(formData.vat_percent);
         console.log("formData.discount:", formData.discount);
 
+        let endPoint = "/v1/purchase";
+        let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/purchase/" + formData.id;
+            method = "PUT";
+        }
+
+
         const requestOptions = {
-            method: "POST",
+            method: method,
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
@@ -344,7 +473,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         setProcessing(true);
-        fetch("/v1/purchase", requestOptions)
+        fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -566,7 +695,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
-                    <Modal.Title>Create New Purchase</Modal.Title>
+                    <Modal.Title>
+                        {formData.id ? "Update Purchase #" + formData.code : "Create New Purchase"}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <PurchasePreview />
@@ -1337,7 +1468,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         aria-hidden="true"
                                     /> + " Creating..."
 
-                                    : "Create"
+                                    : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

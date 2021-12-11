@@ -18,9 +18,40 @@ import ProductView from "./../product/view.js";
 const QuotationCreate = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
-    open() {
+    open(id) {
+      formData = {
+        vat_percent: 15.0,
+        discount: 0.0,
+        date_str: format(new Date(), "MMM dd yyyy"),
+        signature_date_str: format(new Date(), "MMM dd yyyy"),
+        status: "delivered",
+        status: "created",
+      };
+
+      selectedProducts = [];
+      setSelectedProducts([]);
+
+      selectedStores = [];
+      setSelectedStores([]);
+
+      selectedCustomers = [];
+      setSelectedCustomers([]);
+
+      selectedDeliveredByUsers = [];
+      setSelectedDeliveredByUsers([]);
+
+      selectedDeliveredBySignatures = [];
+      setSelectedDeliveredBySignatures([]);
+
+      reCalculate();
+
+      setFormData({ ...formData });
+      if (id) {
+        getQuotation(id);
+      }
       SetShow(true);
     },
+
 
   }));
 
@@ -45,30 +76,30 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   //Store Auto Suggestion
   const [storeOptions, setStoreOptions] = useState([]);
-  const [selectedStores, setSelectedStores] = useState([]);
+  let [selectedStores, setSelectedStores] = useState([]);
   const [isStoresLoading, setIsStoresLoading] = useState(false);
 
   //Customer Auto Suggestion
   const [customerOptions, setCustomerOptions] = useState([]);
-  const [selectedCustomers, setSelectedCustomers] = useState([]);
+  let [selectedCustomers, setSelectedCustomers] = useState([]);
   const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
   //Product Auto Suggestion
   const [productOptions, setProductOptions] = useState([]);
   let [selectedProduct, setSelectedProduct] = useState([]);
-  const [selectedProducts, setSelectedProducts] = useState([]);
+  let [selectedProducts, setSelectedProducts] = useState([]);
   const [isProductsLoading, setIsProductsLoading] = useState(false);
 
   //Delivered By Auto Suggestion
   const [deliveredByUserOptions, setDeliveredByUserOptions] = useState([]);
-  const [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
+  let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
   const [isDeliveredByUsersLoading, setIsDeliveredByUsersLoading] =
     useState(false);
 
   //Delivered By Signature Auto Suggestion
   const [deliveredBySignatureOptions, setDeliveredBySignatureOptions] =
     useState([]);
-  const [selectedDeliveredBySignatures, setSelectedDeliveredBySignatures] =
+  let [selectedDeliveredBySignatures, setSelectedDeliveredBySignatures] =
     useState([]);
   const [isDeliveredBySignaturesLoading, setIsDeliveredBySignaturesLoading] =
     useState(false);
@@ -88,6 +119,101 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
   });
 
+
+  function getQuotation(id) {
+    console.log("inside get Quotation");
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': cookies.get('access_token'),
+      },
+    };
+
+    fetch('/v1/quotation/' + id, requestOptions)
+      .then(async response => {
+        const isJson = response.headers.get('content-type')?.includes('application/json');
+        const data = isJson && await response.json();
+
+        // check for error response
+        if (!response.ok) {
+          const error = (data && data.errors);
+          return Promise.reject(error);
+        }
+
+        setErrors({});
+
+        console.log("Response:");
+        console.log(data);
+
+        let quotation = data.result;
+        formData = {
+          id: quotation.id,
+          code: quotation.code,
+          store_id: quotation.store_id,
+          customer_id: quotation.customer_id,
+          date_str: quotation.date_str,
+          date: quotation.date,
+          vat_percent: quotation.vat_percent,
+          discount: quotation.discount,
+          status: quotation.status,
+          delivered_by: quotation.delivered_by,
+          delivered_by_signature_id: quotation.delivered_by_signature_id,
+        };
+
+        selectedProducts = quotation.products;
+        setSelectedProducts([...selectedProducts]);
+
+
+        let selectedStores = [
+          {
+            id: quotation.store_id,
+            name: quotation.store_name,
+          }
+        ];
+
+        let selectedCustomers = [
+          {
+            id: quotation.customer_id,
+            name: quotation.customer_name,
+          }
+        ];
+
+        let selectedDeliveredByUsers = [
+          {
+            id: quotation.delivered_by,
+            name: quotation.delivered_by_name
+          }
+        ];
+
+        if (quotation.delivered_by_signature_id) {
+          let selectedDeliveredBySignatures = [
+            {
+              id: quotation.delivered_by_signature_id,
+              name: quotation.delivered_by_signature_name,
+            }
+          ];
+          setSelectedDeliveredBySignatures([...selectedDeliveredBySignatures]);
+        }
+
+        setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
+
+        setSelectedStores([...selectedStores]);
+        setSelectedCustomers([...selectedCustomers]);
+
+
+        setFormData({ ...formData });
+
+        findTotalPrice();
+        findTotalQuantity();
+        findVatPrice();
+        findNetTotal();
+      })
+      .catch(error => {
+        setProcessing(false);
+        setErrors(error);
+      });
+  }
 
   function ObjectToSearchQueryParams(object) {
     return Object.keys(object)
@@ -337,8 +463,16 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     console.log("formData.discount:", formData.discount);
 
+    let endPoint = "/v1/quotation";
+    let method = "POST";
+    if (formData.id) {
+      endPoint = "/v1/quotation/" + formData.id;
+      method = "PUT";
+    }
+
+
     const requestOptions = {
-      method: "POST",
+      method: method,
       headers: {
         'Accept': 'application/json',
         "Content-Type": "application/json",
@@ -350,7 +484,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     console.log("formData:", formData);
 
     setProcessing(true);
-    fetch("/v1/quotation", requestOptions)
+    fetch(endPoint, requestOptions)
       .then(async (response) => {
         const isJson = response.headers
           .get("content-type")
@@ -583,7 +717,9 @@ const QuotationCreate = forwardRef((props, ref) => {
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
       <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
         <Modal.Header>
-          <Modal.Title>Create New Quotation</Modal.Title>
+          <Modal.Title>
+            {formData.id ? "Update Quotation #" + formData.code : "Create New Quotation"}
+          </Modal.Title>
 
           <div className="col align-self-end text-end">
             <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
@@ -1343,9 +1479,9 @@ const QuotationCreate = forwardRef((props, ref) => {
                     size="sm"
                     role="status"
                     aria-hidden="true"
-                  /> + " Creating..."
+                  /> + " Processing..."
 
-                  : "Create"
+                  : formData.id ? "Update" : "Create"
                 }
               </Button>
             </Modal.Footer>

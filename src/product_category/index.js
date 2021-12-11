@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ProductCategoryCreate from "./create.js";
 import ProductCategoryView from "./view.js";
-import ProductCategoryUpdate from "./update.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -229,9 +228,8 @@ function ProductCategoryIndex(props) {
         list();
     }
 
-    const UpdateFormRef = useRef();
     function openUpdateForm(id) {
-        UpdateFormRef.current.open(id);
+        CreateFormRef.current.open(id);
     }
 
     const DetailsViewRef = useRef();
@@ -249,7 +247,6 @@ function ProductCategoryIndex(props) {
     return (
         <>
             <ProductCategoryCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <ProductCategoryUpdate ref={UpdateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <ProductCategoryView ref={DetailsViewRef} />
 
             <div className="container-fluid p-0">
