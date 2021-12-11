@@ -1,8 +1,8 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import OrderPreview from './preview.js';
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
+import OrderPreview from './preview.js';
 
 const OrderView = forwardRef((props, ref) => {
 
@@ -113,14 +113,22 @@ const OrderView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
+    const PreviewRef = useRef();
+    function openPreview() {
+        PreviewRef.current.open(model);
+    }
+
 
     return (<>
+        <OrderPreview ref={PreviewRef} />
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Order #{model.code}</Modal.Title>
 
                 <div className="col align-self-end text-end">
-                    <OrderPreview />
+                    <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
+                        <i className="bi bi-display"></i> Preview
+                    </Button>
                     {/*
                         <button
                             className="btn btn-primary mb-3"
