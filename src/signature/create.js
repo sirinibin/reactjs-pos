@@ -203,40 +203,6 @@ const SignatureCreate = forwardRef((props, ref) => {
         return { targetWidth: targetWidth, targetHeight: targetHeight };
     }
 
-    /*
-        function getTargetDimension(file, targetWidth, targetHeight) {
-    
-            console.log("Inside getTargetDimension");
-    
-            new Promise((resolve, reject) => {
-    
-    
-                let url = URL.createObjectURL(file);
-                let img = new Image;
-    
-                img.onload = function () {
-                    console.log("Inside onload ");
-                    let originaleWidth = img.width;
-                    let originalHeight = img.height;
-    
-                    let ratio = parseFloat(originaleWidth / originalHeight);
-    
-                    URL.revokeObjectURL(img.src);
-    
-                    targetWidth = parseInt(targetHeight * ratio);
-                    targetHeight = parseInt(targetWidth * ratio);
-    
-                    return resolve({ targetWidth: targetWidth, targetHeight: targetHeight });
-                }
-                img.src = url;
-    
-            });
-    
-    
-        }
-        */
-
-
 
     return (
         <>

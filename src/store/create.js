@@ -89,11 +89,11 @@ const StoreCreate = forwardRef((props, ref) => {
             .join("&");
     }
 
-    function resizeFIle(file, cb) {
+    function resizeFIle(file, w, h, cb) {
         Resizer.imageFileResizer(
             file,
-            100,
-            100,
+            w,
+            h,
             "JPEG",
             100,
             0,
@@ -186,6 +186,17 @@ const StoreCreate = forwardRef((props, ref) => {
                 console.error("There was an error!", error);
                 props.showToastMessage("Error Creating Store!", "danger");
             });
+    }
+
+
+    function getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight) {
+
+        let ratio = parseFloat(originaleWidth / originalHeight);
+
+        targetWidth = parseInt(targetHeight * ratio);
+        targetHeight = parseInt(targetWidth * ratio);
+
+        return { targetWidth: targetWidth, targetHeight: targetHeight };
     }
 
     //let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
@@ -809,6 +820,31 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                         let file = document.querySelector('#logo').files[0];
 
+                                        let targetHeight = 100;
+                                        let targetWidth = 100;
+
+
+                                        let url = URL.createObjectURL(file);
+                                        let img = new Image;
+
+                                        img.onload = function () {
+                                            let originaleWidth = img.width;
+                                            let originalHeight = img.height;
+
+                                            let targetDimensions = getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight);
+                                            targetWidth = targetDimensions.targetWidth;
+                                            targetHeight = targetDimensions.targetHeight;
+
+                                            resizeFIle(file, targetWidth, targetHeight, (result) => {
+                                                formData.logo_content = result;
+                                                setFormData({ ...formData });
+
+                                                console.log("formData.logo_content:", formData.logo_content);
+                                            });
+                                        };
+                                        img.src = url;
+
+                                        /*
                                         resizeFIle(file, (result) => {
                                             formData.logo_content = result;
 
@@ -816,6 +852,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
                                             setFormData({ ...formData });
                                         });
+                                        */
                                     }}
                                     className="form-control"
                                     id="logo"

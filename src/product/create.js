@@ -37,11 +37,11 @@ const ProductCreate = forwardRef((props, ref) => {
     }));
 
 
-    function resizeFIle(file, cb) {
+    function resizeFIle(file, w, h, cb) {
         Resizer.imageFileResizer(
             file,
-            400,
-            400,
+            w,
+            h,
             "JPEG",
             100,
             0,
@@ -478,6 +478,17 @@ const ProductCreate = forwardRef((props, ref) => {
         selectedUnitPrice[0].wholesale_unit_price = "";
 
         setSelectedUnitPrice([...selectedUnitPrice]);
+    }
+
+
+    function getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight) {
+
+        let ratio = parseFloat(originaleWidth / originalHeight);
+
+        targetWidth = parseInt(targetHeight * ratio);
+        targetHeight = parseInt(targetWidth * ratio);
+
+        return { targetWidth: targetWidth, targetHeight: targetHeight };
     }
 
     const DetailsViewRef = useRef();
@@ -1113,6 +1124,33 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                         let file = document.querySelector('#image').files[0];
 
+
+                                        let targetHeight = 400;
+                                        let targetWidth = 400;
+
+
+                                        let url = URL.createObjectURL(file);
+                                        let img = new Image;
+
+                                        img.onload = function () {
+                                            let originaleWidth = img.width;
+                                            let originalHeight = img.height;
+
+                                            let targetDimensions = getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight);
+                                            targetWidth = targetDimensions.targetWidth;
+                                            targetHeight = targetDimensions.targetHeight;
+
+                                            resizeFIle(file, targetWidth, targetHeight, (result) => {
+                                                formData.images_content[0] = result;
+                                                setFormData({ ...formData });
+
+                                                console.log("formData.images_content[0]:", formData.images_content[0]);
+                                            });
+                                        };
+                                        img.src = url;
+
+
+                                        /*
                                         resizeFIle(file, (result) => {
                                             if (!formData.images_content) {
                                                 formData.images_content = [];
@@ -1122,6 +1160,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                             console.log("formData.images_content[0]:", formData.images_content[0]);
                                         });
+                                        */
                                     }}
                                     className="form-control"
                                     id="image"
