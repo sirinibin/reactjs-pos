@@ -115,7 +115,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                         <li><strong> اقتباس: </strong>#{props.model.code ? convertToPersianNumber(props.model.code) : "<ID_NUMBER_ARABIC>"}</li>
                         <li><strong>تاريخ الاقتباس: </strong>{props.model.date_str ? getArabicDate(props.model.date_str) : "<DATE_ARABIC>"}</li>
                         <li>
-                            <strong>‫لعميل‬ ‫اسم‬: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
+                            <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
                         </li>
                         <li><strong>ظريبه الشراء: </strong>{props.model.customer ? props.model.customer.vat_no_in_arabic : "<CUSTOMER_VAT_NO_ARABIC>"}</li>
                     </ul>

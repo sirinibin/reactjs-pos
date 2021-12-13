@@ -84,8 +84,8 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             {props.model.store ? props.model.store.title_in_arabic : "<STORE_TITLE_ARABIC>"}
                         </li>
                         {/* <!-- <li><hr /></li> --> */}
-                        <li>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"} / ‫ت‬.‫س‬</li>
-                        <li>{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"} / ‫الضريبي‬ ‫الرقم‬</li>
+                        <li>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"} / رقم التسجيل</li>
+                        <li>{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"} / الرقم الضريبي</li>
                     </ul>
                 </div>
             </div>
