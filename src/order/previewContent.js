@@ -93,7 +93,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                 <div className="col">
                     <u
                     ><h1 className="text-center" style={{ fontSize: "4mm" }}>
-                            ORDER / طلب
+                            INVOICE / فاتورة
                         </h1>
                     </u>
                 </div>
