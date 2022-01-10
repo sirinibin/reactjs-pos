@@ -220,7 +220,7 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Name In Arabic*</label>
+                            <label className="form-label">Name In Arabic</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -320,7 +320,7 @@ const VendorCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-6">
-                            <label className="form-label">Address*</label>
+                            <label className="form-label">Address</label>
 
                             <div className="input-group mb-3">
                                 <textarea
@@ -353,7 +353,7 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Address In Arabic*</label>
+                            <label className="form-label">Address In Arabic</label>
 
                             <div className="input-group mb-3">
                                 <textarea
@@ -420,7 +420,7 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Phone In Arabic*</label>
+                            <label className="form-label">Phone In Arabic</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -454,7 +454,7 @@ const VendorCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-6">
-                            <label className="form-label">VAT NO.*</label>
+                            <label className="form-label">VAT NO.</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -487,7 +487,7 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">VAT NO. In Arabic*</label>
+                            <label className="form-label">VAT NO. In Arabic</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -521,7 +521,7 @@ const VendorCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-6">
-                            <label className="form-label">VAT %*</label>
+                            <label className="form-label">VAT %</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -555,7 +555,7 @@ const VendorCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-6">
-                            <label className="form-label">Email*</label>
+                            <label className="form-label">Email</label>
 
                             <div className="input-group mb-3">
                                 <input

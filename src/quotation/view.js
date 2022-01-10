@@ -3,7 +3,7 @@ import QuotationPreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
-
+import QuotationCreate from "./create.js";
 
 const QuotationView = forwardRef((props, ref) => {
 
@@ -124,9 +124,10 @@ const QuotationView = forwardRef((props, ref) => {
         PreviewRef.current.open(model);
     }
 
-
     return (<>
         <QuotationPreview ref={PreviewRef} />
+
+
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Quotation #{model.code} </Modal.Title>
