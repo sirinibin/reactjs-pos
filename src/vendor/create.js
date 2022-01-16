@@ -267,6 +267,74 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
+                            <label className="form-label">Phone*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.phone}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["phone"] = "";
+                                        setErrors({ ...errors });
+                                        formData.phone = e.target.value;
+                                        formData.phone_in_arabic = convertToPersianNumber(formData.phone);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="phone"
+                                    placeholder="Phone"
+                                />
+                                {errors.phone && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.phone}
+                                    </div>
+                                )}
+                                {formData.phone && !errors.phone && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Phone In Arabic</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.phone_in_arabic}
+                                    type='string'
+                                    disabled
+                                    onChange={(e) => {
+                                        errors["phone_in_arabic"] = "";
+                                        setErrors({ ...errors });
+                                        formData.phone_in_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="phone_in_arabic"
+                                    placeholder="Phone NO. In Arabic"
+                                />
+                                {errors.phone_in_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.phone_in_arabic}
+                                    </div>
+                                )}
+                                {formData.phone_in_arabic && !errors.phone_in_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
                             <label className="form-label">Title(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -400,77 +468,11 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-6">
-                            <label className="form-label">Phone*</label>
 
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.phone}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["phone"] = "";
-                                        setErrors({ ...errors });
-                                        formData.phone = e.target.value;
-                                        formData.phone_in_arabic = convertToPersianNumber(formData.phone);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="phone"
-                                    placeholder="Phone"
-                                />
-                                {errors.phone && (
-                                    <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
-                                        {errors.phone}
-                                    </div>
-                                )}
-                                {formData.phone && !errors.phone && (
-                                    <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Phone In Arabic</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.phone_in_arabic}
-                                    type='string'
-                                    disabled
-                                    onChange={(e) => {
-                                        errors["phone_in_arabic"] = "";
-                                        setErrors({ ...errors });
-                                        formData.phone_in_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="phone_in_arabic"
-                                    placeholder="Phone NO. In Arabic"
-                                />
-                                {errors.phone_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
-                                        {errors.phone_in_arabic}
-                                    </div>
-                                )}
-                                {formData.phone_in_arabic && !errors.phone_in_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
 
                         <div className="col-md-6">
-                            <label className="form-label">Registration Number(C.R NO.)*</label>
+                            <label className="form-label">Registration Number(C.R NO.)</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -504,7 +506,7 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Registration Number(C.R NO.) In Arabic*</label>
+                            <label className="form-label">Registration Number(C.R NO.) In Arabic</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -539,7 +541,7 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">VAT NO.*</label>
+                            <label className="form-label">VAT NO.</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -573,7 +575,7 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">VAT NO. In Arabic*</label>
+                            <label className="form-label">VAT NO. In Arabic</label>
 
                             <div className="input-group mb-3">
                                 <input
