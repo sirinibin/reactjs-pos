@@ -150,6 +150,20 @@ const VendorCreate = forwardRef((props, ref) => {
             });
     }
 
+    let persianDigits = "۰۱۲۳٤۵٦۷۸۹";
+    let persianMap = persianDigits.split("");
+
+    function convertToEnglishNumber(input) {
+        return input.replace(/[\u06F0-\u06F90]/g, function (m) {
+            return persianDigits.indexOf(m);
+        });
+    }
+
+    function convertToPersianNumber(input) {
+        return input.replace(/\d/g, function (m) {
+            return persianMap[parseInt(m)];
+        });
+    }
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
@@ -397,6 +411,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         errors["phone"] = "";
                                         setErrors({ ...errors });
                                         formData.phone = e.target.value;
+                                        formData.phone_in_arabic = convertToPersianNumber(formData.phone);
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -426,6 +441,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                 <input
                                     value={formData.phone_in_arabic}
                                     type='string'
+                                    disabled
                                     onChange={(e) => {
                                         errors["phone_in_arabic"] = "";
                                         setErrors({ ...errors });
@@ -454,7 +470,76 @@ const VendorCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-6">
-                            <label className="form-label">VAT NO.</label>
+                            <label className="form-label">Registration Number(C.R NO.)*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.registration_number}
+                                    type='number'
+                                    onChange={(e) => {
+                                        errors["registration_number"] = "";
+                                        setErrors({ ...errors });
+                                        formData.registration_number = e.target.value;
+                                        formData.registration_number_in_arabic = convertToPersianNumber(formData.registration_number.toString());
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="registration_number"
+                                    placeholder="Registration Number(C.R NO.)"
+                                />
+                                {errors.registration_number && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.registration_number}
+                                    </div>
+                                )}
+                                {formData.registration_number && !errors.registration_number && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Registration Number(C.R NO.) In Arabic*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.registration_number_in_arabic}
+                                    type='string'
+                                    disabled
+                                    onChange={(e) => {
+                                        errors["registration_number"] = "";
+                                        setErrors({ ...errors });
+                                        formData.registration_number_in_arabic = e.target.value;
+                                        formData.registration_number = convertToEnglishNumber(formData.registration_number_in_arabic.toString());
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="registration_number_in_arabic"
+                                    placeholder="Registration Number(C.R NO.) In Arabic"
+                                />
+                                {errors.registration_number_in_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.registration_number}
+                                    </div>
+                                )}
+                                {formData.registration_number_in_arabic && !errors.registration_number_in_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">VAT NO.*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -464,6 +549,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         errors["vat_no"] = "";
                                         setErrors({ ...errors });
                                         formData.vat_no = e.target.value;
+                                        formData.vat_no_in_arabic = convertToPersianNumber(formData.vat_no.toString());
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -487,16 +573,18 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">VAT NO. In Arabic</label>
+                            <label className="form-label">VAT NO. In Arabic*</label>
 
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.vat_no_in_arabic}
                                     type='string'
+                                    disabled
                                     onChange={(e) => {
                                         errors["vat_no_in_arabic"] = "";
                                         setErrors({ ...errors });
                                         formData.vat_no_in_arabic = e.target.value;
+                                        formData.vat_no = convertToEnglishNumber(formData.vat_no_in_arabic.toString());
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}

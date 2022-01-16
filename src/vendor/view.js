@@ -106,6 +106,10 @@ const VendorView = forwardRef((props, ref) => {
                         <th>Phone in Arabic:</th><td> {model.phone_in_arabic}</td>
                     </tr>
                     <tr>
+                        <th>Registration Number(C.R NO.):</th><td> {model.registration_number}</td>
+                        <th>Registration Number(C.R NO.)(in Arabic):</th><td> {model.registration_number_in_arabic}</td>
+                    </tr>
+                    <tr>
                         <th>VAT No:</th><td> {model.vat_no}</td>
                         <th>VAT No(in Arabic):</th><td> {model.vat_no_in_arabic}</td>
                     </tr>
