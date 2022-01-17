@@ -90,43 +90,92 @@ const VendorView = forwardRef((props, ref) => {
             <Modal.Body>
                 <Table striped bvendored hover responsive="lg">
                     <tr>
-                        <th>Name:</th><td> {model.name}</td>
-                        <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
+                        <th>Name: </th><td> {model.name}</td>
+                        <th>Name(in Arabic): </th><td> {model.name_in_arabic}</td>
                     </tr>
                     <tr>
-                        <th>Title:</th><td> {model.title}</td>
-                        <th>Title(in Arabic):</th><td> {model.title_in_arabic}</td>
+                        <th>Title: </th><td> {model.title}</td>
+                        <th>Title(in Arabic): </th><td> {model.title_in_arabic}</td>
                     </tr>
                     <tr>
-                        <th>Address:</th><td> {model.address}</td>
-                        <th>Address in Arabic:</th><td> {model.address_in_arabic}</td>
+                        <th>Address: </th><td> {model.address}</td>
+                        <th>Address in Arabic: </th><td> {model.address_in_arabic}</td>
                     </tr>
                     <tr>
-                        <th>Phone:</th><td> {model.phone}</td>
-                        <th>Phone in Arabic:</th><td> {model.phone_in_arabic}</td>
+                        <th>Phone: </th><td> {model.phone}</td>
+                        <th>Phone in Arabic: </th><td> {model.phone_in_arabic}</td>
                     </tr>
                     <tr>
-                        <th>Registration Number(C.R NO.):</th><td> {model.registration_number}</td>
-                        <th>Registration Number(C.R NO.)(in Arabic):</th><td> {model.registration_number_in_arabic}</td>
+                        <th>Registration Number(C.R NO.): </th><td> {model.registration_number}</td>
+                        <th>Registration Number(C.R NO.)(in Arabic): </th><td> {model.registration_number_in_arabic}</td>
                     </tr>
                     <tr>
-                        <th>VAT No:</th><td> {model.vat_no}</td>
-                        <th>VAT No(in Arabic):</th><td> {model.vat_no_in_arabic}</td>
+                        <th>VAT No: </th><td> {model.vat_no}</td>
+                        <th>VAT No(in Arabic): </th><td> {model.vat_no_in_arabic}</td>
                     </tr>
                     <tr>
-                        <th>Created At:</th><td> {model.created_at}</td>
-                        <th>Updated At:</th><td> {model.updated_at}</td>
+                        <th>Created At: </th><td> {model.created_at}</td>
+                        <th>Updated At: </th><td> {model.updated_at}</td>
                     </tr>
                     <tr>
-                        <th>Created By:</th><td> {model.created_by_name}</td>
-                        <th>Updated By:</th><td> {model.updated_by_name}</td>
+                        <th>Created By: </th><td> {model.created_by_name}</td>
+                        <th>Updated By: </th><td> {model.updated_by_name}</td>
                     </tr>
                     <tr>
-                        <th>E-mail:</th><td> {model.email}</td>
-                        <th>VAT %:</th><td> {model.vat_percent + "%"}</td>
+                        <th>E-mail: </th><td> {model.email}</td>
+                        <th>VAT %: </th><td> {model.vat_percent + "%"}</td>
                     </tr>
 
                 </Table>
+                {model.national_address &&
+                    <span>
+                        < h2 > National Address</h2>
+
+                        <Table striped bvendored hover responsive="lg">
+                            <tr>
+                                <th>Application Number: </th><td> {model.national_address.application_no}</td>
+                                <th>Application Number(Arabic): </th><td> {model.national_address.application_no_arabic}</td>
+                            </tr>
+                            <tr>
+                                <th>Service Number: </th><td> {model.national_address.service_no}</td>
+                                <th>Service Number(Arabic): </th><td> {model.national_address.service_no_arabic}</td>
+                            </tr>
+                            <tr>
+                                <th>Customer Account Number: </th><td> {model.national_address.customer_account_no}</td>
+                                <th>Customer Account Number(Arabic): </th><td> {model.national_address.customer_account_no_arabic}</td>
+                            </tr>
+                            <tr>
+                                <th>Building Number: </th><td> {model.national_address.building_no}</td>
+                                <th>Building Number(Arabic): </th><td> {model.national_address.building_no_arabic}</td>
+                            </tr>
+                            <tr>
+                                <th>Street Name: </th><td> {model.national_address.street_name}</td>
+                                <th>Street Name(Arabic): </th><td> {model.national_address.street_name_arabic}</td>
+                            </tr>
+                            <tr>
+                                <th>District Name: </th><td> {model.national_address.district_name}</td>
+                                <th>District Name(Arabic): </th><td> {model.national_address.district_name_arabic}</td>
+                            </tr>
+                            <tr>
+                                <th>City Name: </th><td> {model.national_address.city_name}</td>
+                                <th>City Name(Arabic): </th><td> {model.national_address.city_name_arabic}</td>
+                            </tr>
+                            <tr>
+                                <th>ZipCode: </th><td> {model.national_address.zipcode}</td>
+                                <th>ZipCode(Arabic): </th><td> {model.national_address.zipcode_arabic}</td>
+                            </tr>
+                            <tr>
+                                <th>Additional Number: </th><td> {model.national_address.additional_no}</td>
+                                <th>Additional Number(Arabic): </th><td> {model.national_address.additional_no_arabic}</td>
+                            </tr>
+                            <tr>
+                                <th>Unit Number: </th><td> {model.national_address.unit_no}</td>
+                                <th>Unit Number(Arabic): </th><td> {model.national_address.unit_no_arabic}</td>
+                            </tr>
+                        </Table>
+                    </span>
+                }
+
 
                 {/*
                     <form className="row g-3 needs-validation" >
