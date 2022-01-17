@@ -59,6 +59,7 @@ const ProductCreate = forwardRef((props, ref) => {
         {
             id: "",
             name: "",
+            purchase_unit_price: "",
             retail_unit_price: "",
             wholesale_unit_price: "",
         },
@@ -431,6 +432,20 @@ const ProductCreate = forwardRef((props, ref) => {
             return;
         }
 
+        if (!selectedUnitPrice[0].purchase_unit_price) {
+            errors.purchase_unit_price = "Purchase Unit Price is required";
+            setErrors({ ...errors });
+            return;
+        }
+
+
+        if (isNaN(selectedUnitPrice[0].purchase_unit_price)) {
+            errors.purchase_unit_price = "Invalid Purchase Unit Price";
+            setErrors({ ...errors });
+            return;
+        }
+
+
         if (!selectedUnitPrice[0].wholesale_unit_price) {
             errors.wholesale_unit_price = "Wholesale Unit Price is required";
             setErrors({ ...errors });
@@ -467,6 +482,7 @@ const ProductCreate = forwardRef((props, ref) => {
         selectedUnitPrices.push({
             store_id: selectedUnitPrice[0].id,
             store_name: selectedUnitPrice[0].name,
+            purchase_unit_price: parseFloat(selectedUnitPrice[0].purchase_unit_price),
             retail_unit_price: parseFloat(selectedUnitPrice[0].retail_unit_price),
             wholesale_unit_price: parseFloat(selectedUnitPrice[0].wholesale_unit_price),
         });
@@ -474,6 +490,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
         selectedUnitPrice[0].id = "";
         selectedUnitPrice[0].name = "";
+        selectedUnitPrice[0].purchase_unit_price = "";
         selectedUnitPrice[0].retail_unit_price = "";
         selectedUnitPrice[0].wholesale_unit_price = "";
 
@@ -515,7 +532,7 @@ const ProductCreate = forwardRef((props, ref) => {
             <ProductView ref={DetailsViewRef} />
             <ProductCategoryCreate ref={ProductCategoryCreateFormRef} showToastMessage={props.showToastMessage} />
 
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Product #" + formData.name : "Create New Product"}
@@ -723,7 +740,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         </div>
 
                         <h4>Unit Price</h4>
-                        <div className="col-md-5">
+                        <div className="col-md-4">
                             <label className="form-label">Select Store*</label>
 
                             <div className="input-group mb-3">
@@ -775,29 +792,29 @@ const ProductCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Retail*</label>
+                            <label className="form-label">Purchase*</label>
 
                             <div className="input-group mb-3">
 
                                 <input
-                                    value={selectedUnitPrice[0].retail_unit_price}
+                                    value={selectedUnitPrice[0].purchase_unit_price}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["retail_unit_price"] = "";
+                                        errors["purchase_unit_price"] = "";
                                         setErrors({ ...errors });
-                                        selectedUnitPrice[0].retail_unit_price = e.target.value;
+                                        selectedUnitPrice[0].purchase_unit_price = e.target.value;
                                     }}
                                     className="form-control"
-                                    id="retail_unit_price"
-                                    placeholder="Unit Price"
+                                    id="purchase_unit_price"
+                                    placeholder="Purchase Unit Price"
                                 />
-                                {errors.retail_unit_price && (
+                                {errors.purchase_unit_price && (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i>
-                                        {errors.retail_unit_price}
+                                        {errors.purchase_unit_price}
                                     </div>
                                 )}
-                                {selectedUnitPrice[0].retail_unit_price && !errors.retail_unit_price && (
+                                {selectedUnitPrice[0].purchase_unit_price && !errors.purchase_unit_price && (
                                     <div style={{ color: "green" }}>
                                         <i class="bi bi-check-lg"> </i>
                                         Looks good!
@@ -806,6 +823,9 @@ const ProductCreate = forwardRef((props, ref) => {
 
                             </div>
                         </div>
+
+
+
 
                         <div className="col-md-2">
                             <label className="form-label">Wholesale*</label>
@@ -845,6 +865,40 @@ const ProductCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
+                            <label className="form-label">Retail*</label>
+
+                            <div className="input-group mb-3">
+
+                                <input
+                                    value={selectedUnitPrice[0].retail_unit_price}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["retail_unit_price"] = "";
+                                        setErrors({ ...errors });
+                                        selectedUnitPrice[0].retail_unit_price = e.target.value;
+                                    }}
+                                    className="form-control"
+                                    id="retail_unit_price"
+                                    placeholder="Unit Price"
+                                />
+                                {errors.retail_unit_price && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.retail_unit_price}
+                                    </div>
+                                )}
+                                {selectedUnitPrice[0].retail_unit_price && !errors.retail_unit_price && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+
+                            </div>
+                        </div>
+
+
+                        <div className="col-md-2">
                             <label className="form-label">Action</label>
                             <div className="input-group mb-3">
 
@@ -856,6 +910,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 <tr className="text-center">
                                     <th>SI No.</th>
                                     <th>Store Name</th>
+                                    <th>Purchase Unit Price</th>
                                     <th>Wholesale Unit Price</th>
                                     <th>Retail Unit Price</th>
                                     <th></th>
@@ -866,6 +921,40 @@ const ProductCreate = forwardRef((props, ref) => {
                                     <tr className="text-center">
                                         <td>{index + 1}</td>
                                         <td>{unitPrice.store_name}</td>
+                                        <td style={{ width: "150px" }}>
+
+                                            <input type="number" value={unitPrice.purchase_unit_price} className="form-control"
+
+                                                placeholder="Purchase Unit Price" onChange={(e) => {
+                                                    errors["purchase_unit_price_" + index] = "";
+                                                    setErrors({ ...errors });
+                                                    if (!e.target.value || e.target.value == 0) {
+                                                        errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
+                                                        selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
+                                                        setSelectedUnitPrices([...selectedUnitPrices]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+                                                    selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
+                                                    console.log("selectedUnitPrices[index].purchase_unit_price:", selectedUnitPrices[index].purchase_unit_price);
+                                                    setSelectedUnitPrices([...selectedUnitPrices]);
+
+                                                }} /> SAR
+                                            {errors["purchase_unit_price_" + index] && (
+                                                <div style={{ color: "red" }}>
+                                                    <i class="bi bi-x-lg"> </i>
+                                                    {errors["purchase_unit_price_" + index]}
+                                                </div>
+                                            )}
+                                            {(selectedUnitPrices[index].purchase_unit_price && !errors["purchase_unit_price_" + index]) ? (
+                                                <div style={{ color: "green" }}>
+                                                    <i class="bi bi-check-lg"> </i>
+                                                    Looks good!
+                                                </div>
+                                            ) : null}
+                                        </td>
+
                                         <td style={{ width: "150px" }}>
 
                                             <input type="number" value={unitPrice.wholesale_unit_price} className="form-control"

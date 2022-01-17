@@ -211,6 +211,7 @@ const ProductView = forwardRef((props, ref) => {
                         <tr className="text-center">
                             <th>SI No.</th>
                             <th>Store Name</th>
+                            <th>Purchase Unit Price</th>
                             <th>Wholesale Unit Price</th>
                             <th>Retail Unit Price</th>
                         </tr>
@@ -220,6 +221,15 @@ const ProductView = forwardRef((props, ref) => {
                             <tr className="text-center">
                                 <td>{index + 1}</td>
                                 <td>{unitPrice.store_name}</td>
+                                <td>
+                                    <NumberFormat
+                                        value={unitPrice.purchase_unit_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                        suffix={" SAR"}
+                                    />
+                                </td>
                                 <td>
                                     <NumberFormat
                                         value={unitPrice.wholesale_unit_price}

@@ -38,7 +38,7 @@ const PurchaseView = forwardRef((props, ref) => {
         console.log("model.products:", model.products);
         for (var i = 0; i < model.products.length; i++) {
             totalPrice +=
-                parseFloat(model.products[i].unit_price) *
+                parseFloat(model.products[i].purchase_unit_price) *
                 parseInt(model.products[i].quantity);
         }
         totalPrice = totalPrice.toFixed(2);
@@ -176,7 +176,7 @@ const PurchaseView = forwardRef((props, ref) => {
                             <th>CODE</th>
                             <th>Name</th>
                             <th>Qty</th>
-                            <th>Unit Price</th>
+                            <th>Purchase Unit Price</th>
                             <th>Price</th>
                         </tr>
                     </thead>
@@ -189,7 +189,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                 <td>{product.quantity}</td>
                                 <td>
                                     <NumberFormat
-                                        value={product.unit_price}
+                                        value={product.purchase_unit_price}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
@@ -198,7 +198,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                 </td>
                                 <td>
                                     <NumberFormat
-                                        value={(product.unit_price * product.quantity).toFixed(2)}
+                                        value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}

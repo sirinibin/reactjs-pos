@@ -38,7 +38,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
             formData = {
-                vat_percent: 10.0,
+                vat_percent: 15.0,
                 discount: 0.0,
                 date_str: format(new Date(), "MMM dd yyyy"),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
@@ -292,22 +292,22 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setIsVendorsLoading(false);
     }
 
-    function GetProductUnitPriceInStore(storeId, unitPriceListArray) {
-        if (!unitPriceListArray) {
+    function GetProductUnitPriceInStore(storeId, purchaseUnitPriceListArray) {
+        if (!purchaseUnitPriceListArray) {
             return "";
         }
 
-        for (var i = 0; i < unitPriceListArray.length; i++) {
-            console.log("unitPriceListArray[i]:", unitPriceListArray[i]);
+        for (var i = 0; i < purchaseUnitPriceListArray.length; i++) {
+            console.log("purchaseUnitPriceListArray[i]:", purchaseUnitPriceListArray[i]);
             console.log("store_id:", storeId);
 
-            if (unitPriceListArray[i].store_id === storeId) {
+            if (purchaseUnitPriceListArray[i].store_id === storeId) {
                 console.log("macthed");
                 console.log(
                     "unitPrice.retail_unit_price:",
-                    unitPriceListArray[i].retail_unit_price
+                    purchaseUnitPriceListArray[i].purchase_unit_price
                 );
-                return unitPriceListArray[i].retail_unit_price;
+                return purchaseUnitPriceListArray[i].purchase_unit_price;
             } else {
                 console.log("not matched");
             }
@@ -445,8 +445,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
                 quantity: parseInt(selectedProducts[i].quantity),
-                unit_price: parseFloat(selectedProducts[i].unit_price),
-                selling_unit_price: parseFloat(selectedProducts[i].selling_unit_price),
+                purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
+                retail_unit_price: parseFloat(selectedProducts[i].retail_unit_price),
+                wholesale_unit_price: parseFloat(selectedProducts[i].wholesale_unit_price),
             });
         }
 
@@ -544,41 +545,55 @@ const PurchaseCreate = forwardRef((props, ref) => {
             return;
         }
 
-        errors.unit_price = "";
+        errors.purchase_unit_price = "";
 
         if (
-            !selectedProduct[0].unit_price ||
-            isNaN(selectedProduct[0].unit_price)
+            !selectedProduct[0].purchase_unit_price ||
+            isNaN(selectedProduct[0].purchase_unit_price)
         ) {
-            errors.unit_price = "Invalid Unit Price";
+            errors.purchase_unit_price = "Invalid Purchase Unit Price";
             setErrors({ ...errors });
             return;
         }
 
-        errors.selling_unit_price = "";
+
+        errors.wholesale_unit_price = "";
         if (
-            !selectedProduct[0].selling_unit_price ||
-            isNaN(selectedProduct[0].selling_unit_price)
+            !selectedProduct[0].wholesale_unit_price ||
+            isNaN(selectedProduct[0].wholesale_unit_price)
         ) {
-            errors.selling_unit_price = "Invalid Selling Unit Price";
+            errors.wholesale_unit_price = "Invalid Wholesale Unit Price";
             setErrors({ ...errors });
             return;
         }
+
+        errors.retail_unit_price = "";
+        if (
+            !selectedProduct[0].retail_unit_price ||
+            isNaN(selectedProduct[0].retail_unit_price)
+        ) {
+            errors.retail_unit_price = "Invalid Retail Unit Price";
+            setErrors({ ...errors });
+            return;
+        }
+
 
         selectedProducts.push({
             product_id: selectedProduct[0].id,
             code: selectedProduct[0].item_code,
             name: selectedProduct[0].name,
             quantity: selectedProduct[0].quantity,
-            unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
-            selling_unit_price: parseFloat(selectedProduct[0].selling_unit_price).toFixed(2),
+            purchase_unit_price: parseFloat(selectedProduct[0].purchase_unit_price).toFixed(2),
+            retail_unit_price: parseFloat(selectedProduct[0].retail_unit_price).toFixed(2),
+            wholesale_unit_price: parseFloat(selectedProduct[0].wholesale_unit_price).toFixed(2),
         });
 
         selectedProduct[0].name = "";
         selectedProduct[0].id = "";
         selectedProduct[0].quantity = "";
-        selectedProduct[0].unit_price = "";
-        selectedProduct[0].selling_unit_price = "";
+        selectedProduct[0].purchase_unit_price = "";
+        selectedProduct[0].retail_unit_price = "";
+        selectedProduct[0].wholesale_unit_price = "";
 
         setSelectedProduct([...selectedProduct]);
         setSelectedProducts([...selectedProducts]);
@@ -610,7 +625,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         totalPrice = 0.00;
         for (var i = 0; i < selectedProducts.length; i++) {
             totalPrice +=
-                parseFloat(selectedProducts[i].unit_price) *
+                parseFloat(selectedProducts[i].purchase_unit_price) *
                 parseInt(selectedProducts[i].quantity);
         }
         totalPrice = totalPrice.toFixed(2);
@@ -695,7 +710,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Purchase #" + formData.code : "Create New Purchase"}
@@ -999,9 +1014,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         setErrors({ ...errors });
 
                                         if (formData.store_id) {
-                                            selectedItems[0].unit_price = GetProductUnitPriceInStore(
+                                            selectedItems[0].purchase_unit_price = GetProductUnitPriceInStore(
                                                 formData.store_id,
-                                                selectedItems[0].unit_prices
+                                                selectedItems[0].purchase_unit_prices
                                             );
 
                                         }
@@ -1039,13 +1054,25 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-2">
+                        <div className="col-md-1">
                             <label className="form-label">Qty*</label>
                             <input
                                 value={selectedProduct[0] ? selectedProduct[0].quantity : null}
                                 onChange={(e) => {
                                     console.log("Inside onchange qty");
-                                    if (!e.target.value || e.target.value == 0) {
+                                    if (!e.target.value) {
+                                        errors["quantity"] = "Invalid Quantity";
+                                        if (selectedProduct[0]) {
+                                            selectedProduct[0].quantity = e.target.value;
+                                        }
+                                        setErrors({ ...errors });
+                                        return;
+                                    }
+
+                                    if (e.target.value == 0) {
+                                        if (selectedProduct[0]) {
+                                            selectedProduct[0].quantity = e.target.value;
+                                        }
                                         errors["quantity"] = "Invalid Quantity";
                                         setErrors({ ...errors });
                                         return;
@@ -1082,88 +1109,131 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 )}
                         </div>
                         <div className="col-md-2">
-                            <label className="form-label">Unit Price*</label>
+                            <label className="form-label">Purchase Unit Price*</label>
                             <input
                                 type="text"
                                 value={
-                                    selectedProduct[0] ? selectedProduct[0].unit_price : null
+                                    selectedProduct[0] ? selectedProduct[0].purchase_unit_price : null
                                 }
                                 onChange={(e) => {
-                                    console.log("Inside onchange unit price:");
+                                    console.log("Inside onchange purchase unit price:");
 
                                     if (isNaN(e.target.value) || e.target.value === "0") {
-                                        errors["unit_price"] = "Invalid Unit Price";
+                                        errors["purchase_unit_price"] = "Invalid Purchase Unit Price";
                                         setErrors({ ...errors });
                                         return;
                                     }
-                                    errors["unit_price"] = "";
+                                    errors["purchase_unit_price"] = "";
                                     setErrors({ ...errors });
 
                                     //setFormData({ ...formData });
                                     if (selectedProduct[0]) {
-                                        selectedProduct[0].unit_price = e.target.value;
+                                        selectedProduct[0].purchase_unit_price = e.target.value;
                                         setSelectedProduct([...selectedProduct]);
                                     }
                                 }}
                                 className="form-control"
-                                id="unit_price"
-                                placeholder="Unit Price"
-                                defaultValue=""
+                                id="purchase_unit_price"
+                                placeholder="Purchase Unit Price"
                             />
 
-                            {errors.unit_price ? (
+                            {errors.purchase_unit_price ? (
                                 <div style={{ color: "red" }}>
                                     <i class="bi bi-x-lg"> </i>
-                                    {errors.unit_price}
+                                    {errors.purchase_unit_price}
                                 </div>
                             ) : null}
                             {selectedProduct[0] &&
-                                selectedProduct[0].unit_price &&
-                                !errors.unit_price && (
+                                selectedProduct[0].purchase_unit_price &&
+                                !errors.purchase_unit_price && (
                                     <div style={{ color: "green" }}>
                                         <i class="bi bi-check-lg"> </i>Looks good!
                                     </div>
                                 )}
                         </div>
-                        <div className="col-md-3">
-                            <label className="form-label">Selling Unit Price*</label>
+                        <div className="col-md-2">
+                            <label className="form-label">Wholesale Unit Price*</label>
                             <input
                                 type="text"
                                 value={
-                                    selectedProduct[0] ? selectedProduct[0].selling_unit_price : null
+                                    selectedProduct[0] ? selectedProduct[0].wholesale_unit_price : null
                                 }
                                 onChange={(e) => {
                                     console.log("Inside onchange selling unit price:");
 
                                     if (isNaN(e.target.value) || e.target.value === "0") {
-                                        errors["selling_unit_price"] = "Invalid Selling Unit Price";
+                                        errors["wholesale_unit_price"] = "Invalid Wholesale Unit Price";
                                         setErrors({ ...errors });
                                         return;
                                     }
-                                    errors["selling_unit_price"] = "";
+                                    errors["wholesale_unit_price"] = "";
                                     setErrors({ ...errors });
 
                                     //setFormData({ ...formData });
                                     if (selectedProduct[0]) {
-                                        selectedProduct[0].selling_unit_price = e.target.value;
+                                        selectedProduct[0].wholesale_unit_price = e.target.value;
                                         setSelectedProduct([...selectedProduct]);
                                     }
                                 }}
                                 className="form-control"
-                                id="selling_unit_price"
-                                placeholder="Selling Unit Price"
+                                id="wholesale_unit_price"
+                                placeholder="Wholesale Unit Price"
                                 defaultValue=""
                             />
 
-                            {errors.selling_unit_price ? (
+                            {errors.wholesale_unit_price ? (
                                 <div style={{ color: "red" }}>
                                     <i class="bi bi-x-lg"> </i>
-                                    {errors.selling_unit_price}
+                                    {errors.wholesale_unit_price}
                                 </div>
                             ) : null}
                             {selectedProduct[0] &&
-                                selectedProduct[0].selling_unit_price &&
-                                !errors.selling_unit_price && (
+                                selectedProduct[0].wholesale_unit_price &&
+                                !errors.wholesale_unit_price && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>Looks good!
+                                    </div>
+                                )}
+                        </div>
+                        <div className="col-md-2">
+                            <label className="form-label">Retail Unit Price*</label>
+                            <input
+                                type="text"
+                                value={
+                                    selectedProduct[0] ? selectedProduct[0].retail_unit_price : null
+                                }
+                                onChange={(e) => {
+                                    console.log("Inside onchange retail unit price:");
+
+                                    if (isNaN(e.target.value) || e.target.value === "0") {
+                                        errors["retail_unit_price"] = "Invalid Retail Unit Price";
+                                        setErrors({ ...errors });
+                                        return;
+                                    }
+                                    errors["retail_unit_price"] = "";
+                                    setErrors({ ...errors });
+
+                                    //setFormData({ ...formData });
+                                    if (selectedProduct[0]) {
+                                        selectedProduct[0].retail_unit_price = e.target.value;
+                                        setSelectedProduct([...selectedProduct]);
+                                    }
+                                }}
+                                className="form-control"
+                                id="retail_unit_price"
+                                placeholder="Retail Unit Price"
+                                defaultValue=""
+                            />
+
+                            {errors.retail_unit_price ? (
+                                <div style={{ color: "red" }}>
+                                    <i class="bi bi-x-lg"> </i>
+                                    {errors.retail_unit_price}
+                                </div>
+                            ) : null}
+                            {selectedProduct[0] &&
+                                selectedProduct[0].retail_unit_price &&
+                                !errors.retails_unit_price && (
                                     <div style={{ color: "green" }}>
                                         <i class="bi bi-check-lg"> </i>Looks good!
                                     </div>
@@ -1187,7 +1257,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     <th>CODE</th>
                                     <th>Name</th>
                                     <th>Qty</th>
-                                    <th>Unit Price</th>
+                                    <th>Purchase Unit Price</th>
                                     <th>Price</th>
                                     <th></th>
                                 </tr>
@@ -1247,32 +1317,32 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         </td>
                                         <td style={{ width: "150px" }}>
 
-                                            <input type="number" value={product.unit_price} className="form-control"
+                                            <input type="number" value={product.purchase_unit_price} className="form-control"
 
-                                                placeholder="Unit Price" onChange={(e) => {
-                                                    errors["unit_price_" + index] = "";
+                                                placeholder="Purchase Unit Price" onChange={(e) => {
+                                                    errors["purchase_unit_price_" + index] = "";
                                                     setErrors({ ...errors });
                                                     if (!e.target.value || e.target.value == 0) {
-                                                        errors["unit_price_" + index] = "Invalid Unit Price";
+                                                        errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
                                                         setSelectedProducts([...selectedProducts]);
                                                         setErrors({ ...errors });
                                                         console.log("errors:", errors);
                                                         return;
                                                     }
-                                                    selectedProducts[index].unit_price = parseFloat(e.target.value);
-                                                    console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
+                                                    selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                    console.log("selectedProducts[index].purchase_unit_price:", selectedProducts[index].purchase_unit_price);
                                                     setSelectedProducts([...selectedProducts]);
                                                     reCalculate();
 
                                                 }} /> SAR
-                                            {errors["unit_price_" + index] && (
+                                            {errors["purchase_unit_price_" + index] && (
                                                 <div style={{ color: "red" }}>
                                                     <i class="bi bi-x-lg"> </i>
-                                                    {errors["unit_price_" + index]}
+                                                    {errors["purchase_unit_price_" + index]}
                                                 </div>
                                             )}
-                                            {(selectedProducts[index].unit_price && !errors["unit_price_" + index]) ? (
+                                            {(selectedProducts[index].purchase_unit_price && !errors["purchase_unit_price_" + index]) ? (
                                                 <div style={{ color: "green" }}>
                                                     <i class="bi bi-check-lg"> </i>
                                                     Looks good!
@@ -1281,7 +1351,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         </td>
                                         <td>
                                             <NumberFormat
-                                                value={(product.unit_price * product.quantity).toFixed(2)}
+                                                value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" SAR"}

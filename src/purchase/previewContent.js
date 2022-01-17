@@ -189,7 +189,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
                                         >
                                             <li>سعر الوحدة</li>
-                                            <li>Unit Price</li>
+                                            <li>Purchase Unit Price</li>
                                         </ul>
                                     </th>
                                     <th className="per20 text-center" style={{ padding: "0px" }}>
@@ -220,7 +220,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                         <td>{product.quantity}</td>
                                         <td>
                                             <NumberFormat
-                                                value={product.unit_price}
+                                                value={product.purchase_unit_price}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" SAR"}
@@ -229,7 +229,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                         </td>
                                         <td>
                                             <NumberFormat
-                                                value={(product.unit_price * product.quantity).toFixed(2)}
+                                                value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" SAR"}
