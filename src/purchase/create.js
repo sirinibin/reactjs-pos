@@ -1258,7 +1258,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     <th>Name</th>
                                     <th>Qty</th>
                                     <th>Purchase Unit Price</th>
-                                    <th>Price</th>
+                                    <th>Wholesale Unit Price</th>
+                                    <th>Retail Unit Price</th>
+                                    <th>Purchase Price</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -1324,7 +1326,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     setErrors({ ...errors });
                                                     if (!e.target.value || e.target.value == 0) {
                                                         errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
-                                                        selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                        selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
                                                         setSelectedProducts([...selectedProducts]);
                                                         setErrors({ ...errors });
                                                         console.log("errors:", errors);
@@ -1343,6 +1345,74 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 </div>
                                             )}
                                             {(selectedProducts[index].purchase_unit_price && !errors["purchase_unit_price_" + index]) ? (
+                                                <div style={{ color: "green" }}>
+                                                    <i class="bi bi-check-lg"> </i>
+                                                    Looks good!
+                                                </div>
+                                            ) : null}
+                                        </td>
+                                        <td style={{ width: "150px" }}>
+
+                                            <input type="number" value={product.wholesale_unit_price} className="form-control"
+
+                                                placeholder="Wholesale Unit Price" onChange={(e) => {
+                                                    errors["wholesale_unit_price_" + index] = "";
+                                                    setErrors({ ...errors });
+                                                    if (!e.target.value || e.target.value == 0) {
+                                                        errors["wholesale_unit_price_" + index] = "Invalid Wholesale Unit Price";
+                                                        selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                        setSelectedProducts([...selectedProducts]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+                                                    selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                    console.log("selectedProducts[index].wholesale_unit_price:", selectedProducts[index].wholesale_unit_price);
+                                                    setSelectedProducts([...selectedProducts]);
+                                                    reCalculate();
+
+                                                }} /> SAR
+                                            {errors["wholesale_unit_price_" + index] && (
+                                                <div style={{ color: "red" }}>
+                                                    <i class="bi bi-x-lg"> </i>
+                                                    {errors["wholesale_unit_price_" + index]}
+                                                </div>
+                                            )}
+                                            {(selectedProducts[index].wholesale_unit_price && !errors["wholesale_unit_price_" + index]) ? (
+                                                <div style={{ color: "green" }}>
+                                                    <i class="bi bi-check-lg"> </i>
+                                                    Looks good!
+                                                </div>
+                                            ) : null}
+                                        </td>
+                                        <td style={{ width: "150px" }}>
+
+                                            <input type="number" value={product.retail_unit_price} className="form-control"
+
+                                                placeholder="Retail Unit Price" onChange={(e) => {
+                                                    errors["retail_unit_price_" + index] = "";
+                                                    setErrors({ ...errors });
+                                                    if (!e.target.value || e.target.value == 0) {
+                                                        errors["retail_unit_price_" + index] = "Invalid Retail Unit Price";
+                                                        selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
+                                                        setSelectedProducts([...selectedProducts]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+                                                    selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
+                                                    console.log("selectedProducts[index].retail_unit_price:", selectedProducts[index].retail_unit_price);
+                                                    setSelectedProducts([...selectedProducts]);
+                                                    reCalculate();
+
+                                                }} /> SAR
+                                            {errors["retail_unit_price_" + index] && (
+                                                <div style={{ color: "red" }}>
+                                                    <i class="bi bi-x-lg"> </i>
+                                                    {errors["retail_unit_price_" + index]}
+                                                </div>
+                                            )}
+                                            {(selectedProducts[index].retail_unit_price && !errors["retail_unit_price_" + index]) ? (
                                                 <div style={{ color: "green" }}>
                                                     <i class="bi bi-check-lg"> </i>
                                                     Looks good!
@@ -1375,6 +1445,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     <td className="text-center">
                                         <b>{totalQuantity}</b>
                                     </td>
+                                    <td colSpan="2"></td>
+
                                     <th className="text-end">Total</th>
                                     <td className="text-center">
                                         <NumberFormat
@@ -1387,7 +1459,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th colSpan="4" className="text-end">
+                                    <th colSpan="6" className="text-end">
                                         VAT
                                     </th>
                                     <td className="text-center">{formData.vat_percent + "%"}</td>
@@ -1402,7 +1474,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th colSpan="5" className="text-end">
+                                    <th colSpan="7" className="text-end">
                                         Discount
                                     </th>
                                     <td className="text-center">
@@ -1416,7 +1488,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td colSpan="4"></td>
+                                    <td colSpan="6"></td>
                                     <th className="text-end">Net Total</th>
                                     <th className="text-center">
                                         <NumberFormat

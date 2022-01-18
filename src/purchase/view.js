@@ -177,7 +177,9 @@ const PurchaseView = forwardRef((props, ref) => {
                             <th>Name</th>
                             <th>Qty</th>
                             <th>Purchase Unit Price</th>
-                            <th>Price</th>
+                            <th>Wholesale Unit Price</th>
+                            <th>Retail Unit Price</th>
+                            <th>Purchase Price</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -190,6 +192,24 @@ const PurchaseView = forwardRef((props, ref) => {
                                 <td>
                                     <NumberFormat
                                         value={product.purchase_unit_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td>
+                                    <NumberFormat
+                                        value={product.wholesale_unit_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td>
+                                    <NumberFormat
+                                        value={product.retail_unit_price}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
@@ -212,6 +232,7 @@ const PurchaseView = forwardRef((props, ref) => {
                             <td className="text-center">
                                 <b>{totalQuantity}</b>
                             </td>
+                            <td colSpan="2"></td>
                             <th className="text-end">Total</th>
                             <td className="text-center">
                                 <NumberFormat
@@ -224,7 +245,7 @@ const PurchaseView = forwardRef((props, ref) => {
                             </td>
                         </tr>
                         <tr>
-                            <th colSpan="4" className="text-end">
+                            <th colSpan="6" className="text-end">
                                 VAT
                             </th>
                             <td className="text-center">{model.vat_percent + "%"}</td>
@@ -239,7 +260,7 @@ const PurchaseView = forwardRef((props, ref) => {
                             </td>
                         </tr>
                         <tr>
-                            <th colSpan="5" className="text-end">
+                            <th colSpan="7" className="text-end">
                                 Discount
                             </th>
                             <td className="text-center">
@@ -253,7 +274,7 @@ const PurchaseView = forwardRef((props, ref) => {
                             </td>
                         </tr>
                         <tr>
-                            <td colSpan="4"></td>
+                            <td colSpan="6"></td>
                             <th className="text-end">Net Total</th>
                             <th className="text-center">
                                 <NumberFormat
