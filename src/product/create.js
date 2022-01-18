@@ -15,7 +15,7 @@ const ProductCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id) {
             formData = {
-                unit: "NO"
+                unit: "Units(s)"
             };
             selectedCategories = [];
             setSelectedCategories(selectedCategories);
@@ -91,7 +91,7 @@ const ProductCreate = forwardRef((props, ref) => {
     //fields
     let [formData, setFormData] = useState({
         images_content: [],
-        unit: "NO",
+        unit: "Units(s)",
     });
 
     const [show, SetShow] = useState(false);
