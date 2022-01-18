@@ -496,7 +496,7 @@ const OrderCreate = forwardRef((props, ref) => {
         for (var i = 0; i < selectedProducts.length; i++) {
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
-                quantity: parseInt(selectedProducts[i].quantity),
+                quantity: parseFloat(selectedProducts[i].quantity),
                 unit_price: parseFloat(selectedProducts[i].unit_price),
             });
         }
@@ -574,7 +574,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function GetProductStockInStore(storeId, stockList) {
         if (!stockList) {
-            return 0;
+            return 0.0;
         }
 
         for (var i = 0; i < stockList.length; i++) {
@@ -582,7 +582,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 return stockList[i].stock;
             }
         }
-        return 0;
+        return 0.0;
     }
 
     function addProduct() {
@@ -678,18 +678,18 @@ const OrderCreate = forwardRef((props, ref) => {
         for (var i = 0; i < selectedProducts.length; i++) {
             totalPrice +=
                 parseFloat(selectedProducts[i].unit_price) *
-                parseInt(selectedProducts[i].quantity);
+                parseFloat(selectedProducts[i].quantity);
         }
         totalPrice = totalPrice.toFixed(2);
         setTotalPrice(totalPrice);
     }
 
-    let [totalQuantity, setTotalQuantity] = useState(0);
+    let [totalQuantity, setTotalQuantity] = useState(0.0);
 
     function findTotalQuantity() {
-        totalQuantity = 0;
+        totalQuantity = 0.0;
         for (var i = 0; i < selectedProducts.length; i++) {
-            totalQuantity += parseInt(selectedProducts[i].quantity);
+            totalQuantity += parseFloat(selectedProducts[i].quantity);
         }
         setTotalQuantity(totalQuantity);
     }
@@ -843,7 +843,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stock);
                                                 }
 
-                                                if (stock < parseInt(selectedProduct[0].quantity)) {
+                                                if (stock < parseFloat(selectedProduct[0].quantity)) {
                                                     if (selectedStores[0]) {
                                                         errors.product_id = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
                                                     } else {
@@ -1229,7 +1229,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     setErrors({ ...errors });
 
                                     if (selectedProduct[0]) {
-                                        selectedProduct[0].quantity = parseInt(e.target.value);
+                                        selectedProduct[0].quantity = parseFloat(e.target.value);
                                         setSelectedProduct([...selectedProduct]);
                                         console.log(selectedProduct);
 
@@ -1238,7 +1238,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stock);
                                         }
 
-                                        if (stock < parseInt(selectedProduct[0].quantity)) {
+                                        if (stock < parseFloat(selectedProduct[0].quantity)) {
                                             errors.product_id = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
                                             setErrors({ ...errors });
                                         }
@@ -1362,7 +1362,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         return;
                                                     }
 
-                                                    product.quantity = parseInt(e.target.value);
+                                                    product.quantity = parseFloat(e.target.value);
                                                     reCalculate();
 
                                                     let stock = 0;
@@ -1370,13 +1370,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         stock = GetProductStockInStore(formData.store_id, selectedProducts[index].stock);
                                                     }
 
-                                                    if (stock < parseInt(e.target.value)) {
+                                                    if (stock < parseFloat(e.target.value)) {
                                                         errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
                                                         setErrors({ ...errors });
                                                         return;
                                                     }
 
-                                                    selectedProducts[index].quantity = parseInt(e.target.value);
+                                                    selectedProducts[index].quantity = parseFloat(e.target.value);
                                                     console.log("selectedProducts[index].stock:", selectedProducts[index].quantity);
                                                     setSelectedProducts([...selectedProducts]);
                                                     reCalculate();

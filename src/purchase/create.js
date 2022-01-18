@@ -444,7 +444,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         for (var i = 0; i < selectedProducts.length; i++) {
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
-                quantity: parseInt(selectedProducts[i].quantity),
+                quantity: parseFloat(selectedProducts[i].quantity),
                 purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
                 retail_unit_price: parseFloat(selectedProducts[i].retail_unit_price),
                 wholesale_unit_price: parseFloat(selectedProducts[i].wholesale_unit_price),
@@ -626,7 +626,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         for (var i = 0; i < selectedProducts.length; i++) {
             totalPrice +=
                 parseFloat(selectedProducts[i].purchase_unit_price) *
-                parseInt(selectedProducts[i].quantity);
+                parseFloat(selectedProducts[i].quantity);
         }
         totalPrice = totalPrice.toFixed(2);
         setTotalPrice(totalPrice);
@@ -637,7 +637,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
     function findTotalQuantity() {
         totalQuantity = 0;
         for (var i = 0; i < selectedProducts.length; i++) {
-            totalQuantity += parseInt(selectedProducts[i].quantity);
+            totalQuantity += parseFloat(selectedProducts[i].quantity);
         }
         setTotalQuantity(totalQuantity);
     }
@@ -1082,7 +1082,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     setErrors({ ...errors });
 
                                     if (selectedProduct[0]) {
-                                        selectedProduct[0].quantity = parseInt(e.target.value);
+                                        selectedProduct[0].quantity = parseFloat(e.target.value);
                                         setSelectedProduct([...selectedProduct]);
                                         console.log(selectedProduct);
                                     }
@@ -1295,10 +1295,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         return;
                                                     }
 
-                                                    product.quantity = parseInt(e.target.value);
+                                                    product.quantity = parseFloat(e.target.value);
                                                     reCalculate();
 
-                                                    selectedProducts[index].quantity = parseInt(e.target.value);
+                                                    selectedProducts[index].quantity = parseFloat(e.target.value);
                                                     console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
                                                     setSelectedProducts([...selectedProducts]);
                                                     reCalculate();

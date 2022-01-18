@@ -39,7 +39,7 @@ const QuotationView = forwardRef((props, ref) => {
         for (var i = 0; i < model.products.length; i++) {
             totalPrice +=
                 parseFloat(model.products[i].unit_price) *
-                parseInt(model.products[i].quantity);
+                parseFloat(model.products[i].quantity);
         }
         totalPrice = totalPrice.toFixed(2);
         console.log("totalPrice:", totalPrice);
@@ -49,7 +49,7 @@ const QuotationView = forwardRef((props, ref) => {
     function findTotalQuantity() {
         totalQuantity = 0;
         for (var i = 0; i < model.products.length; i++) {
-            totalQuantity += parseInt(model.products[i].quantity);
+            totalQuantity += parseFloat(model.products[i].quantity);
         }
         console.log("totalQuantity:", totalQuantity);
         setTotalQuantity(totalQuantity);

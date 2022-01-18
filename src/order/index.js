@@ -244,7 +244,7 @@ function OrderIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at";
+            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -536,6 +536,44 @@ function OrderIndex(props) {
                                                         cursor: "pointer",
                                                     }}
                                                     onClick={() => {
+                                                        sort("profit");
+                                                    }}
+                                                >
+                                                    Profit
+                                                    {sortField === "profit" && sortOrder === "-" ? (
+                                                        <i class="bi bi-sort-numeric-down"></i>
+                                                    ) : null}
+                                                    {sortField === "profit" && sortOrder === "" ? (
+                                                        <i class="bi bi-sort-numeric-up"></i>
+                                                    ) : null}
+                                                </b>
+                                            </th>
+                                            <th>
+                                                <b
+                                                    style={{
+                                                        "text-decoration": "underline",
+                                                        cursor: "pointer",
+                                                    }}
+                                                    onClick={() => {
+                                                        sort("loss");
+                                                    }}
+                                                >
+                                                    Loss
+                                                    {sortField === "loss" && sortOrder === "-" ? (
+                                                        <i class="bi bi-sort-numeric-down"></i>
+                                                    ) : null}
+                                                    {sortField === "loss" && sortOrder === "" ? (
+                                                        <i class="bi bi-sort-numeric-up"></i>
+                                                    ) : null}
+                                                </b>
+                                            </th>
+                                            <th>
+                                                <b
+                                                    style={{
+                                                        "text-decoration": "underline",
+                                                        cursor: "pointer",
+                                                    }}
+                                                    onClick={() => {
                                                         sort("created_by");
                                                     }}
                                                 >
@@ -804,6 +842,8 @@ function OrderIndex(props) {
                                                         {format(new Date(order.date), "MMM dd yyyy")}
                                                     </td>
                                                     <td>{order.net_total} SAR</td>
+                                                    <td>{order.profit} SAR</td>
+                                                    <td>{order.loss ? order.loss : 0.0} SAR</td>
                                                     <td>{order.created_by_name}</td>
                                                     <td>{order.customer_name}</td>
                                                     <td>
