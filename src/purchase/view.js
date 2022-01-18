@@ -188,7 +188,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                 <td>{index + 1}</td>
                                 <td>{product.item_code}</td>
                                 <td>{product.name}</td>
-                                <td>{product.quantity}  {product.unit ? product.unit : "Units"} </td>
+                                <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
                                 <td>
                                     <NumberFormat
                                         value={product.purchase_unit_price}

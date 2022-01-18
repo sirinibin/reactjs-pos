@@ -217,7 +217,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 <li>{product.name}</li>
                                             </ul>
                                         </td>
-                                        <td>{product.quantity}  {product.unit ? product.unit : "Units"} </td>
+                                        <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
                                         <td>
                                             <NumberFormat
                                                 value={product.unit_price}

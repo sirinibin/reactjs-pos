@@ -15,7 +15,7 @@ const ProductCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id) {
             formData = {
-                unit: "Units(s)"
+                unit: ""
             };
             selectedCategories = [];
             setSelectedCategories(selectedCategories);
@@ -91,7 +91,7 @@ const ProductCreate = forwardRef((props, ref) => {
     //fields
     let [formData, setFormData] = useState({
         images_content: [],
-        unit: "Units(s)",
+        unit: "",
     });
 
     const [show, SetShow] = useState(false);
@@ -153,7 +153,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                 formData = data.result;
                 if (!formData.unit) {
-                    formData.unit = "Units(s)";
+                    formData.unit = "";
                 }
                 formData.images_content = [];
                 setFormData({ ...formData });
@@ -755,7 +755,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                 }}
                             >
-                                <option value="Unit(s)" SELECTED>Unit(s)</option>
+                                <option value="" SELECTED>Unit(s)</option>
                                 <option value="Kg">Kg</option>
                                 <option value="Gm">Gm</option>
                                 <option value="L">Liter (L)</option>
@@ -1188,7 +1188,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     console.log("selectedStocks[index].stock:", selectedStocks[index].stock);
                                                     setSelectedStocks([...selectedStocks]);
 
-                                                }} /> Units
+                                                }} />
                                             {errors["stock_" + index] && (
                                                 <div style={{ color: "red" }}>
                                                     <i class="bi bi-x-lg"> </i>
