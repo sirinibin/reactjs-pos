@@ -196,7 +196,7 @@ const ProductView = forwardRef((props, ref) => {
                         </td>
                     </tr>
                     <tr>
-                        <th>Unit:</th><td> {model.unit}</td>
+                        <th>Unit:</th><td> {model.unit ? model.unit : "Unit(s)"}</td>
                         <th>Created At:</th><td> {model.created_at}</td>
                         <th>Updated At:</th><td> {model.updated_at}</td>
                     </tr>
