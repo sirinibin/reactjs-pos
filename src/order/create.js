@@ -29,6 +29,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 status: "delivered",
                 payment_status: "paid",
                 payment_method: "cash",
+                price_type: "retail"
             };
             setFormData({ ...formData });
             if (id) {
@@ -206,6 +207,7 @@ const OrderCreate = forwardRef((props, ref) => {
         status: "delivered",
         payment_status: "paid",
         payment_method: "cash",
+        price_type: "retail",
     });
 
     let [unitPriceList, setUnitPriceList] = useState([]);
@@ -337,6 +339,12 @@ const OrderCreate = forwardRef((props, ref) => {
         setIsCustomersLoading(false);
     }
 
+    function handlePriceTypeChange(priceType) {
+
+        console.log("Inside Price type change");
+        console.log(priceType);
+    }
+
     function GetProductUnitPriceInStore(storeId, unitPriceListArray) {
         if (!unitPriceListArray) {
             return "";
@@ -352,7 +360,12 @@ const OrderCreate = forwardRef((props, ref) => {
                     "unitPrice.retail_unit_price:",
                     unitPriceListArray[i].retail_unit_price
                 );
-                return unitPriceListArray[i].retail_unit_price;
+                if (formData.price_type == "retail") {
+                    return unitPriceListArray[i].retail_unit_price;
+                } else if (formData.price_type == "wholesale") {
+                    return unitPriceListArray[i].wholesale_unit_price;
+                }
+
             } else {
                 console.log("not matched");
             }
@@ -773,7 +786,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Order #" + formData.code : "Create New Order"}
@@ -1176,6 +1189,29 @@ const OrderCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+                        <div className="col-md-2">
+                            <label className="form-label">Price type</label>
+                            <select className="form-control" value={formData.price_type}
+                                onChange={(e) => {
+
+                                    formData.price_type = e.target.value;
+                                    console.log("Inside onchange price type:", formData.price_type);
+                                    setFormData({ ...formData });
+
+                                    if (formData.store_id && selectedProduct[0]) {
+                                        selectedProduct[0].unit_price = GetProductUnitPriceInStore(
+                                            formData.store_id,
+                                            selectedProduct[0].unit_prices
+                                        );
+                                    }
+
+
+                                }}
+                            >
+                                <option value="retail" SELECTED>Retail</option>
+                                <option value="wholesale">Wholesale</option>
+                            </select>
+                        </div>
                         <div className="col-md-2">
                             <label className="form-label">Qty*</label>
                             <input
