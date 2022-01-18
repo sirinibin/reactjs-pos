@@ -153,7 +153,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                 formData = data.result;
                 if (!formData.unit) {
-                    formData.unit = "NO";
+                    formData.unit = "Units(s)";
                 }
                 formData.images_content = [];
                 setFormData({ ...formData });
