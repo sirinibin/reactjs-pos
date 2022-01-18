@@ -1111,7 +1111,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Product*</label>
 
                             <div className="input-group mb-3">

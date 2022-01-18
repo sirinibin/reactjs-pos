@@ -26,6 +26,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
         status: "created",
+        price_type: "retail",
       };
 
       selectedProducts = [];
@@ -70,6 +71,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     date_str: format(new Date(), "MMM dd yyyy"),
     signature_date_str: format(new Date(), "MMM dd yyyy"),
     status: "created",
+    price_type: "retail",
   });
 
   let [unitPriceList, setUnitPriceList] = useState([]);
@@ -312,7 +314,11 @@ const QuotationCreate = forwardRef((props, ref) => {
           "unitPrice.retail_unit_price:",
           unitPriceListArray[i].retail_unit_price
         );
-        return unitPriceListArray[i].retail_unit_price;
+        if (formData.price_type == "retail") {
+          return unitPriceListArray[i].retail_unit_price;
+        } else if (formData.price_type == "wholesale") {
+          return unitPriceListArray[i].wholesale_unit_price;
+        }
       } else {
         console.log("not matched");
       }
@@ -715,7 +721,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
+      <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
         <Modal.Header>
           <Modal.Title>
             {formData.id ? "Update Quotation #" + formData.code : "Create New Quotation"}
@@ -999,7 +1005,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 )}
               </div>
             </div>
-            <div className="col-md-6">
+            <div className="col-md-4">
               <label className="form-label">Product*</label>
 
               <div className="input-group mb-3">
@@ -1058,6 +1064,30 @@ const QuotationCreate = forwardRef((props, ref) => {
                     </div>
                   )}
               </div>
+            </div>
+
+            <div className="col-md-2">
+              <label className="form-label">Price type</label>
+              <select className="form-control" value={formData.price_type}
+                onChange={(e) => {
+
+                  formData.price_type = e.target.value;
+                  console.log("Inside onchange price type:", formData.price_type);
+                  setFormData({ ...formData });
+
+                  if (formData.store_id && selectedProduct[0]) {
+                    selectedProduct[0].unit_price = GetProductUnitPriceInStore(
+                      formData.store_id,
+                      selectedProduct[0].unit_prices
+                    );
+                  }
+
+
+                }}
+              >
+                <option value="retail" SELECTED>Retail</option>
+                <option value="wholesale">Wholesale</option>
+              </select>
             </div>
 
             <div className="col-md-2">
