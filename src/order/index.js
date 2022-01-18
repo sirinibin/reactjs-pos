@@ -721,6 +721,26 @@ function OrderIndex(props) {
                                                 />
                                             </th>
                                             <th>
+                                                <input
+                                                    type="text"
+                                                    id="profit"
+                                                    onChange={(e) =>
+                                                        searchByFieldValue("profit", e.target.value)
+                                                    }
+                                                    className="form-control"
+                                                />
+                                            </th>
+                                            <th>
+                                                <input
+                                                    type="text"
+                                                    id="loss"
+                                                    onChange={(e) =>
+                                                        searchByFieldValue("loss", e.target.value)
+                                                    }
+                                                    className="form-control"
+                                                />
+                                            </th>
+                                            <th>
                                                 <Typeahead
                                                     id="created_by"
                                                     labelKey="name"
