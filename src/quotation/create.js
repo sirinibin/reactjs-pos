@@ -1094,7 +1094,7 @@ const QuotationCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="col-md-2">
-              <label className="form-label">Qty*</label>
+              <label className="form-label">Qty{selectedProduct[0] && selectedProduct[0].unit ? "(" + selectedProduct[0].unit + ")" : ""}*</label>
               <input
                 value={selectedProduct[0] ? selectedProduct[0].quantity : null}
                 onChange={(e) => {
