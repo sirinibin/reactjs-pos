@@ -401,7 +401,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,item_code,name,unit_prices,stock";
+        let Select = "select=id,item_code,name,unit_prices,stock,unit";
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString,
@@ -498,6 +498,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 product_id: selectedProducts[i].product_id,
                 quantity: parseFloat(selectedProducts[i].quantity),
                 unit_price: parseFloat(selectedProducts[i].unit_price),
+                unit: selectedProducts[i].unit,
             });
         }
 
@@ -640,12 +641,14 @@ const OrderCreate = forwardRef((props, ref) => {
             quantity: selectedProduct[0].quantity,
             stock: selectedProduct[0].stock,
             unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
+            unit: selectedProduct[0].unit,
         });
 
         selectedProduct[0].name = "";
         selectedProduct[0].id = "";
         selectedProduct[0].quantity = "";
         selectedProduct[0].unit_price = "";
+        selectedProduct[0].unit = "";
 
         setSelectedProduct([...selectedProduct]);
         setSelectedProducts([...selectedProducts]);
@@ -1213,7 +1216,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </select>
                         </div>
                         <div className="col-md-2">
-                            <label className="form-label">Qty*</label>
+                            <label className="form-label">Qty{selectedProduct[0] && selectedProduct[0].unit ? "(" + selectedProduct[0].unit + ")" : ""}*</label>
                             <input
                                 value={selectedProduct[0] ? selectedProduct[0].quantity : null}
                                 onChange={(e) => {
@@ -1381,7 +1384,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     setSelectedProducts([...selectedProducts]);
                                                     reCalculate();
 
-                                                }} /> Units
+                                                }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
                                             {errors["quantity_" + index] && (
                                                 <div style={{ color: "red" }}>
                                                     <i class="bi bi-x-lg"> </i>

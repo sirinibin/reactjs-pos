@@ -14,7 +14,9 @@ const ProductCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
-            formData = {};
+            formData = {
+                unit: "NO"
+            };
             selectedCategories = [];
             setSelectedCategories(selectedCategories);
 
@@ -89,6 +91,7 @@ const ProductCreate = forwardRef((props, ref) => {
     //fields
     let [formData, setFormData] = useState({
         images_content: [],
+        unit: "NO",
     });
 
     const [show, SetShow] = useState(false);
@@ -149,6 +152,9 @@ const ProductCreate = forwardRef((props, ref) => {
                 setSelectedCategories(selectedCategories);
 
                 formData = data.result;
+                if (!formData.unit) {
+                    formData.unit = "NO";
+                }
                 formData.images_content = [];
                 setFormData({ ...formData });
             })
@@ -690,7 +696,6 @@ const ProductCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-
                         <div className="col-md-6">
                             <label className="form-label">Categories*</label>
 
@@ -738,6 +743,27 @@ const ProductCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Unit</label>
+                            <select className="form-control" value={formData.unit}
+                                onChange={(e) => {
+
+                                    formData.unit = e.target.value;
+                                    console.log("Inside onchange price type:", formData.unit);
+                                    setFormData({ ...formData });
+
+                                }}
+                            >
+                                <option value="Unit(s)" SELECTED>Unit(s)</option>
+                                <option value="Kg">Kg</option>
+                                <option value="Gm">Gm</option>
+                                <option value="L">Liter (L)</option>
+                                <option value="Gm">Gm</option>
+                                <option value="Mg">Mg</option>
+                            </select>
+                        </div>
+
 
                         <h4>Unit Price</h4>
                         <div className="col-md-4">

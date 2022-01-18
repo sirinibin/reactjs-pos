@@ -361,7 +361,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,item_code,name,name_in_arabic,part_number,unit_prices,stock";
+    let Select = "select=id,item_code,name,name_in_arabic,part_number,unit_prices,stock,unit";
     setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString,
@@ -460,6 +460,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         name_in_arabic: selectedProducts[i].name_in_arabic,
         quantity: parseFloat(selectedProducts[i].quantity),
         unit_price: parseFloat(selectedProducts[i].unit_price),
+        unit: selectedProducts[i].unit,
         part_number: selectedProducts[i].part_number,
       });
     }
@@ -577,12 +578,14 @@ const QuotationCreate = forwardRef((props, ref) => {
       name_in_arabic: selectedProduct[0].name_in_arabic,
       quantity: selectedProduct[0].quantity,
       unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
+      unit: selectedProduct[0].unit,
     });
 
     selectedProduct[0].name = "";
     selectedProduct[0].id = "";
     selectedProduct[0].quantity = "";
     selectedProduct[0].unit_price = "";
+    selectedProduct[0].unit = "";
 
     setSelectedProduct([...selectedProduct]);
     setSelectedProducts([...selectedProducts]);
@@ -1238,7 +1241,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           setSelectedProducts([...selectedProducts]);
                           reCalculate();
 
-                        }} /> Units
+                        }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
                       {errors["quantity_" + index] && (
                         <div style={{ color: "red" }}>
                           <i class="bi bi-x-lg"> </i>

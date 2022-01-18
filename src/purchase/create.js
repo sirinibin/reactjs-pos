@@ -349,7 +349,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,item_code,name,unit_prices,stock";
+        let Select = "select=id,item_code,name,unit_prices,stock,unit";
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString,
@@ -445,6 +445,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
                 quantity: parseFloat(selectedProducts[i].quantity),
+                unit: selectedProducts[i].unit,
                 purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
                 retail_unit_price: parseFloat(selectedProducts[i].retail_unit_price),
                 wholesale_unit_price: parseFloat(selectedProducts[i].wholesale_unit_price),
@@ -586,6 +587,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             purchase_unit_price: parseFloat(selectedProduct[0].purchase_unit_price).toFixed(2),
             retail_unit_price: parseFloat(selectedProduct[0].retail_unit_price).toFixed(2),
             wholesale_unit_price: parseFloat(selectedProduct[0].wholesale_unit_price).toFixed(2),
+            unit: selectedProduct[0].unit,
         });
 
         selectedProduct[0].name = "";
@@ -594,6 +596,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         selectedProduct[0].purchase_unit_price = "";
         selectedProduct[0].retail_unit_price = "";
         selectedProduct[0].wholesale_unit_price = "";
+        selectedProduct[0].unit = "";
 
         setSelectedProduct([...selectedProduct]);
         setSelectedProducts([...selectedProducts]);
@@ -1303,7 +1306,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     setSelectedProducts([...selectedProducts]);
                                                     reCalculate();
 
-                                                }} /> Units
+                                                }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
                                             {errors["quantity_" + index] && (
                                                 <div style={{ color: "red" }}>
                                                     <i class="bi bi-x-lg"> </i>
