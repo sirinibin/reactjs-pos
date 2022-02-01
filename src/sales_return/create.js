@@ -75,6 +75,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 for (let i = 0; i < selectedProductsTemp.length; i++) {
                     selectedProductsTemp[i].selected = true;
                     let purchasedQty = selectedProductsTemp[i].quantity - selectedProductsTemp[i].returned_quantity;
+                    selectedProductsTemp[i].quantity = purchasedQty;
+
                     if (purchasedQty > 0) {
                         selectedProducts.push(selectedProductsTemp[i]);
                     }
@@ -532,7 +534,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
-                quantity: parseFloat(selectedProducts[i].quantity - selectedProducts[i].returned_quantity),
+                quantity: parseFloat(selectedProducts[i].quantity),
                 unit_price: parseFloat(selectedProducts[i].unit_price),
                 unit: selectedProducts[i].unit,
             });
@@ -893,7 +895,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         </td>
                                         <td style={{ width: "125px" }}>
 
-                                            <input type="number" value={(product.quantity - product.returned_quantity)} className="form-control"
+                                            <input type="number" value={(product.quantity)} className="form-control"
 
                                                 placeholder="Quantity" onChange={(e) => {
                                                     errors["quantity_" + index] = "";
