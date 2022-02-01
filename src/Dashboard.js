@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import QuotationIndex from './quotation/index.js';
 import OrderIndex from './order/index.js';
+import SalesReturnIndex from './sales_return/index.js';
 import PurchaseIndex from './purchase/index.js';
 import VendorIndex from './vendor/index.js';
 import StoreIndex from './store/index.js';
@@ -122,6 +123,18 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <OrderIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/salesreturn">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <SalesReturnIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

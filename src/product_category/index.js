@@ -387,215 +387,216 @@ function ProductCategoryIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <table className="table table-striped table-sm table-bproductcategoryed">
-                                    <thead>
-                                        <tr className="text-center">
-                                            <th>
-                                                <b
-                                                    style={{
-                                                        "text-decoration": "underline",
-                                                        cursor: "pointer",
-                                                    }}
-                                                    onClick={() => {
-                                                        sort("name");
-                                                    }}
-                                                >
-                                                    Name
-                                                    {sortField === "name" && sortProductCategory === "-" ? (
-                                                        <i class="bi bi-sort-alpha-up-alt"></i>
-                                                    ) : null}
-                                                    {sortField === "name" && sortProductCategory === "" ? (
-                                                        <i class="bi bi-sort-alpha-up"></i>
-                                                    ) : null}
-                                                </b>
-                                            </th>
-                                            <th>
-                                                <b
-                                                    style={{
-                                                        "text-decoration": "underline",
-                                                        cursor: "pointer",
-                                                    }}
-                                                    onClick={() => {
-                                                        sort("parent_name");
-                                                    }}
-                                                >
-                                                    Parent
-                                                    {sortField === "parent_name" && sortProductCategory === "-" ? (
-                                                        <i class="bi bi-sort-alpha-up-alt"></i>
-                                                    ) : null}
-                                                    {sortField === "parent_name" && sortProductCategory === "" ? (
-                                                        <i class="bi bi-sort-alpha-up"></i>
-                                                    ) : null}
-                                                </b>
-                                            </th>
+                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                    <table className="table table-striped table-sm table-bproductcategoryed">
+                                        <thead>
+                                            <tr className="text-center">
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("name");
+                                                        }}
+                                                    >
+                                                        Name
+                                                        {sortField === "name" && sortProductCategory === "-" ? (
+                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "name" && sortProductCategory === "" ? (
+                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("parent_name");
+                                                        }}
+                                                    >
+                                                        Parent
+                                                        {sortField === "parent_name" && sortProductCategory === "-" ? (
+                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "parent_name" && sortProductCategory === "" ? (
+                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
 
-                                            <th>
-                                                <b
-                                                    style={{
-                                                        "text-decoration": "underline",
-                                                        cursor: "pointer",
-                                                    }}
-                                                    onClick={() => {
-                                                        sort("created_by_name");
-                                                    }}
-                                                >
-                                                    Created By
-                                                    {sortField === "created_by_name" && sortProductCategory === "-" ? (
-                                                        <i class="bi bi-sort-alpha-up-alt"></i>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("created_by_name");
+                                                        }}
+                                                    >
+                                                        Created By
+                                                        {sortField === "created_by_name" && sortProductCategory === "-" ? (
+                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "created_by_name" && sortProductCategory === "" ? (
+                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("created_at");
+                                                        }}
+                                                    >
+                                                        Created At
+                                                        {sortField === "created_at" && sortProductCategory === "-" ? (
+                                                            <i class="bi bi-sort-down"></i>
+                                                        ) : null}
+                                                        {sortField === "created_at" && sortProductCategory === "" ? (
+                                                            <i class="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+
+                                        <thead>
+                                            <tr className="text-center">
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="name"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("name", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="parent_name"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("parent_name", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="created_by"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "created_by",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={productcategoryOptions}
+                                                        placeholder="Select Users"
+                                                        selected={selectedCreatedByProductCategorys}
+                                                        highlightOnlyResult="true"
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestUsers(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <DatePicker
+                                                        id="created_at"
+                                                        value={createdAtValue}
+                                                        selected={selectedDate}
+                                                        className="form-control"
+                                                        dateFormat="MMM dd yyyy"
+                                                        onChange={(date) => {
+                                                            searchByDateField("created_at", date);
+                                                        }}
+                                                    />
+                                                    <small
+                                                        style={{
+                                                            color: "blue",
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={(e) =>
+                                                            setShowCreatedAtDateRange(!showCreatedAtDateRange)
+                                                        }
+                                                    >
+                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
+                                                    </small>
+                                                    <br />
+
+                                                    {showCreatedAtDateRange ? (
+                                                        <span className="text-left">
+                                                            From:{" "}
+                                                            <DatePicker
+                                                                id="created_at_from"
+                                                                value={createdAtFromValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    searchByDateField("created_at_from", date);
+                                                                }}
+                                                            />
+                                                            To:{" "}
+                                                            <DatePicker
+                                                                id="created_at_to"
+                                                                value={createdAtToValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    searchByDateField("created_at_to", date);
+                                                                }}
+                                                            />
+                                                        </span>
                                                     ) : null}
-                                                    {sortField === "created_by_name" && sortProductCategory === "" ? (
-                                                        <i class="bi bi-sort-alpha-up"></i>
-                                                    ) : null}
-                                                </b>
-                                            </th>
-                                            <th>
-                                                <b
-                                                    style={{
-                                                        "text-decoration": "underline",
-                                                        cursor: "pointer",
-                                                    }}
-                                                    onClick={() => {
-                                                        sort("created_at");
-                                                    }}
-                                                >
-                                                    Created At
-                                                    {sortField === "created_at" && sortProductCategory === "-" ? (
-                                                        <i class="bi bi-sort-down"></i>
-                                                    ) : null}
-                                                    {sortField === "created_at" && sortProductCategory === "" ? (
-                                                        <i class="bi bi-sort-up"></i>
-                                                    ) : null}
-                                                </b>
-                                            </th>
-                                            <th>Actions</th>
-                                        </tr>
-                                    </thead>
+                                                </th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
 
-                                    <thead>
-                                        <tr className="text-center">
-                                            <th>
-                                                <input
-                                                    type="text"
-                                                    id="name"
-                                                    onChange={(e) =>
-                                                        searchByFieldValue("name", e.target.value)
-                                                    }
-                                                    className="form-control"
-                                                />
-                                            </th>
-                                            <th>
-                                                <input
-                                                    type="text"
-                                                    id="parent_name"
-                                                    onChange={(e) =>
-                                                        searchByFieldValue("parent_name", e.target.value)
-                                                    }
-                                                    className="form-control"
-                                                />
-                                            </th>
-                                            <th>
-                                                <Typeahead
-                                                    id="created_by"
-                                                    labelKey="name"
-                                                    onChange={(selectedItems) => {
-                                                        searchByMultipleValuesField(
-                                                            "created_by",
-                                                            selectedItems
-                                                        );
-                                                    }}
-                                                    options={productcategoryOptions}
-                                                    placeholder="Select Users"
-                                                    selected={selectedCreatedByProductCategorys}
-                                                    highlightOnlyResult="true"
-                                                    onInputChange={(searchTerm, e) => {
-                                                        suggestUsers(searchTerm);
-                                                    }}
-                                                    multiple
-                                                />
-                                            </th>
-                                            <th>
-                                                <DatePicker
-                                                    id="created_at"
-                                                    value={createdAtValue}
-                                                    selected={selectedDate}
-                                                    className="form-control"
-                                                    dateFormat="MMM dd yyyy"
-                                                    onChange={(date) => {
-                                                        searchByDateField("created_at", date);
-                                                    }}
-                                                />
-                                                <small
-                                                    style={{
-                                                        color: "blue",
-                                                        "text-decoration": "underline",
-                                                        cursor: "pointer",
-                                                    }}
-                                                    onClick={(e) =>
-                                                        setShowCreatedAtDateRange(!showCreatedAtDateRange)
-                                                    }
-                                                >
-                                                    {showCreatedAtDateRange ? "Less.." : "More.."}
-                                                </small>
-                                                <br />
+                                        <tbody className="text-center">
+                                            {productcategoryList &&
+                                                productcategoryList.map((productcategory) => (
+                                                    <tr>
+                                                        <td>{productcategory.name}</td>
+                                                        <td>{productcategory.parent_name}</td>
+                                                        <td>{productcategory.created_by_name}</td>
+                                                        <td>
+                                                            {format(
+                                                                new Date(productcategory.created_at),
+                                                                "MMM dd yyyy H:mma"
+                                                            )}
+                                                        </td>
+                                                        <td>
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(productcategory.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
 
-                                                {showCreatedAtDateRange ? (
-                                                    <span className="text-left">
-                                                        From:{" "}
-                                                        <DatePicker
-                                                            id="created_at_from"
-                                                            value={createdAtFromValue}
-                                                            selected={selectedDate}
-                                                            className="form-control"
-                                                            dateFormat="MMM dd yyyy"
-                                                            onChange={(date) => {
-                                                                searchByDateField("created_at_from", date);
-                                                            }}
-                                                        />
-                                                        To:{" "}
-                                                        <DatePicker
-                                                            id="created_at_to"
-                                                            value={createdAtToValue}
-                                                            selected={selectedDate}
-                                                            className="form-control"
-                                                            dateFormat="MMM dd yyyy"
-                                                            onChange={(date) => {
-                                                                searchByDateField("created_at_to", date);
-                                                            }}
-                                                        />
-                                                    </span>
-                                                ) : null}
-                                            </th>
-                                            <th></th>
-                                        </tr>
-                                    </thead>
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openDetailsView(productcategory.id);
+                                                            }}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>
 
-                                    <tbody className="text-center">
-                                        {productcategoryList &&
-                                            productcategoryList.map((productcategory) => (
-                                                <tr>
-                                                    <td>{productcategory.name}</td>
-                                                    <td>{productcategory.parent_name}</td>
-                                                    <td>{productcategory.created_by_name}</td>
-                                                    <td>
-                                                        {format(
-                                                            new Date(productcategory.created_at),
-                                                            "MMM dd yyyy H:mma"
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        <Button className="btn btn-light btn-sm" onClick={() => {
-                                                            openUpdateForm(productcategory.id);
-                                                        }}>
-                                                            <i className="bi bi-pencil"></i>
-                                                        </Button>
-
-                                                        <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                            openDetailsView(productcategory.id);
-                                                        }}>
-                                                            <i className="bi bi-eye"></i>
-                                                        </Button>
-
-                                                        {/*
+                                                            {/*
                                                         <button
                                                             className="btn btn-outline-secondary dropdown-toggle"
                                                             type="button"
@@ -611,11 +612,12 @@ function ProductCategoryIndex(props) {
                                                             </li>
                                                         </ul>
                                                        */}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                    </tbody>
-                                </table>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
 
                                 <ReactPaginate
                                     breakLabel="..."

@@ -2,15 +2,15 @@ import React, { useState, useRef, forwardRef, useImperativeHandle } from "react"
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
-import OrderPreview from './preview.js';
+import SalesReturnPreview from './preview.js';
 
-const OrderView = forwardRef((props, ref) => {
+const SalesReturnView = forwardRef((props, ref) => {
 
 
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
-                getOrder(id);
+                getSalesReturn(id);
                 SetShow(true);
             }
 
@@ -64,8 +64,8 @@ const OrderView = forwardRef((props, ref) => {
         setNetTotal(netTotal);
     }
 
-    function getOrder(id) {
-        console.log("inside get Order");
+    function getSalesReturn(id) {
+        console.log("inside get SalesReturn");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -75,7 +75,7 @@ const OrderView = forwardRef((props, ref) => {
         };
 
         setProcessing(true);
-        fetch('/v1/order/' + id, requestOptions)
+        fetch('/v1/sales-return/' + id, requestOptions)
             .then(async response => {
                 setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -120,10 +120,10 @@ const OrderView = forwardRef((props, ref) => {
 
 
     return (<>
-        <OrderPreview ref={PreviewRef} />
+        <SalesReturnPreview ref={PreviewRef} />
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Details of Order #{model.code}</Modal.Title>
+                <Modal.Title>Details of SalesReturn #{model.code}</Modal.Title>
 
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
@@ -133,7 +133,7 @@ const OrderView = forwardRef((props, ref) => {
                         <button
                             className="btn btn-primary mb-3"
                             data-bs-toggle="modal"
-                            data-bs-target="#previewOrderModal"
+                            data-bs-target="#previewSalesReturnModal"
                         >
                             <i className="bi bi-display"></i> Preview
                         </button> */}
@@ -147,11 +147,13 @@ const OrderView = forwardRef((props, ref) => {
                 </div>
             </Modal.Header>
             <Modal.Body>
-                <Table striped bordered hover responsive="lg">
+                <Table striped bsalesreturned hover responsive="lg">
                     <tr>
+
+                        <th>Order ID:</th><td> {model.order_code}</td>
                         <th>Store:</th><td> {model.store_name}</td>
                         <th>Customer:</th><td> {model.customer_name}</td>
-                        <th>Delivered by:</th><td> {model.delivered_by_name}</td>
+                        <th>Received by:</th><td> {model.received_by_name}</td>
                     </tr>
                     <tr>
                         <th>Date:</th><td> {model.date_str}</td>
@@ -166,12 +168,11 @@ const OrderView = forwardRef((props, ref) => {
                     <tr>
                         <th>Created By:</th><td> {model.created_by_name}</td>
                         <th>Updated By:</th><td> {model.updated_by_name}</td>
-                        <th>Profit:</th><td> {model.profit}</td>
                     </tr>
 
                 </Table>
 
-                <table className="table table-striped table-sm table-bordered">
+                <table className="table table-striped table-sm table-bsalesreturned">
                     <thead>
                         <tr className="text-center">
                             <th>SI No.</th>
@@ -212,7 +213,7 @@ const OrderView = forwardRef((props, ref) => {
                         <tr>
                             <td colSpan="3"></td>
                             <td className="text-center">
-                                <b>{totalQuantity}</b>
+                                <b></b>
                             </td>
                             <th className="text-end">Total</th>
                             <td className="text-center">
@@ -308,4 +309,4 @@ const OrderView = forwardRef((props, ref) => {
 
 });
 
-export default OrderView;
+export default SalesReturnView;
