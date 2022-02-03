@@ -1,28 +1,31 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import PurchaseReturnPreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
-import OrderPreview from './preview.js';
 
-const OrderView = forwardRef((props, ref) => {
 
+const PurchaseReturnView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
-                getOrder(id);
-                SetShow(true);
+                getPurchaseReturn(id);
+                setShow(true);
             }
 
         },
 
     }));
 
-
     let [model, setModel] = useState({});
     const cookies = new Cookies();
 
+    const [show, setShow] = useState(false);
 
+    function handleClose() {
+        setShow(false);
+    };
 
     const [isProcessing, setProcessing] = useState(false);
     let [totalPrice, setTotalPrice] = useState(0.0);
@@ -35,7 +38,7 @@ const OrderView = forwardRef((props, ref) => {
         console.log("model.products:", model.products);
         for (var i = 0; i < model.products.length; i++) {
             totalPrice +=
-                parseFloat(model.products[i].unit_price) *
+                parseFloat(model.products[i].purchasereturn_unit_price) *
                 parseFloat(model.products[i].quantity);
         }
         totalPrice = totalPrice.toFixed(2);
@@ -64,8 +67,8 @@ const OrderView = forwardRef((props, ref) => {
         setNetTotal(netTotal);
     }
 
-    function getOrder(id) {
-        console.log("inside get Order");
+    function getPurchaseReturn(id) {
+        console.log("inside get PurchaseReturn");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -75,7 +78,7 @@ const OrderView = forwardRef((props, ref) => {
         };
 
         setProcessing(true);
-        fetch('/v1/order/' + id, requestOptions)
+        fetch('/v1/purchase-return/' + id, requestOptions)
             .then(async response => {
                 setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -92,6 +95,7 @@ const OrderView = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
 
+
                 model = data.result;
 
                 setModel({ ...model });
@@ -107,23 +111,17 @@ const OrderView = forwardRef((props, ref) => {
             });
     }
 
-    const [show, SetShow] = useState(false);
-
-    function handleClose() {
-        SetShow(false);
-    };
 
     const PreviewRef = useRef();
     function openPreview() {
         PreviewRef.current.open(model);
     }
 
-
     return (<>
-        <OrderPreview ref={PreviewRef} />
+        <PurchaseReturnPreview ref={PreviewRef} />
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Details of Order #{model.code}</Modal.Title>
+                <Modal.Title>Details of Purchase Return #{model.code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
@@ -133,7 +131,7 @@ const OrderView = forwardRef((props, ref) => {
                         <button
                             className="btn btn-primary mb-3"
                             data-bs-toggle="modal"
-                            data-bs-target="#previewOrderModal"
+                            data-bs-target="#previewPurchaseReturnModal"
                         >
                             <i className="bi bi-display"></i> Preview
                         </button> */}
@@ -147,11 +145,12 @@ const OrderView = forwardRef((props, ref) => {
                 </div>
             </Modal.Header>
             <Modal.Body>
+
                 <Table striped bordered hover responsive="lg">
                     <tr>
                         <th>Store:</th><td> {model.store_name}</td>
-                        <th>Customer:</th><td> {model.customer_name}</td>
-                        <th>Delivered by:</th><td> {model.delivered_by_name}</td>
+                        <th>Vendor:</th><td> {model.vendor_name}</td>
+                        <th>Purchase Returned by:</th><td> {model.purchase_returned_by_name}</td>
                     </tr>
                     <tr>
                         <th>Date:</th><td> {model.date_str}</td>
@@ -160,13 +159,13 @@ const OrderView = forwardRef((props, ref) => {
                     </tr>
                     <tr>
                         <th>Status:</th><td> {model.status}</td>
+                        <th>Signature Date:</th><td> {model.signature_date_str}</td>
                         <th>Created At:</th><td> {model.created_at}</td>
                         <th>Updated At:</th><td> {model.updated_at}</td>
                     </tr>
                     <tr>
                         <th>Created By:</th><td> {model.created_by_name}</td>
                         <th>Updated By:</th><td> {model.updated_by_name}</td>
-                        <th>Profit:</th><td> {model.profit}</td>
                     </tr>
 
                 </Table>
@@ -179,8 +178,8 @@ const OrderView = forwardRef((props, ref) => {
                                 <th>CODE</th>
                                 <th>Name</th>
                                 <th>Qty</th>
-                                <th>Unit Price</th>
-                                <th>Price</th>
+                                <th>Purchase Return Unit Price</th>
+                                <th>Purchase Return Price</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -192,7 +191,7 @@ const OrderView = forwardRef((props, ref) => {
                                     <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
                                     <td>
                                         <NumberFormat
-                                            value={product.unit_price}
+                                            value={product.purchasereturn_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
@@ -201,7 +200,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td>
                                     <td>
                                         <NumberFormat
-                                            value={(product.unit_price * product.quantity).toFixed(2)}
+                                            value={(product.purchasereturn_unit_price * product.quantity).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
@@ -211,10 +210,7 @@ const OrderView = forwardRef((props, ref) => {
                                 </tr>
                             ))}
                             <tr>
-                                <td colSpan="3"></td>
-                                <td className="text-center">
-                                    <b>{totalQuantity}</b>
-                                </td>
+                                <td colSpan="4"></td>
                                 <th className="text-end">Total</th>
                                 <td className="text-center">
                                     <NumberFormat
@@ -310,4 +306,4 @@ const OrderView = forwardRef((props, ref) => {
 
 });
 
-export default OrderView;
+export default PurchaseReturnView;

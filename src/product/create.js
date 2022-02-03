@@ -931,136 +931,138 @@ const ProductCreate = forwardRef((props, ref) => {
                                 <Button hide={true} onClick={addUnitPrice} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> Add Price</Button>
                             </div>
                         </div>
-                        <table className="table table-striped table-sm table-bordered">
-                            <thead>
-                                <tr className="text-center">
-                                    <th>SI No.</th>
-                                    <th>Store Name</th>
-                                    <th>Purchase Unit Price</th>
-                                    <th>Wholesale Unit Price</th>
-                                    <th>Retail Unit Price</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {selectedUnitPrices.map((unitPrice, index) => (
+                        <div className="table-responsive" style={{ overflowX: "auto" }}>
+                            <table className="table table-striped table-sm table-bordered">
+                                <thead>
                                     <tr className="text-center">
-                                        <td>{index + 1}</td>
-                                        <td>{unitPrice.store_name}</td>
-                                        <td style={{ width: "150px" }}>
-
-                                            <input type="number" value={unitPrice.purchase_unit_price} className="form-control"
-
-                                                placeholder="Purchase Unit Price" onChange={(e) => {
-                                                    errors["purchase_unit_price_" + index] = "";
-                                                    setErrors({ ...errors });
-                                                    if (!e.target.value || e.target.value == 0) {
-                                                        errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
-                                                        selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
-                                                        setSelectedUnitPrices([...selectedUnitPrices]);
-                                                        setErrors({ ...errors });
-                                                        console.log("errors:", errors);
-                                                        return;
-                                                    }
-                                                    selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
-                                                    console.log("selectedUnitPrices[index].purchase_unit_price:", selectedUnitPrices[index].purchase_unit_price);
-                                                    setSelectedUnitPrices([...selectedUnitPrices]);
-
-                                                }} /> SAR
-                                            {errors["purchase_unit_price_" + index] && (
-                                                <div style={{ color: "red" }}>
-                                                    <i class="bi bi-x-lg"> </i>
-                                                    {errors["purchase_unit_price_" + index]}
-                                                </div>
-                                            )}
-                                            {(selectedUnitPrices[index].purchase_unit_price && !errors["purchase_unit_price_" + index]) ? (
-                                                <div style={{ color: "green" }}>
-                                                    <i class="bi bi-check-lg"> </i>
-                                                    Looks good!
-                                                </div>
-                                            ) : null}
-                                        </td>
-
-                                        <td style={{ width: "150px" }}>
-
-                                            <input type="number" value={unitPrice.wholesale_unit_price} className="form-control"
-
-                                                placeholder="Wholesale Unit Price" onChange={(e) => {
-                                                    errors["wholesale_unit_price_" + index] = "";
-                                                    setErrors({ ...errors });
-                                                    if (!e.target.value || e.target.value == 0) {
-                                                        errors["wholesale_unit_price_" + index] = "Invalid Unit Price";
-                                                        selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
-                                                        setSelectedUnitPrices([...selectedUnitPrices]);
-                                                        setErrors({ ...errors });
-                                                        console.log("errors:", errors);
-                                                        return;
-                                                    }
-                                                    selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
-                                                    console.log("selectedUnitPrices[index].wholesale_unit_price:", selectedUnitPrices[index].wholesale_unit_price);
-                                                    setSelectedUnitPrices([...selectedUnitPrices]);
-
-                                                }} /> SAR
-                                            {errors["wholesale_unit_price_" + index] && (
-                                                <div style={{ color: "red" }}>
-                                                    <i class="bi bi-x-lg"> </i>
-                                                    {errors["wholesale_unit_price_" + index]}
-                                                </div>
-                                            )}
-                                            {(selectedUnitPrices[index].wholesale_unit_price && !errors["wholesale_unit_price_" + index]) ? (
-                                                <div style={{ color: "green" }}>
-                                                    <i class="bi bi-check-lg"> </i>
-                                                    Looks good!
-                                                </div>
-                                            ) : null}
-                                        </td>
-                                        <td style={{ width: "150px" }}>
-
-                                            <input type="number" value={unitPrice.retail_unit_price} className="form-control"
-
-                                                placeholder="Retail Unit Price" onChange={(e) => {
-                                                    errors["retail_unit_price_" + index] = "";
-                                                    setErrors({ ...errors });
-                                                    if (!e.target.value || e.target.value == 0) {
-                                                        errors["retail_unit_price_" + index] = "Invalid Unit Price";
-                                                        selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
-                                                        setSelectedUnitPrices([...selectedUnitPrices]);
-                                                        setErrors({ ...errors });
-                                                        console.log("errors:", errors);
-                                                        return;
-                                                    }
-                                                    selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
-                                                    console.log("selectedUnitPrices[index].retail_unit_price:", selectedUnitPrices[index].retail_unit_price);
-                                                    setSelectedUnitPrices([...selectedUnitPrices]);
-
-                                                }} /> SAR
-                                            {errors["retail_unit_price_" + index] && (
-                                                <div style={{ color: "red" }}>
-                                                    <i class="bi bi-x-lg"> </i>
-                                                    {errors["retail_unit_price_" + index]}
-                                                </div>
-                                            )}
-                                            {(selectedUnitPrices[index].retail_unit_price && !errors["retail_unit_price_" + index]) ? (
-                                                <div style={{ color: "green" }}>
-                                                    <i class="bi bi-check-lg"> </i>
-                                                    Looks good!
-                                                </div>
-                                            ) : null}
-                                        </td>
-                                        <td>
-                                            <div
-                                                style={{ color: "red", cursor: "pointer" }}
-                                                onClick={() => {
-                                                    removeUnitPrice(unitPrice);
-                                                }}
-                                            >
-                                                <i class="bi bi-x-lg"> </i>
-                                            </div>
-                                        </td>
+                                        <th>SI No.</th>
+                                        <th>Store Name</th>
+                                        <th>Purchase Unit Price</th>
+                                        <th>Wholesale Unit Price</th>
+                                        <th>Retail Unit Price</th>
+                                        <th></th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {selectedUnitPrices.map((unitPrice, index) => (
+                                        <tr className="text-center">
+                                            <td>{index + 1}</td>
+                                            <td>{unitPrice.store_name}</td>
+                                            <td style={{ width: "150px" }}>
+
+                                                <input type="number" value={unitPrice.purchase_unit_price} className="form-control"
+
+                                                    placeholder="Purchase Unit Price" onChange={(e) => {
+                                                        errors["purchase_unit_price_" + index] = "";
+                                                        setErrors({ ...errors });
+                                                        if (!e.target.value || e.target.value == 0) {
+                                                            errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
+                                                            selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
+                                                            setSelectedUnitPrices([...selectedUnitPrices]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+                                                        selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
+                                                        console.log("selectedUnitPrices[index].purchase_unit_price:", selectedUnitPrices[index].purchase_unit_price);
+                                                        setSelectedUnitPrices([...selectedUnitPrices]);
+
+                                                    }} /> SAR
+                                                {errors["purchase_unit_price_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        <i class="bi bi-x-lg"> </i>
+                                                        {errors["purchase_unit_price_" + index]}
+                                                    </div>
+                                                )}
+                                                {(selectedUnitPrices[index].purchase_unit_price && !errors["purchase_unit_price_" + index]) ? (
+                                                    <div style={{ color: "green" }}>
+                                                        <i class="bi bi-check-lg"> </i>
+                                                        Looks good!
+                                                    </div>
+                                                ) : null}
+                                            </td>
+
+                                            <td style={{ width: "150px" }}>
+
+                                                <input type="number" value={unitPrice.wholesale_unit_price} className="form-control"
+
+                                                    placeholder="Wholesale Unit Price" onChange={(e) => {
+                                                        errors["wholesale_unit_price_" + index] = "";
+                                                        setErrors({ ...errors });
+                                                        if (!e.target.value || e.target.value == 0) {
+                                                            errors["wholesale_unit_price_" + index] = "Invalid Unit Price";
+                                                            selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                            setSelectedUnitPrices([...selectedUnitPrices]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+                                                        selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                        console.log("selectedUnitPrices[index].wholesale_unit_price:", selectedUnitPrices[index].wholesale_unit_price);
+                                                        setSelectedUnitPrices([...selectedUnitPrices]);
+
+                                                    }} /> SAR
+                                                {errors["wholesale_unit_price_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        <i class="bi bi-x-lg"> </i>
+                                                        {errors["wholesale_unit_price_" + index]}
+                                                    </div>
+                                                )}
+                                                {(selectedUnitPrices[index].wholesale_unit_price && !errors["wholesale_unit_price_" + index]) ? (
+                                                    <div style={{ color: "green" }}>
+                                                        <i class="bi bi-check-lg"> </i>
+                                                        Looks good!
+                                                    </div>
+                                                ) : null}
+                                            </td>
+                                            <td style={{ width: "150px" }}>
+
+                                                <input type="number" value={unitPrice.retail_unit_price} className="form-control"
+
+                                                    placeholder="Retail Unit Price" onChange={(e) => {
+                                                        errors["retail_unit_price_" + index] = "";
+                                                        setErrors({ ...errors });
+                                                        if (!e.target.value || e.target.value == 0) {
+                                                            errors["retail_unit_price_" + index] = "Invalid Unit Price";
+                                                            selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
+                                                            setSelectedUnitPrices([...selectedUnitPrices]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+                                                        selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
+                                                        console.log("selectedUnitPrices[index].retail_unit_price:", selectedUnitPrices[index].retail_unit_price);
+                                                        setSelectedUnitPrices([...selectedUnitPrices]);
+
+                                                    }} /> SAR
+                                                {errors["retail_unit_price_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        <i class="bi bi-x-lg"> </i>
+                                                        {errors["retail_unit_price_" + index]}
+                                                    </div>
+                                                )}
+                                                {(selectedUnitPrices[index].retail_unit_price && !errors["retail_unit_price_" + index]) ? (
+                                                    <div style={{ color: "green" }}>
+                                                        <i class="bi bi-check-lg"> </i>
+                                                        Looks good!
+                                                    </div>
+                                                ) : null}
+                                            </td>
+                                            <td>
+                                                <div
+                                                    style={{ color: "red", cursor: "pointer" }}
+                                                    onClick={() => {
+                                                        removeUnitPrice(unitPrice);
+                                                    }}
+                                                >
+                                                    <i class="bi bi-x-lg"> </i>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                         <h4>Stock</h4>
                         <div className="col-md-5">
                             <label className="form-label">Select Store*</label>
@@ -1154,68 +1156,70 @@ const ProductCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <table className="table table-striped table-sm table-bordered">
-                            <thead>
-                                <tr className="text-center">
-                                    <th>SI No.</th>
-                                    <th>Store Name</th>
-                                    <th>Stock</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {selectedStocks.map((stock, index) => (
+                        <div className="table-responsive" style={{ overflowX: "auto" }}>
+                            <table className="table table-striped table-sm table-bordered">
+                                <thead>
                                     <tr className="text-center">
-                                        <td>{index + 1}</td>
-                                        <td>{stock.store_name}</td>
-                                        <td style={{ width: "125px" }}>
-
-                                            <input type="number" value={stock.stock} className="form-control"
-
-                                                placeholder="Stock" onChange={(e) => {
-                                                    errors["stock_" + index] = "";
-                                                    setErrors({ ...errors });
-                                                    if (!e.target.value) {
-                                                        errors["stock_" + index] = "Invalid Stock";
-                                                        selectedStocks[index].stock = "";
-                                                        setSelectedStocks([...selectedStocks]);
-                                                        setErrors({ ...errors });
-                                                        console.log("errors:", errors);
-                                                        return;
-                                                    }
-                                                    //  stock.stock = parseInt(e.target.value);
-                                                    selectedStocks[index].stock = parseInt(e.target.value);
-                                                    console.log("selectedStocks[index].stock:", selectedStocks[index].stock);
-                                                    setSelectedStocks([...selectedStocks]);
-
-                                                }} />
-                                            {errors["stock_" + index] && (
-                                                <div style={{ color: "red" }}>
-                                                    <i class="bi bi-x-lg"> </i>
-                                                    {errors["stock_" + index]}
-                                                </div>
-                                            )}
-                                            {((selectedStocks[index].stock || selectedStocks[index].stock === 0) && !errors["stock_" + index]) ? (
-                                                <div style={{ color: "green" }}>
-                                                    <i class="bi bi-check-lg"> </i>
-                                                    Looks good!
-                                                </div>
-                                            ) : null}
-                                        </td>
-                                        <td>
-                                            <div
-                                                style={{ color: "red", cursor: "pointer" }}
-                                                onClick={() => {
-                                                    removeStock(stock);
-                                                }}
-                                            >
-                                                <i class="bi bi-x-lg"> </i>
-                                            </div>
-                                        </td>
+                                        <th>SI No.</th>
+                                        <th>Store Name</th>
+                                        <th>Stock</th>
+                                        <th></th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {selectedStocks.map((stock, index) => (
+                                        <tr className="text-center">
+                                            <td>{index + 1}</td>
+                                            <td>{stock.store_name}</td>
+                                            <td style={{ width: "125px" }}>
+
+                                                <input type="number" value={stock.stock} className="form-control"
+
+                                                    placeholder="Stock" onChange={(e) => {
+                                                        errors["stock_" + index] = "";
+                                                        setErrors({ ...errors });
+                                                        if (!e.target.value) {
+                                                            errors["stock_" + index] = "Invalid Stock";
+                                                            selectedStocks[index].stock = "";
+                                                            setSelectedStocks([...selectedStocks]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+                                                        //  stock.stock = parseInt(e.target.value);
+                                                        selectedStocks[index].stock = parseInt(e.target.value);
+                                                        console.log("selectedStocks[index].stock:", selectedStocks[index].stock);
+                                                        setSelectedStocks([...selectedStocks]);
+
+                                                    }} />
+                                                {errors["stock_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        <i class="bi bi-x-lg"> </i>
+                                                        {errors["stock_" + index]}
+                                                    </div>
+                                                )}
+                                                {((selectedStocks[index].stock || selectedStocks[index].stock === 0) && !errors["stock_" + index]) ? (
+                                                    <div style={{ color: "green" }}>
+                                                        <i class="bi bi-check-lg"> </i>
+                                                        Looks good!
+                                                    </div>
+                                                ) : null}
+                                            </td>
+                                            <td>
+                                                <div
+                                                    style={{ color: "red", cursor: "pointer" }}
+                                                    onClick={() => {
+                                                        removeStock(stock);
+                                                    }}
+                                                >
+                                                    <i class="bi bi-x-lg"> </i>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
 
                         <div className="col-md-6">
                             <label className="form-label">Image(Optional)</label>

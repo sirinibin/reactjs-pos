@@ -1,49 +1,125 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
-import SalesReturnPreview from "./preview.js";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import PurchaseReturnedPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
-import CustomerCreate from "./../customer/create.js";
-import ProductCreate from "./../product/create.js";
-import UserCreate from "./../user/create.js";
-import SignatureCreate from "./../signature/create.js";
+import VendorCreate from "../vendor/create.js";
+import ProductCreate from "../product/create.js";
+import UserCreate from "../user/create.js";
+import SignatureCreate from "../signature/create.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
-import SalesReturnView from "./view.js";
-import BarcodeScannerComponent from "react-qr-barcode-scanner";
-import Quagga from 'quagga';
-import ProductView from "./../product/view.js";
+import PurchaseReturnedView from "./view.js";
+import ProductView from "../product/view.js";
+import PurchaseView from "./../purchase/view.js";
 
-const SalesReturnCreate = forwardRef((props, ref) => {
+
+const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
+
+            selectedProducts = [];
+            setSelectedProducts([]);
+
+            selectedStores = [];
+            setSelectedStores([]);
+
+            selectedVendors = [];
+            setSelectedVendors([]);
+
+            selectedPurchaseReturnedByUsers = [];
+            setSelectedPurchaseReturnedByUsers([]);
+
+            selectedPurchaseReturnedBySignatures = [];
+            setSelectedPurchaseReturnedBySignatures([]);
+
+
             formData = {
-                order_id: id,
                 vat_percent: 15.0,
                 discount: 0.0,
                 date_str: format(new Date(), "MMM dd yyyy"),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
-                status: "received",
-                payment_status: "paid",
-                payment_method: "cash",
-                price_type: "retail"
+                status: "purchase_returned",
             };
+
             setFormData({ ...formData });
+
+
             if (id) {
-                getOrder(id);
+                getPurchase(id);
             }
             setShow(true);
-
         },
 
     }));
 
-    function getOrder(id) {
-        console.log("inside get SalesReturn");
+
+    const selectedDate = new Date();
+
+    //const history = useHistory();
+    let [errors, setErrors] = useState({});
+    const [isProcessing, setProcessing] = useState(false);
+    const cookies = new Cookies();
+
+    //fields
+    let [formData, setFormData] = useState({
+        vat_percent: 10.0,
+        discount: 0.0,
+        date_str: format(new Date(), "MMM dd yyyy"),
+        signature_date_str: format(new Date(), "MMM dd yyyy"),
+        status: "purchase_returned",
+    });
+
+    //Store Auto Suggestion
+    const [storeOptions, setStoreOptions] = useState([]);
+    let [selectedStores, setSelectedStores] = useState([]);
+    const [isStoresLoading, setIsStoresLoading] = useState(false);
+
+    //Vendor Auto Suggestion
+    const [vendorOptions, setVendorOptions] = useState([]);
+    let [selectedVendors, setSelectedVendors] = useState([]);
+    const [isVendorsLoading, setIsVendorsLoading] = useState(false);
+
+    //Product Auto Suggestion
+    const [productOptions, setProductOptions] = useState([]);
+    let [selectedProduct, setSelectedProduct] = useState([]);
+    let [selectedProducts, setSelectedProducts] = useState([]);
+    const [isProductsLoading, setIsProductsLoading] = useState(false);
+
+    //Purchase Returned By Auto Suggestion
+    const [purchaseReturnedByUserOptions, setPurchaseReturnedByUserOptions] = useState([]);
+    let [selectedPurchaseReturnedByUsers, setSelectedPurchaseReturnedByUsers] = useState([]);
+    const [isPurchaseReturnedByUsersLoading, setIsPurchaseReturnedByUsersLoading] = useState(false);
+
+    //Purchase Returned By Signature Auto Suggestion
+    const [purchaseReturnedBySignatureOptions, setPurchaseReturnedBySignatureOptions] =
+        useState([]);
+    let [selectedPurchaseReturnedBySignatures, setSelectedPurchaseReturnedBySignatures] =
+        useState([]);
+    const [isPurchaseReturnedBySignaturesLoading, setIsPurchaseReturnedBySignaturesLoading] =
+        useState(false);
+
+    const [show, setShow] = useState(false);
+
+    function handleClose() {
+        setShow(false);
+    }
+
+    useEffect(() => {
+        let at = cookies.get("access_token");
+        if (!at) {
+            // history.push("/dashboard/purchasereturneds");
+            window.location = "/";
+        }
+    });
+
+
+    function getPurchase(id) {
+        console.log("inside get PurchaseReturned");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -52,7 +128,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/order/' + id, requestOptions)
+        fetch('/v1/purchase/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -68,224 +144,93 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
 
-                let order = data.result;
+                let purchase = data.result;
+                formData = {
+                    vat_percent: 15.0,
+                    discount: 0.0,
+                    date_str: format(new Date(), "MMM dd yyyy"),
+                    signature_date_str: format(new Date(), "MMM dd yyyy"),
+                    purchase_id: purchase.id,
+                    purchase_code: purchase.code,
+                    store_id: purchase.store_id,
+                    vendor_id: purchase.vendor_id,
+                    vat_percent: purchase.vat_percent,
+                    discount: purchase.discount,
+                    status: purchase.status,
+                    purchase_returned_by: purchase.order_placed_by,
+                    purchase_returned_by_signature_id: purchase.order_placed_by_signature_id,
+                };
 
-                let selectedProductsTemp = order.products;
+                formData.status = "purchase_returned";
+
+                setFormData({ ...formData });
+                console.log("formData1.status:", formData.status);
+
+
+                let selectedProductsTemp = purchase.products;
+
                 selectedProducts = [];
                 for (let i = 0; i < selectedProductsTemp.length; i++) {
                     selectedProductsTemp[i].selected = false;
-                    let soldQty = selectedProductsTemp[i].quantity - selectedProductsTemp[i].quantity_returned;
-                    selectedProductsTemp[i].quantity = soldQty;
+                    let purchasedQty = selectedProductsTemp[i].quantity - selectedProductsTemp[i].quantity_returned;
+                    selectedProductsTemp[i].quantity = purchasedQty;
 
-                    if (soldQty > 0) {
+                    if (purchasedQty > 0) {
                         selectedProducts.push(selectedProductsTemp[i]);
                     }
                 }
 
-                // selectedProducts = selectedProductsTemp
 
-                console.log("selectedProducts:", selectedProducts);
                 setSelectedProducts([...selectedProducts]);
 
 
-
-                //formData = order;
-                console.log("order.id:", order.id);
-                formData.id = "";
-                formData.products = order.products;
-                // formData.order_id = order.id;
-                //console.log("formData.order_id:", formData.order_id);
-                formData.order_code = order.code;
-                formData.store_id = order.store_id;
-                formData.received_by = order.delivered_by;
-                formData.received_by_signature_id = order.delivered_by_signature_id;
-                formData.customer_id = order.customer_id;
-
-                // formData.discount = 0.0;
-
-                setFormData({ ...formData });
-                console.log("formData:", formData);
-
-
-                selectedStores = [
+                let selectedStores = [
                     {
-                        id: order.store_id,
-                        name: order.store_name,
+                        id: purchase.store_id,
+                        name: purchase.store_name,
                     }
                 ];
 
-                setSelectedStores(selectedStores);
-                console.log("selectedStores:", selectedStores);
-
-                let selectedCustomers = [
+                let selectedVendors = [
                     {
-                        id: order.customer_id,
-                        name: order.customer_name,
+                        id: purchase.vendor_id,
+                        name: purchase.vendor_name,
                     }
                 ];
 
-                let selectedReceivedByUsers = [
+                let selectedPurchaseReturnedByUsers = [
                     {
-                        id: order.delivered_by,
-                        name: order.delivered_by_name
+                        id: purchase.order_placed_by,
+                        name: purchase.order_placed_by_name
                     }
                 ];
 
-                if (order.delivered_by_signature_id) {
-                    let selectedReceivedBySignatures = [
+                if (purchase.order_placed_by_signature_id) {
+                    let selectedPurchaseReturnedBySignatures = [
                         {
-                            id: order.delivered_by_signature_id,
-                            name: order.delivered_by_signature_name,
+                            id: purchase.order_placed_by_signature_id,
+                            name: purchase.order_placed_by_signature_name,
                         }
                     ];
-                    setSelectedReceivedBySignatures([...selectedReceivedBySignatures]);
+
+                    setSelectedPurchaseReturnedBySignatures([...selectedPurchaseReturnedBySignatures]);
                 }
 
-                setSelectedReceivedByUsers([...selectedReceivedByUsers]);
+                setSelectedPurchaseReturnedByUsers([...selectedPurchaseReturnedByUsers]);
 
-
-                setSelectedCustomers([...selectedCustomers]);
-
+                setSelectedStores([...selectedStores]);
+                setSelectedVendors([...selectedVendors]);
 
                 reCalculate();
+                setFormData({ ...formData });
+
+
             })
             .catch(error => {
                 setProcessing(false);
                 setErrors(error);
             });
     }
-
-    /*
-    let [barcode, setBarcode] = useState("");
-    let [barcodeEnded, setBarcodeEnded] = useState(false);
-    const keyPress = useCallback(
-        (e) => {
-            console.log("e.key:", e.key);
-
-            if (!barcodeEnded && e.key != "Enter") {
-                console.log()
-                barcode += e.key;
-                setBarcode(barcode);
-            }
-
-            if (e.key === "Enter") {
-                document.removeEventListener("keydown", keyPress);
-                console.log("barcode:", barcode);
-                barcodeEnded = true;
-                setBarcodeEnded(true);
-            }
-
-        },
-        []
-    );
-
-    function addListener() {
-        //barcode = "";
-        //setBarcode(barcode);
-        document.addEventListener("keydown", keyPress);
-        console.log("Listener added, barcode:", barcode);
-    }
-    */
-    /*
-    useEffect(() => {
-        document.addEventListener("keydown", keyPress);
-        return () => document.removeEventListener("keydown", keyPress);
-    }, [keyPress]);
-    */
-    /*
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    });
-    let [barcode, setBarcode] = useState("");
-    function handleKeyDown(event) {
-        console.log("event.key:", event.key);
-
-        /*
-        if (event.key == "Enter") {
-            barcode = "";
-            setBarcode(barcode);
-        }
-        else if (event.key == "Shift") {
-            console.log("barcode:", barcode);
-        } else {
-            barcode += event.key;
-            setBarcode(barcode);
-        }
-        */
-
-    /*
-    if (event.keyCode === KEY_ESCAPE) {
-        /* do your action here */
-    // }  
-    // }
-
-    const selectedDate = new Date();
-
-    //const history = useHistory();
-    let [errors, setErrors] = useState({});
-    const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
-
-    //fields
-    let [formData, setFormData] = useState({
-        order_id: "",
-        vat_percent: 15.0,
-        discount: 0.0,
-        date_str: format(new Date(), "MMM dd yyyy"),
-        signature_date_str: format(new Date(), "MMM dd yyyy"),
-        status: "received",
-        payment_status: "paid",
-        payment_method: "cash",
-        price_type: "retail",
-    });
-
-    let [unitPriceList, setUnitPriceList] = useState([]);
-
-    //Store Auto Suggestion
-    const [storeOptions, setStoreOptions] = useState([]);
-    let [selectedStores, setSelectedStores] = useState([]);
-    const [isStoresLoading, setIsStoresLoading] = useState(false);
-
-    //Customer Auto Suggestion
-    const [customerOptions, setCustomerOptions] = useState([]);
-    let [selectedCustomers, setSelectedCustomers] = useState([]);
-    const [isCustomersLoading, setIsCustomersLoading] = useState(false);
-
-    //Product Auto Suggestion
-    const [productOptions, setProductOptions] = useState([]);
-    let [selectedProduct, setSelectedProduct] = useState([]);
-    let [selectedProducts, setSelectedProducts] = useState([]);
-    const [isProductsLoading, setIsProductsLoading] = useState(false);
-
-    //Received By Auto Suggestion
-    const [receivedByUserOptions, setReceivedByUserOptions] = useState([]);
-    let [selectedReceivedByUsers, setSelectedReceivedByUsers] = useState([]);
-    const [isReceivedByUsersLoading, setIsReceivedByUsersLoading] =
-        useState(false);
-
-    //Received By Signature Auto Suggestion
-    const [receivedBySignatureOptions, setReceivedBySignatureOptions] =
-        useState([]);
-    const [selectedReceivedBySignatures, setSelectedReceivedBySignatures] =
-        useState([]);
-    const [isReceivedBySignaturesLoading, setIsReceivedBySignaturesLoading] =
-        useState(false);
-
-    const [show, setShow] = useState(false);
-
-    function handleClose() {
-        setShow(false);
-    }
-
-    useEffect(() => {
-        let at = cookies.get("access_token");
-        if (!at) {
-            // history.push("/dashboard/salesreturns");
-            window.location = "/";
-        }
-    });
-
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -332,9 +277,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         setIsStoresLoading(false);
     }
 
-    async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
-        setCustomerOptions([]);
+    async function suggestVendors(searchTerm) {
+        console.log("Inside handle suggestVendors");
+        setVendorOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -358,94 +303,22 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         };
 
         let Select = "select=id,name";
-        setIsCustomersLoading(true);
+        setIsVendorsLoading(true);
         let result = await fetch(
-            "/v1/customer?" + Select + queryString,
+            "/v1/vendor?" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
 
-        setCustomerOptions(data.result);
-        setIsCustomersLoading(false);
-    }
-
-    function handlePriceTypeChange(priceType) {
-
-        console.log("Inside Price type change");
-        console.log(priceType);
-    }
-
-    function GetProductUnitPriceInStore(storeId, unitPriceListArray) {
-        if (!unitPriceListArray) {
-            return "";
-        }
-
-        for (var i = 0; i < unitPriceListArray.length; i++) {
-            console.log("unitPriceListArray[i]:", unitPriceListArray[i]);
-            console.log("store_id:", storeId);
-
-            if (unitPriceListArray[i].store_id === storeId) {
-                console.log("macthed");
-                console.log(
-                    "unitPrice.retail_unit_price:",
-                    unitPriceListArray[i].retail_unit_price
-                );
-                if (formData.price_type == "retail") {
-                    return unitPriceListArray[i].retail_unit_price;
-                } else if (formData.price_type == "wholesale") {
-                    return unitPriceListArray[i].wholesale_unit_price;
-                }
-
-            } else {
-                console.log("not matched");
-            }
-        }
-        return "";
+        setVendorOptions(data.result);
+        setIsVendorsLoading(false);
     }
 
 
-
-
-    async function suggestProducts(searchTerm) {
-        console.log("Inside handle suggestProducts");
-        setProductOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,item_code,name,unit_prices,stock,unit";
-        setIsProductsLoading(true);
-        let result = await fetch(
-            "/v1/product?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setProductOptions(data.result);
-        setIsProductsLoading(false);
-    }
 
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggestUsers");
-        setReceivedByUserOptions([]);
+        setPurchaseReturnedByUserOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -469,20 +342,20 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         };
 
         let Select = "select=id,name";
-        setIsReceivedByUsersLoading(true);
+        setIsPurchaseReturnedByUsersLoading(true);
         let result = await fetch(
             "/v1/user?" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
 
-        setReceivedByUserOptions(data.result);
-        setIsReceivedByUsersLoading(false);
+        setPurchaseReturnedByUserOptions(data.result);
+        setIsPurchaseReturnedByUsersLoading(false);
     }
 
     async function suggestSignatures(searchTerm) {
         console.log("Inside handle suggestSignatures");
-        setReceivedBySignatureOptions([]);
+        setPurchaseReturnedBySignatureOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -506,46 +379,47 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         };
 
         let Select = "select=id,name";
-        setIsReceivedBySignaturesLoading(true);
+        setIsPurchaseReturnedBySignaturesLoading(true);
         let result = await fetch(
             "/v1/signature?" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
 
-        setReceivedBySignatureOptions(data.result);
-        setIsReceivedBySignaturesLoading(false);
+        setPurchaseReturnedBySignatureOptions(data.result);
+        setIsPurchaseReturnedBySignaturesLoading(false);
     }
 
     function handleCreate(event) {
+        console.log("formData.status:" + formData.status);
         event.preventDefault();
         console.log("Inside handle Create");
         console.log("selectedProducts:", selectedProducts);
-        console.log("formData.order_id:", formData.order_id);
 
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
             if (!selectedProducts[i].selected) {
-                continue;
+                continue
             }
 
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
                 quantity: parseFloat(selectedProducts[i].quantity),
-                unit_price: parseFloat(selectedProducts[i].unit_price),
                 unit: selectedProducts[i].unit,
+                purchasereturn_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
             });
         }
 
-        //return;
         formData.discount = parseFloat(formData.discount);
         formData.vat_percent = parseFloat(formData.vat_percent);
-        formData.partial_payment_amount = parseFloat(formData.partial_payment_amount);
         console.log("formData.discount:", formData.discount);
 
-
-        let endPoint = "/v1/sales-return";
+        let endPoint = "/v1/purchase-return";
         let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/purchase-return/" + formData.id;
+            method = "PUT";
+        }
 
 
         const requestOptions = {
@@ -557,8 +431,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             },
             body: JSON.stringify(formData),
         };
-
-        console.log("formData:", formData);
 
         setProcessing(true);
         fetch(endPoint, requestOptions)
@@ -581,10 +453,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("SalesReturn Created Successfully!", "success");
-                // props.refreshList();
+                props.showToastMessage("Purchase Return Created Successfully!", "success");
+                //  props.refreshList();
                 handleClose();
-
                 openDetailsView(data.result.id);
             })
             .catch((error) => {
@@ -593,7 +464,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating SalesReturn!", "danger");
+                props.showToastMessage("Error Creating PurchaseReturned!", "danger");
             });
     }
 
@@ -604,19 +475,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             }
         }
         return false;
-    }
-
-    function GetProductStockInStore(storeId, stockList) {
-        if (!stockList) {
-            return 0.0;
-        }
-
-        for (var i = 0; i < stockList.length; i++) {
-            if (stockList[i].store_id === storeId) {
-                return stockList[i].stock;
-            }
-        }
-        return 0.0;
     }
 
     function addProduct() {
@@ -644,50 +502,60 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             return;
         }
 
-        errors.unit_price = "";
+        errors.purchasereturned_unit_price = "";
+
         if (
-            !selectedProduct[0].unit_price ||
-            isNaN(selectedProduct[0].unit_price)
+            !selectedProduct[0].purchasereturned_unit_price ||
+            isNaN(selectedProduct[0].purchasereturned_unit_price)
         ) {
-            errors.unit_price = "Invalid Unit Price";
+            errors.purchasereturned_unit_price = "Invalid PurchaseReturned Unit Price";
             setErrors({ ...errors });
             return;
         }
 
-        if (!formData.store_id) {
-            errors.product_id = "Please Select a Store and try again";
+
+        errors.wholesale_unit_price = "";
+        if (
+            !selectedProduct[0].wholesale_unit_price ||
+            isNaN(selectedProduct[0].wholesale_unit_price)
+        ) {
+            errors.wholesale_unit_price = "Invalid Wholesale Unit Price";
             setErrors({ ...errors });
             return;
         }
 
-        let stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stock);
-        if (stock < selectedProduct[0].quantity) {
-            errors.product_id = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
+        errors.retail_unit_price = "";
+        if (
+            !selectedProduct[0].retail_unit_price ||
+            isNaN(selectedProduct[0].retail_unit_price)
+        ) {
+            errors.retail_unit_price = "Invalid Retail Unit Price";
             setErrors({ ...errors });
             return;
         }
+
 
         selectedProducts.push({
             product_id: selectedProduct[0].id,
             code: selectedProduct[0].item_code,
             name: selectedProduct[0].name,
             quantity: selectedProduct[0].quantity,
-            stock: selectedProduct[0].stock,
-            unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
+            purchasereturned_unit_price: parseFloat(selectedProduct[0].purchasereturned_unit_price).toFixed(2),
+            retail_unit_price: parseFloat(selectedProduct[0].retail_unit_price).toFixed(2),
+            wholesale_unit_price: parseFloat(selectedProduct[0].wholesale_unit_price).toFixed(2),
             unit: selectedProduct[0].unit,
         });
 
         selectedProduct[0].name = "";
         selectedProduct[0].id = "";
         selectedProduct[0].quantity = "";
-        selectedProduct[0].unit_price = "";
+        selectedProduct[0].purchasereturned_unit_price = "";
+        selectedProduct[0].retail_unit_price = "";
+        selectedProduct[0].wholesale_unit_price = "";
         selectedProduct[0].unit = "";
 
         setSelectedProduct([...selectedProduct]);
         setSelectedProducts([...selectedProducts]);
-        console.log("selectedProduct:", selectedProduct);
-        console.log("selectedProducts:", selectedProducts);
-
         reCalculate();
     }
 
@@ -710,7 +578,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 continue;
             }
             totalPrice +=
-                parseFloat(selectedProducts[i].unit_price) *
+                parseFloat(selectedProducts[i].purchase_unit_price) *
                 parseFloat(selectedProducts[i].quantity);
         }
         totalPrice = totalPrice.toFixed(2);
@@ -743,16 +611,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         DetailsViewRef.current.open(id);
     }
 
-    const camref = useRef();
 
     const StoreCreateFormRef = useRef();
     function openStoreCreateForm() {
         StoreCreateFormRef.current.open();
-    }
-
-    const CustomerCreateFormRef = useRef();
-    function openCustomerCreateForm() {
-        CustomerCreateFormRef.current.open();
     }
 
     const ProductCreateFormRef = useRef();
@@ -776,51 +638,48 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         SignatureCreateFormRef.current.open();
     }
 
-
     const ProductDetailsViewRef = useRef();
     function openProductDetailsView(id) {
         ProductDetailsViewRef.current.open(id);
     }
 
+    const PurchaseDetailsViewRef = useRef();
+    function openPurchaseDetailsView(id) {
+        PurchaseDetailsViewRef.current.open(id);
+    }
+
 
     return (
         <>
-            {/*
-            <div ref={camref}></div>
-        */}
-
-            {/*
-            <BarcodeScannerComponent
-                width={500}
-                height={500}
-                onUpdate={(err, result) => {
-                    console.log("Result:", result);
-                }}
-            />
-            */}
-
-            <SalesReturnView ref={DetailsViewRef} />
             <ProductView ref={ProductDetailsViewRef} />
+            <PurchaseReturnedView ref={DetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
-            <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-
-
+            <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
+            <PurchaseView ref={PurchaseDetailsViewRef} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {"Create Sales Return for Order #" + formData.order_code}
+                        {formData.purchase_code ? "Create Purchase Return for Purchse " : ""}
+                        <span style={{
+                            "text-decoration": "underline",
+                            color: "blue",
+                            cursor: "pointer",
+                        }}
+                            onClick={() => {
+                                openPurchaseDetailsView(formData.purchase_id);
+                            }}> {formData.purchase_code ? "#" + formData.purchase_code : ""} </span>
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
-                        <SalesReturnPreview />
+                        <PurchaseReturnedPreview />
                         {/*
                         <button
                             className="btn btn-primary mb-3"
                             data-bs-toggle="modal"
-                            data-bs-target="#previewSalesReturnModal"
+                            data-bs-target="#previewPurchaseReturnedModal"
                         >
                             <i className="bi bi-display"></i> Preview
                         </button> */}
@@ -833,9 +692,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    {selectedProducts.length == 0 && "Already Returned All sold products"}
+                    {selectedProducts.length == 0 && "Already Returned All purchased products"}
+
                     {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         <h2>Select Products</h2>
+                        {errors["product_id"] && (
+                            <div style={{ color: "red" }}>
+                                <i class="bi bi-x-lg"> </i>
+                                {errors["product_id"]}
+                            </div>
+                        )}
                         <div className="table-responsive" style={{ overflowX: "auto" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
@@ -845,8 +711,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th>CODE</th>
                                         <th>Name</th>
                                         <th>Qty</th>
-                                        <th>Unit Price</th>
-                                        <th>Price</th>
+                                        <th>Purchase Return Unit Price</th>
+                                        <th>Purchase Return Price</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -873,7 +739,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td style={{ width: "125px" }}>
 
-                                                <input type="number" value={(product.quantity)} className="form-control"
+                                                <input type="number" value={product.quantity} className="form-control"
 
                                                     placeholder="Quantity" onChange={(e) => {
                                                         errors["quantity_" + index] = "";
@@ -888,7 +754,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         }
 
                                                         product.quantity = parseFloat(e.target.value);
+                                                        reCalculate();
+
                                                         selectedProducts[index].quantity = parseFloat(e.target.value);
+                                                        console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
                                                         setSelectedProducts([...selectedProducts]);
                                                         reCalculate();
 
@@ -908,32 +777,32 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td style={{ width: "150px" }}>
 
-                                                <input type="number" value={product.unit_price} className="form-control"
+                                                <input type="number" value={product.purchase_unit_price} className="form-control"
 
-                                                    placeholder="Unit Price" onChange={(e) => {
-                                                        errors["unit_price_" + index] = "";
+                                                    placeholder="Purchase Return Unit Price" onChange={(e) => {
+                                                        errors["purchasereturned_unit_price_" + index] = "";
                                                         setErrors({ ...errors });
                                                         if (!e.target.value || e.target.value == 0) {
-                                                            errors["unit_price_" + index] = "Invalid Unit Price";
-                                                            selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                            errors["purchasereturned_unit_price_" + index] = "Invalid Purchase Return Unit Price";
+                                                            selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
                                                             setSelectedProducts([...selectedProducts]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
-                                                        selectedProducts[index].unit_price = parseFloat(e.target.value);
-                                                        console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
+                                                        selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                        console.log("selectedProducts[index].purchase_unit_price:", selectedProducts[index].purchase_unit_price);
                                                         setSelectedProducts([...selectedProducts]);
                                                         reCalculate();
 
                                                     }} /> SAR
-                                                {errors["unit_price_" + index] && (
+                                                {errors["purchasereturned_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
                                                         <i class="bi bi-x-lg"> </i>
-                                                        {errors["unit_price_" + index]}
+                                                        {errors["purchasereturned_unit_price_" + index]}
                                                     </div>
                                                 )}
-                                                {(selectedProducts[index].unit_price && !errors["unit_price_" + index]) ? (
+                                                {(selectedProducts[index].purchasereturned_unit_price && !errors["purchasereturned_unit_price_" + index]) ? (
                                                     <div style={{ color: "green" }}>
                                                         <i class="bi bi-check-lg"> </i>
                                                         Looks good!
@@ -942,7 +811,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <NumberFormat
-                                                    value={(product.unit_price * product.quantity).toFixed(2)}
+                                                    value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={" SAR"}
@@ -952,10 +821,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         </tr>
                                     ))}
                                     <tr>
-                                        <td colSpan="4"></td>
-                                        <td className="text-center">
-
-                                        </td>
+                                        <td colSpan="5"></td>
                                         <th className="text-end">Total</th>
                                         <td className="text-center">
                                             <NumberFormat
@@ -1013,7 +879,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </table>
                         </div>
 
-                        <div className="col-md-4">
+
+                        <div className="col-md-6">
                             <label className="form-label">Date*</label>
 
                             <div className="input-group mb-3">
@@ -1044,7 +911,52 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-6">
+                            <label className="form-label">VAT %*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vat_percent}
+                                    type='number'
+                                    onChange={(e) => {
+                                        console.log("Inside onchange vat percent");
+                                        if (isNaN(e.target.value)) {
+                                            errors["vat_percent"] = "Invalid Quantity";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        errors["vat_percent"] = "";
+                                        setErrors({ ...errors });
+
+                                        formData.vat_percent = e.target.value;
+                                        findVatPrice();
+                                        findNetTotal();
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    defaultValue="10.00"
+                                    id="validationCustom01"
+                                    placeholder="VAT %"
+                                    aria-label="Select Store"
+                                    aria-describedby="button-addon1"
+                                />
+                                {errors.vat_percent && (
+                                    <div style={{ color: "red" }}>
+                                        <i class="bi bi-x-lg"> </i>
+                                        {errors.vat_percent}
+                                    </div>
+                                )}
+                                {formData.vat_percent && !errors.vat_percent && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="col-md-6">
                             <label className="form-label">Discount*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1067,9 +979,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
+                                    defaultValue="0.00"
                                     id="validationCustom02"
                                     placeholder="Discount"
-                                    aria-label="Select Customer"
+                                    aria-label="Select Vendor"
                                     aria-describedby="button-addon2"
                                 />
                                 {errors.discount && (
@@ -1086,12 +999,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-                        <div className="col-md-4">
+                        <div className="col-md-6">
                             <label className="form-label">Status*</label>
 
                             <div className="input-group mb-3">
                                 <select
-                                    value={formData.status}
                                     onChange={(e) => {
                                         console.log("Inside onchange status");
                                         if (!e.target.value) {
@@ -1109,8 +1021,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
-                                    <option value="received">Received</option>
-                                    <option value="salesreturn_placed">Sales Return Placed</option>
+                                    <option value="purchase_returned">Purchase Returned</option>
                                     <option value="pending">Pending</option>
                                     <option value="cancelled">Cancelled</option>
                                     <option value="dispatched">Dispatched</option>
@@ -1131,44 +1042,43 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">Received By*</label>
+                            <label className="form-label">Purchase Returned By*</label>
 
                             <div className="input-group mb-3">
                                 <Typeahead
-                                    id="received_by"
+                                    id="purchase_returned_by"
                                     labelKey="name"
-                                    isLoading={isReceivedByUsersLoading}
-                                    isInvalid={errors.received_by ? true : false}
+                                    isLoading={isPurchaseReturnedByUsersLoading}
+                                    isInvalid={errors.purchase_returned_by ? true : false}
                                     onChange={(selectedItems) => {
-                                        errors.received_by = "";
+                                        errors.purchase_returned_by = "";
                                         setErrors(errors);
                                         if (selectedItems.length === 0) {
-                                            errors.received_by = "Invalid User Selected";
+                                            errors.purchase_returned_by = "Invalid User Selected";
                                             setErrors(errors);
                                             setFormData({ ...formData });
-                                            setSelectedReceivedByUsers([]);
+                                            setSelectedPurchaseReturnedByUsers([]);
                                             return;
                                         }
-                                        formData.received_by = selectedItems[0].id;
+                                        formData.purchase_returned_by = selectedItems[0].id;
                                         setFormData({ ...formData });
-                                        setSelectedReceivedByUsers(selectedItems);
+                                        setSelectedPurchaseReturnedByUsers(selectedItems);
                                     }}
-                                    options={receivedByUserOptions}
+                                    options={purchaseReturnedByUserOptions}
                                     placeholder="Select User"
-                                    selected={selectedReceivedByUsers}
+                                    selected={selectedPurchaseReturnedByUsers}
                                     highlightOnlyResult="true"
                                     onInputChange={(searchTerm, e) => {
                                         suggestUsers(searchTerm);
                                     }}
                                 />
-
                                 <Button hide={true} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.received_by ? (
+                                {errors.purchase_returned_by ? (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i> {errors.received_by}
+                                        <i class="bi bi-x-lg"> </i> {errors.purchase_returned_by}
                                     </div>
                                 ) : null}
-                                {formData.received_by && !errors.received_by && (
+                                {formData.purchase_returned_by && !errors.purchase_returned_by && (
                                     <div style={{ color: "green" }}>
                                         <i class="bi bi-check-lg"> </i>Looks good!
                                     </div>
@@ -1178,33 +1088,33 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-6">
                             <label className="form-label">
-                                Received By Signature(Optional)
+                                Purchase Returned By Signature(Optional)
                             </label>
 
                             <div className="input-group mb-3">
                                 <Typeahead
-                                    id="received_by_signature_id"
+                                    id="purchase_returned_by_signature_id"
                                     labelKey="name"
-                                    isLoading={isReceivedBySignaturesLoading}
-                                    isInvalid={errors.received_by_signature_id ? true : false}
+                                    isLoading={isPurchaseReturnedBySignaturesLoading}
+                                    isInvalid={errors.purchase_returned_by_signature_id ? true : false}
                                     onChange={(selectedItems) => {
-                                        errors.received_by_signature_id = "";
+                                        errors.purchase_returned_by_signature_id = "";
                                         setErrors(errors);
                                         if (selectedItems.length === 0) {
-                                            errors.received_by_signature_id =
+                                            errors.purchase_returned_by_signature_id =
                                                 "Invalid Signature Selected";
                                             setErrors(errors);
                                             setFormData({ ...formData });
-                                            setSelectedReceivedBySignatures([]);
+                                            setSelectedPurchaseReturnedBySignatures([]);
                                             return;
                                         }
-                                        formData.received_by_signature_id = selectedItems[0].id;
+                                        formData.purchase_returned_by_signature_id = selectedItems[0].id;
                                         setFormData({ ...formData });
-                                        setSelectedReceivedBySignatures(selectedItems);
+                                        setSelectedPurchaseReturnedBySignatures(selectedItems);
                                     }}
-                                    options={receivedBySignatureOptions}
+                                    options={purchaseReturnedBySignatureOptions}
                                     placeholder="Select Signature"
-                                    selected={selectedReceivedBySignatures}
+                                    selected={selectedPurchaseReturnedBySignatures}
                                     highlightOnlyResult="true"
                                     onInputChange={(searchTerm, e) => {
                                         suggestSignatures(searchTerm);
@@ -1212,22 +1122,21 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 />
 
                                 <Button hide={true} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.received_by_signature_id ? (
+                                {errors.purchase_returned_by_signature_id ? (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i>{" "}
-                                        {errors.received_by_signature_id}
+                                        {errors.purchase_returned_by_signature_id}
                                     </div>
                                 ) : null}
-                                {formData.received_by_signature_id &&
-                                    !errors.received_by_signature_id && (
+                                {formData.purchase_returned_by_signature_id &&
+                                    !errors.purchase_returned_by_signature_id && (
                                         <div style={{ color: "green" }}>
                                             <i class="bi bi-check-lg"> </i> Looks good!
                                         </div>
                                     )}
                             </div>
                         </div>
-
-                        <div className="col-md-4">
+                        <div className="col-md-6">
                             <label className="form-label">Signature Date(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -1258,130 +1167,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-3">
-                            <label className="form-label">Payment method*</label>
-
-                            <div className="input-group mb-3">
-                                <select
-                                    onChange={(e) => {
-                                        console.log("Inside onchange payment method");
-                                        if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Method";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["payment_method"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.payment_method = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="cash">Cash</option>
-                                    <option vaue="account_transfer">Account Transfer</option>
-                                    <option value="card_payment">Credit/Debit Card</option>
-                                </select>
-                                {errors.payment_method && (
-                                    <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
-                                        {errors.payment_method}
-                                    </div>
-                                )}
-                                {formData.payment_method && !errors.payment_method && (
-                                    <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">Payment Status*</label>
-
-                            <div className="input-group mb-3">
-                                <select
-                                    value={formData.payment_method}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange payment Status");
-                                        if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Status";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["payment_status"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.payment_method = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="paid">Paid</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="paid_partially">Paid Partially</option>
-                                </select>
-                                {errors.payment_status && (
-                                    <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
-                                        {errors.payment_status}
-                                    </div>
-                                )}
-                                {formData.payment_status && !errors.payment_status && (
-                                    <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-
-                        <div className="col-md-4">
-                            <label className="form-label">Patial Payment Amount(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    type='number'
-                                    onChange={(e) => {
-                                        console.log("Inside onchange vat discount");
-                                        if (isNaN(e.target.value)) {
-                                            errors["partial_payment_amount"] = "Invalid Amount";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["partial_payment_amount"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.partial_payment_amount = e.target.value;
-                                        //findNetTotal();
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="validationCustom02"
-                                    placeholder="Amount"
-                                />
-                                {errors.partial_payment_amount && (
-                                    <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
-                                        {errors.v}
-                                    </div>
-                                )}
-                                {formData.partial_payment_amount && !errors.partial_payment_amount && (
-                                    <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
@@ -1391,7 +1176,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
-                                        animation="bsalesreturn"
+                                        animation="border"
                                         size="sm"
                                         role="status"
                                         aria-hidden="true"
@@ -1411,4 +1196,4 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     );
 });
 
-export default SalesReturnCreate;
+export default PurchaseReturnedCreate;

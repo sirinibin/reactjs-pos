@@ -169,56 +169,75 @@ const PurchaseView = forwardRef((props, ref) => {
 
                 </Table>
 
-                <table className="table table-striped table-sm table-bordered">
-                    <thead>
-                        <tr className="text-center">
-                            <th>SI No.</th>
-                            <th>CODE</th>
-                            <th>Name</th>
-                            <th>Qty</th>
-                            <th>Purchase Unit Price</th>
-                            <th>Wholesale Unit Price</th>
-                            <th>Retail Unit Price</th>
-                            <th>Purchase Price</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {model.products && model.products.map((product, index) => (
+                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                    <table className="table table-striped table-sm table-bordered">
+                        <thead>
                             <tr className="text-center">
-                                <td>{index + 1}</td>
-                                <td>{product.item_code}</td>
-                                <td>{product.name}</td>
-                                <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
-                                <td>
-                                    <NumberFormat
-                                        value={product.purchase_unit_price}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
+                                <th>SI No.</th>
+                                <th>CODE</th>
+                                <th>Name</th>
+                                <th>Qty</th>
+                                <th>Purchase Unit Price</th>
+                                <th>Wholesale Unit Price</th>
+                                <th>Retail Unit Price</th>
+                                <th>Purchase Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {model.products && model.products.map((product, index) => (
+                                <tr className="text-center">
+                                    <td>{index + 1}</td>
+                                    <td>{product.item_code}</td>
+                                    <td>{product.name}</td>
+                                    <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.purchase_unit_price}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.wholesale_unit_price}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.retail_unit_price}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                            <tr>
+                                <td colSpan="3"></td>
+                                <td className="text-center">
+                                    <b>{totalQuantity}</b>
                                 </td>
-                                <td>
+                                <td colSpan="2"></td>
+                                <th className="text-end">Total</th>
+                                <td className="text-center">
                                     <NumberFormat
-                                        value={product.wholesale_unit_price}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td>
-                                    <NumberFormat
-                                        value={product.retail_unit_price}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td>
-                                    <NumberFormat
-                                        value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                        value={totalPrice}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
@@ -226,68 +245,51 @@ const PurchaseView = forwardRef((props, ref) => {
                                     />
                                 </td>
                             </tr>
-                        ))}
-                        <tr>
-                            <td colSpan="3"></td>
-                            <td className="text-center">
-                                <b>{totalQuantity}</b>
-                            </td>
-                            <td colSpan="2"></td>
-                            <th className="text-end">Total</th>
-                            <td className="text-center">
-                                <NumberFormat
-                                    value={totalPrice}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <th colSpan="6" className="text-end">
-                                VAT
-                            </th>
-                            <td className="text-center">{model.vat_percent + "%"}</td>
-                            <td className="text-center">
-                                <NumberFormat
-                                    value={vatPrice}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <th colSpan="7" className="text-end">
-                                Discount
-                            </th>
-                            <td className="text-center">
-                                <NumberFormat
-                                    value={model.discount}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colSpan="6"></td>
-                            <th className="text-end">Net Total</th>
-                            <th className="text-center">
-                                <NumberFormat
-                                    value={netTotal}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
-                            </th>
-                        </tr>
-                    </tbody>
-                </table>
+                            <tr>
+                                <th colSpan="6" className="text-end">
+                                    VAT
+                                </th>
+                                <td className="text-center">{model.vat_percent + "%"}</td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={vatPrice}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th colSpan="7" className="text-end">
+                                    Discount
+                                </th>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={model.discount}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colSpan="6"></td>
+                                <th className="text-end">Net Total</th>
+                                <th className="text-center">
+                                    <NumberFormat
+                                        value={netTotal}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
                 {/*
                     <form className="row g-3 needs-validation" >

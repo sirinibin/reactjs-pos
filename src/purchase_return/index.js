@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import VendorCreate from "./create.js";
-import VendorView from "./view.js";
+import PurchaseReturnCreate from "./create.js";
+import PurchaseReturnView from "./view.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -9,13 +9,11 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 
-function VendorIndex(props) {
+function PurchaseReturnIndex(props) {
     const cookies = new Cookies();
 
-    const selectedDate = new Date();
-
     //list
-    const [vendorList, setVendorList] = useState([]);
+    const [purchasereturnList, setPurchaseReturnList] = useState([]);
 
     //pagination
     let [pageSize, setPageSize] = useState(5);
@@ -25,6 +23,12 @@ function VendorIndex(props) {
     const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
     const [offset, setOffset] = useState(0);
 
+    //Date filter
+    const [showDateRange, setShowDateRange] = useState(false);
+    const selectedDate = new Date();
+    const [dateValue, setDateValue] = useState("");
+    const [fromDateValue, setFromDateValue] = useState("");
+    const [toDateValue, setToDateValue] = useState("");
 
     //Created At filter
     const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
@@ -36,10 +40,43 @@ function VendorIndex(props) {
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
+    //Vendor Auto Suggestion
+    const [vendorOptions, setVendorOptions] = useState([]);
+    const [selectedVendors, setSelectedVendors] = useState([]);
+
     //Created By User Auto Suggestion
     const [userOptions, setUserOptions] = useState([]);
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
 
+    //Status Auto Suggestion
+    const statusOptions = [
+        {
+            id: "sent",
+            name: "Sent",
+        },
+        {
+            id: "pending",
+            name: "Pending",
+        },
+        {
+            id: "accepted",
+            name: "Accepted",
+        },
+        {
+            id: "rejected",
+            name: "Rejected",
+        },
+        {
+            id: "cancelled",
+            name: "Cancelled",
+        },
+        {
+            id: "deleted",
+            name: "Deleted",
+        },
+    ];
+
+    const [selectedStatusList, setSelectedStatusList] = useState([]);
 
     useEffect(() => {
         list();
@@ -49,7 +86,7 @@ function VendorIndex(props) {
     //Search params
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
-    let [sortVendor, setSortVendor] = useState("-");
+    let [sortOrder, setSortOrder] = useState("-");
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -59,8 +96,35 @@ function VendorIndex(props) {
             .join("&");
     }
 
+    async function suggestVendors(searchTerm) {
+        console.log("Inside handle suggestVendors");
+
+        var params = {
+            name: searchTerm,
+        };
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = `&${queryString}`;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = "select=id,name";
+        let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
+        let data = await result.json();
+
+        setVendorOptions(data.result);
+    }
+
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggestUsers");
+        setVendorOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -104,7 +168,24 @@ function VendorIndex(props) {
     function searchByDateField(field, value) {
         value = format(new Date(value), "MMM dd yyyy");
 
-        if (field === "created_at") {
+        if (field === "date_str") {
+            setDateValue(value);
+            setFromDateValue("");
+            setToDateValue("");
+            searchParams["from_date"] = "";
+            searchParams["to_date"] = "";
+            searchParams[field] = value;
+        } else if (field === "from_date") {
+            setFromDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "to_date") {
+            setToDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "created_at") {
             setCreatedAtValue(value);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
@@ -133,6 +214,10 @@ function VendorIndex(props) {
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
+        } else if (field === "vendor_id") {
+            setSelectedVendors(values);
+        } else if (field === "status") {
+            setSelectedStatusList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -156,7 +241,7 @@ function VendorIndex(props) {
             },
         };
         let Select =
-            "select=id,name,created_by_name,created_at";
+            "select=id,code,purchase_code,purchase_id,date,net_total,created_by_name,vendor_name,status,created_at";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -165,11 +250,11 @@ function VendorIndex(props) {
 
         setIsListLoading(true);
         fetch(
-            "/v1/vendor?" +
+            "/v1/purchase-return?" +
             Select +
             queryParams +
             "&sort=" +
-            sortVendor +
+            sortOrder +
             sortField +
             "&page=" +
             page +
@@ -191,7 +276,7 @@ function VendorIndex(props) {
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
-                setVendorList(data.result);
+                setPurchaseReturnList(data.result);
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
@@ -210,8 +295,8 @@ function VendorIndex(props) {
     function sort(field) {
         sortField = field;
         setSortField(sortField);
-        sortVendor = sortVendor === "-" ? "" : "-";
-        setSortVendor(sortVendor);
+        sortOrder = sortOrder === "-" ? "" : "-";
+        setSortOrder(sortOrder);
         list();
     }
 
@@ -234,7 +319,6 @@ function VendorIndex(props) {
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
-        console.log("id:", id);
         DetailsViewRef.current.open(id);
     }
 
@@ -245,17 +329,17 @@ function VendorIndex(props) {
 
     return (
         <>
-            <VendorCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <VendorView ref={DetailsViewRef} />
-
+            <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+            <PurchaseReturnView ref={DetailsViewRef} />
 
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Vendors</h1>
+                        <h1 className="h3">Purchase Returns</h1>
                     </div>
 
                     <div className="col text-end">
+                        {/*
                         <Button
                             hide={true}
                             variant="primary"
@@ -264,7 +348,7 @@ function VendorIndex(props) {
                         >
                             <i className="bi bi-plus-lg"></i> Create
                         </Button>
-
+                        */}
                     </div>
                 </div>
 
@@ -280,12 +364,12 @@ function VendorIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Vendors to display</p>
+                                            <p className="text-start">No Purchase Returns to display</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ bvendor: "solid 0px" }}>
-                                    <div className="col text-start" style={{ bvendor: "solid 0px" }}>
+                                <div className="row" style={{ border: "solid 0px" }}>
+                                    <div className="col text-start" style={{ border: "solid 0px" }}>
                                         <Button
                                             onClick={() => {
                                                 setIsRefreshInProcess(true);
@@ -297,7 +381,7 @@ function VendorIndex(props) {
                                             {isRefreshInProcess ? (
                                                 <Spinner
                                                     as="span"
-                                                    animation="bvendor"
+                                                    animation="border"
                                                     size="sm"
                                                     role="status"
                                                     aria-hidden="true"
@@ -324,8 +408,8 @@ function VendorIndex(props) {
                                                     }}
                                                     className="form-control pull-right"
                                                     style={{
-                                                        bvendor: "solid 1px",
-                                                        bvendorColor: "silver",
+                                                        border: "solid 1px",
+                                                        borderColor: "silver",
                                                         width: "55px",
                                                     }}
                                                 >
@@ -347,7 +431,7 @@ function VendorIndex(props) {
 
                                 <br />
                                 <div className="row">
-                                    <div className="col" style={{ bvendor: "solid 0px" }}>
+                                    <div className="col" style={{ border: "solid 0px" }}>
                                         <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
@@ -399,14 +483,14 @@ function VendorIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("name");
+                                                            sort("code");
                                                         }}
                                                     >
-                                                        Name
-                                                        {sortField === "name" && sortVendor === "-" ? (
+                                                        ID
+                                                        {sortField === "code" && sortOrder === "-" ? (
                                                             <i class="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "name" && sortVendor === "" ? (
+                                                        {sortField === "code" && sortOrder === "" ? (
                                                             <i class="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -418,14 +502,110 @@ function VendorIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("created_by_name");
+                                                            sort("purchase_code");
+                                                        }}
+                                                    >
+                                                        Purchase ID
+                                                        {sortField === "code" && sortOrder === "-" ? (
+                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "code" && sortOrder === "" ? (
+                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("date");
+                                                        }}
+                                                    >
+                                                        Date
+                                                        {sortField === "date" && sortOrder === "-" ? (
+                                                            <i class="bi bi-sort-down"></i>
+                                                        ) : null}
+                                                        {sortField === "date" && sortOrder === "" ? (
+                                                            <i class="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("net_total");
+                                                        }}
+                                                    >
+                                                        Net Total
+                                                        {sortField === "net_total" && sortOrder === "-" ? (
+                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "net_total" && sortOrder === "" ? (
+                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("created_by");
                                                         }}
                                                     >
                                                         Created By
-                                                        {sortField === "created_by_name" && sortVendor === "-" ? (
+                                                        {sortField === "created_by" && sortOrder === "-" ? (
                                                             <i class="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "created_by_name" && sortVendor === "" ? (
+                                                        {sortField === "created_by" && sortOrder === "" ? (
+                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vendor_name");
+                                                        }}
+                                                    >
+                                                        Vendor
+                                                        {sortField === "vendor_name" &&
+                                                            sortOrder === "-" ? (
+                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vendor_name" && sortOrder === "" ? (
+                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("status");
+                                                        }}
+                                                    >
+                                                        Status
+                                                        {sortField === "status" && sortOrder === "-" ? (
+                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "status" && sortOrder === "" ? (
                                                             <i class="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -441,10 +621,10 @@ function VendorIndex(props) {
                                                         }}
                                                     >
                                                         Created At
-                                                        {sortField === "created_at" && sortVendor === "-" ? (
+                                                        {sortField === "created_at" && sortOrder === "-" ? (
                                                             <i class="bi bi-sort-down"></i>
                                                         ) : null}
-                                                        {sortField === "created_at" && sortVendor === "" ? (
+                                                        {sortField === "created_at" && sortOrder === "" ? (
                                                             <i class="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
@@ -458,9 +638,79 @@ function VendorIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="name"
+                                                        id="code"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("name", e.target.value)
+                                                            searchByFieldValue("code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="purchase_code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <DatePicker
+                                                        id="date_str"
+                                                        value={dateValue}
+                                                        selected={selectedDate}
+                                                        className="form-control"
+                                                        dateFormat="MMM dd yyyy"
+                                                        onChange={(date) => {
+                                                            searchByDateField("date_str", date);
+                                                        }}
+                                                    />
+                                                    <small
+                                                        style={{
+                                                            color: "blue",
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={(e) => setShowDateRange(!showDateRange)}
+                                                    >
+                                                        {showDateRange ? "Less.." : "More.."}
+                                                    </small>
+                                                    <br />
+
+                                                    {showDateRange ? (
+                                                        <span className="text-left">
+                                                            From:{" "}
+                                                            <DatePicker
+                                                                id="from_date"
+                                                                value={fromDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    searchByDateField("from_date", date);
+                                                                }}
+                                                            />
+                                                            To:{" "}
+                                                            <DatePicker
+                                                                id="to_date"
+                                                                value={toDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    searchByDateField("to_date", date);
+                                                                }}
+                                                            />
+                                                        </span>
+                                                    ) : null}
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="net_total"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("net_total", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -482,6 +732,43 @@ function VendorIndex(props) {
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="vendor_id"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "vendor_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={vendorOptions}
+                                                        placeholder="Select Vendor"
+                                                        selected={selectedVendors}
+                                                        highlightOnlyResult="true"
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestVendors(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="status"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "status",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={statusOptions}
+                                                        placeholder="Select Status"
+                                                        selected={selectedStatusList}
+                                                        highlightOnlyResult="true"
                                                         multiple
                                                     />
                                                 </th>
@@ -542,47 +829,70 @@ function VendorIndex(props) {
                                         </thead>
 
                                         <tbody className="text-center">
-                                            {vendorList &&
-                                                vendorList.map((vendor) => (
+                                            {purchasereturnList &&
+                                                purchasereturnList.map((purchasereturn) => (
                                                     <tr>
-                                                        <td>{vendor.name}</td>
-                                                        <td>{vendor.created_by_name}</td>
+                                                        <td>{purchasereturn.code}</td>
+                                                        <td>{purchasereturn.purchase_code}</td>
+                                                        <td>
+                                                            {format(new Date(purchasereturn.date), "MMM dd yyyy")}
+                                                        </td>
+                                                        <td>{purchasereturn.net_total} SAR</td>
+                                                        <td>{purchasereturn.created_by_name}</td>
+                                                        <td>{purchasereturn.vendor_name}</td>
+                                                        <td>
+                                                            <span className="badge bg-success">
+                                                                {purchasereturn.status}
+                                                            </span>
+                                                        </td>
                                                         <td>
                                                             {format(
-                                                                new Date(vendor.created_at),
+                                                                new Date(purchasereturn.created_at),
                                                                 "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
                                                         <td>
-
+                                                            {/*
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(vendor.id);
+                                                                openUpdateForm(purchasereturn.purchase_id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>
+                                                        */}
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(vendor.id);
+                                                                openDetailsView(purchasereturn.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
 
                                                             {/*
-                                                        <button
-                                                            className="btn btn-outline-secondary dropdown-toggle"
-                                                            type="button"
-                                                            data-bs-toggle="dropdown"
-                                                            aria-expanded="false"
-                                                        ></button>
-                                                        <ul className="dropdown-menu">
-                                                            <li>
-                                                                <a href="/" className="dropdown-item">
-                                                                    <i className="bi bi-download"></i>
-                                                                    Download
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                       */}
+                                                            <button
+                                                                className="btn btn-default btn-sm"
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top"
+                                                                title="Download"
+                                                            >
+                                                                <i className="bi bi-download"></i>
+                                                            </button>
+                                                            
+
+                                                            <button
+                                                                className="btn btn-outline-secondary dropdown-toggle"
+                                                                type="button"
+                                                                data-bs-toggle="dropdown"
+                                                                aria-expanded="false"
+                                                            ></button>
+                                                            <ul className="dropdown-menu">
+                                                                <li>
+                                                                    <a href="/" className="dropdown-item">
+                                                                        <i className="bi bi-download"></i>
+                                                                        Download
+                                                                    </a>
+                                                                </li>
+                                                             
+                                                            </ul>
+                                                            */}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -619,4 +929,4 @@ function VendorIndex(props) {
     );
 }
 
-export default VendorIndex;
+export default PurchaseReturnIndex;

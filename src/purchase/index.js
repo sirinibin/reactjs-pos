@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import PurchaseReturnCreate from "./../purchase_return/create.js";
 
 function PurchaseIndex(props) {
     const cookies = new Cookies();
@@ -327,10 +328,16 @@ function PurchaseIndex(props) {
         CreateFormRef.current.open();
     }
 
+    const PurchaseReturnCreateRef = useRef();
+    function openPurchaseReturnForm(id) {
+        PurchaseReturnCreateRef.current.open(id);
+    }
+
     return (
         <>
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <PurchaseView ref={DetailsViewRef} />
+            <PurchaseReturnCreate ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -831,6 +838,18 @@ function PurchaseIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
+
+                                                            <button
+                                                                className="btn btn-dark btn-sm"
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top"
+                                                                title="Create Purchase Return"
+                                                                onClick={() => {
+                                                                    openPurchaseReturnForm(purchase.id);
+                                                                }}
+                                                            >
+                                                                <i className="bi bi-arrow-left"></i> Return
+                                                            </button>
 
 
                                                             <button

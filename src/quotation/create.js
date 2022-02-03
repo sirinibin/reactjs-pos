@@ -1190,186 +1190,188 @@ const QuotationCreate = forwardRef((props, ref) => {
               </Button>
             </div>
 
-            <table className="table table-striped table-sm table-bordered">
-              <thead>
-                <tr className="text-center">
-                  <th>SI No.</th>
-                  <th>CODE</th>
-                  <th>Name</th>
-                  <th>Qty</th>
-                  <th>Unit Price</th>
-                  <th>Price</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedProducts.map((product, index) => (
+            <div className="table-responsive" style={{ overflowX: "auto" }}>
+              <table className="table table-striped table-sm table-bordered">
+                <thead>
                   <tr className="text-center">
-                    <td>{index + 1}</td>
-                    <td>{product.code}</td>
-                    <td style={{
-                      "text-decoration": "underline",
-                      color: "blue",
-                      cursor: "pointer",
-                    }}
-                      onClick={() => {
-                        openProductDetailsView(product.product_id);
-                        console.log("okk,id:", product.product_id);
-                      }}>{product.name}
-                    </td>
-                    <td style={{ width: "125px" }}>
+                    <th>SI No.</th>
+                    <th>CODE</th>
+                    <th>Name</th>
+                    <th>Qty</th>
+                    <th>Unit Price</th>
+                    <th>Price</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedProducts.map((product, index) => (
+                    <tr className="text-center">
+                      <td>{index + 1}</td>
+                      <td>{product.code}</td>
+                      <td style={{
+                        "text-decoration": "underline",
+                        color: "blue",
+                        cursor: "pointer",
+                      }}
+                        onClick={() => {
+                          openProductDetailsView(product.product_id);
+                          console.log("okk,id:", product.product_id);
+                        }}>{product.name}
+                      </td>
+                      <td style={{ width: "125px" }}>
 
-                      <input type="number" value={product.quantity} className="form-control"
+                        <input type="number" value={product.quantity} className="form-control"
 
-                        placeholder="Quantity" onChange={(e) => {
-                          errors["quantity_" + index] = "";
-                          setErrors({ ...errors });
-                          if (!e.target.value || e.target.value == 0) {
-                            errors["quantity_" + index] = "Invalid Quantity";
-                            selectedProducts[index].quantity = e.target.value;
-                            setSelectedProducts([...selectedProducts]);
+                          placeholder="Quantity" onChange={(e) => {
+                            errors["quantity_" + index] = "";
                             setErrors({ ...errors });
-                            console.log("errors:", errors);
-                            return;
-                          }
+                            if (!e.target.value || e.target.value == 0) {
+                              errors["quantity_" + index] = "Invalid Quantity";
+                              selectedProducts[index].quantity = e.target.value;
+                              setSelectedProducts([...selectedProducts]);
+                              setErrors({ ...errors });
+                              console.log("errors:", errors);
+                              return;
+                            }
 
-                          product.quantity = parseFloat(e.target.value);
-                          reCalculate();
+                            product.quantity = parseFloat(e.target.value);
+                            reCalculate();
 
-                          selectedProducts[index].quantity = parseFloat(e.target.value);
-                          console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
-                          setSelectedProducts([...selectedProducts]);
-                          reCalculate();
+                            selectedProducts[index].quantity = parseFloat(e.target.value);
+                            console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
+                            setSelectedProducts([...selectedProducts]);
+                            reCalculate();
 
-                        }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
-                      {errors["quantity_" + index] && (
-                        <div style={{ color: "red" }}>
-                          <i class="bi bi-x-lg"> </i>
-                          {errors["quantity_" + index]}
-                        </div>
-                      )}
-                      {((selectedProducts[index].quantity) && !errors["quantity_" + index]) ? (
-                        <div style={{ color: "green" }}>
-                          <i class="bi bi-check-lg"> </i>
-                          Looks good!
-                        </div>
-                      ) : null}
-                    </td>
-                    <td style={{ width: "150px" }}>
+                          }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
+                        {errors["quantity_" + index] && (
+                          <div style={{ color: "red" }}>
+                            <i class="bi bi-x-lg"> </i>
+                            {errors["quantity_" + index]}
+                          </div>
+                        )}
+                        {((selectedProducts[index].quantity) && !errors["quantity_" + index]) ? (
+                          <div style={{ color: "green" }}>
+                            <i class="bi bi-check-lg"> </i>
+                            Looks good!
+                          </div>
+                        ) : null}
+                      </td>
+                      <td style={{ width: "150px" }}>
 
-                      <input type="number" value={product.unit_price} className="form-control"
+                        <input type="number" value={product.unit_price} className="form-control"
 
-                        placeholder="Unit Price" onChange={(e) => {
-                          errors["unit_price_" + index] = "";
-                          setErrors({ ...errors });
-                          if (!e.target.value || e.target.value == 0) {
-                            errors["unit_price_" + index] = "Invalid Unit Price";
+                          placeholder="Unit Price" onChange={(e) => {
+                            errors["unit_price_" + index] = "";
+                            setErrors({ ...errors });
+                            if (!e.target.value || e.target.value == 0) {
+                              errors["unit_price_" + index] = "Invalid Unit Price";
+                              selectedProducts[index].unit_price = parseFloat(e.target.value);
+                              setSelectedProducts([...selectedProducts]);
+                              setErrors({ ...errors });
+                              console.log("errors:", errors);
+                              return;
+                            }
                             selectedProducts[index].unit_price = parseFloat(e.target.value);
+                            console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
                             setSelectedProducts([...selectedProducts]);
-                            setErrors({ ...errors });
-                            console.log("errors:", errors);
-                            return;
-                          }
-                          selectedProducts[index].unit_price = parseFloat(e.target.value);
-                          console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
-                          setSelectedProducts([...selectedProducts]);
-                          reCalculate();
+                            reCalculate();
 
-                        }} /> SAR
-                      {errors["unit_price_" + index] && (
-                        <div style={{ color: "red" }}>
+                          }} /> SAR
+                        {errors["unit_price_" + index] && (
+                          <div style={{ color: "red" }}>
+                            <i class="bi bi-x-lg"> </i>
+                            {errors["unit_price_" + index]}
+                          </div>
+                        )}
+                        {(selectedProducts[index].unit_price && !errors["unit_price_" + index]) ? (
+                          <div style={{ color: "green" }}>
+                            <i class="bi bi-check-lg"> </i>
+                            Looks good!
+                          </div>
+                        ) : null}
+                      </td>
+                      <td>
+                        <NumberFormat
+                          value={(product.unit_price * product.quantity).toFixed(2)}
+                          displayType={"text"}
+                          thousandSeparator={true}
+                          suffix={" SAR"}
+                          renderText={(value, props) => value}
+                        />
+                      </td>
+                      <td>
+                        <div
+                          style={{ color: "red", cursor: "pointer" }}
+                          onClick={() => {
+                            removeProduct(product);
+                          }}
+                        >
                           <i class="bi bi-x-lg"> </i>
-                          {errors["unit_price_" + index]}
                         </div>
-                      )}
-                      {(selectedProducts[index].unit_price && !errors["unit_price_" + index]) ? (
-                        <div style={{ color: "green" }}>
-                          <i class="bi bi-check-lg"> </i>
-                          Looks good!
-                        </div>
-                      ) : null}
+                      </td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td colSpan="3"></td>
+                    <td className="text-center">
+                      <b>{totalQuantity}</b>
                     </td>
-                    <td>
+                    <th className="text-end">Total</th>
+                    <td className="text-center">
                       <NumberFormat
-                        value={(product.unit_price * product.quantity).toFixed(2)}
+                        value={totalPrice}
                         displayType={"text"}
                         thousandSeparator={true}
                         suffix={" SAR"}
                         renderText={(value, props) => value}
                       />
                     </td>
-                    <td>
-                      <div
-                        style={{ color: "red", cursor: "pointer" }}
-                        onClick={() => {
-                          removeProduct(product);
-                        }}
-                      >
-                        <i class="bi bi-x-lg"> </i>
-                      </div>
+                  </tr>
+                  <tr>
+                    <th colSpan="4" className="text-end">
+                      VAT
+                    </th>
+                    <td className="text-center">{formData.vat_percent + "%"}</td>
+                    <td className="text-center">
+                      <NumberFormat
+                        value={vatPrice}
+                        displayType={"text"}
+                        thousandSeparator={true}
+                        suffix={" SAR"}
+                        renderText={(value, props) => value}
+                      />
                     </td>
                   </tr>
-                ))}
-                <tr>
-                  <td colSpan="3"></td>
-                  <td className="text-center">
-                    <b>{totalQuantity}</b>
-                  </td>
-                  <th className="text-end">Total</th>
-                  <td className="text-center">
-                    <NumberFormat
-                      value={totalPrice}
-                      displayType={"text"}
-                      thousandSeparator={true}
-                      suffix={" SAR"}
-                      renderText={(value, props) => value}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th colSpan="4" className="text-end">
-                    VAT
-                  </th>
-                  <td className="text-center">{formData.vat_percent + "%"}</td>
-                  <td className="text-center">
-                    <NumberFormat
-                      value={vatPrice}
-                      displayType={"text"}
-                      thousandSeparator={true}
-                      suffix={" SAR"}
-                      renderText={(value, props) => value}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <th colSpan="5" className="text-end">
-                    Discount
-                  </th>
-                  <td className="text-center">
-                    <NumberFormat
-                      value={formData.discount}
-                      displayType={"text"}
-                      thousandSeparator={true}
-                      suffix={" SAR"}
-                      renderText={(value, props) => value}
-                    />
-                  </td>
-                </tr>
-                <tr>
-                  <td colSpan="4"></td>
-                  <th className="text-end">Net Total</th>
-                  <th className="text-center">
-                    <NumberFormat
-                      value={netTotal}
-                      displayType={"text"}
-                      thousandSeparator={true}
-                      suffix={" SAR"}
-                      renderText={(value, props) => value}
-                    />
-                  </th>
-                </tr>
-              </tbody>
-            </table>
+                  <tr>
+                    <th colSpan="5" className="text-end">
+                      Discount
+                    </th>
+                    <td className="text-center">
+                      <NumberFormat
+                        value={formData.discount}
+                        displayType={"text"}
+                        thousandSeparator={true}
+                        suffix={" SAR"}
+                        renderText={(value, props) => value}
+                      />
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan="4"></td>
+                    <th className="text-end">Net Total</th>
+                    <th className="text-center">
+                      <NumberFormat
+                        value={netTotal}
+                        displayType={"text"}
+                        thousandSeparator={true}
+                        suffix={" SAR"}
+                        renderText={(value, props) => value}
+                      />
+                    </th>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
             <div className="col-md-6">
               <label className="form-label">Delivered By*</label>
