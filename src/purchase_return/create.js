@@ -662,7 +662,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.purchase_code ? "Create Purchase Return for Purchse " : ""}
+                        {formData.purchase_code ? "Create Purchase Return for Purchase " : ""}
                         <span style={{
                             "text-decoration": "underline",
                             color: "blue",

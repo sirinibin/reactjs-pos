@@ -811,7 +811,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {"Create Sales Return for Order #" + formData.order_code}
+                        {"Create Sales Return for Sales Order #" + formData.order_code}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">

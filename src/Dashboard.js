@@ -117,7 +117,7 @@ function Dashboard() {
                     </div>
                 </div>
             </Route>
-            <Route path="/dashboard/orders">
+            <Route path="/dashboard/sales">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
                     <div className="main">

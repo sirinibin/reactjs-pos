@@ -123,7 +123,7 @@ const OrderView = forwardRef((props, ref) => {
         <OrderPreview ref={PreviewRef} />
         <Modal show={show} size="lg" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Details of Order #{model.code}</Modal.Title>
+                <Modal.Title>Details of Sales Order #{model.code}</Modal.Title>
 
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>

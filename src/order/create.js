@@ -792,7 +792,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Order #" + formData.code : "Create New Order"}
+                        {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order"}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
