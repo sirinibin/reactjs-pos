@@ -760,6 +760,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             >
                                 <option value="" SELECTED>Unit(s)</option>
                                 <option value="Kg">Kg</option>
+                                <option value="Meter(s)">Meter(s)</option>
                                 <option value="Gm">Gm</option>
                                 <option value="L">Liter (L)</option>
                                 <option value="Gm">Gm</option>
