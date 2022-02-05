@@ -42,7 +42,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 discount: 0.0,
                 discountValue: 0.0,
                 discount_percent: 0.0,
-                isDiscountPercent: false,
+                is_discount_percent: false,
                 date_str: format(new Date(), "MMM dd yyyy"),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "created",
@@ -73,7 +73,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         discount: 0.0,
         discountValue: 0.0,
         discount_percent: 0.0,
-        isDiscountPercent: false,
+        is_discount_percent: false,
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "created",
@@ -163,10 +163,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     status: purchase.status,
                     order_placed_by: purchase.order_placed_by,
                     order_placed_by_signature_id: purchase.order_placed_by_signature_id,
-                    isDiscountPercent: false,
+                    is_discount_percent: purchase.is_discount_percent,
                 };
 
-                if (formData.isDiscountPercent) {
+                if (formData.is_discount_percent) {
                     formData.discountValue = formData.discount_percent;
                 } else {
                     formData.discountValue = formData.discount;
@@ -705,7 +705,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         findTotalPrice();
         findVatPrice();
         findNetTotal();
-        if (formData.isDiscountPercent) {
+        if (formData.is_discount_percent) {
             findDiscount();
         } else {
             findDiscountPercent();
@@ -958,10 +958,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 type="switch"
                                 id="custom-switch"
                                 label="%"
-                                value={formData.isDiscountPercent}
+                                value={formData.is_discount_percent}
+                                checked={formData.is_discount_percent ? "checked" : null}
                                 onChange={(e) => {
-                                    formData.isDiscountPercent = !formData.isDiscountPercent;
-                                    console.log("e.target.value:", formData.isDiscountPercent);
+                                    formData.is_discount_percent = !formData.is_discount_percent;
+                                    console.log("e.target.value:", formData.is_discount_percent);
                                     setFormData({ ...formData });
                                     reCalculate();
                                 }}

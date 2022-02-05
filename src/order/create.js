@@ -186,7 +186,7 @@ const OrderCreate = forwardRef((props, ref) => {
         discountValue: 0.0,
         discount: 0.0,
         discount_percent: 0.0,
-        isDiscountPercent: false,
+        is_discount_percent: false,
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
@@ -736,7 +736,7 @@ const OrderCreate = forwardRef((props, ref) => {
         findTotalPrice();
         findVatPrice();
         findNetTotal();
-        if (formData.isDiscountPercent) {
+        if (formData.is_discount_percent) {
             findDiscount();
         } else {
             findDiscountPercent();
@@ -1057,10 +1057,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                 type="switch"
                                 id="custom-switch"
                                 label="%"
-                                value={formData.isDiscountPercent}
+                                value={formData.is_discount_percent}
                                 onChange={(e) => {
-                                    formData.isDiscountPercent = !formData.isDiscountPercent;
-                                    console.log("e.target.value:", formData.isDiscountPercent);
+                                    formData.is_discount_percent = !formData.is_discount_percent;
+                                    console.log("e.target.value:", formData.is_discount_percent);
                                     setFormData({ ...formData });
                                     reCalculate();
                                 }}
