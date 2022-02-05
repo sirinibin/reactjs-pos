@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import PurchaseReturnedPreview from "./preview.js";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import VendorCreate from "../vendor/create.js";
 import ProductCreate from "../product/create.js";
@@ -41,6 +41,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             formData = {
                 vat_percent: 15.0,
                 discount: 0.0,
+                discountValue: 0.0,
+                discount_percent: 0.0,
+                isDiscountPercent: false,
                 date_str: format(new Date(), "MMM dd yyyy"),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "purchase_returned",
@@ -69,6 +72,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     let [formData, setFormData] = useState({
         vat_percent: 10.0,
         discount: 0.0,
+        discountValue: 0.0,
+        discount_percent: 0.0,
+        isDiscountPercent: false,
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "purchase_returned",
@@ -147,7 +153,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 let purchase = data.result;
                 formData = {
                     vat_percent: 15.0,
-                    discount: 0.0,
                     date_str: format(new Date(), "MMM dd yyyy"),
                     signature_date_str: format(new Date(), "MMM dd yyyy"),
                     purchase_id: purchase.id,
@@ -155,11 +160,19 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     store_id: purchase.store_id,
                     vendor_id: purchase.vendor_id,
                     vat_percent: purchase.vat_percent,
-                    discount: purchase.discount,
                     status: purchase.status,
                     purchase_returned_by: purchase.order_placed_by,
                     purchase_returned_by_signature_id: purchase.order_placed_by_signature_id,
+                    isDiscountPercent: false,
+                    discount: purchase.discount,
+                    discount_percent: purchase.discount_percent,
                 };
+
+                if (formData.isDiscountPercent) {
+                    formData.discountValue = formData.discount_percent;
+                } else {
+                    formData.discountValue = formData.discount;
+                }
 
                 formData.status = "purchase_returned";
 
@@ -411,6 +424,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         }
 
         formData.discount = parseFloat(formData.discount);
+        formData.discount_percent = parseFloat(formData.discount_percent);
+
         formData.vat_percent = parseFloat(formData.vat_percent);
         console.log("formData.discount:", formData.discount);
 
@@ -590,22 +605,72 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     let [vatPrice, setVatPrice] = useState(0.00);
 
     function findVatPrice() {
-        vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
-        console.log("vatPrice:", vatPrice);
-        setVatPrice(vatPrice);
+        if (totalPrice > 0) {
+            vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
+            console.log("vatPrice:", vatPrice);
+            setVatPrice(vatPrice);
+        }
+
     }
+
 
     let [netTotal, setNetTotal] = useState(0.00);
 
     function findNetTotal() {
-        netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
-        setNetTotal(netTotal);
+        if (totalPrice > 0) {
+            netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
+            setNetTotal(netTotal);
+        }
+
     }
+
+    let [discountPercent, setDiscountPercent] = useState(0.00);
+
+    function findDiscountPercent() {
+        if (!formData.discountValue) {
+            formData.discount = 0.00;
+            formData.discount_percent = 0.00;
+            setFormData({ ...formData });
+            return;
+        }
+
+        formData.discount = formData.discountValue;
+
+        if (formData.discount > 0 && totalPrice > 0) {
+            discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
+            setDiscountPercent(discountPercent);
+            formData.discount_percent = discountPercent;
+            setFormData({ ...formData });
+        }
+
+    }
+
+    function findDiscount() {
+        if (!formData.discountValue) {
+            formData.discount = 0.00;
+            formData.discount_percent = 0.00;
+            setFormData({ ...formData });
+            return;
+        }
+
+        formData.discount_percent = formData.discountValue;
+
+        if (formData.discount_percent > 0 && totalPrice > 0) {
+            formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100)).toFixed(2);
+        }
+        setFormData({ ...formData });
+    }
+
 
     function reCalculate() {
         findTotalPrice();
         findVatPrice();
         findNetTotal();
+        if (formData.isDiscountPercent) {
+            findDiscount();
+        } else {
+            findDiscountPercent();
+        }
     }
 
     const DetailsViewRef = useRef();
@@ -852,7 +917,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="6" className="text-end">
-                                            Discount
+                                            Discount(  {formData.discount_percent + "%"})
                                         </th>
                                         <td className="text-center">
                                             <NumberFormat
@@ -932,9 +997,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         setErrors({ ...errors });
 
                                         formData.vat_percent = e.target.value;
-                                        findVatPrice();
-                                        findNetTotal();
                                         setFormData({ ...formData });
+                                        reCalculate();
                                         console.log(formData);
                                     }}
                                     className="form-control"
@@ -960,14 +1024,36 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label">Discount*</label>
+                            <Form.Check
+                                type="switch"
+                                id="custom-switch"
+                                label="%"
+                                value={formData.isDiscountPercent}
+                                onChange={(e) => {
+                                    formData.isDiscountPercent = !formData.isDiscountPercent;
+                                    console.log("e.target.value:", formData.isDiscountPercent);
+                                    setFormData({ ...formData });
+                                    reCalculate();
+                                }}
+                            />
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.discount}
+                                    value={formData.discountValue}
                                     type='number'
                                     onChange={(e) => {
-                                        console.log("Inside onchange vat discount");
-                                        if (isNaN(e.target.value)) {
+                                        if (e.target.value == 0) {
+                                            formData.discountValue = e.target.value;
+                                            setFormData({ ...formData });
+                                            errors["discount"] = "";
+                                            setErrors({ ...errors });
+                                            reCalculate();
+                                            return;
+                                        }
+
+                                        if (!e.target.value) {
+                                            formData.discountValue = "";
                                             errors["discount"] = "Invalid Discount";
+                                            setFormData({ ...formData });
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -975,16 +1061,14 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         errors["discount"] = "";
                                         setErrors({ ...errors });
 
-                                        formData.discount = e.target.value;
-                                        findNetTotal();
+                                        formData.discountValue = e.target.value;
                                         setFormData({ ...formData });
-                                        console.log(formData);
+                                        reCalculate();
                                     }}
                                     className="form-control"
-                                    defaultValue="0.00"
                                     id="validationCustom02"
                                     placeholder="Discount"
-                                    aria-label="Select Vendor"
+                                    aria-label="Select Customer"
                                     aria-describedby="button-addon2"
                                 />
                                 {errors.discount && (
@@ -1000,6 +1084,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
+
                         </div>
                         <div className="col-md-6">
                             <label className="form-label">Status*</label>

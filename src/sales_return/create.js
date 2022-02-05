@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import SalesReturnPreview from "./preview.js";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
@@ -25,6 +25,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 order_id: id,
                 vat_percent: 15.0,
                 discount: 0.0,
+                discountValue: 0.0,
+                discount_percent: 0.0,
+                isDiscountPercent: false,
                 date_str: format(new Date(), "MMM dd yyyy"),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "received",
@@ -101,7 +104,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 formData.received_by_signature_id = order.delivered_by_signature_id;
                 formData.customer_id = order.customer_id;
 
-                // formData.discount = 0.0;
+                formData.isDiscountPercent = false;
+                formData.discount = order.discount;
+                formData.discount_percent = order.discount_percent;
+
+                if (formData.isDiscountPercent) {
+                    formData.discountValue = formData.discount_percent;
+                } else {
+                    formData.discountValue = formData.discount;
+                }
 
                 setFormData({ ...formData });
                 console.log("formData:", formData);
@@ -537,8 +548,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             });
         }
 
-        //return;
         formData.discount = parseFloat(formData.discount);
+        formData.discount_percent = parseFloat(formData.discount_percent);
+
         formData.vat_percent = parseFloat(formData.vat_percent);
         formData.partial_payment_amount = parseFloat(formData.partial_payment_amount);
         console.log("formData.discount:", formData.discount);
@@ -727,18 +739,67 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         setVatPrice(vatPrice);
     }
 
+
+
     let [netTotal, setNetTotal] = useState(0.00);
 
     function findNetTotal() {
-        netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
-        setNetTotal(netTotal);
+        if (totalPrice > 0) {
+            netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
+            setNetTotal(netTotal);
+        }
+
     }
+
+    let [discountPercent, setDiscountPercent] = useState(0.00);
+
+    function findDiscountPercent() {
+        if (!formData.discountValue) {
+            formData.discount = 0.00;
+            formData.discount_percent = 0.00;
+            setFormData({ ...formData });
+            return;
+        }
+
+        formData.discount = formData.discountValue;
+
+        if (formData.discount > 0 && totalPrice > 0) {
+            discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
+            setDiscountPercent(discountPercent);
+            formData.discount_percent = discountPercent;
+            setFormData({ ...formData });
+        }
+
+    }
+
+    function findDiscount() {
+        if (!formData.discountValue) {
+            formData.discount = 0.00;
+            formData.discount_percent = 0.00;
+            setFormData({ ...formData });
+            return;
+        }
+
+        formData.discount_percent = formData.discountValue;
+
+        if (formData.discount_percent > 0 && totalPrice > 0) {
+            formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100)).toFixed(2);
+        }
+        setFormData({ ...formData });
+    }
+
 
     function reCalculate() {
         findTotalPrice();
         findVatPrice();
         findNetTotal();
+        if (formData.isDiscountPercent) {
+            findDiscount();
+        } else {
+            findDiscountPercent();
+        }
     }
+
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
@@ -992,7 +1053,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="6" className="text-end">
-                                            Discount
+                                            Discount(  {formData.discount_percent + "%"})
                                         </th>
                                         <td className="text-center">
                                             <NumberFormat
@@ -1052,16 +1113,39 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+
                         <div className="col-md-4">
                             <label className="form-label">Discount*</label>
+                            <Form.Check
+                                type="switch"
+                                id="custom-switch"
+                                label="%"
+                                value={formData.isDiscountPercent}
+                                onChange={(e) => {
+                                    formData.isDiscountPercent = !formData.isDiscountPercent;
+                                    console.log("e.target.value:", formData.isDiscountPercent);
+                                    setFormData({ ...formData });
+                                    reCalculate();
+                                }}
+                            />
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.discount}
+                                    value={formData.discountValue}
                                     type='number'
                                     onChange={(e) => {
-                                        console.log("Inside onchange vat discount");
-                                        if (isNaN(e.target.value)) {
+                                        if (e.target.value == 0) {
+                                            formData.discountValue = e.target.value;
+                                            setFormData({ ...formData });
+                                            errors["discount"] = "";
+                                            setErrors({ ...errors });
+                                            reCalculate();
+                                            return;
+                                        }
+
+                                        if (!e.target.value) {
+                                            formData.discountValue = "";
                                             errors["discount"] = "Invalid Discount";
+                                            setFormData({ ...formData });
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -1069,16 +1153,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         errors["discount"] = "";
                                         setErrors({ ...errors });
 
-                                        formData.discount = e.target.value;
-                                        findNetTotal();
+                                        formData.discountValue = e.target.value;
                                         setFormData({ ...formData });
-                                        console.log(formData);
+                                        reCalculate();
                                     }}
                                     className="form-control"
                                     id="validationCustom02"
                                     placeholder="Discount"
-                                    aria-label="Select Customer"
-                                    aria-describedby="button-addon2"
                                 />
                                 {errors.discount && (
                                     <div style={{ color: "red" }}>
@@ -1094,6 +1175,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+
                         <div className="col-md-4">
                             <label className="form-label">Status*</label>
 

@@ -163,6 +163,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     status: purchase.status,
                     order_placed_by: purchase.order_placed_by,
                     order_placed_by_signature_id: purchase.order_placed_by_signature_id,
+                    isDiscountPercent: false,
                 };
 
                 if (formData.isDiscountPercent) {
