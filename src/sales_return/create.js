@@ -582,7 +582,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 props.showToastMessage("SalesReturn Created Successfully!", "success");
-                // props.refreshList();
+                if (props.refreshList) {
+                    props.refreshList();
+                }
                 handleClose();
 
                 openDetailsView(data.result.id);

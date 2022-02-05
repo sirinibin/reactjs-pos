@@ -512,7 +512,9 @@ const QuotationCreate = forwardRef((props, ref) => {
         console.log("Response:");
         console.log(data);
         props.showToastMessage("Quotation Created Successfully!", "success");
-        props.refreshList();
+        if (props.refreshList) {
+          props.refreshList();
+        }
         handleClose();
         openDetailsView(data.result.id);
       })
