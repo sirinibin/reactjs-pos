@@ -24,12 +24,12 @@ const QuotationCreate = forwardRef((props, ref) => {
         discount: 0.0,
         discountValue: 0.0,
         discount_percent: 0.0,
+        isDiscountPercent: false,
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
         status: "created",
         price_type: "retail",
-        isDiscountPercent: false,
       };
 
       selectedProducts = [];
@@ -164,6 +164,7 @@ const QuotationCreate = forwardRef((props, ref) => {
           date: quotation.date,
           vat_percent: quotation.vat_percent,
           discount: quotation.discount,
+          discount_percent: quotation.discount_percent,
           status: quotation.status,
           delivered_by: quotation.delivered_by,
           delivered_by_signature_id: quotation.delivered_by_signature_id,
@@ -478,6 +479,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
 
     formData.discount = parseFloat(formData.discount);
+    formData.discount_percent = parseFloat(formData.discount_percent);
     formData.vat_percent = parseFloat(formData.vat_percent);
 
     console.log("formData.discount:", formData.discount);

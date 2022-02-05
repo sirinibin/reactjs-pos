@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import PurchasePreview from "./preview.js";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import VendorCreate from "./../vendor/create.js";
 import ProductCreate from "./../product/create.js";
@@ -40,6 +40,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
             formData = {
                 vat_percent: 15.0,
                 discount: 0.0,
+                discountValue: 0.0,
+                discount_percent: 0.0,
+                isDiscountPercent: false,
                 date_str: format(new Date(), "MMM dd yyyy"),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "created",
@@ -68,6 +71,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
     let [formData, setFormData] = useState({
         vat_percent: 10.0,
         discount: 0.0,
+        discountValue: 0.0,
+        discount_percent: 0.0,
+        isDiscountPercent: false,
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "created",
@@ -153,10 +159,17 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     date: purchase.date,
                     vat_percent: purchase.vat_percent,
                     discount: purchase.discount,
+                    discount_percent: purchase.discount_percent,
                     status: purchase.status,
                     order_placed_by: purchase.order_placed_by,
                     order_placed_by_signature_id: purchase.order_placed_by_signature_id,
                 };
+
+                if (formData.isDiscountPercent) {
+                    formData.discountValue = formData.discount_percent;
+                } else {
+                    formData.discountValue = formData.discount;
+                }
 
                 selectedProducts = purchase.products;
                 setSelectedProducts([...selectedProducts]);
@@ -453,8 +466,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }
 
         formData.discount = parseFloat(formData.discount);
+        formData.discount_percent = parseFloat(formData.discount_percent);
         formData.vat_percent = parseFloat(formData.vat_percent);
         console.log("formData.discount:", formData.discount);
+        console.log("formData.discount_percent:", formData.discount_percent);
 
         let endPoint = "/v1/purchase";
         let method = "POST";
@@ -604,11 +619,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setSelectedProducts([...selectedProducts]);
         console.log("selectedProduct:", selectedProduct);
         console.log("selectedProducts:", selectedProducts);
-
-        findTotalPrice();
-        findTotalQuantity();
-        findVatPrice();
-        findNetTotal();
+        reCalculate();
     }
 
     function removeProduct(product) {
@@ -617,11 +628,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             selectedProducts.splice(index, 1);
         }
         setSelectedProducts(selectedProducts);
-
-        findTotalPrice();
-        findTotalQuantity();
-        findVatPrice();
-        findNetTotal();
+        reCalculate();
     }
 
     let [totalPrice, setTotalPrice] = useState(0.0);
@@ -637,16 +644,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setTotalPrice(totalPrice);
     }
 
-    let [totalQuantity, setTotalQuantity] = useState(0);
-
-    function findTotalQuantity() {
-        totalQuantity = 0;
-        for (var i = 0; i < selectedProducts.length; i++) {
-            totalQuantity += parseFloat(selectedProducts[i].quantity);
-        }
-        setTotalQuantity(totalQuantity);
-    }
-
     let [vatPrice, setVatPrice] = useState(0.00);
 
     function findVatPrice() {
@@ -658,15 +655,60 @@ const PurchaseCreate = forwardRef((props, ref) => {
     let [netTotal, setNetTotal] = useState(0.00);
 
     function findNetTotal() {
-        netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
-        setNetTotal(netTotal);
+        if (totalPrice > 0) {
+            netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
+            setNetTotal(netTotal);
+        }
+
     }
+
+    let [discountPercent, setDiscountPercent] = useState(0.00);
+
+    function findDiscountPercent() {
+        if (!formData.discountValue) {
+            formData.discount = 0.00;
+            formData.discount_percent = 0.00;
+            setFormData({ ...formData });
+            return;
+        }
+
+        formData.discount = formData.discountValue;
+
+        if (formData.discount > 0 && totalPrice > 0) {
+            discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
+            setDiscountPercent(discountPercent);
+            formData.discount_percent = discountPercent;
+            setFormData({ ...formData });
+        }
+
+    }
+
+    function findDiscount() {
+        if (!formData.discountValue) {
+            formData.discount = 0.00;
+            formData.discount_percent = 0.00;
+            setFormData({ ...formData });
+            return;
+        }
+
+        formData.discount_percent = formData.discountValue;
+
+        if (formData.discount_percent > 0 && totalPrice > 0) {
+            formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100)).toFixed(2);
+        }
+        setFormData({ ...formData });
+    }
+
 
     function reCalculate() {
         findTotalPrice();
-        findTotalQuantity();
         findVatPrice();
         findNetTotal();
+        if (formData.isDiscountPercent) {
+            findDiscount();
+        } else {
+            findDiscountPercent();
+        }
     }
 
     const DetailsViewRef = useRef();
@@ -884,9 +926,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         setErrors({ ...errors });
 
                                         formData.vat_percent = e.target.value;
-                                        findVatPrice();
-                                        findNetTotal();
                                         setFormData({ ...formData });
+                                        reCalculate();
                                         console.log(formData);
                                     }}
                                     className="form-control"
@@ -912,14 +953,36 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label">Discount*</label>
+                            <Form.Check
+                                type="switch"
+                                id="custom-switch"
+                                label="%"
+                                value={formData.isDiscountPercent}
+                                onChange={(e) => {
+                                    formData.isDiscountPercent = !formData.isDiscountPercent;
+                                    console.log("e.target.value:", formData.isDiscountPercent);
+                                    setFormData({ ...formData });
+                                    reCalculate();
+                                }}
+                            />
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.discount}
+                                    value={formData.discountValue}
                                     type='number'
                                     onChange={(e) => {
-                                        console.log("Inside onchange vat discount");
-                                        if (isNaN(e.target.value)) {
+                                        if (e.target.value == 0) {
+                                            formData.discountValue = e.target.value;
+                                            setFormData({ ...formData });
+                                            errors["discount"] = "";
+                                            setErrors({ ...errors });
+                                            reCalculate();
+                                            return;
+                                        }
+
+                                        if (!e.target.value) {
+                                            formData.discountValue = "";
                                             errors["discount"] = "Invalid Discount";
+                                            setFormData({ ...formData });
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -927,16 +990,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         errors["discount"] = "";
                                         setErrors({ ...errors });
 
-                                        formData.discount = e.target.value;
-                                        findNetTotal();
+                                        formData.discountValue = e.target.value;
                                         setFormData({ ...formData });
-                                        console.log(formData);
+                                        reCalculate();
                                     }}
                                     className="form-control"
-                                    defaultValue="0.00"
                                     id="validationCustom02"
                                     placeholder="Discount"
-                                    aria-label="Select Vendor"
+                                    aria-label="Select Customer"
                                     aria-describedby="button-addon2"
                                 />
                                 {errors.discount && (
@@ -952,6 +1013,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
+
                         </div>
                         <div className="col-md-6">
                             <label className="form-label">Status*</label>
@@ -1446,10 +1508,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </tr>
                                 ))}
                                 <tr>
-                                    <td colSpan="3"></td>
-                                    <td className="text-center">
-                                        <b>{totalQuantity}</b>
-                                    </td>
+                                    <td colSpan="4"></td>
                                     <td colSpan="2"></td>
 
                                     <th className="text-end">Total</th>
@@ -1480,7 +1539,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 </tr>
                                 <tr>
                                     <th colSpan="7" className="text-end">
-                                        Discount
+                                        Discount(  {formData.discount_percent + "%"})
                                     </th>
                                     <td className="text-center">
                                         <NumberFormat
