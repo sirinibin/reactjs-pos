@@ -836,6 +836,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     {selectedProducts.length == 0 && "Already Returned All sold products"}
                     {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         <h2>Select Products</h2>
+                        {errors["product_id"] && (
+                            <div style={{ color: "red" }}>
+                                <i class="bi bi-x-lg"> </i>
+                                {errors["product_id"]}
+                            </div>
+                        )}
                         <div className="table-responsive" style={{ overflowX: "auto" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
