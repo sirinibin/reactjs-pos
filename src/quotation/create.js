@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import QuotationPreview from "./preview.js";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
@@ -22,11 +22,14 @@ const QuotationCreate = forwardRef((props, ref) => {
       formData = {
         vat_percent: 15.0,
         discount: 0.0,
+        discountValue: 0.0,
+        discount_percent: 0.0,
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
         status: "created",
         price_type: "retail",
+        isDiscountPercent: false,
       };
 
       selectedProducts = [];
@@ -68,10 +71,13 @@ const QuotationCreate = forwardRef((props, ref) => {
   let [formData, setFormData] = useState({
     vat_percent: 15.0,
     discount: 0.0,
+    discountValue: 0.0,
+    discount_percent: 0.0,
     date_str: format(new Date(), "MMM dd yyyy"),
     signature_date_str: format(new Date(), "MMM dd yyyy"),
     status: "created",
     price_type: "retail",
+    isDiscountPercent: false,
   });
 
   let [unitPriceList, setUnitPriceList] = useState([]);
@@ -161,7 +167,14 @@ const QuotationCreate = forwardRef((props, ref) => {
           status: quotation.status,
           delivered_by: quotation.delivered_by,
           delivered_by_signature_id: quotation.delivered_by_signature_id,
+          isDiscountPercent: false,
         };
+
+        if (formData.isDiscountPercent) {
+          formData.discountValue = formData.discount_percent;
+        } else {
+          formData.discountValue = formData.discount;
+        }
 
         selectedProducts = quotation.products;
         setSelectedProducts([...selectedProducts]);
@@ -206,10 +219,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
         setFormData({ ...formData });
 
-        findTotalPrice();
-        findTotalQuantity();
-        findVatPrice();
-        findNetTotal();
+        reCalculate();
       })
       .catch(error => {
         setProcessing(false);
@@ -596,10 +606,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     console.log("selectedProduct:", selectedProduct);
     console.log("selectedProducts:", selectedProducts);
 
-    findTotalPrice();
-    findTotalQuantity();
-    findVatPrice();
-    findNetTotal();
+    reCalculate();
   }
 
   function removeProduct(product) {
@@ -609,10 +616,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
     setSelectedProducts(selectedProducts);
 
-    findTotalPrice();
-    findTotalQuantity();
-    findVatPrice();
-    findNetTotal();
+    reCalculate();
   }
 
   let [totalPrice, setTotalPrice] = useState(0.0);
@@ -628,36 +632,73 @@ const QuotationCreate = forwardRef((props, ref) => {
     setTotalPrice(totalPrice);
   }
 
-  let [totalQuantity, setTotalQuantity] = useState(0);
-
-  function findTotalQuantity() {
-    totalQuantity = 0;
-    for (var i = 0; i < selectedProducts.length; i++) {
-      totalQuantity += parseFloat(selectedProducts[i].quantity);
-    }
-    setTotalQuantity(totalQuantity);
-  }
-
   let [vatPrice, setVatPrice] = useState(0.00);
 
   function findVatPrice() {
-    vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);
-    console.log("vatPrice:", vatPrice);
-    setVatPrice(vatPrice);
+    if (totalPrice > 0) {
+      vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
+      console.log("vatPrice:", vatPrice);
+      setVatPrice(vatPrice);
+    }
   }
 
   let [netTotal, setNetTotal] = useState(0.00);
 
   function findNetTotal() {
-    netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
-    setNetTotal(netTotal);
+    if (totalPrice > 0) {
+      netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
+      setNetTotal(netTotal);
+    }
+
   }
+
+  let [discountPercent, setDiscountPercent] = useState(0.00);
+
+  function findDiscountPercent() {
+    if (!formData.discountValue) {
+      formData.discount = 0.00;
+      formData.discount_percent = 0.00;
+      setFormData({ ...formData });
+      return;
+    }
+
+    formData.discount = formData.discountValue;
+
+    if (formData.discount > 0 && totalPrice > 0) {
+      discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
+      setDiscountPercent(discountPercent);
+      formData.discount_percent = discountPercent;
+      setFormData({ ...formData });
+    }
+
+  }
+
+  function findDiscount() {
+    if (!formData.discountValue) {
+      formData.discount = 0.00;
+      formData.discount_percent = 0.00;
+      setFormData({ ...formData });
+      return;
+    }
+
+    formData.discount_percent = formData.discountValue;
+
+    if (formData.discount_percent > 0 && totalPrice > 0) {
+      formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100)).toFixed(2);
+    }
+    setFormData({ ...formData });
+  }
+
 
   function reCalculate() {
     findTotalPrice();
-    findTotalQuantity();
     findVatPrice();
     findNetTotal();
+    if (formData.isDiscountPercent) {
+      findDiscount();
+    } else {
+      findDiscountPercent();
+    }
   }
 
 
@@ -711,7 +752,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     model.products = selectedProducts;
     model.net_total = netTotal;
     model.vat_price = vatPrice;
-    model.total_quantity = totalQuantity;
     model.total = totalPrice;
 
     //setFormData({ ...formData });
@@ -928,14 +968,36 @@ const QuotationCreate = forwardRef((props, ref) => {
             </div>
             <div className="col-md-6">
               <label className="form-label">Discount*</label>
+              <Form.Check
+                type="switch"
+                id="custom-switch"
+                label="%"
+                value={formData.isDiscountPercent}
+                onChange={(e) => {
+                  formData.isDiscountPercent = !formData.isDiscountPercent;
+                  console.log("e.target.value:", formData.isDiscountPercent);
+                  setFormData({ ...formData });
+                  reCalculate();
+                }}
+              />
               <div className="input-group mb-3">
                 <input
-                  value={formData.discount}
+                  value={formData.discountValue}
                   type='number'
                   onChange={(e) => {
-                    console.log("Inside onchange vat discount");
-                    if (isNaN(e.target.value)) {
+                    if (e.target.value == 0) {
+                      formData.discountValue = e.target.value;
+                      setFormData({ ...formData });
+                      errors["discount"] = "";
+                      setErrors({ ...errors });
+                      reCalculate();
+                      return;
+                    }
+
+                    if (!e.target.value) {
+                      formData.discountValue = "";
                       errors["discount"] = "Invalid Discount";
+                      setFormData({ ...formData });
                       setErrors({ ...errors });
                       return;
                     }
@@ -943,17 +1005,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                     errors["discount"] = "";
                     setErrors({ ...errors });
 
-                    formData.discount = e.target.value;
-                    findNetTotal();
+                    formData.discountValue = e.target.value;
                     setFormData({ ...formData });
-                    console.log(formData);
+                    reCalculate();
                   }}
                   className="form-control"
-                  defaultValue="0.00"
                   id="validationCustom02"
                   placeholder="Discount"
-                  aria-label="Select Customer"
-                  aria-describedby="button-addon2"
                 />
                 {errors.discount && (
                   <div style={{ color: "red" }}>
@@ -1327,10 +1385,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     </tr>
                   ))}
                   <tr>
-                    <td colSpan="3"></td>
-                    <td className="text-center">
-                      <b>{totalQuantity}</b>
-                    </td>
+                    <td colSpan="4"></td>
                     <th className="text-end">Total</th>
                     <td className="text-center">
                       <NumberFormat
@@ -1359,7 +1414,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   </tr>
                   <tr>
                     <th colSpan="5" className="text-end">
-                      Discount
+                      Discount(  {formData.discount_percent + "%"})
                     </th>
                     <td className="text-center">
                       <NumberFormat

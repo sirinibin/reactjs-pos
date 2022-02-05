@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import OrderPreview from "./preview.js";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
@@ -183,9 +183,10 @@ const OrderCreate = forwardRef((props, ref) => {
     //fields
     let [formData, setFormData] = useState({
         vat_percent: 15.0,
+        discountValue: 0.0,
         discount: 0.0,
         discount_percent: 0.0,
-        isDiscountPercent: true,
+        isDiscountPercent: false,
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
@@ -696,13 +697,14 @@ const OrderCreate = forwardRef((props, ref) => {
     let [discountPercent, setDiscountPercent] = useState(0.00);
 
     function findDiscountPercent() {
-        if (!formData.discount) {
+        if (!formData.discountValue) {
             formData.discount = 0.00;
             formData.discount_percent = 0.00;
             setFormData({ ...formData });
             return;
         }
 
+        formData.discount = formData.discountValue;
 
         if (formData.discount > 0 && totalPrice > 0) {
             discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
@@ -713,12 +715,32 @@ const OrderCreate = forwardRef((props, ref) => {
 
     }
 
+    function findDiscount() {
+        if (!formData.discountValue) {
+            formData.discount = 0.00;
+            formData.discount_percent = 0.00;
+            setFormData({ ...formData });
+            return;
+        }
+
+        formData.discount_percent = formData.discountValue;
+
+        if (formData.discount_percent > 0 && totalPrice > 0) {
+            formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100)).toFixed(2);
+        }
+        setFormData({ ...formData });
+    }
+
 
     function reCalculate() {
         findTotalPrice();
         findVatPrice();
         findNetTotal();
-        findDiscountPercent();
+        if (formData.isDiscountPercent) {
+            findDiscount();
+        } else {
+            findDiscountPercent();
+        }
     }
 
     const DetailsViewRef = useRef();
@@ -1031,13 +1053,34 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
                         <div className="col-md-6">
                             <label className="form-label">Discount*</label>
+                            <Form.Check
+                                type="switch"
+                                id="custom-switch"
+                                label="%"
+                                value={formData.isDiscountPercent}
+                                onChange={(e) => {
+                                    formData.isDiscountPercent = !formData.isDiscountPercent;
+                                    console.log("e.target.value:", formData.isDiscountPercent);
+                                    setFormData({ ...formData });
+                                    reCalculate();
+                                }}
+                            />
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.discount}
+                                    value={formData.discountValue}
                                     type='number'
                                     onChange={(e) => {
+                                        if (e.target.value == 0) {
+                                            formData.discountValue = e.target.value;
+                                            setFormData({ ...formData });
+                                            errors["discount"] = "";
+                                            setErrors({ ...errors });
+                                            reCalculate();
+                                            return;
+                                        }
+
                                         if (!e.target.value) {
-                                            formData.discount = "";
+                                            formData.discountValue = "";
                                             errors["discount"] = "Invalid Discount";
                                             setFormData({ ...formData });
                                             setErrors({ ...errors });
@@ -1047,12 +1090,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                         errors["discount"] = "";
                                         setErrors({ ...errors });
 
-                                        formData.discount = e.target.value;
+                                        formData.discountValue = e.target.value;
                                         setFormData({ ...formData });
                                         reCalculate();
                                     }}
                                     className="form-control"
-                                    defaultValue="0.00"
                                     id="validationCustom02"
                                     placeholder="Discount"
                                     aria-label="Select Customer"
@@ -1071,6 +1113,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
+
                         </div>
                         <div className="col-md-6">
                             <label className="form-label">Status*</label>
