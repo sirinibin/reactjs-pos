@@ -114,11 +114,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 setSelectedCustomers([...selectedCustomers]);
 
-
-                findTotalPrice();
-                findTotalQuantity();
-                findVatPrice();
-                findNetTotal();
+                reCalculate();
             })
             .catch(error => {
                 setProcessing(false);
@@ -225,7 +221,7 @@ const OrderCreate = forwardRef((props, ref) => {
     //Product Auto Suggestion
     const [productOptions, setProductOptions] = useState([]);
     let [selectedProduct, setSelectedProduct] = useState([]);
-    const [selectedProducts, setSelectedProducts] = useState([]);
+    let [selectedProducts, setSelectedProducts] = useState([]);
     const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     //Delivered By Auto Suggestion
@@ -556,6 +552,12 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
 
                 handleClose();
+                formData.products = [];
+                setSelectedProducts([]);
+                formData.customer_id = "";
+                setSelectedCustomers([]);
+                setFormData({ ...formData });
+                reCalculate();
 
                 openDetailsView(data.result.id);
             })
@@ -660,10 +662,7 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("selectedProduct:", selectedProduct);
         console.log("selectedProducts:", selectedProducts);
 
-        findTotalPrice();
-        findTotalQuantity();
-        findVatPrice();
-        findNetTotal();
+        reCalculate();
     }
 
     function removeProduct(product) {
@@ -673,10 +672,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         setSelectedProducts(selectedProducts);
 
-        findTotalPrice();
-        findTotalQuantity();
-        findVatPrice();
-        findNetTotal();
+        reCalculate();
     }
 
     let [totalPrice, setTotalPrice] = useState(0.0);
@@ -690,16 +686,6 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         totalPrice = totalPrice.toFixed(2);
         setTotalPrice(totalPrice);
-    }
-
-    let [totalQuantity, setTotalQuantity] = useState(0.0);
-
-    function findTotalQuantity() {
-        totalQuantity = 0.0;
-        for (var i = 0; i < selectedProducts.length; i++) {
-            totalQuantity += parseFloat(selectedProducts[i].quantity);
-        }
-        setTotalQuantity(totalQuantity);
     }
 
     let [vatPrice, setVatPrice] = useState(0.00);
@@ -719,7 +705,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function reCalculate() {
         findTotalPrice();
-        findTotalQuantity();
         findVatPrice();
         findNetTotal();
     }
@@ -1472,10 +1457,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </tr>
                                     ))}
                                     <tr>
-                                        <td colSpan="3"></td>
-                                        <td className="text-center">
-                                            <b>{totalQuantity}</b>
-                                        </td>
+                                        <td colSpan="4"></td>
+
                                         <th className="text-end">Total</th>
                                         <td className="text-center">
                                             <NumberFormat
