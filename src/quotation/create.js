@@ -1104,8 +1104,18 @@ const QuotationCreate = forwardRef((props, ref) => {
                 value={selectedProduct[0] ? selectedProduct[0].quantity : null}
                 onChange={(e) => {
                   console.log("Inside onchange qty");
-                  if (!e.target.value || e.target.value == 0) {
-                    errors["quantity"] = "Invalid Quantity";
+                  if (!e.target.value) {
+                    selectedProduct[0].quantity = "";
+                    setSelectedProduct([...selectedProduct]);
+                    errors["quantity"] = "Quantity is required";
+                    setErrors({ ...errors });
+                    return;
+                  }
+
+                  if (e.target.value == 0) {
+                    selectedProduct[0].quantity = parseFloat(e.target.value);
+                    setSelectedProduct([...selectedProduct]);
+                    errors["quantity"] = "Quantity should be more than zero";
                     setErrors({ ...errors });
                     return;
                   }
@@ -1132,7 +1142,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               ) : null}
 
               {selectedProduct[0] &&
-                selectedProduct[0].quantity &&
+                selectedProduct[0].quantity > 0 &&
                 !errors["quantity"] && (
                   <div style={{ color: "green" }}>
                     <i class="bi bi-check-lg"> </i>
