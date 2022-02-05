@@ -108,7 +108,8 @@ const CustomerCreate = forwardRef((props, ref) => {
             formData.vat_percent = null;
         }
 
-        console.log("formData.logo:", formData.logo);
+        formData.phone_in_arabic = convertToPersianNumber(formData.phone);
+        formData.vat_no_in_arabic = convertToPersianNumber(formData.vat_no);
 
         let endPoint = "/v1/customer";
         let method = "POST";
@@ -176,6 +177,9 @@ const CustomerCreate = forwardRef((props, ref) => {
     }
 
     function convertToPersianNumber(input) {
+        if (!input) {
+            return "";
+        }
         return input.replace(/\d/g, function (m) {
             return persianMap[parseInt(m)];
         });
@@ -293,7 +297,6 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         errors["phone"] = "";
                                         setErrors({ ...errors });
                                         formData.phone = e.target.value;
-                                        formData.phone_in_arabic = convertToPersianNumber(formData.phone);
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -308,40 +311,6 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                                 {formData.phone && !errors.phone && (
-                                    <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Phone In Arabic(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.phone_in_arabic}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["phone_in_arabic"] = "";
-                                        setErrors({ ...errors });
-                                        formData.phone_in_arabic = e.target.value;
-                                        formData.phone = convertToEnglishNumber(formData.phone_in_arabic);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="phone_in_arabic"
-                                    placeholder="Phone NO. In Arabic"
-                                />
-                                {errors.phone_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
-                                        {errors.phone_in_arabic}
-                                    </div>
-                                )}
-                                {formData.phone_in_arabic && !errors.phone_in_arabic && (
                                     <div style={{ color: "green" }}>
                                         <i class="bi bi-check-lg"> </i>
                                         Looks good!
@@ -427,7 +396,6 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         errors["vat_no"] = "";
                                         setErrors({ ...errors });
                                         formData.vat_no = e.target.value;
-                                        formData.vat_no_in_arabic = convertToPersianNumber(formData.vat_no);
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -450,39 +418,6 @@ const CustomerCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">VAT NO. In Arabic (Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.vat_no_in_arabic}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["vat_no_in_arabic"] = "";
-                                        setErrors({ ...errors });
-                                        formData.vat_no_in_arabic = e.target.value;
-                                        formData.vat_no = convertToPersianNumber(formData.vat_no_in_arabic);
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="vat_no_in_arabic"
-                                    placeholder="VAT NO. In Arabic"
-                                />
-                                {errors.vat_no_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
-                                        {errors.vat_no_in_arabic}
-                                    </div>
-                                )}
-                                {formData.vat_no_in_arabic && !errors.vat_no_in_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
                         <div className="col-md-6">
                             <label className="form-label">Email (Optional)</label>
 
