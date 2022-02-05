@@ -318,6 +318,8 @@ const QuotationCreate = forwardRef((props, ref) => {
           return unitPriceListArray[i].retail_unit_price;
         } else if (formData.price_type == "wholesale") {
           return unitPriceListArray[i].wholesale_unit_price;
+        } else if (formData.price_type == "purchase") {
+          return unitPriceListArray[i].purchase_unit_price;
         }
       } else {
         console.log("not matched");
@@ -1092,6 +1094,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               >
                 <option value="retail" SELECTED>Retail</option>
                 <option value="wholesale">Wholesale</option>
+                <option value="purchase">Purchase</option>
               </select>
             </div>
 
