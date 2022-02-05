@@ -20,27 +20,12 @@ import ProductView from "./../product/view.js";
 const OrderCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open(id) {
-            formData = {
-                vat_percent: 15.0,
-                discount: 0.0,
-                date_str: format(new Date(), "MMM dd yyyy"),
-                signature_date_str: format(new Date(), "MMM dd yyyy"),
-                status: "delivered",
-                payment_status: "paid",
-                payment_method: "cash",
-                price_type: "retail"
-            };
-            setFormData({ ...formData });
-            if (id) {
-                getOrder(id);
-            }
+        open() {
             setShow(true);
 
         },
-
     }));
-
+    /*
     function getOrder() {
         console.log("inside get Order");
         const requestOptions = {
@@ -121,6 +106,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 setErrors(error);
             });
     }
+    */
 
     /*
     let [barcode, setBarcode] = useState("");
@@ -198,6 +184,8 @@ const OrderCreate = forwardRef((props, ref) => {
     let [formData, setFormData] = useState({
         vat_percent: 15.0,
         discount: 0.0,
+        discount_percent: 0.0,
+        isDiscountPercent: true,
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
@@ -487,8 +475,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function handleCreate(event) {
         event.preventDefault();
-        console.log("Inside handle Create");
-        console.log("selectedProducts:", selectedProducts);
 
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
@@ -499,20 +485,18 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit: selectedProducts[i].unit,
             });
         }
+        if (!formData.discount) {
+            return;
+        }
 
         formData.discount = parseFloat(formData.discount);
+        formData.discount_percent = parseFloat(formData.discount_percent);
         formData.vat_percent = parseFloat(formData.vat_percent);
         formData.partial_payment_amount = parseFloat(formData.partial_payment_amount);
-        console.log("formData.discount:", formData.discount);
 
 
         let endPoint = "/v1/order";
         let method = "POST";
-        if (formData.id) {
-            endPoint = "/v1/order/" + formData.id;
-            method = "PUT";
-        }
-
         const requestOptions = {
             method: method,
             headers: {
@@ -553,6 +537,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 handleClose();
                 formData.products = [];
+                selectedProducts = [];
                 setSelectedProducts([]);
                 formData.customer_id = "";
                 setSelectedCustomers([]);
@@ -691,22 +676,49 @@ const OrderCreate = forwardRef((props, ref) => {
     let [vatPrice, setVatPrice] = useState(0.00);
 
     function findVatPrice() {
-        vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
-        console.log("vatPrice:", vatPrice);
-        setVatPrice(vatPrice);
+        if (totalPrice > 0) {
+            vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
+            console.log("vatPrice:", vatPrice);
+            setVatPrice(vatPrice);
+        }
     }
 
     let [netTotal, setNetTotal] = useState(0.00);
 
     function findNetTotal() {
-        netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
-        setNetTotal(netTotal);
+        if (totalPrice > 0) {
+            netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
+            setNetTotal(netTotal);
+        }
+
     }
+
+    let [discountPercent, setDiscountPercent] = useState(0.00);
+
+    function findDiscountPercent() {
+        if (!formData.discount) {
+            formData.discount = 0.00;
+            formData.discount_percent = 0.00;
+            setFormData({ ...formData });
+            return;
+        }
+
+
+        if (formData.discount > 0 && totalPrice > 0) {
+            discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
+            setDiscountPercent(discountPercent);
+            formData.discount_percent = discountPercent;
+            setFormData({ ...formData });
+        }
+
+    }
+
 
     function reCalculate() {
         findTotalPrice();
         findVatPrice();
         findNetTotal();
+        findDiscountPercent();
     }
 
     const DetailsViewRef = useRef();
@@ -1024,9 +1036,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                     value={formData.discount}
                                     type='number'
                                     onChange={(e) => {
-                                        console.log("Inside onchange vat discount");
-                                        if (isNaN(e.target.value)) {
+                                        if (!e.target.value) {
+                                            formData.discount = "";
                                             errors["discount"] = "Invalid Discount";
+                                            setFormData({ ...formData });
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -1035,9 +1048,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setErrors({ ...errors });
 
                                         formData.discount = e.target.value;
-                                        findNetTotal();
                                         setFormData({ ...formData });
-                                        console.log(formData);
+                                        reCalculate();
                                     }}
                                     className="form-control"
                                     defaultValue="0.00"
@@ -1487,7 +1499,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="5" className="text-end">
-                                            Discount
+                                            Discount(  {formData.discount_percent + "%"})
                                         </th>
                                         <td className="text-center">
                                             <NumberFormat
@@ -1746,7 +1758,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setErrors({ ...errors });
 
                                         formData.partial_payment_amount = e.target.value;
-                                        //findNetTotal();
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}

@@ -157,6 +157,7 @@ const OrderView = forwardRef((props, ref) => {
                         <th>Date:</th><td> {model.date_str}</td>
                         <th>VAT %:</th><td> {model.vat_percent}%</td>
                         <th>Discount :</th><td> {model.discount} SAR</td>
+                        <th>Discount %:</th><td> {model.discount_percent} SAR</td>
                     </tr>
                     <tr>
                         <th>Status:</th><td> {model.status}</td>
