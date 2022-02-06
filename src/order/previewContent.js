@@ -4,6 +4,8 @@ import { format } from "date-fns";
 import converter from 'number-to-words';
 import n2words from 'n2words'
 import QRCode from "react-qr-code";
+//import { DateTime } from "react-intl-datetime-format"
+//import { IntlProvider } from "react-intl-datetime-format"
 
 const OrderPreviewContent = forwardRef((props, ref) => {
 
@@ -31,7 +33,11 @@ const OrderPreviewContent = forwardRef((props, ref) => {
             /*weekday: 'long', */
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric",
+            //  timeZoneName: "short",
         };
         return event.toLocaleDateString('ar-EG', options)
     }
@@ -103,7 +109,10 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                 <div className="col">
                     <ul className="list-unstyled mb0 text-start">
                         <li><strong>Order: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                        <li><strong>Order Date: </strong>{props.model.date_str ? props.model.date_str : "<DATE>"}</li>
+                        <li><strong>Order Date: </strong> {props.model.created_at ? format(
+                            new Date(props.model.created_at),
+                            "MMM dd yyyy h:mma"
+                        ) : "<DATETIME>"} </li>
                         <li>
                             <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "<CUSTOMER_NAME>"}
                         </li>
@@ -114,7 +123,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                 <div className="col">
                     <ul className="list-unstyled mb0 text-end">
                         <li><strong> طلب: </strong>#{props.model.code ? convertToPersianNumber(props.model.code) : "<ID_NUMBER_ARABIC>"}</li>
-                        <li><strong>تاريخ الطلب: </strong>{props.model.date_str ? getArabicDate(props.model.date_str) : "<DATE_ARABIC>"}</li>
+                        <li><strong>تاريخ الطلب: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATETIME_ARABIC>"}</li>
                         <li>
                             <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
                         </li>

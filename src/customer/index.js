@@ -611,7 +611,7 @@ function CustomerIndex(props) {
                                                         <td>
                                                             {format(
                                                                 new Date(customer.created_at),
-                                                                "MMM dd yyyy H:mma"
+                                                                "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
                                                         <td>

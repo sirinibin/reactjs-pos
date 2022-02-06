@@ -30,7 +30,10 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
             /*weekday: 'long', */
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric",
         };
         return event.toLocaleDateString('ar-EG', options)
     }
@@ -102,7 +105,12 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                 <div className="col">
                     <ul className="list-unstyled mb0 text-start">
                         <li><strong>Purchase: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                        <li><strong>Purchase Date: </strong>{props.model.date_str ? props.model.date_str : "<DATE>"}</li>
+                        <li><strong>Purchase Date: </strong>
+                            {props.model.created_at ? format(
+                                new Date(props.model.created_at),
+                                "MMM dd yyyy h:mma"
+                            ) : "<DATETIME>"}
+                        </li>
                         <li>
                             <strong>Vendor: </strong>{props.model.vendor ? props.model.vendor.name : "<VENDOR_NAME>"}
                         </li>
@@ -113,7 +121,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                 <div className="col">
                     <ul className="list-unstyled mb0 text-end">
                         <li><strong> شراء: </strong>#{props.model.code ? convertToPersianNumber(props.model.code) : "<ID_NUMBER_ARABIC>"}</li>
-                        <li><strong>تاريخ الشراء: </strong>{props.model.date_str ? getArabicDate(props.model.date_str) : "<DATE_ARABIC>"}</li>
+                        <li><strong>تاريخ الشراء: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATETIME_ARABIC>"}</li>
                         <li>
                             <strong>بائع: </strong>{props.model.vendor ? props.model.vendor.name_in_arabic : "<VENDOR_NAME_ARABIC>"}
                         </li>

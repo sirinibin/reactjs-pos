@@ -817,7 +817,7 @@ function QuotationIndex(props) {
                             <td>
                               {format(
                                 new Date(quotation.created_at),
-                                "MMM dd yyyy H:mma"
+                                "MMM dd yyyy h:mma"
                               )}
                             </td>
                             <td>

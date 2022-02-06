@@ -699,7 +699,7 @@ function ProductIndex(props) {
                                                         <td>
                                                             {format(
                                                                 new Date(product.created_at),
-                                                                "MMM dd yyyy H:mma"
+                                                                "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
                                                         <td>

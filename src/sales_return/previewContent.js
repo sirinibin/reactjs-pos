@@ -30,7 +30,10 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
             /*weekday: 'long', */
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric",
         };
         return event.toLocaleDateString('ar-EG', options)
     }
@@ -102,7 +105,10 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                 <div className="col">
                     <ul className="list-unstyled mb0 text-start">
                         <li><strong>Sales Return: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                        <li><strong>Sales Return Date: </strong>{props.model.date_str ? props.model.date_str : "<DATE>"}</li>
+                        <li><strong>Sales Return Date: </strong>{props.model.created_at ? format(
+                            new Date(props.model.created_at),
+                            "MMM dd yyyy h:mma"
+                        ) : "<DATE_TIME>"}</li>
                         <li><strong>Order: </strong>#{props.model.order_code ? props.model.order_code : "<ORDER_ID_NUMBER>"}</li>
                         <li>
                             <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "<CUSTOMER_NAME>"}
@@ -114,7 +120,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                 <div className="col">
                     <ul className="list-unstyled mb0 text-end">
                         <li><strong>عائد المبيعات: </strong>#{props.model.code ? convertToPersianNumber(props.model.code) : "<ID_NUMBER_ARABIC>"}</li>
-                        <li><strong>تاريخ عودة المبيعات: </strong>{props.model.date_str ? getArabicDate(props.model.date_str) : "<DATE_ARABIC>"}</li>
+                        <li><strong>تاريخ عودة المبيعات: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
                         <li><strong> طلب: </strong>#{props.model.order_code ? convertToPersianNumber(props.model.order_code) : "<ORDER_ID_NUMBER_ARABIC>"}</li>
                         <li>
                             <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
