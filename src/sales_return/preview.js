@@ -3,6 +3,7 @@ import { Modal, Button } from 'react-bootstrap';
 import QuotationPreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
+import { Invoice } from '@axenda/zatca';
 
 const SalesReturnPreview = forwardRef((props, ref) => {
 
@@ -111,6 +112,17 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                 console.log(data);
                 let storeData = data.result;
                 model.store = storeData;
+
+                const invoice = new Invoice({
+                    sellerName: model.store_name,
+                    vatRegistrationNumber: model.store.vat_no,
+                    invoiceTimestamp: model.created_at,
+                    invoiceTotal: model.total,
+                    invoiceVatTotal: model.vat_price,
+                });
+
+                model.QRImageData = await invoice.render();
+
                 setModel({ ...model });
             })
             .catch(error => {

@@ -145,6 +145,8 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
                 console.log(data);
                 let storeData = data.result;
                 model.store = storeData;
+                console.log("model.QRImageData:", model.QRImageData);
+
                 setModel({ ...model });
             })
             .catch(error => {
