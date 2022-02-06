@@ -24,6 +24,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
 
     }
 
+
     function getArabicDate(engishDate) {
         let event = new Date(engishDate);
         let options = {
@@ -456,7 +457,8 @@ const OrderPreviewContent = forwardRef((props, ref) => {
             </div>
             <div className="row" style={{ fontSize: "3mm" }}>
                 <div className="col-md-2 text-start">
-                    {props.model.store && props.model.customer ? <QRCode value={"Order #: " + props.model.code + "<br/> Store: " + props.model.store.name + "<br/> Net Total: " + props.model.net_total + "<br/> Customer: " + props.model.customer.name} size={128} /> : null}
+                    {props.model.QRImageData && <img src={props.model.QRImageData} alt="Invoice QR Code" />}
+                    {/*props.model.store && props.model.customer ? <QRCode value={"Order #: " + props.model.code + "<br/> Store: " + props.model.store.name + "<br/> Net Total: " + props.model.net_total + "<br/> Customer: " + props.model.customer.name} size={128} /> : null*/}
                 </div>
                 <div className="col-md-8 text-center">
                     <ul className="list-unstyled mb0 text-center">
