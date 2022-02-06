@@ -541,7 +541,7 @@ const ProductCreate = forwardRef((props, ref) => {
             <ProductView ref={DetailsViewRef} />
             <ProductCategoryCreate ref={ProductCategoryCreateFormRef} showToastMessage={props.showToastMessage} />
 
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Product #" + formData.name : "Create New Product"}

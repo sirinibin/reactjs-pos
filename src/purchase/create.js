@@ -758,7 +758,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Purchase #" + formData.code : "Create New Purchase"}

@@ -871,7 +871,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
                         {"Create Sales Return for Sales Order #" + formData.order_code}

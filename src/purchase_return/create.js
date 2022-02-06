@@ -726,7 +726,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
             <PurchaseView ref={PurchaseDetailsViewRef} />
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
                         {formData.purchase_code ? "Create Purchase Return for Purchase " : ""}

@@ -770,7 +770,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
+      <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
         <Modal.Header>
           <Modal.Title>
             {formData.id ? "Update Quotation #" + formData.code : "Create New Quotation"}

@@ -813,7 +813,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order"}

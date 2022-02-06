@@ -196,7 +196,7 @@ const CustomerCreate = forwardRef((props, ref) => {
     return (
         <>
             <CustomerView ref={DetailsViewRef} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Customer #" + formData.name : "Create New Customer"}

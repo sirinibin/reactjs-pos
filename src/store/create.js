@@ -269,7 +269,7 @@ const StoreCreate = forwardRef((props, ref) => {
     return (
         <>
             <StoreView ref={DetailsViewRef} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true} scrollable={true}>
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Store #" + formData.name : "Create New Store"}

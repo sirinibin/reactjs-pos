@@ -207,7 +207,7 @@ const SignatureCreate = forwardRef((props, ref) => {
     return (
         <>
             <SignatureView ref={DetailsViewRef} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Signature #" + formData.name : "Create New Signature"}

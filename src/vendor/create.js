@@ -220,7 +220,7 @@ const VendorCreate = forwardRef((props, ref) => {
     return (
         <>
             <VendorView ref={DetailsViewRef} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true} scrollable={true}>
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Vendor #" + formData.name : "Create New Vendor"}

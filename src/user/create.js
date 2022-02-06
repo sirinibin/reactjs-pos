@@ -168,7 +168,7 @@ const UserCreate = forwardRef((props, ref) => {
     return (
         <>
             <UserView ref={DetailsViewRef} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop={true}>
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update User #" + formData.name : "Create New User"}
