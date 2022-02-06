@@ -486,7 +486,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit: selectedProducts[i].unit,
             });
         }
-        if (!formData.discount) {
+        if (!formData.discount && formData.discount != 0) {
             return;
         }
 
