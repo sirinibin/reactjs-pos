@@ -339,6 +339,24 @@ const QuotationCreate = forwardRef((props, ref) => {
     return "";
   }
 
+  function GetProductPurchaseUnitPriceInStore(storeId, unitPriceListArray) {
+    if (!unitPriceListArray) {
+      return "";
+    }
+
+    for (var i = 0; i < unitPriceListArray.length; i++) {
+      console.log("unitPriceListArray[i]:", unitPriceListArray[i]);
+      console.log("store_id:", storeId);
+
+      if (unitPriceListArray[i].store_id === storeId) {
+        return unitPriceListArray[i].purchase_unit_price;
+      } else {
+        console.log("not matched");
+      }
+    }
+    return "";
+  }
+
   function GetProductStockInStore(storeId, stockList) {
     for (var i = 0; i < stockList.length; i++) {
       if (stockList[i].store_id === storeId) {
@@ -473,6 +491,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         name_in_arabic: selectedProducts[i].name_in_arabic,
         quantity: parseFloat(selectedProducts[i].quantity),
         unit_price: parseFloat(selectedProducts[i].unit_price),
+        purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
         unit: selectedProducts[i].unit,
         part_number: selectedProducts[i].part_number,
       });
@@ -586,6 +605,16 @@ const QuotationCreate = forwardRef((props, ref) => {
       return;
     }
 
+    errors.purchase_unit_price = "";
+    if (
+      !selectedProduct[0].purchase_unit_price ||
+      isNaN(selectedProduct[0].purchase_unit_price)
+    ) {
+      errors.purchase_unit_price = "Invalid Purchase Unit Price";
+      setErrors({ ...errors });
+      return;
+    }
+
     selectedProducts.push({
       product_id: selectedProduct[0].id,
       code: selectedProduct[0].item_code,
@@ -594,6 +623,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       name_in_arabic: selectedProduct[0].name_in_arabic,
       quantity: selectedProduct[0].quantity,
       unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
+      purchase_unit_price: parseFloat(selectedProduct[0].purchase_unit_price).toFixed(2),
       unit: selectedProduct[0].unit,
     });
 
@@ -1100,6 +1130,11 @@ const QuotationCreate = forwardRef((props, ref) => {
                         formData.store_id,
                         selectedItems[0].unit_prices
                       );
+
+                      selectedItems[0].purchase_unit_price = GetProductPurchaseUnitPriceInStore(
+                        formData.store_id,
+                        selectedItems[0].unit_prices
+                      );
                     }
 
                     selectedProduct = selectedItems;
@@ -1211,6 +1246,50 @@ const QuotationCreate = forwardRef((props, ref) => {
                   </div>
                 )}
             </div>
+            <div className="col-md-2">
+              <label className="form-label">Purchase Unit Price*</label>
+              <input
+                type="text"
+                value={
+                  selectedProduct[0] ? selectedProduct[0].purchase_unit_price : null
+                }
+                onChange={(e) => {
+                  console.log("Inside onchange purchase unit price:");
+
+                  if (isNaN(e.target.value) || e.target.value === "0") {
+                    errors["purchase_unit_price"] = "Invalid Purchase Unit Price";
+                    setErrors({ ...errors });
+                    return;
+                  }
+                  errors["purchase_unit_price"] = "";
+                  setErrors({ ...errors });
+
+                  //setFormData({ ...formData });
+                  if (selectedProduct[0]) {
+                    selectedProduct[0].purchase_unit_price = e.target.value;
+                    setSelectedProduct([...selectedProduct]);
+                  }
+                }}
+                className="form-control"
+                id="unit_price"
+                placeholder="Purchase Unit Price"
+              />
+
+              {errors.purchase_unit_price ? (
+                <div style={{ color: "red" }}>
+                  <i class="bi bi-x-lg"> </i>
+                  {errors.purchase_unit_price}
+                </div>
+              ) : null}
+              {selectedProduct[0] &&
+                selectedProduct[0].purchase_unit_price &&
+                !errors.purchase_unit_price && (
+                  <div style={{ color: "green" }}>
+                    <i class="bi bi-check-lg"> </i>Looks good!
+                  </div>
+                )}
+            </div>
+
             <div className="col-md-2">
               <label className="form-label">Unit Price*</label>
               <input
