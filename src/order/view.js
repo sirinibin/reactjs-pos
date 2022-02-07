@@ -187,6 +187,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <th>Purchase Unit Price</th>
                                 <th>Purchase Price</th>
                                 <th>Profit</th>
+                                <th>Loss</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -242,6 +243,15 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.loss}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
                                 </tr>
                             ))}
                             <tr>
@@ -267,6 +277,15 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={model.loss}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
                             </tr>
                             <tr>
                                 <th colSpan="4" className="text-end">
@@ -283,6 +302,7 @@ const OrderView = forwardRef((props, ref) => {
                                     />
                                 </td>
                                 <td colSpan="3"></td>
+                                <td className="text-center">0 SAR</td>
                                 <td className="text-center">0 SAR</td>
                             </tr>
                             <tr>
@@ -308,6 +328,15 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
                             </tr>
                             <tr>
                                 <td colSpan="4"></td>
@@ -325,6 +354,15 @@ const OrderView = forwardRef((props, ref) => {
                                 <th className="text-center">
                                     <NumberFormat
                                         value={model.net_profit}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th className="text-center">
+                                    <NumberFormat
+                                        value={model.loss}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
