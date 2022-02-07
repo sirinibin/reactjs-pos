@@ -121,7 +121,7 @@ const QuotationView = forwardRef((props, ref) => {
 
     return (<>
         <QuotationPreview ref={PreviewRef} />
-        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Sales Quotation #{model.code}</Modal.Title>
 
@@ -147,7 +147,7 @@ const QuotationView = forwardRef((props, ref) => {
                 </div>
             </Modal.Header>
             <Modal.Body>
-                <Table striped bquotationed hover responsive="lg">
+                <Table striped bordered hover responsive="xl">
                     <tr>
                         <th>Store:</th><td> {model.store_name}</td>
                         <th>Customer:</th><td> {model.customer_name}</td>
@@ -174,7 +174,7 @@ const QuotationView = forwardRef((props, ref) => {
                 </Table>
 
                 <div className="table-responsive" style={{ overflowX: "auto" }}>
-                    <table className="table table-striped table-sm table-bquotationed">
+                    <table className="table table-striped table-sm table-bordered">
                         <thead>
                             <tr className="text-center">
                                 <th>SI No.</th>
@@ -184,6 +184,7 @@ const QuotationView = forwardRef((props, ref) => {
                                 <th>Unit Price</th>
                                 <th>Price</th>
                                 <th>Purchase Unit Price</th>
+                                <th>Purchase Price</th>
                                 <th>Profit</th>
                             </tr>
                         </thead>
@@ -223,6 +224,15 @@ const QuotationView = forwardRef((props, ref) => {
                                     </td>
                                     <td>
                                         <NumberFormat
+                                            value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
                                             value={product.profit}
                                             displayType={"text"}
                                             thousandSeparator={true}
@@ -245,7 +255,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                <td></td>
+                                <td colSpan="2" ></td>
                                 <td className="text-center">
                                     <NumberFormat
                                         value={model.profit}
@@ -270,7 +280,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                <td></td>
+                                <td colSpan="2"></td>
                                 <td className="text-center">0 SAR</td>
                             </tr>
                             <tr>
@@ -286,7 +296,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                <td></td>
+                                <td colSpan="2"></td>
                                 <td className="text-center">
                                     <NumberFormat
                                         value={(0 - model.discount)}
@@ -309,7 +319,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </th>
-                                <th colSpan="1" className="text-end">Net Profit</th>
+                                <th colSpan="2" className="text-end">Net Profit</th>
                                 <th className="text-center">
                                     <NumberFormat
                                         value={model.net_profit}

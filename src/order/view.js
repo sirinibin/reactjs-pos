@@ -121,7 +121,7 @@ const OrderView = forwardRef((props, ref) => {
 
     return (<>
         <OrderPreview ref={PreviewRef} />
-        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Sales Order #{model.code}</Modal.Title>
 
@@ -147,7 +147,7 @@ const OrderView = forwardRef((props, ref) => {
                 </div>
             </Modal.Header>
             <Modal.Body>
-                <Table striped bordered hover responsive="lg">
+                <Table striped bordered hover responsive="xl">
                     <tr>
                         <th>Store:</th><td> {model.store_name}</td>
                         <th>Customer:</th><td> {model.customer_name}</td>
@@ -185,6 +185,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <th>Price</th>
                                 <th>Qty Returned</th>
                                 <th>Purchase Unit Price</th>
+                                <th>Purchase Price</th>
                                 <th>Profit</th>
                             </tr>
                         </thead>
@@ -225,6 +226,15 @@ const OrderView = forwardRef((props, ref) => {
                                     </td>
                                     <td>
                                         <NumberFormat
+                                            value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
                                             value={product.profit}
                                             displayType={"text"}
                                             thousandSeparator={true}
@@ -247,7 +257,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                <td colSpan="2" ></td>
+                                <td colSpan="3" ></td>
                                 <td className="text-center">
                                     <NumberFormat
                                         value={model.profit}
@@ -272,7 +282,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                <td colSpan="2"></td>
+                                <td colSpan="3"></td>
                                 <td className="text-center">0 SAR</td>
                             </tr>
                             <tr>
@@ -288,7 +298,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                <td colSpan="2"></td>
+                                <td colSpan="3"></td>
                                 <td className="text-center">
                                     <NumberFormat
                                         value={(0 - model.discount)}
@@ -311,7 +321,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </th>
-                                <th colSpan="2" className="text-end">Net Profit</th>
+                                <th colSpan="3" className="text-end">Net Profit</th>
                                 <th className="text-center">
                                     <NumberFormat
                                         value={model.net_profit}
