@@ -631,6 +631,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     selectedProduct[0].id = "";
     selectedProduct[0].quantity = "";
     selectedProduct[0].unit_price = "";
+    selectedProduct[0].purchase_unit_price = "";
     selectedProduct[0].unit = "";
 
     setSelectedProduct([...selectedProduct]);
