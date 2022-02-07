@@ -358,7 +358,7 @@ function OrderIndex(props) {
 
                     <div className="col">
                         <h1 className="text-end">
-                            Total: <Badge bg="secondary">
+                            Sales: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalSales}
                                     displayType={"text"}
