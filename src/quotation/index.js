@@ -29,9 +29,9 @@ function QuotationIndex(props) {
   //Date filter
   const [showDateRange, setShowDateRange] = useState(false);
   const selectedDate = new Date();
-  const [dateValue, setDateValue] = useState("");
-  const [fromDateValue, setFromDateValue] = useState("");
-  const [toDateValue, setToDateValue] = useState("");
+  let [dateValue, setDateValue] = useState("");
+  let [fromDateValue, setFromDateValue] = useState("");
+  let [toDateValue, setToDateValue] = useState("");
 
   //Created At filter
   const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
@@ -172,7 +172,10 @@ function QuotationIndex(props) {
   }
 
   function searchByDateField(field, value) {
-    value = format(new Date(value), "MMM dd yyyy");
+    let d = new Date(value);
+    d = new Date(d.toUTCString());
+
+    value = format(d, "MMM dd yyyy");
 
     if (field === "date_str") {
       setDateValue(value);
@@ -181,6 +184,7 @@ function QuotationIndex(props) {
       searchParams["from_date"] = "";
       searchParams["to_date"] = "";
       searchParams[field] = value;
+      console.log("Value:", value);
     } else if (field === "from_date") {
       setFromDateValue(value);
       setDateValue("");
@@ -657,6 +661,11 @@ function QuotationIndex(props) {
                             className="form-control"
                             dateFormat="MMM dd yyyy"
                             onChange={(date) => {
+                              if (!date) {
+                                dateValue = "";
+                                setDateValue("");
+                                return;
+                              }
                               searchByDateField("date_str", date);
                             }}
                           />

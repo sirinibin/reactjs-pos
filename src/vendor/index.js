@@ -102,7 +102,10 @@ function VendorIndex(props) {
     }
 
     function searchByDateField(field, value) {
-        value = format(new Date(value), "MMM dd yyyy");
+        let d = new Date(value);
+        d = new Date(d.toUTCString());
+
+        value = format(d, "MMM dd yyyy");
 
         if (field === "created_at") {
             setCreatedAtValue(value);

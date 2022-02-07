@@ -172,7 +172,10 @@ function PurchaseIndex(props) {
     }
 
     function searchByDateField(field, value) {
-        value = format(new Date(value), "MMM dd yyyy");
+        let d = new Date(value);
+        d = new Date(d.toUTCString());
+
+        value = format(d, "MMM dd yyyy");
 
         if (field === "date_str") {
             setDateValue(value);
