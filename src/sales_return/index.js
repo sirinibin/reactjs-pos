@@ -6,11 +6,14 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import NumberFormat from "react-number-format";
 
 function SalesReturnIndex(props) {
     const cookies = new Cookies();
+
+    let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
 
     //list
     const [salesreturnList, setSalesReturnList] = useState([]);
@@ -287,6 +290,10 @@ function SalesReturnIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                totalSalesReturn = data.meta.total_sales_return;
+                setTotalSalesReturn(totalSalesReturn);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -332,6 +339,24 @@ function SalesReturnIndex(props) {
             <SalesReturnCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <SalesReturnView ref={DetailsViewRef} />
             <div className="container-fluid p-0">
+                <div className="row">
+
+                    <div className="col">
+                        <h1 className="text-end">
+                            Sales Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalSalesReturn}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                    </div>
+
+                </div>
+
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Sales Returns</h1>

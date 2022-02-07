@@ -6,11 +6,15 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import NumberFormat from "react-number-format";
+
 
 function PurchaseReturnIndex(props) {
     const cookies = new Cookies();
+
+    let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
 
     //list
     const [purchasereturnList, setPurchaseReturnList] = useState([]);
@@ -284,6 +288,9 @@ function PurchaseReturnIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                totalPurchaseReturn = data.meta.total_purchase_return;
+                setTotalPurchaseReturn(totalPurchaseReturn);
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -333,6 +340,24 @@ function PurchaseReturnIndex(props) {
             <PurchaseReturnView ref={DetailsViewRef} />
 
             <div className="container-fluid p-0">
+                <div className="row">
+
+                    <div className="col">
+                        <h1 className="text-end">
+                            Purchase Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalPurchaseReturn}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                    </div>
+
+                </div>
+
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Purchase Returns</h1>

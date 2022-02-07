@@ -6,12 +6,17 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import PurchaseReturnCreate from "./../purchase_return/create.js";
+import NumberFormat from "react-number-format";
 
 function PurchaseIndex(props) {
     const cookies = new Cookies();
+
+    let [totalPurchase, setTotalPurchase] = useState(0.00);
+    let [retailProfit, setRetailProfit] = useState(0.00);
+    let [wholesaleProfit, setWholesaleProfit] = useState(0.00);
 
     //list
     const [purchaseList, setPurchaseList] = useState([]);
@@ -242,7 +247,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,vendor_name,status,created_at";
+            "select=id,code,date,net_total,created_by_name,vendor_name,status,created_at,retail_profit,wholesale_profit";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -285,6 +290,15 @@ function PurchaseIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                totalPurchase = data.meta.total_purchase;
+                setTotalPurchase(totalPurchase);
+
+                retailProfit = data.meta.retail_profit;
+                setRetailProfit(retailProfit);
+
+                wholesaleProfit = data.meta.wholesale_profit;
+                setWholesaleProfit(wholesaleProfit);
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -340,6 +354,45 @@ function PurchaseIndex(props) {
             <PurchaseReturnCreate ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />
 
             <div className="container-fluid p-0">
+                <div className="row">
+
+                    <div className="col">
+                        <h1 className="text-end">
+                            Purchases: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalPurchase}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Expected Retail Profit: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={retailProfit}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Expected Wholesale Profit: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={wholesaleProfit}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                    </div>
+
+                </div>
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Purchases</h1>
@@ -545,6 +598,44 @@ function PurchaseIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("retail_profit");
+                                                        }}
+                                                    >
+                                                        Expected Retail Profit
+                                                        {sortField === "retail_profit" && sortOrder === "-" ? (
+                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "retail_profit" && sortOrder === "" ? (
+                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("wholesale_profit");
+                                                        }}
+                                                    >
+                                                        Expected Wholesale Profit
+                                                        {sortField === "wholesale_profit" && sortOrder === "-" ? (
+                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "wholesale_profit" && sortOrder === "" ? (
+                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            "text-decoration": "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("created_by");
                                                         }}
                                                     >
@@ -692,6 +783,26 @@ function PurchaseIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
+                                                    <input
+                                                        type="text"
+                                                        id="retail_profit"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("retail_profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="wholesale_profit"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("wholesale_profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
@@ -812,7 +923,34 @@ function PurchaseIndex(props) {
                                                         <td>
                                                             {format(new Date(purchase.date), "MMM dd yyyy")}
                                                         </td>
-                                                        <td>{purchase.net_total} SAR</td>
+                                                        <td>
+                                                            <NumberFormat
+                                                                value={purchase.net_total}
+                                                                displayType={"text"}
+                                                                thousandSeparator={true}
+                                                                suffix={" SAR"}
+                                                                renderText={(value, props) => value}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <NumberFormat
+                                                                value={purchase.retail_profit}
+                                                                displayType={"text"}
+                                                                thousandSeparator={true}
+                                                                suffix={" SAR"}
+                                                                renderText={(value, props) => value}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <NumberFormat
+                                                                value={purchase.wholesale_profit}
+                                                                displayType={"text"}
+                                                                thousandSeparator={true}
+                                                                suffix={" SAR"}
+                                                                renderText={(value, props) => value}
+                                                            />
+                                                        </td>
+
                                                         <td>{purchase.created_by_name}</td>
                                                         <td>{purchase.vendor_name}</td>
                                                         <td>
