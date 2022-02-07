@@ -16,7 +16,7 @@ function Login() {
         let at = cookies.get("access_token");
         if (at) {
             // history.push("/dashboard/quotations");
-            window.location = "/dashboard/quotations";
+            window.location = "/dashboard/sales";
         }
     });
 
@@ -53,7 +53,7 @@ function Login() {
                     cookies.set('user_photo', data.result.photo);
                 }
 
-                history.push("/dashboard/quotations");
+                history.push("/dashboard/sales");
             })
             .catch(error => {
                 setProcessing(false);
@@ -220,8 +220,8 @@ function Login() {
                                                     {isProcessing ?
                                                         <button class="btn btn-lg btn-primary" type="button" disabled>
                                                             <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                         Logging In...
-                                                    </button> : null}
+                                                            Logging In...
+                                                        </button> : null}
 
                                                     {!isProcessing ?
                                                         <button className="btn btn-lg btn-primary" type="submit">Login</button>

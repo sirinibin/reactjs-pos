@@ -20,7 +20,7 @@ function App() {
   return (
     <Router>
       <Switch>
-        <Route path="/dashboard/orders">
+        <Route path="/dashboard/sales">
           <Dashboard />
         </Route>
 

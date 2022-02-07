@@ -173,6 +173,8 @@ const QuotationView = forwardRef((props, ref) => {
                         <th>Updated At:</th><td> {model.updated_at}</td>
                     </tr>
                     <tr>
+                        <th>Profit :</th><td> {model.profit} SAR</td>
+                        <th>Loss:</th><td> {model.loss} SAR</td>
                         <th>Created By:</th><td> {model.created_by_name}</td>
                         <th>Updated By:</th><td> {model.updated_by_name}</td>
                     </tr>

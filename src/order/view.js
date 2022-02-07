@@ -167,7 +167,8 @@ const OrderView = forwardRef((props, ref) => {
                     <tr>
                         <th>Created By:</th><td> {model.created_by_name}</td>
                         <th>Updated By:</th><td> {model.updated_by_name}</td>
-                        <th>Profit:</th><td> {model.profit}</td>
+                        <th>Profit :</th><td> {model.profit} SAR</td>
+                        <th>Loss:</th><td> {model.loss} SAR</td>
                     </tr>
 
                 </Table>

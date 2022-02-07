@@ -14,6 +14,8 @@ function QuotationIndex(props) {
   const cookies = new Cookies();
 
   let [totalQuotation, setTotalQuotation] = useState(0.00);
+  let [profit, setProfit] = useState(0.00);
+  let [loss, setLoss] = useState(0.00);
 
   //list
   const [quotationList, setQuotationList] = useState([]);
@@ -251,7 +253,7 @@ function QuotationIndex(props) {
       },
     };
     let Select =
-      "select=id,code,date,net_total,created_by_name,customer_name,status,created_at";
+      "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
     setSearchParams(searchParams);
     let queryParams = ObjectToSearchQueryParams(searchParams);
     if (queryParams !== "") {
@@ -297,6 +299,13 @@ function QuotationIndex(props) {
 
         totalQuotation = data.meta.total_quotation;
         setTotalQuotation(totalQuotation);
+
+        profit = data.meta.profit;
+        setProfit(profit);
+
+        loss = data.meta.loss;
+        setLoss(loss);
+
       })
       .catch((error) => {
         setIsListLoading(false);
@@ -351,6 +360,28 @@ function QuotationIndex(props) {
               Quotation: <Badge bg="secondary">
                 <NumberFormat
                   value={totalQuotation}
+                  displayType={"text"}
+                  thousandSeparator={true}
+                  suffix={" SAR"}
+                  renderText={(value, props) => value}
+                />
+              </Badge>
+            </h1>
+            <h1 className="text-end">
+              Expected Profit: <Badge bg="secondary">
+                <NumberFormat
+                  value={profit}
+                  displayType={"text"}
+                  thousandSeparator={true}
+                  suffix={" SAR"}
+                  renderText={(value, props) => value}
+                />
+              </Badge>
+            </h1>
+            <h1 className="text-end">
+              Expected Loss: <Badge bg="secondary">
+                <NumberFormat
+                  value={loss}
                   displayType={"text"}
                   thousandSeparator={true}
                   suffix={" SAR"}
@@ -567,6 +598,44 @@ function QuotationIndex(props) {
                               cursor: "pointer",
                             }}
                             onClick={() => {
+                              sort("profit");
+                            }}
+                          >
+                            Expected Profit
+                            {sortField === "profit" && sortOrder === "-" ? (
+                              <i class="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "profit" && sortOrder === "" ? (
+                              <i class="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+                        <th>
+                          <b
+                            style={{
+                              "text-decoration": "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("loss");
+                            }}
+                          >
+                            Expected Loss
+                            {sortField === "loss" && sortOrder === "-" ? (
+                              <i class="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "loss" && sortOrder === "" ? (
+                              <i class="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+                        <th>
+                          <b
+                            style={{
+                              "text-decoration": "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
                               sort("created_by");
                             }}
                           >
@@ -719,6 +788,26 @@ function QuotationIndex(props) {
                           />
                         </th>
                         <th>
+                          <input
+                            type="text"
+                            id="profit"
+                            onChange={(e) =>
+                              searchByFieldValue("profit", e.target.value)
+                            }
+                            className="form-control"
+                          />
+                        </th>
+                        <th>
+                          <input
+                            type="text"
+                            id="loss"
+                            onChange={(e) =>
+                              searchByFieldValue("loss", e.target.value)
+                            }
+                            className="form-control"
+                          />
+                        </th>
+                        <th>
                           <Typeahead
                             id="created_by"
                             labelKey="name"
@@ -840,6 +929,8 @@ function QuotationIndex(props) {
                               {format(new Date(quotation.date), "MMM dd yyyy")}
                             </td>
                             <td>{quotation.net_total} SAR</td>
+                            <td>{quotation.profit ? quotation.profit : 0.00} SAR</td>
+                            <td>{quotation.loss ? quotation.loss : 0.00} SAR</td>
                             <td>{quotation.created_by_name}</td>
                             <td>{quotation.customer_name}</td>
                             <td>

@@ -8,11 +8,11 @@ function Sidebar(props) {
     const [appState, ChangeState] = useState({
         activeTab: '',
         tabs: [
-            'quotations',
             'sales',
             'sales return',
             'purchases',
             'purchase return',
+            'quotations',
             'vendors',
             'stores',
             'customers',
@@ -52,31 +52,23 @@ function Sidebar(props) {
             <ul className="sidebar-nav">
                 <li onClick={() => {
                     toggleActive(appState.tabs[0]);
-                }} className={toggleActiveStyles(appState.tabs[0])} >
-                    <Link to="/dashboard/quotations" className="sidebar-link">
-                        <i className="bi bi-file-earmark-text" />
-                        <span className="align-middle">Quotations</span>
-                    </Link>
-                </li>
-                <li onClick={() => {
-                    toggleActive(appState.tabs[1]);
-                }} className={toggleActiveStyles(appState.tabs[1])}>
+                }} className={toggleActiveStyles(appState.tabs[0])}>
                     <Link to="/dashboard/sales" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Sales</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[2]);
-                }} className={toggleActiveStyles(appState.tabs[2])}>
+                    toggleActive(appState.tabs[1]);
+                }} className={toggleActiveStyles(appState.tabs[1])}>
                     <Link to="/dashboard/salesreturn" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Sales Return</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[3]);
-                }} className={toggleActiveStyles(appState.tabs[3])}>
+                    toggleActive(appState.tabs[2]);
+                }} className={toggleActiveStyles(appState.tabs[2])}>
                     <Link to="/dashboard/purchases" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Purchases</span>
@@ -84,11 +76,20 @@ function Sidebar(props) {
                 </li>
 
                 <li onClick={() => {
-                    toggleActive(appState.tabs[4]);
-                }} className={toggleActiveStyles(appState.tabs[4])}>
+                    toggleActive(appState.tabs[3]);
+                }} className={toggleActiveStyles(appState.tabs[3])}>
                     <Link to="/dashboard/purchasereturn" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Purchase Return</span>
+                    </Link>
+                </li>
+
+                <li onClick={() => {
+                    toggleActive(appState.tabs[4]);
+                }} className={toggleActiveStyles(appState.tabs[4])} >
+                    <Link to="/dashboard/quotations" className="sidebar-link">
+                        <i className="bi bi-file-earmark-text" />
+                        <span className="align-middle">Quotations</span>
                     </Link>
                 </li>
 

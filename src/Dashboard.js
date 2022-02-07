@@ -105,18 +105,7 @@ function Dashboard() {
 
         </ToastContainer>
         <Switch>
-            <Route path="/dashboard/quotations">
-                <div className="wrapper">
-                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
-                    <div className="main">
-                        <Topbar parentCallback={handleToggle} />
-                        <main className="content">
-                            <QuotationIndex showToastMessage={showToastMessage} />
-                        </main>
-                        <Footer />
-                    </div>
-                </div>
-            </Route>
+
             <Route path="/dashboard/sales">
                 <div className="wrapper">
                     <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
@@ -161,6 +150,19 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <PurchaseReturnIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/quotations">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <QuotationIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
@@ -253,7 +255,7 @@ function Dashboard() {
                 </div>
             </Route>
             <Route path="/">
-                {at && <Redirect to="/dashboard/quotations" />}
+                {at && <Redirect to="/dashboard/sales" />}
                 <Login />
             </Route>
         </Switch>
