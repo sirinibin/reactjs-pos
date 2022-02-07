@@ -183,6 +183,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <th>Qty</th>
                                 <th>Unit Price</th>
                                 <th>Price</th>
+                                <th>Qty Returned</th>
                                 <th>Purchase Unit Price</th>
                                 <th>Profit</th>
                             </tr>
@@ -212,6 +213,7 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td>
+                                    <td>{product.quantity_returned}  {product.unit ? product.unit : ""} </td>
                                     <td>
                                         <NumberFormat
                                             value={product.purchase_unit_price}
@@ -245,7 +247,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                <td></td>
+                                <td colSpan="2" ></td>
                                 <td className="text-center">
                                     <NumberFormat
                                         value={model.profit}
@@ -270,7 +272,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                <td></td>
+                                <td colSpan="2"></td>
                                 <td className="text-center">0 SAR</td>
                             </tr>
                             <tr>
@@ -286,7 +288,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                <td></td>
+                                <td colSpan="2"></td>
                                 <td className="text-center">
                                     <NumberFormat
                                         value={(0 - model.discount)}
@@ -309,7 +311,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </th>
-                                <th colSpan="1" className="text-end">Net Profit</th>
+                                <th colSpan="2" className="text-end">Net Profit</th>
                                 <th className="text-center">
                                     <NumberFormat
                                         value={model.net_profit}
