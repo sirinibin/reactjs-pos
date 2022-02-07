@@ -7,8 +7,9 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import NumberFormat from "react-number-format";
 
 function OrderIndex(props) {
     const cookies = new Cookies();
@@ -88,6 +89,11 @@ function OrderIndex(props) {
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortOrder, setSortOrder] = useState("-");
+
+
+    let [totalSales, setTotalSales] = useState(0.00);
+    let [profit, setProfit] = useState(0.00);
+    let [loss, setLoss] = useState(0.00);
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -288,6 +294,15 @@ function OrderIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                totalSales = data.meta.total_sales;
+                setTotalSales(totalSales);
+
+                profit = data.meta.profit;
+                setProfit(profit);
+
+                loss = data.meta.loss;
+                setLoss(loss);
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -339,6 +354,45 @@ function OrderIndex(props) {
             <OrderView ref={DetailsViewRef} />
             <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} />
             <div className="container-fluid p-0">
+                <div className="row">
+
+                    <div className="col">
+                        <h1 className="text-end">
+                            Total: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalSales}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Profit: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={profit}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Loss: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={loss}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                    </div>
+
+                </div>
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Sales Orders</h1>
