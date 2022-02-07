@@ -6,11 +6,14 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import NumberFormat from "react-number-format";
 
 function QuotationIndex(props) {
   const cookies = new Cookies();
+
+  let [totalQuotation, setTotalQuotation] = useState(0.00);
 
   //list
   const [quotationList, setQuotationList] = useState([]);
@@ -287,6 +290,9 @@ function QuotationIndex(props) {
         setTotalItems(data.total_count);
         setOffset((page - 1) * pageSize);
         setCurrentPageItemsCount(data.result.length);
+
+        totalQuotation = data.meta.total_quotation;
+        setTotalQuotation(totalQuotation);
       })
       .catch((error) => {
         setIsListLoading(false);
@@ -334,6 +340,24 @@ function QuotationIndex(props) {
       <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
       <QuotationView ref={DetailsViewRef} />
       <div className="container-fluid p-0">
+        <div className="row">
+
+          <div className="col">
+            <h1 className="text-end">
+              Quotation: <Badge bg="secondary">
+                <NumberFormat
+                  value={totalQuotation}
+                  displayType={"text"}
+                  thousandSeparator={true}
+                  suffix={" SAR"}
+                  renderText={(value, props) => value}
+                />
+              </Badge>
+            </h1>
+          </div>
+
+        </div>
+
         <div className="row">
           <div className="col">
             <h1 className="h3">Quotations</h1>
