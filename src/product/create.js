@@ -758,7 +758,9 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                 }}
                             >
-                                <option value="" SELECTED>Unit(s)</option>
+                                <option value="" SELECTED>PC</option>
+                                <option value="drum">Drum</option>
+                                <option value="set">Set</option>
                                 <option value="Kg">Kg</option>
                                 <option value="Meter(s)">Meter(s)</option>
                                 <option value="Gm">Gm</option>
