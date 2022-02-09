@@ -1061,7 +1061,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-                        <div className="col-md-4">
+                        <div className="col-md-12">
                             <label className="form-label">Product*</label>
 
                         
@@ -1126,7 +1126,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             
                         </div>
 
-                        <div className="col-md-1">
+                        <div className="col-md-2">
                             <label className="form-label">Qty{selectedProduct[0] && selectedProduct[0].unit ? "(" + selectedProduct[0].unit + ")" : ""}*</label>
                             <input
                                 value={selectedProduct[0] ? selectedProduct[0].quantity : null}

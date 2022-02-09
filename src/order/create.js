@@ -1159,7 +1159,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-                        <div className="col-md-5">
+                        <div className="col-md-12">
                             <label className="form-label">Product*</label>
 
                          
@@ -1237,7 +1237,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     )}
                         </div>
 
-                        <div className="col-md-1">
+                        <div className="col-md-2">
                             <label className="form-label">Price type</label>
                             <select className="form-control" value={formData.price_type}
                                 onChange={(e) => {
@@ -1261,7 +1261,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 <option value="purchase" SELECTED>Purchase</option>
                             </select>
                         </div>
-                        <div className="col-md-1">
+                        <div className="col-md-2">
                             <label className="form-label">Qty{selectedProduct[0] && selectedProduct[0].unit ? "(" + selectedProduct[0].unit + ")" : ""}*</label>
                             <input
                                 value={selectedProduct[0] ? selectedProduct[0].quantity : null}
