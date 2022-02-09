@@ -610,6 +610,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         selectedProduct[0].name = "";
         selectedProduct[0].id = "";
+        selectedProduct[0].search_label = "";
         selectedProduct[0].quantity = "";
         selectedProduct[0].purchase_unit_price = "";
         selectedProduct[0].retail_unit_price = "";
@@ -1066,7 +1067,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="product_id"
-                                    labelKey="name"
+                                    labelKey="search_label"
                                     isLoading={isProductsLoading}
                                     isInvalid={errors.product_id ? true : false}
                                     onChange={(selectedItems) => {

@@ -93,7 +93,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
   //Product Auto Suggestion
-  const [productOptions, setProductOptions] = useState([]);
+  let [productOptions, setProductOptions] = useState([]);
   let [selectedProduct, setSelectedProduct] = useState([]);
   let [selectedProducts, setSelectedProducts] = useState([]);
   const [isProductsLoading, setIsProductsLoading] = useState(false);
@@ -399,8 +399,11 @@ const QuotationCreate = forwardRef((props, ref) => {
       requestOptions
     );
     let data = await result.json();
+    console.log("data.result:",data.result);
 
-    setProductOptions(data.result);
+    //productOptions=data.result;
+    console.log("Setting product options");
+    setProductOptions([...data.result]);
     setIsProductsLoading(false);
   }
 
@@ -628,6 +631,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     });
 
     selectedProduct[0].name = "";
+    selectedProduct[0].search_label = "";
+    selectedProduct[0].item_code = "";
     selectedProduct[0].id = "";
     selectedProduct[0].quantity = "";
     selectedProduct[0].unit_price = "";
@@ -1110,12 +1115,13 @@ const QuotationCreate = forwardRef((props, ref) => {
               <div className="input-group mb-3">
                 <Typeahead
                   id="product_id"
-                  labelKey="name"
+                  labelKey="search_label"
                   isLoading={isProductsLoading}
                   isInvalid={errors.product_id ? true : false}
                   onChange={(selectedItems) => {
                     if (selectedItems.length === 0) {
-                      errors["product_id"] = "Invalid Product selected";
+                      console.log("Inside Invalid");
+                      errors["product_id"] = "Invalid Product selected123";
                       console.log(errors);
                       setErrors(errors);
                       setSelectedProduct([]);
@@ -1149,6 +1155,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   selected={selectedProduct}
                   highlightOnlyResult="true"
                   onInputChange={(searchTerm, e) => {
+                    console.log("Inside input change");
                     suggestProducts(searchTerm);
                   }}
                 />
