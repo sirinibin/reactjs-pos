@@ -1061,12 +1061,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-                        <div className="col-md-3">
+                        <div className="col-md-4">
                             <label className="form-label">Product*</label>
 
-                            <div className="input-group mb-3">
+                        
                                 <Typeahead
                                     id="product_id"
+                                    size="lg"
                                     labelKey="search_label"
                                     isLoading={isProductsLoading}
                                     isInvalid={errors.product_id ? true : false}
@@ -1105,6 +1106,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     onInputChange={(searchTerm, e) => {
                                         suggestProducts(searchTerm);
                                     }}
+
                                 />
                                 <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.product_id ? (
@@ -1121,7 +1123,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             Looks good!
                                         </div>
                                     )}
-                            </div>
+                            
                         </div>
 
                         <div className="col-md-1">
@@ -1309,14 +1311,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                         </div>
-                        <div className="col-md-2">
+                        <div className="col-md-1">
                             <label className="form-label">&nbsp;</label>
                             <Button
                                 variant="primary"
                                 className="btn btn-primary form-control"
                                 onClick={addProduct}
                             >
-                                <i className="bi bi-plus-lg"></i> ADD
+                                 ADD
                             </Button>
                         </div>
 
