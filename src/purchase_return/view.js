@@ -119,7 +119,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
 
     return (<>
         <PurchaseReturnPreview ref={PreviewRef} />
-        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Purchase Return #{model.code} </Modal.Title>
 

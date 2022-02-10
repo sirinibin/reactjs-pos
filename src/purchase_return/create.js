@@ -665,12 +665,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     function reCalculate() {
         findTotalPrice();
         findVatPrice();
-        findNetTotal();
         if (formData.is_discount_percent) {
             findDiscount();
         } else {
             findDiscountPercent();
         }
+        findNetTotal();
     }
 
     const DetailsViewRef = useRef();
@@ -1044,14 +1044,16 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         if (e.target.value == 0) {
                                             formData.discountValue = e.target.value;
+                                            reCalculate();
                                             setFormData({ ...formData });
                                             errors["discount"] = "";
                                             setErrors({ ...errors });
-                                            reCalculate();
+                                           
                                             return;
                                         }
 
                                         if (!e.target.value) {
+                                            console.log("inside invalid");
                                             formData.discountValue = "";
                                             errors["discount"] = "Invalid Discount";
                                             setFormData({ ...formData });
@@ -1062,9 +1064,11 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         errors["discount"] = "";
                                         setErrors({ ...errors });
 
+                                        console.log("e.target.value:",e.target.value);
                                         formData.discountValue = e.target.value;
-                                        setFormData({ ...formData });
+                                        
                                         reCalculate();
+                                        setFormData({ ...formData });
                                     }}
                                     className="form-control"
                                     id="validationCustom02"

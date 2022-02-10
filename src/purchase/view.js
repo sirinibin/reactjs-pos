@@ -119,7 +119,7 @@ const PurchaseView = forwardRef((props, ref) => {
 
     return (<>
         <PurchasePreview ref={PreviewRef} />
-        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Details of Purchase #{model.code} </Modal.Title>
 
@@ -179,9 +179,14 @@ const PurchaseView = forwardRef((props, ref) => {
                                 <th>Name</th>
                                 <th>Qty</th>
                                 <th>Purchase Unit Price</th>
+                                <th>Purchase Price</th>
+                                <th>Qty Returned</th>
                                 <th>Wholesale Unit Price</th>
                                 <th>Retail Unit Price</th>
-                                <th>Purchase Price</th>
+                                <th>Wholesale Profit</th>
+                                <th>Retail Profit</th>
+                                <th>Wholesale Loss</th>
+                                <th>Retail Loss</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -199,6 +204,18 @@ const PurchaseView = forwardRef((props, ref) => {
                                             suffix={" SAR"}
                                             renderText={(value, props) => value}
                                         />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        {product.quantity_returned}  {product.unit ? product.unit : ""}
                                     </td>
                                     <td>
                                         <NumberFormat
@@ -220,7 +237,34 @@ const PurchaseView = forwardRef((props, ref) => {
                                     </td>
                                     <td>
                                         <NumberFormat
-                                            value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                            value={product.wholesale_profit}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.retail_profit}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.wholesale_loss}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.retail_loss}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
@@ -230,12 +274,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                 </tr>
                             ))}
                             <tr>
-                                <td colSpan="3"></td>
-                                <td className="text-center">
-                                    <b>{totalQuantity}</b>
-                                </td>
-                                <td colSpan="2"></td>
-                                <th className="text-end">Total</th>
+                                <th  colSpan="5" className="text-end">Total</th>
                                 <td className="text-center">
                                     <NumberFormat
                                         value={totalPrice}
@@ -245,9 +284,46 @@ const PurchaseView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
+                                <th  colSpan="3" className="text-end">Total Profit/Loss</th>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={model.wholesale_profit}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={model.retail_profit}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={model.wholesale_loss}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={model.retail_loss}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
                             </tr>
                             <tr>
-                                <th colSpan="6" className="text-end">
+                                <th colSpan="4" className="text-end">
                                     VAT
                                 </th>
                                 <td className="text-center">{model.vat_percent + "%"}</td>
@@ -260,9 +336,48 @@ const PurchaseView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
+                                <th colSpan="3" className="text-end">
+                                   
+                                </th>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
                             </tr>
                             <tr>
-                                <th colSpan="7" className="text-end">
+                                <th colSpan="5" className="text-end">
                                     Discount
                                 </th>
                                 <td className="text-center">
@@ -274,13 +389,113 @@ const PurchaseView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
+                                <th colSpan="3" className="text-end">
+                                
+                                </th>
+                                <td className="text-center">
+                                 {model.returned_all?<NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />: <NumberFormat
+                                    value={model.discount}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />}
+                                </td>
+                                <td className="text-center">
+                                    {model.returned_all?<NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />: <NumberFormat
+                                    value={model.discount}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />}
+                                </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
                             </tr>
                             <tr>
-                                <td colSpan="6"></td>
+                                <td colSpan="4"></td>
                                 <th className="text-end">Net Total</th>
                                 <th className="text-center">
                                     <NumberFormat
                                         value={netTotal}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th colSpan="3" className="text-end" >Net Profit/Loss</th>
+                                <th className="text-center">
+                                    {model.returned_all?<NumberFormat
+                                        value={model.wholesale_profit}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />:<NumberFormat
+                                    value={model.wholesale_profit+model.discount}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />}
+                                </th>
+                                <th className="text-center">
+                                   {model.returned_all?<NumberFormat
+                                        value={model.retail_profit}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />:<NumberFormat
+                                    value={model.retail_profit+model.discount}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />}
+                                </th>
+                                <th className="text-center">
+                                    <NumberFormat
+                                        value={model.wholesale_loss}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th className="text-center">
+                                    <NumberFormat
+                                        value={model.retail_loss}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}

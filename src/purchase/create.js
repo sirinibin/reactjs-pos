@@ -705,12 +705,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
     function reCalculate() {
         findTotalPrice();
         findVatPrice();
-        findNetTotal();
         if (formData.is_discount_percent) {
             findDiscount();
         } else {
             findDiscountPercent();
         }
+        findNetTotal();
     }
 
     const DetailsViewRef = useRef();
