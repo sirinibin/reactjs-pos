@@ -218,8 +218,8 @@ function Login() {
                                                 <div className="text-center mt-3">
 
                                                     {isProcessing ?
-                                                        <button class="btn btn-lg btn-primary" type="button" disabled>
-                                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden={true}></span>
+                                                        <button className="btn btn-lg btn-primary" type="button" disabled>
+                                                            <span className="spinner-border spinner-border-sm" role="status" aria-hidden={true}></span>
                                                             Logging In...
                                                         </button> : null}
 

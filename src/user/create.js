@@ -189,7 +189,7 @@ const UserCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="name"
+                                    id="name1"
                                     placeholder="Name"
                                 />
                                 {errors.name && (
@@ -222,7 +222,7 @@ const UserCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="email"
+                                    id="email1"
                                     placeholder="Email"
                                 />
 
@@ -256,7 +256,7 @@ const UserCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="password"
+                                    id="password1"
                                     placeholder="Password"
                                 />
 
@@ -290,7 +290,7 @@ const UserCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="mob"
+                                    id="mob1"
                                     placeholder="Mob"
                                 />
                                 {errors.mob && (
