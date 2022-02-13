@@ -116,7 +116,7 @@ const OrderView = forwardRef((props, ref) => {
 
     return (<>
         <OrderPreview ref={PreviewRef} />
-        <Modal show={show} size="xl" onHide={handleClose} animation={false}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Sales Order #{model.code}</Modal.Title>
 
@@ -188,7 +188,7 @@ const OrderView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.products && model.products.map((product, index) => (
-                                <tr className="text-center">
+                                <tr key={product.item_code} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>{product.item_code}</td>
                                     <td>{product.name}</td>

@@ -505,7 +505,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
             <PurchaseView ref={PurchaseDetailsViewRef} />
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.purchase_code ? "Create Purchase Return for Purchase " : ""}
@@ -960,7 +960,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         suggestUsers(searchTerm);
                                     }}
                                 />
-                                <Button hide={true} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <Button hide={true.toString()} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.purchase_returned_by ? (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i> {errors.purchase_returned_by}
@@ -1009,7 +1009,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     }}
                                 />
 
-                                <Button hide={true} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <Button hide={true.toString()} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.purchase_returned_by_signature_id ? (
                                     <div style={{ color: "red" }}>
                                         <i class="bi bi-x-lg"> </i>{" "}

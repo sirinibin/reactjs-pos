@@ -116,7 +116,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
 
     return (<>
         <PurchaseReturnPreview ref={PreviewRef} />
-        <Modal show={show} size="xl" onHide={handleClose} animation={false}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Purchase Return #{model.code} </Modal.Title>
 
@@ -143,7 +143,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
 
-                <Table striped bordered hover responsive="lg">
+                <Table striped bordered hover responsive="xl">
                     <tbody>
                         <tr>
                             <th>Store:</th><td> {model.store_name}</td>
@@ -183,7 +183,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.products && model.products.map((product, index) => (
-                                <tr className="text-center">
+                                <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>{product.item_code}</td>
                                     <td>{product.name}</td>

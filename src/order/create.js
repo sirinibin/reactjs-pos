@@ -815,7 +815,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order"}
@@ -920,7 +920,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                 />
 
-                                <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 <div style={{ color: "red" }}>
                                     <i className="bi x-lg"> </i>
                                     {errors.store_id}
@@ -965,7 +965,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         suggestCustomers(searchTerm);
                                     }}
                                 />
-                                <Button hide={true} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.customer_id && (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>
@@ -1249,7 +1249,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     suggestProducts(searchTerm);
                                 }}
                             />
-                            <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                            <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                             {errors.product_id ? (
                                 <div style={{ color: "red" }}>
                                     <i className="bi bi-x-lg"> </i>
@@ -1672,7 +1672,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                 />
 
-                                <Button hide={true} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <Button hide={true.toString()} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.delivered_by ? (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i> {errors.delivered_by}
@@ -1721,7 +1721,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                 />
 
-                                <Button hide={true} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <Button hide={true.toString()} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.delivered_by_signature_id ? (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>{" "}

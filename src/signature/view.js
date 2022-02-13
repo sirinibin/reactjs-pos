@@ -61,7 +61,7 @@ const SignatureView = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+        <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Signature #{model.name} </Modal.Title>
 
@@ -84,7 +84,7 @@ const SignatureView = forwardRef((props, ref) => {
                 </div>
             </Modal.Header>
             <Modal.Body>
-                <Table striped bsignatureed hover responsive="lg">
+                <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
                             <th>Name:</th><td> {model.name}</td>

@@ -452,7 +452,7 @@ function PurchaseReturnIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ border: "solid 0px" }}>
-                                        <ReactPaginate
+                                        {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -471,7 +471,7 @@ function PurchaseReturnIndex(props) {
                                             previousLinkClassName="page-link"
                                             nextLinkClassName="page-link"
                                             forcePage={page - 1}
-                                        />
+                                        /> : ""}
                                     </div>
                                 </div>
                                 <div className="row">
@@ -920,7 +920,7 @@ function PurchaseReturnIndex(props) {
                                     </table>
                                 </div>
 
-                                <ReactPaginate
+                                {totalPages ? <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
                                     onPageChange={(event) => {
@@ -939,7 +939,7 @@ function PurchaseReturnIndex(props) {
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
                                     forcePage={page - 1}
-                                />
+                                /> : ""}
                             </div>
                         </div>
                     </div>

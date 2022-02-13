@@ -62,7 +62,7 @@ const UserView = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+        <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of User #{model.name} </Modal.Title>
 

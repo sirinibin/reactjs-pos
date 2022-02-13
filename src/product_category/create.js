@@ -226,7 +226,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
     return (
         <>
             <ProductCategoryView ref={DetailsViewRef} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static">
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Product Category #" + formData.name : "Create New Product Category"}
@@ -257,7 +257,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.name}
+                                    value={formData.name ? formData.name : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["name"] = "";
@@ -272,13 +272,13 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.name && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.name}
                                     </div>
                                 )}
                                 {formData.name && !errors.name && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -322,13 +322,13 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
 
                                 {errors.parent_id && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.parent_id}
                                     </div>
                                 )}
                                 {formData.parent_id && !errors.parent_id && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}

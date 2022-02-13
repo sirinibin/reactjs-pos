@@ -260,7 +260,7 @@ function VendorIndex(props) {
 
                     <div className="col text-end">
                         <Button
-                            hide={true}
+                            hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
@@ -351,7 +351,7 @@ function VendorIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ bvendor: "solid 0px" }}>
-                                        <ReactPaginate
+                                        {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -370,7 +370,7 @@ function VendorIndex(props) {
                                             previousLinkClassName="page-link"
                                             nextLinkClassName="page-link"
                                             forcePage={page - 1}
-                                        />
+                                        /> : ""}
                                     </div>
                                 </div>
                                 <div className="row">
@@ -407,10 +407,10 @@ function VendorIndex(props) {
                                                     >
                                                         Name
                                                         {sortField === "name" && sortVendor === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "name" && sortVendor === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -426,10 +426,10 @@ function VendorIndex(props) {
                                                     >
                                                         Created By
                                                         {sortField === "created_by_name" && sortVendor === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "created_by_name" && sortVendor === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -445,10 +445,10 @@ function VendorIndex(props) {
                                                     >
                                                         Created At
                                                         {sortField === "created_at" && sortVendor === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "created_at" && sortVendor === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -547,7 +547,7 @@ function VendorIndex(props) {
                                         <tbody className="text-center">
                                             {vendorList &&
                                                 vendorList.map((vendor) => (
-                                                    <tr>
+                                                    <tr key={vendor.id}>
                                                         <td>{vendor.name}</td>
                                                         <td>{vendor.created_by_name}</td>
                                                         <td>
@@ -593,7 +593,7 @@ function VendorIndex(props) {
                                     </table>
                                 </div>
 
-                                <ReactPaginate
+                                {totalPages ? <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
                                     onPageChange={(event) => {
@@ -612,7 +612,7 @@ function VendorIndex(props) {
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
                                     forcePage={page - 1}
-                                />
+                                /> : ""}
                             </div>
                         </div>
                     </div>

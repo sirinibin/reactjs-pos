@@ -403,7 +403,7 @@ function PurchaseIndex(props) {
 
                     <div className="col text-end">
                         <Button
-                            hide={true}
+                            hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
@@ -493,7 +493,7 @@ function PurchaseIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ border: "solid 0px" }}>
-                                        <ReactPaginate
+                                        {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -512,7 +512,7 @@ function PurchaseIndex(props) {
                                             previousLinkClassName="page-link"
                                             nextLinkClassName="page-link"
                                             forcePage={page - 1}
-                                        />
+                                        /> : ""}
                                     </div>
                                 </div>
                                 <div className="row">
@@ -549,10 +549,10 @@ function PurchaseIndex(props) {
                                                     >
                                                         ID
                                                         {sortField === "code" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "code" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -568,10 +568,10 @@ function PurchaseIndex(props) {
                                                     >
                                                         Date
                                                         {sortField === "date" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "date" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -587,10 +587,10 @@ function PurchaseIndex(props) {
                                                     >
                                                         Net Total
                                                         {sortField === "net_total" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "net_total" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -606,10 +606,10 @@ function PurchaseIndex(props) {
                                                     >
                                                         Expected Retail Profit
                                                         {sortField === "retail_profit" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "retail_profit" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -625,10 +625,10 @@ function PurchaseIndex(props) {
                                                     >
                                                         Expected Wholesale Profit
                                                         {sortField === "wholesale_profit" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "wholesale_profit" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -644,10 +644,10 @@ function PurchaseIndex(props) {
                                                     >
                                                         Created By
                                                         {sortField === "created_by" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "created_by" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -664,10 +664,10 @@ function PurchaseIndex(props) {
                                                         Vendor
                                                         {sortField === "vendor_name" &&
                                                             sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "vendor_name" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -683,10 +683,10 @@ function PurchaseIndex(props) {
                                                     >
                                                         Status
                                                         {sortField === "status" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "status" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -702,10 +702,10 @@ function PurchaseIndex(props) {
                                                     >
                                                         Created At
                                                         {sortField === "created_at" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "created_at" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -921,7 +921,7 @@ function PurchaseIndex(props) {
                                         <tbody className="text-center">
                                             {purchaseList &&
                                                 purchaseList.map((purchase) => (
-                                                    <tr>
+                                                    <tr key={purchase.code}>
                                                         <td>{purchase.code}</td>
                                                         <td>
                                                             {format(new Date(purchase.date), "MMM dd yyyy")}
@@ -1031,7 +1031,7 @@ function PurchaseIndex(props) {
                                     </table>
                                 </div>
 
-                                <ReactPaginate
+                                {totalPages ? <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
                                     onPageChange={(event) => {
@@ -1050,7 +1050,7 @@ function PurchaseIndex(props) {
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
                                     forcePage={page - 1}
-                                />
+                                /> : ""}
                             </div>
                         </div>
                     </div>

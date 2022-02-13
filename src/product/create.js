@@ -573,7 +573,7 @@ const ProductCreate = forwardRef((props, ref) => {
             <ProductView ref={DetailsViewRef} />
             <ProductCategoryCreate ref={ProductCategoryCreateFormRef} showToastMessage={props.showToastMessage} />
 
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Product #" + formData.name : "Create New Product"}
@@ -604,7 +604,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.name}
+                                    value={formData.name ? formData.name : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["name"] = "";
@@ -619,13 +619,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.name && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.name}
                                     </div>
                                 )}
                                 {formData.name && !errors.name && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -637,7 +637,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.name_in_arabic}
+                                    value={formData.name_in_arabic ? formData.name_in_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["v"] = "";
@@ -652,13 +652,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.name_in_arabic && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.name_in_arabic}
                                     </div>
                                 )}
                                 {formData.name_in_arabic && !errors.name_in_arabic && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -672,7 +672,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 as="input"
                                 id="use_laser_scanner"
                                 label="Use Laser Scanner to Read Barcode"
-                                value={formData.useLaserScanner}
+                                value={formData.useLaserScanner ? formData.useLaserScanner : false}
                                 checked={formData.useLaserScanner ? "checked" : null}
 
                                 onChange={(e) => {
@@ -698,7 +698,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.item_code}
+                                    value={formData.item_code ? formData.item_code : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["item_code"] = "";
@@ -713,13 +713,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.item_code && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.item_code}
                                     </div>
                                 )}
                                 {formData.item_code && !errors.item_code && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -731,7 +731,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.part_number}
+                                    value={formData.part_number ? formData.part_number : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["part_number"] = "";
@@ -746,13 +746,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.part_number && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.part_number}
                                     </div>
                                 )}
                                 {formData.part_number && !errors.part_number && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -791,16 +791,16 @@ const ProductCreate = forwardRef((props, ref) => {
                                     }}
                                     multiple
                                 />
-                                <Button hide={true} onClick={openProductCategoryCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <Button hide={true.toString()} onClick={openProductCategoryCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.category_id && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.category_id}
                                     </div>
                                 )}
                                 {formData.category_id && !errors.category_id && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -866,17 +866,17 @@ const ProductCreate = forwardRef((props, ref) => {
                                         suggestStores(searchTerm);
                                     }}
                                 />
-                                <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
 
                                 {errors.store_id1 && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.store_id1}
                                     </div>
                                 )}
                                 {selectedUnitPrice[0].id && !errors.store_id1 && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -889,7 +889,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
 
                                 <input
-                                    value={selectedUnitPrice[0].purchase_unit_price}
+                                    value={selectedUnitPrice[0] && selectedUnitPrice[0].purchase_unit_price ? selectedUnitPrice[0].purchase_unit_price : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["purchase_unit_price"] = "";
@@ -902,13 +902,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.purchase_unit_price && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.purchase_unit_price}
                                     </div>
                                 )}
                                 {selectedUnitPrice[0].purchase_unit_price && !errors.purchase_unit_price && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -925,7 +925,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
 
                                 <input
-                                    value={selectedUnitPrice[0].wholesale_unit_price}
+                                    value={selectedUnitPrice[0] && selectedUnitPrice[0].wholesale_unit_price ? selectedUnitPrice[0].wholesale_unit_price : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["wholesale_unit_price"] = "";
@@ -938,13 +938,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.wholesale_unit_price && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.wholesale_unit_price}
                                     </div>
                                 )}
                                 {selectedUnitPrice[0].wholesale_unit_price && !errors.wholesale_unit_price && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -962,7 +962,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
 
                                 <input
-                                    value={selectedUnitPrice[0].retail_unit_price}
+                                    value={selectedUnitPrice[0] && selectedUnitPrice[0].retail_unit_price ? selectedUnitPrice[0].retail_unit_price : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["retail_unit_price"] = "";
@@ -975,13 +975,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.retail_unit_price && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.retail_unit_price}
                                     </div>
                                 )}
                                 {selectedUnitPrice[0].retail_unit_price && !errors.retail_unit_price && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -994,7 +994,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             <label className="form-label">Action</label>
                             <div className="input-group mb-3">
 
-                                <Button hide={true} onClick={addUnitPrice} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> Add Price</Button>
+                                <Button hide={true.toString()} onClick={addUnitPrice} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> Add Price</Button>
                             </div>
                         </div>
                         <div className="table-responsive" style={{ overflowX: "auto" }}>
@@ -1011,12 +1011,12 @@ const ProductCreate = forwardRef((props, ref) => {
                                 </thead>
                                 <tbody>
                                     {selectedUnitPrices.map((unitPrice, index) => (
-                                        <tr className="text-center">
+                                        <tr key={index} className="text-center">
                                             <td>{index + 1}</td>
                                             <td>{unitPrice.store_name}</td>
                                             <td style={{ width: "150px" }}>
 
-                                                <input type="number" value={unitPrice.purchase_unit_price} className="form-control"
+                                                <input type="number" value={unitPrice.purchase_unit_price ? unitPrice.purchase_unit_price : ""} className="form-control"
 
                                                     placeholder="Purchase Unit Price" onChange={(e) => {
                                                         errors["purchase_unit_price_" + index] = "";
@@ -1045,13 +1045,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     }} /> SAR
                                                 {errors["purchase_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i class="bi bi-x-lg"> </i>
+                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["purchase_unit_price_" + index]}
                                                     </div>
                                                 )}
                                                 {(selectedUnitPrices[index].purchase_unit_price && !errors["purchase_unit_price_" + index]) ? (
                                                     <div style={{ color: "green" }}>
-                                                        <i class="bi bi-check-lg"> </i>
+                                                        <i className="bi bi-check-lg"> </i>
                                                         Looks good!
                                                     </div>
                                                 ) : null}
@@ -1059,7 +1059,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                             <td style={{ width: "150px" }}>
 
-                                                <input type="number" value={unitPrice.wholesale_unit_price} className="form-control"
+                                                <input type="number" value={unitPrice.wholesale_unit_price ? unitPrice.wholesale_unit_price : ""} className="form-control"
 
                                                     placeholder="Wholesale Unit Price" onChange={(e) => {
                                                         errors["wholesale_unit_price_" + index] = "";
@@ -1089,20 +1089,20 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     }} /> SAR
                                                 {errors["wholesale_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i class="bi bi-x-lg"> </i>
+                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["wholesale_unit_price_" + index]}
                                                     </div>
                                                 )}
                                                 {(selectedUnitPrices[index].wholesale_unit_price && !errors["wholesale_unit_price_" + index]) ? (
                                                     <div style={{ color: "green" }}>
-                                                        <i class="bi bi-check-lg"> </i>
+                                                        <i className="bi bi-check-lg"> </i>
                                                         Looks good!
                                                     </div>
                                                 ) : null}
                                             </td>
                                             <td style={{ width: "150px" }}>
 
-                                                <input type="number" value={unitPrice.retail_unit_price} className="form-control"
+                                                <input type="number" value={unitPrice.retail_unit_price ? unitPrice.retail_unit_price : ""} className="form-control"
 
                                                     placeholder="Retail Unit Price" onChange={(e) => {
                                                         errors["retail_unit_price_" + index] = "";
@@ -1132,13 +1132,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     }} /> SAR
                                                 {errors["retail_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i class="bi bi-x-lg"> </i>
+                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["retail_unit_price_" + index]}
                                                     </div>
                                                 )}
                                                 {(selectedUnitPrices[index].retail_unit_price && !errors["retail_unit_price_" + index]) ? (
                                                     <div style={{ color: "green" }}>
-                                                        <i class="bi bi-check-lg"> </i>
+                                                        <i className="bi bi-check-lg"> </i>
                                                         Looks good!
                                                     </div>
                                                 ) : null}
@@ -1150,7 +1150,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                                         removeUnitPrice(unitPrice);
                                                     }}
                                                 >
-                                                    <i class="bi bi-x-lg"> </i>
+                                                    <i className="bi bi-x-lg"> </i>
                                                 </div>
                                             </td>
                                         </tr>
@@ -1194,17 +1194,17 @@ const ProductCreate = forwardRef((props, ref) => {
                                     }}
                                 />
 
-                                <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="b1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="b1"> <i className="bi bi-plus-lg"></i> New</Button>
 
                                 {errors.store_id2 && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.store_id2}
                                     </div>
                                 )}
                                 {selectedStock[0].id && !errors.store_id2 && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1217,7 +1217,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
 
                                 <input
-                                    value={selectedStock[0].stock}
+                                    value={selectedStock[0] && selectedStock[0].stock ? selectedStock[0].stock : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["stock"] = "";
@@ -1230,13 +1230,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.stock && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.stock}
                                     </div>
                                 )}
                                 {selectedStock[0].stock && !errors.stock && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1247,7 +1247,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <label className="form-label">Action</label>
                             <div className="input-group mb-3">
-                                <Button hide={true} onClick={addStock} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> Add Stock</Button>
+                                <Button hide={true.toString()} onClick={addStock} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> Add Stock</Button>
                             </div>
                         </div>
 
@@ -1263,12 +1263,12 @@ const ProductCreate = forwardRef((props, ref) => {
                                 </thead>
                                 <tbody>
                                     {selectedStocks.map((stock, index) => (
-                                        <tr className="text-center">
+                                        <tr key={index} className="text-center">
                                             <td>{index + 1}</td>
                                             <td>{stock.store_name}</td>
                                             <td style={{ width: "125px" }}>
 
-                                                <input type="number" value={stock.stock} className="form-control"
+                                                <input type="number" value={stock.stock ? stock.stock : ""} className="form-control"
 
                                                     placeholder="Stock" onChange={(e) => {
                                                         errors["stock_" + index] = "";
@@ -1289,13 +1289,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     }} />
                                                 {errors["stock_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i class="bi bi-x-lg"> </i>
+                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["stock_" + index]}
                                                     </div>
                                                 )}
                                                 {((selectedStocks[index].stock || selectedStocks[index].stock === 0) && !errors["stock_" + index]) ? (
                                                     <div style={{ color: "green" }}>
-                                                        <i class="bi bi-check-lg"> </i>
+                                                        <i className="bi bi-check-lg"> </i>
                                                         Looks good!
                                                     </div>
                                                 ) : null}
@@ -1307,7 +1307,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                                         removeStock(stock);
                                                     }}
                                                 >
-                                                    <i class="bi bi-x-lg"> </i>
+                                                    <i className="bi bi-x-lg"> </i>
                                                 </div>
                                             </td>
                                         </tr>
@@ -1321,7 +1321,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={selectedImage}
+                                    value={selectedImage ? selectedImage : ""}
                                     type='file'
                                     onChange={(e) => {
                                         errors["image"] = "";
@@ -1381,13 +1381,13 @@ const ProductCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.image && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.image}
                                     </div>
                                 )}
                                 {formData.image && !errors.image && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}

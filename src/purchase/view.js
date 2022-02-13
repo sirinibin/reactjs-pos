@@ -115,7 +115,7 @@ const PurchaseView = forwardRef((props, ref) => {
 
     return (<>
         <PurchasePreview ref={PreviewRef} />
-        <Modal show={show} size="xl" onHide={handleClose} animation={false}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Purchase #{model.code} </Modal.Title>
 
@@ -188,7 +188,7 @@ const PurchaseView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.products && model.products.map((product, index) => (
-                                <tr className="text-center">
+                                <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>{product.item_code}</td>
                                     <td>{product.name}</td>

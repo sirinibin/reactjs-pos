@@ -61,7 +61,7 @@ const StoreView = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+        <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Store #{model.name} </Modal.Title>
 
@@ -84,7 +84,7 @@ const StoreView = forwardRef((props, ref) => {
                 </div>
             </Modal.Header>
             <Modal.Body>
-                <Table striped bstoreed hover responsive="lg">
+                <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
                             <th>Name:</th><td> {model.name}</td>
@@ -134,7 +134,7 @@ const StoreView = forwardRef((props, ref) => {
                     <span>
                         < h2 > National Address</h2>
 
-                        <Table striped bvendored hover responsive="lg">
+                        <Table striped bordered hover responsive="lg">
                             <tbody>
                                 <tr>
                                     <th>Application Number: </th><td> {model.national_address.application_no}</td>

@@ -148,7 +148,7 @@ const UserCreate = forwardRef((props, ref) => {
     return (
         <>
             <UserView ref={DetailsViewRef} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static">
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update User #" + formData.name : "Create New User"}
@@ -179,8 +179,8 @@ const UserCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.name}
-                                    type='string'
+                                    value={formData.name ? formData.name : ""}
+                                    type='text'
                                     onChange={(e) => {
                                         errors["name"] = "";
                                         setErrors({ ...errors });
@@ -194,13 +194,13 @@ const UserCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.name && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.name}
                                     </div>
                                 )}
                                 {formData.name && !errors.name && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -212,8 +212,8 @@ const UserCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.email}
-                                    type='string'
+                                    value={formData.email ? formData.email : ""}
+                                    type='text'
                                     onChange={(e) => {
                                         errors["email"] = "";
 
@@ -228,13 +228,13 @@ const UserCreate = forwardRef((props, ref) => {
 
                                 {errors.email && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.email}
                                     </div>
                                 )}
                                 {formData.email && !errors.email && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -246,7 +246,7 @@ const UserCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.password}
+                                    value={formData.password ? formData.password : ""}
                                     type='password'
                                     onChange={(e) => {
                                         errors["password"] = "";
@@ -262,13 +262,13 @@ const UserCreate = forwardRef((props, ref) => {
 
                                 {errors.password && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.password}
                                     </div>
                                 )}
                                 {formData.password && !errors.password && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -280,8 +280,8 @@ const UserCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.mob}
-                                    type='string'
+                                    value={formData.mob ? formData.mob : ""}
+                                    type='text'
                                     onChange={(e) => {
                                         errors["mob"] = "";
                                         setErrors({ ...errors });
@@ -295,13 +295,13 @@ const UserCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.mob && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.mob}
                                     </div>
                                 )}
                                 {formData.mob && !errors.mob && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}

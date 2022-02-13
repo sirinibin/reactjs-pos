@@ -142,7 +142,7 @@ const ProductView = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Product #{model.name} </Modal.Title>
 
@@ -170,10 +170,10 @@ const ProductView = forwardRef((props, ref) => {
                         <tr>
                             <th>Barcode (Note:Click on Image to Print):</th><td> <div ref={barcodeRef} onClick={printBarCode} style={{
                                 cursor: "pointer",
-                            }}>  <Barcode value={model.item_code} width={2} /> </div></td>
+                            }}>  {model.item_code ? <Barcode value={model.item_code} width={2} /> : ""} </div></td>
                             <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode} style={{
                                 cursor: "pointer",
-                            }} > {model.item_code ? <QRCode value={model.item_code} size={128} /> : null}</div> </td>
+                            }} > {model.item_code ? <QRCode value={model.item_code} size={128} /> : ""}</div> </td>
                         </tr>
                         <tr>
                             <th>Name:</th><td> {model.name}</td>
@@ -186,7 +186,7 @@ const ProductView = forwardRef((props, ref) => {
                                 <ul>
                                     {model.category_name &&
                                         model.category_name.map((name) => (
-                                            <li>{name}</li>
+                                            <li key={name}>{name}</li>
                                         ))}
                                 </ul>
                             </td>
@@ -216,7 +216,7 @@ const ProductView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.unit_prices && model.unit_prices.map((unitPrice, index) => (
-                                <tr className="text-center">
+                                <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>{unitPrice.store_name}</td>
                                     <td>
@@ -263,7 +263,7 @@ const ProductView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.stock && model.stock.map((stock, index) => (
-                                <tr className="text-center">
+                                <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>{stock.store_name}</td>
                                     <td>
@@ -292,7 +292,7 @@ const ProductView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.images && model.images.map((image, index) => (
-                                <tr className="text-center">
+                                <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>
                                         <img alt="Product" src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />

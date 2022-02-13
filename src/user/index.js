@@ -260,7 +260,7 @@ function UserIndex(props) {
 
                     <div className="col text-end">
                         <Button
-                            hide={true}
+                            hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
@@ -350,7 +350,7 @@ function UserIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ buser: "solid 0px" }}>
-                                        <ReactPaginate
+                                        {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -369,7 +369,7 @@ function UserIndex(props) {
                                             previousLinkClassName="page-link"
                                             nextLinkClassName="page-link"
                                             forcePage={page - 1}
-                                        />
+                                        /> : ""}
                                     </div>
                                 </div>
                                 <div className="row">
@@ -391,7 +391,7 @@ function UserIndex(props) {
                                     )}
                                 </div>
                                 <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                    <table className="table table-striped table-sm table-busered">
+                                    <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
                                                 <th>
@@ -406,10 +406,10 @@ function UserIndex(props) {
                                                     >
                                                         Mob
                                                         {sortField === "mob" && sortUser === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "mob" && sortUser === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -425,10 +425,10 @@ function UserIndex(props) {
                                                     >
                                                         Name
                                                         {sortField === "name" && sortUser === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "name" && sortUser === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -444,10 +444,10 @@ function UserIndex(props) {
                                                     >
                                                         Email
                                                         {sortField === "email" && sortUser === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "email" && sortUser === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -464,10 +464,10 @@ function UserIndex(props) {
                                                     >
                                                         Created By
                                                         {sortField === "created_by_name" && sortUser === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "created_by_name" && sortUser === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -483,10 +483,10 @@ function UserIndex(props) {
                                                     >
                                                         Created At
                                                         {sortField === "created_at" && sortUser === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "created_at" && sortUser === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -605,7 +605,7 @@ function UserIndex(props) {
                                         <tbody className="text-center">
                                             {userList &&
                                                 userList.map((user) => (
-                                                    <tr>
+                                                    <tr key={user.id}>
                                                         <td>{user.mob}</td>
                                                         <td>{user.name}</td>
                                                         <td>{user.email}</td>
@@ -652,7 +652,7 @@ function UserIndex(props) {
                                     </table>
                                 </div>
 
-                                <ReactPaginate
+                                {totalPages ? <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
                                     onPageChange={(event) => {
@@ -671,7 +671,7 @@ function UserIndex(props) {
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
                                     forcePage={page - 1}
-                                />
+                                /> : ""}
                             </div>
                         </div>
                     </div>

@@ -570,7 +570,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {"Create Sales Return for Sales Order #" + formData.order_code}
@@ -619,7 +619,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 </thead>
                                 <tbody>
                                     {selectedProducts.map((product, index) => (
-                                        <tr className="text-center">
+                                        <tr key={index} className="text-center">
                                             <td>
                                                 <input type="checkbox" checked={selectedProducts[index].selected} onChange={(e) => {
                                                     console.log("e.target.value:", e.target.value)

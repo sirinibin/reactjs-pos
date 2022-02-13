@@ -400,7 +400,7 @@ function QuotationIndex(props) {
 
           <div className="col text-end">
             <Button
-              hide={true}
+              hide={true.toString()}
               variant="primary"
               className="btn btn-primary mb-3"
               onClick={openCreateForm}
@@ -490,7 +490,7 @@ function QuotationIndex(props) {
                 <br />
                 <div className="row">
                   <div className="col" style={{ border: "solid 0px" }}>
-                    <ReactPaginate
+                    {totalPages ? <ReactPaginate
                       breakLabel="..."
                       nextLabel="next >"
                       onPageChange={(event) => {
@@ -509,7 +509,7 @@ function QuotationIndex(props) {
                       previousLinkClassName="page-link"
                       nextLinkClassName="page-link"
                       forcePage={page - 1}
-                    />
+                    /> : ""}
                   </div>
                 </div>
                 <div className="row">
@@ -546,10 +546,10 @@ function QuotationIndex(props) {
                           >
                             ID
                             {sortField === "code" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-alpha-up-alt"></i>
+                              <i className="bi bi-sort-alpha-up-alt"></i>
                             ) : null}
                             {sortField === "code" && sortOrder === "" ? (
-                              <i class="bi bi-sort-alpha-up"></i>
+                              <i className="bi bi-sort-alpha-up"></i>
                             ) : null}
                           </b>
                         </th>
@@ -565,10 +565,10 @@ function QuotationIndex(props) {
                           >
                             Date
                             {sortField === "date" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-down"></i>
+                              <i className="bi bi-sort-down"></i>
                             ) : null}
                             {sortField === "date" && sortOrder === "" ? (
-                              <i class="bi bi-sort-up"></i>
+                              <i className="bi bi-sort-up"></i>
                             ) : null}
                           </b>
                         </th>
@@ -584,10 +584,10 @@ function QuotationIndex(props) {
                           >
                             Net Total
                             {sortField === "net_total" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-numeric-down"></i>
+                              <i className="bi bi-sort-numeric-down"></i>
                             ) : null}
                             {sortField === "net_total" && sortOrder === "" ? (
-                              <i class="bi bi-sort-numeric-up"></i>
+                              <i className="bi bi-sort-numeric-up"></i>
                             ) : null}
                           </b>
                         </th>
@@ -603,10 +603,10 @@ function QuotationIndex(props) {
                           >
                             Expected Profit
                             {sortField === "profit" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-numeric-down"></i>
+                              <i className="bi bi-sort-numeric-down"></i>
                             ) : null}
                             {sortField === "profit" && sortOrder === "" ? (
-                              <i class="bi bi-sort-numeric-up"></i>
+                              <i className="bi bi-sort-numeric-up"></i>
                             ) : null}
                           </b>
                         </th>
@@ -622,10 +622,10 @@ function QuotationIndex(props) {
                           >
                             Expected Loss
                             {sortField === "loss" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-numeric-down"></i>
+                              <i className="bi bi-sort-numeric-down"></i>
                             ) : null}
                             {sortField === "loss" && sortOrder === "" ? (
-                              <i class="bi bi-sort-numeric-up"></i>
+                              <i className="bi bi-sort-numeric-up"></i>
                             ) : null}
                           </b>
                         </th>
@@ -641,10 +641,10 @@ function QuotationIndex(props) {
                           >
                             Created By
                             {sortField === "created_by" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-alpha-up-alt"></i>
+                              <i className="bi bi-sort-alpha-up-alt"></i>
                             ) : null}
                             {sortField === "created_by" && sortOrder === "" ? (
-                              <i class="bi bi-sort-alpha-up"></i>
+                              <i className="bi bi-sort-alpha-up"></i>
                             ) : null}
                           </b>
                         </th>
@@ -661,10 +661,10 @@ function QuotationIndex(props) {
                             Customer
                             {sortField === "customer_name" &&
                               sortOrder === "-" ? (
-                              <i class="bi bi-sort-alpha-up-alt"></i>
+                              <i className="bi bi-sort-alpha-up-alt"></i>
                             ) : null}
                             {sortField === "customer_name" && sortOrder === "" ? (
-                              <i class="bi bi-sort-alpha-up"></i>
+                              <i className="bi bi-sort-alpha-up"></i>
                             ) : null}
                           </b>
                         </th>
@@ -680,10 +680,10 @@ function QuotationIndex(props) {
                           >
                             Status
                             {sortField === "status" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-alpha-up-alt"></i>
+                              <i className="bi bi-sort-alpha-up-alt"></i>
                             ) : null}
                             {sortField === "status" && sortOrder === "" ? (
-                              <i class="bi bi-sort-alpha-up"></i>
+                              <i className="bi bi-sort-alpha-up"></i>
                             ) : null}
                           </b>
                         </th>
@@ -699,10 +699,10 @@ function QuotationIndex(props) {
                           >
                             Created At
                             {sortField === "created_at" && sortOrder === "-" ? (
-                              <i class="bi bi-sort-down"></i>
+                              <i className="bi bi-sort-down"></i>
                             ) : null}
                             {sortField === "created_at" && sortOrder === "" ? (
-                              <i class="bi bi-sort-up"></i>
+                              <i className="bi bi-sort-up"></i>
                             ) : null}
                           </b>
                         </th>
@@ -820,7 +820,7 @@ function QuotationIndex(props) {
                             options={userOptions}
                             placeholder="Select Users"
                             selected={selectedCreatedByUsers}
-                            highlightOnlyResult="true"
+                            highlightOnlyResult={true}
                             onInputChange={(searchTerm, e) => {
                               suggestUsers(searchTerm);
                             }}
@@ -840,7 +840,7 @@ function QuotationIndex(props) {
                             options={customerOptions}
                             placeholder="Select customers"
                             selected={selectedCustomers}
-                            highlightOnlyResult="true"
+                            highlightOnlyResult={true}
                             onInputChange={(searchTerm, e) => {
                               suggestCustomers(searchTerm);
                             }}
@@ -860,7 +860,7 @@ function QuotationIndex(props) {
                             options={statusOptions}
                             placeholder="Select Status"
                             selected={selectedStatusList}
-                            highlightOnlyResult="true"
+                            highlightOnlyResult={true}
                             multiple
                           />
                         </th>
@@ -923,7 +923,7 @@ function QuotationIndex(props) {
                     <tbody className="text-center">
                       {quotationList &&
                         quotationList.map((quotation) => (
-                          <tr>
+                          <tr key={quotation.code}>
                             <td>{quotation.code}</td>
                             <td>
                               {format(new Date(quotation.date), "MMM dd yyyy")}
@@ -995,7 +995,7 @@ function QuotationIndex(props) {
                   </table>
                 </div>
 
-                <ReactPaginate
+                {totalPages ? <ReactPaginate
                   breakLabel="..."
                   nextLabel="next >"
                   onPageChange={(event) => {
@@ -1014,7 +1014,7 @@ function QuotationIndex(props) {
                   previousLinkClassName="page-link"
                   nextLinkClassName="page-link"
                   forcePage={page - 1}
-                />
+                /> : ""}
               </div>
             </div>
           </div>

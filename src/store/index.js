@@ -259,7 +259,7 @@ function StoreIndex(props) {
 
                     <div className="col text-end">
                         <Button
-                            hide={true}
+                            hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
@@ -349,7 +349,7 @@ function StoreIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ bstore: "solid 0px" }}>
-                                        <ReactPaginate
+                                        {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -368,7 +368,7 @@ function StoreIndex(props) {
                                             previousLinkClassName="page-link"
                                             nextLinkClassName="page-link"
                                             forcePage={page - 1}
-                                        />
+                                        /> : ""}
                                     </div>
                                 </div>
                                 <div className="row">
@@ -390,7 +390,7 @@ function StoreIndex(props) {
                                     )}
                                 </div>
                                 <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                    <table className="table table-striped table-sm table-bstoreed">
+                                    <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
                                                 <th>
@@ -405,10 +405,10 @@ function StoreIndex(props) {
                                                     >
                                                         Name
                                                         {sortField === "name" && sortStore === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "name" && sortStore === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -424,10 +424,10 @@ function StoreIndex(props) {
                                                     >
                                                         Created By
                                                         {sortField === "created_by_name" && sortStore === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "created_by_name" && sortStore === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -443,10 +443,10 @@ function StoreIndex(props) {
                                                     >
                                                         Created At
                                                         {sortField === "created_at" && sortStore === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "created_at" && sortStore === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -545,7 +545,7 @@ function StoreIndex(props) {
                                         <tbody className="text-center">
                                             {storeList &&
                                                 storeList.map((store) => (
-                                                    <tr>
+                                                    <tr key={store.id}>
                                                         <td>{store.name}</td>
                                                         <td>{store.created_by_name}</td>
                                                         <td>
@@ -590,7 +590,7 @@ function StoreIndex(props) {
                                     </table>
                                 </div>
 
-                                <ReactPaginate
+                                {totalPages ? <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
                                     onPageChange={(event) => {
@@ -609,7 +609,7 @@ function StoreIndex(props) {
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
                                     forcePage={page - 1}
-                                />
+                                /> : ""}
                             </div>
                         </div>
                     </div>

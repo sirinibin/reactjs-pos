@@ -59,7 +59,7 @@ const VendorView = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} size="lg" onHide={handleClose} animation={false}>
+        <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Vendor #{model.name} </Modal.Title>
 
@@ -82,7 +82,7 @@ const VendorView = forwardRef((props, ref) => {
                 </div>
             </Modal.Header>
             <Modal.Body>
-                <Table striped bvendored hover responsive="lg">
+                <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
                             <th>Name: </th><td> {model.name}</td>
@@ -126,7 +126,7 @@ const VendorView = forwardRef((props, ref) => {
                     <span>
                         < h2 > National Address</h2>
 
-                        <Table striped bvendored hover responsive="lg">
+                        <Table striped bordered hover responsive="lg">
                             <tbody>
                                 <tr>
                                     <th>Application Number: </th><td> {model.national_address.application_no}</td>

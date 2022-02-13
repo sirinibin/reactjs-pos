@@ -195,7 +195,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                             </thead>
                             <tbody>
                                 {props.model.products && props.model.products.map((product, index) => (
-                                    <tr className="text-center">
+                                    <tr key={product.item_code} className="text-center">
                                         <td>{index + 1}</td>
                                         <td>{product.code ? product.code : product.item_code ? product.item_code : null}</td>
                                         <td>

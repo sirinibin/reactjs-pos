@@ -493,7 +493,7 @@ function OrderIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ border: "solid 0px" }}>
-                                        <ReactPaginate
+                                        {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -512,7 +512,7 @@ function OrderIndex(props) {
                                             previousLinkClassName="page-link"
                                             nextLinkClassName="page-link"
                                             forcePage={page - 1}
-                                        />
+                                        /> : ""}
                                     </div>
                                 </div>
                                 <div className="row">
@@ -921,7 +921,7 @@ function OrderIndex(props) {
                                         <tbody className="text-center">
                                             {orderList &&
                                                 orderList.map((order) => (
-                                                    <tr>
+                                                    <tr key={order.code}>
                                                         <td>{order.code}</td>
                                                         <td>
                                                             {format(new Date(order.date), "MMM dd yyyy")}
@@ -1004,7 +1004,7 @@ function OrderIndex(props) {
                                     </table>
                                 </div>
 
-                                <ReactPaginate
+                                {totalPages ? <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
                                     onPageChange={(event) => {
@@ -1023,7 +1023,7 @@ function OrderIndex(props) {
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
                                     forcePage={page - 1}
-                                />
+                                /> : ""}
                             </div>
                         </div>
                     </div>

@@ -792,7 +792,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
+      <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
         <Modal.Header>
           <Modal.Title>
             {formData.id ? "Update Quotation #" + formData.code : "Create New Quotation"}
@@ -855,14 +855,14 @@ const QuotationCreate = forwardRef((props, ref) => {
                   }}
                 />
 
-                <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                 <div style={{ color: "red" }}>
-                  <i class="bi x-lg"> </i>
+                  <i className="bi x-lg"> </i>
                   {errors.store_id}
                 </div>
                 {formData.store_id && !errors.store_id && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>
+                    <i className="bi bi-check-lg"> </i>
                     Looks good!
                   </div>
                 )}
@@ -900,16 +900,16 @@ const QuotationCreate = forwardRef((props, ref) => {
                     suggestCustomers(searchTerm);
                   }}
                 />
-                <Button hide={true} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                 {errors.customer_id && (
                   <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i>
+                    <i className="bi bi-x-lg"> </i>
                     {errors.customer_id}
                   </div>
                 )}
                 {formData.customer_id && !errors.customer_id && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>
+                    <i className="bi bi-check-lg"> </i>
                     Looks good!
                   </div>
                 )}
@@ -933,13 +933,13 @@ const QuotationCreate = forwardRef((props, ref) => {
 
                 {errors.date_str && (
                   <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i>
+                    <i className="bi bi-x-lg"> </i>
                     {errors.date_str}
                   </div>
                 )}
                 {formData.date_str && !errors.date_str && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>
+                    <i className="bi bi-check-lg"> </i>
                     Looks good!
                   </div>
                 )}
@@ -978,13 +978,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                 />
                 {errors.vat_percent && (
                   <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i>
+                    <i className="bi bi-x-lg"> </i>
                     {errors.vat_percent}
                   </div>
                 )}
                 {formData.vat_percent && !errors.vat_percent && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>
+                    <i className="bi bi-check-lg"> </i>
                     Looks good!
                   </div>
                 )}
@@ -997,7 +997,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 id="custom-switch"
                 label="%"
                 value={formData.is_discount_percent}
-                checked={formData.is_discount_percent ? "checked" : null}
+                checked={formData.is_discount_percent ? "checked" : ""}
                 onChange={(e) => {
                   formData.is_discount_percent = !formData.is_discount_percent;
                   console.log("e.target.value:", formData.is_discount_percent);
@@ -1040,13 +1040,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                 />
                 {errors.discount && (
                   <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i>
+                    <i className="bi bi-x-lg"> </i>
                     {errors.discount}
                   </div>
                 )}
                 {!errors.discount && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>
+                    <i className="bi bi-check-lg"> </i>
                     Looks good!
                   </div>
                 )}
@@ -1075,7 +1075,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   className="form-control"
                 >
                   <option value="created">Created</option>
-                  <option vaue="delivered">Delivered</option>
+                  <option value="delivered">Delivered</option>
                   <option value="pending">Pending</option>
                   <option value="accepted">Accepted</option>
                   <option value="rejected">Rejected</option>
@@ -1083,13 +1083,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                 </select>
                 {errors.status && (
                   <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i>
+                    <i className="bi bi-x-lg"> </i>
                     {errors.status}
                   </div>
                 )}
                 {formData.status && !errors.status && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>
+                    <i className="bi bi-check-lg"> </i>
                     Looks good!
                   </div>
                 )}
@@ -1146,10 +1146,10 @@ const QuotationCreate = forwardRef((props, ref) => {
                   suggestProducts(searchTerm);
                 }}
               />
-              <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+              <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
               {errors.product_id ? (
                 <div style={{ color: "red" }}>
-                  <i class="bi bi-x-lg"> </i>
+                  <i className="bi bi-x-lg"> </i>
                   {errors.product_id}
                 </div>
               ) : null}
@@ -1157,7 +1157,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 selectedProduct[0].id &&
                 !errors.product_id && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>
+                    <i className="bi bi-check-lg"> </i>
                     Looks good!
                   </div>
                 )}
@@ -1182,7 +1182,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
                 }}
               >
-                <option value="retail" SELECTED>Retail</option>
+                <option value="retail">Retail</option>
                 <option value="wholesale">Wholesale</option>
                 <option value="purchase">Purchase</option>
               </select>
@@ -1191,7 +1191,7 @@ const QuotationCreate = forwardRef((props, ref) => {
             <div className="col-md-2">
               <label className="form-label">Qty{selectedProduct[0] && selectedProduct[0].unit ? "(" + selectedProduct[0].unit + ")" : ""}*</label>
               <input
-                value={selectedProduct[0] ? selectedProduct[0].quantity : null}
+                value={selectedProduct[0] ? selectedProduct[0].quantity : ""}
                 onChange={(e) => {
                   console.log("Inside onchange qty");
                   if (!e.target.value) {
@@ -1226,7 +1226,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               />
               {errors.quantity ? (
                 <div style={{ color: "red" }}>
-                  <i class="bi bi-x-lg"> </i>
+                  <i className="bi bi-x-lg"> </i>
                   {errors.quantity}
                 </div>
               ) : null}
@@ -1235,7 +1235,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 selectedProduct[0].quantity > 0 &&
                 !errors["quantity"] && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>
+                    <i className="bi bi-check-lg"> </i>
                     Looks good!
                   </div>
                 )}
@@ -1243,24 +1243,39 @@ const QuotationCreate = forwardRef((props, ref) => {
             <div className="col-md-2">
               <label className="form-label">Purchase Unit Price*</label>
               <input
-                type="text"
+                type="number"
                 value={
-                  selectedProduct[0] ? selectedProduct[0].purchase_unit_price : null
+                  selectedProduct[0] ? selectedProduct[0].purchase_unit_price : ""
                 }
                 onChange={(e) => {
                   console.log("Inside onchange purchase unit price:");
 
-                  if (isNaN(e.target.value) || e.target.value === "0") {
+                  if (!e.target.value) {
                     errors["purchase_unit_price"] = "Invalid Purchase Unit Price";
                     setErrors({ ...errors });
+                    if (selectedProduct[0]) {
+                      selectedProduct[0].purchase_unit_price = e.target.value;
+                      setSelectedProduct([...selectedProduct]);
+                    }
                     return;
                   }
+
+                  if (e.target.value === 0) {
+                    errors["purchase_unit_price"] = "Purchase Unit Price should be > 0";
+                    setErrors({ ...errors });
+                    if (selectedProduct[0]) {
+                      selectedProduct[0].purchase_unit_price = parseFloat(e.target.value);
+                      setSelectedProduct([...selectedProduct]);
+                    }
+                    return;
+                  }
+
                   errors["purchase_unit_price"] = "";
                   setErrors({ ...errors });
 
-                  //setFormData({ ...formData });
+
                   if (selectedProduct[0]) {
-                    selectedProduct[0].purchase_unit_price = e.target.value;
+                    selectedProduct[0].purchase_unit_price = parseFloat(e.target.value);
                     setSelectedProduct([...selectedProduct]);
                   }
                 }}
@@ -1271,7 +1286,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
               {errors.purchase_unit_price ? (
                 <div style={{ color: "red" }}>
-                  <i class="bi bi-x-lg"> </i>
+                  <i className="bi bi-x-lg"> </i>
                   {errors.purchase_unit_price}
                 </div>
               ) : null}
@@ -1279,7 +1294,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 selectedProduct[0].purchase_unit_price &&
                 !errors.purchase_unit_price && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>Looks good!
+                    <i className="bi bi-check-lg"> </i>Looks good!
                   </div>
                 )}
             </div>
@@ -1287,24 +1302,40 @@ const QuotationCreate = forwardRef((props, ref) => {
             <div className="col-md-2">
               <label className="form-label">Unit Price*</label>
               <input
-                type="text"
+                type="number"
                 value={
-                  selectedProduct[0] ? selectedProduct[0].unit_price : null
+                  selectedProduct[0] ? selectedProduct[0].unit_price : ""
                 }
                 onChange={(e) => {
                   console.log("Inside onchange unit price:");
 
-                  if (isNaN(e.target.value) || e.target.value === "0") {
+                  if (!e.target.value) {
                     errors["unit_price"] = "Invalid Unit Price";
                     setErrors({ ...errors });
+                    if (selectedProduct[0]) {
+                      selectedProduct[0].unit_price = e.target.value;
+                      setSelectedProduct([...selectedProduct]);
+                    }
                     return;
                   }
+
+                  if (e.target.value === 0) {
+                    errors["unit_price"] = "Invalid Unit Price";
+                    setErrors({ ...errors });
+                    if (selectedProduct[0]) {
+                      selectedProduct[0].unit_price = parseFloat(e.target.value);
+                      setSelectedProduct([...selectedProduct]);
+                    }
+                    return;
+                  }
+
+
                   errors["unit_price"] = "";
                   setErrors({ ...errors });
 
                   //setFormData({ ...formData });
                   if (selectedProduct[0]) {
-                    selectedProduct[0].unit_price = e.target.value;
+                    selectedProduct[0].unit_price = parseFloat(e.target.value);
                     setSelectedProduct([...selectedProduct]);
                   }
                 }}
@@ -1315,7 +1346,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
               {errors.unit_price ? (
                 <div style={{ color: "red" }}>
-                  <i class="bi bi-x-lg"> </i>
+                  <i className="bi bi-x-lg"> </i>
                   {errors.unit_price}
                 </div>
               ) : null}
@@ -1323,7 +1354,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 selectedProduct[0].unit_price &&
                 !errors.unit_price && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>Looks good!
+                    <i className="bi bi-check-lg"> </i>Looks good!
                   </div>
                 )}
             </div>
@@ -1353,7 +1384,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 </thead>
                 <tbody>
                   {selectedProducts.map((product, index) => (
-                    <tr className="text-center">
+                    <tr key={index} className="text-center">
                       <td>{index + 1}</td>
                       <td>{product.code}</td>
                       <td style={{
@@ -1393,13 +1424,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                           }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
                         {errors["quantity_" + index] && (
                           <div style={{ color: "red" }}>
-                            <i class="bi bi-x-lg"> </i>
+                            <i className="bi bi-x-lg"> </i>
                             {errors["quantity_" + index]}
                           </div>
                         )}
                         {((selectedProducts[index].quantity) && !errors["quantity_" + index]) ? (
                           <div style={{ color: "green" }}>
-                            <i class="bi bi-check-lg"> </i>
+                            <i className="bi bi-check-lg"> </i>
                             Looks good!
                           </div>
                         ) : null}
@@ -1437,13 +1468,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                           }} /> SAR
                         {errors["unit_price_" + index] && (
                           <div style={{ color: "red" }}>
-                            <i class="bi bi-x-lg"> </i>
+                            <i className="bi bi-x-lg"> </i>
                             {errors["unit_price_" + index]}
                           </div>
                         )}
                         {(selectedProducts[index].unit_price && !errors["unit_price_" + index]) ? (
                           <div style={{ color: "green" }}>
-                            <i class="bi bi-check-lg"> </i>
+                            <i className="bi bi-check-lg"> </i>
                             Looks good!
                           </div>
                         ) : null}
@@ -1464,7 +1495,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                             removeProduct(product);
                           }}
                         >
-                          <i class="bi bi-x-lg"> </i>
+                          <i className="bi bi-x-lg"> </i>
                         </div>
                       </td>
                     </tr>
@@ -1561,15 +1592,15 @@ const QuotationCreate = forwardRef((props, ref) => {
                   }}
                 />
 
-                <Button hide={true} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                <Button hide={true.toString()} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                 {errors.delivered_by ? (
                   <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i> {errors.delivered_by}
+                    <i className="bi bi-x-lg"> </i> {errors.delivered_by}
                   </div>
                 ) : null}
                 {formData.delivered_by && !errors.delivered_by && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>Looks good!
+                    <i className="bi bi-check-lg"> </i>Looks good!
                   </div>
                 )}
               </div>
@@ -1610,17 +1641,17 @@ const QuotationCreate = forwardRef((props, ref) => {
                   }}
                 />
 
-                <Button hide={true} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                <Button hide={true.toString()} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                 {errors.delivered_by_signature_id ? (
                   <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i>{" "}
+                    <i className="bi bi-x-lg"> </i>{" "}
                     {errors.delivered_by_signature_id}
                   </div>
                 ) : null}
                 {formData.delivered_by_signature_id &&
                   !errors.delivered_by_signature_id && (
                     <div style={{ color: "green" }}>
-                      <i class="bi bi-check-lg"> </i> Looks good!
+                      <i className="bi bi-check-lg"> </i> Looks good!
                     </div>
                   )}
               </div>
@@ -1644,13 +1675,13 @@ const QuotationCreate = forwardRef((props, ref) => {
 
                 {errors.signature_date_str && (
                   <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i>
+                    <i className="bi bi-x-lg"> </i>
                     {errors.signature_date_str}
                   </div>
                 )}
                 {formData.signature_date_str && !errors.signature_date_str && (
                   <div style={{ color: "green" }}>
-                    <i class="bi bi-check-lg"> </i>
+                    <i className="bi bi-check-lg"> </i>
                     Looks good!
                   </div>
                 )}

@@ -171,7 +171,7 @@ const CustomerCreate = forwardRef((props, ref) => {
     return (
         <>
             <CustomerView ref={DetailsViewRef} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static">
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Customer #" + formData.name : "Create New Customer"}
@@ -202,7 +202,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.name}
+                                    value={formData.name ? formData.name : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["name"] = "";
@@ -217,13 +217,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.name && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.name}
                                     </div>
                                 )}
                                 {formData.name && !errors.name && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -235,10 +235,10 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.name_in_arabic}
+                                    value={formData.name_in_arabic ? formData.name_in_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["v"] = "";
+                                        errors["name_in_arabic"] = "";
                                         setErrors({ ...errors });
                                         formData.name_in_arabic = e.target.value;
                                         setFormData({ ...formData });
@@ -250,13 +250,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.name_in_arabic && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.name_in_arabic}
                                     </div>
                                 )}
                                 {formData.name_in_arabic && !errors.name_in_arabic && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -268,7 +268,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.phone}
+                                    value={formData.phone ? formData.phone : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["phone"] = "";
@@ -283,13 +283,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.phone && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.phone}
                                     </div>
                                 )}
                                 {formData.phone && !errors.phone && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -316,13 +316,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.address && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.address}
                                     </div>
                                 )}
                                 {formData.address && !errors.address && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -349,13 +349,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.address_in_arabic && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.address_in_arabic}
                                     </div>
                                 )}
                                 {formData.address_in_arabic && !errors.address_in_arabic && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -367,7 +367,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.vat_no}
+                                    value={formData.vat_no ? formData.vat_no : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["vat_no"] = "";
@@ -382,13 +382,13 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.vat_no && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.vat_no}
                                     </div>
                                 )}
                                 {formData.vat_no && !errors.vat_no && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -400,7 +400,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.email}
+                                    value={formData.email ? formData.email : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["email"] = "";
@@ -416,13 +416,13 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                                 {errors.email && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.email}
                                     </div>
                                 )}
                                 {formData.email && !errors.email && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}

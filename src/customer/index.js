@@ -260,7 +260,7 @@ function CustomerIndex(props) {
 
                     <div className="col text-end">
                         <Button
-                            hide={true}
+                            hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
@@ -350,7 +350,7 @@ function CustomerIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ bcustomer: "solid 0px" }}>
-                                        <ReactPaginate
+                                        {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -369,7 +369,7 @@ function CustomerIndex(props) {
                                             previousLinkClassName="page-link"
                                             nextLinkClassName="page-link"
                                             forcePage={page - 1}
-                                        />
+                                        /> : ""}
                                     </div>
                                 </div>
                                 <div className="row">
@@ -406,10 +406,10 @@ function CustomerIndex(props) {
                                                     >
                                                         Phone
                                                         {sortField === "phone" && sortCustomer === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "phone" && sortCustomer === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -425,10 +425,10 @@ function CustomerIndex(props) {
                                                     >
                                                         Name
                                                         {sortField === "name" && sortCustomer === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "name" && sortCustomer === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -444,10 +444,10 @@ function CustomerIndex(props) {
                                                     >
                                                         Email
                                                         {sortField === "email" && sortCustomer === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "email" && sortCustomer === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -464,10 +464,10 @@ function CustomerIndex(props) {
                                                     >
                                                         Created By
                                                         {sortField === "created_by_name" && sortCustomer === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "created_by_name" && sortCustomer === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -483,10 +483,10 @@ function CustomerIndex(props) {
                                                     >
                                                         Created At
                                                         {sortField === "created_at" && sortCustomer === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "created_at" && sortCustomer === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -605,7 +605,7 @@ function CustomerIndex(props) {
                                         <tbody className="text-center">
                                             {customerList &&
                                                 customerList.map((customer) => (
-                                                    <tr>
+                                                    <tr key={customer.id}>
                                                         <td>{customer.phone}</td>
                                                         <td>{customer.name}</td>
                                                         <td>{customer.email}</td>
@@ -652,7 +652,7 @@ function CustomerIndex(props) {
                                     </table>
                                 </div>
 
-                                <ReactPaginate
+                                {totalPages ? <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
                                     onPageChange={(event) => {
@@ -671,7 +671,7 @@ function CustomerIndex(props) {
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
                                     forcePage={page - 1}
-                                />
+                                /> : ""}
                             </div>
                         </div>
                     </div>

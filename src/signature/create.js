@@ -186,7 +186,7 @@ const SignatureCreate = forwardRef((props, ref) => {
     return (
         <>
             <SignatureView ref={DetailsViewRef} />
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static">
+            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Signature #" + formData.name : "Create New Signature"}
@@ -217,7 +217,7 @@ const SignatureCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.name}
+                                    value={formData.name ? formData.name : ""}
                                     type='string'
                                     onChange={(e) => {
                                         errors["name"] = "";
@@ -232,13 +232,13 @@ const SignatureCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.name && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.name}
                                     </div>
                                 )}
                                 {formData.name && !errors.name && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -250,7 +250,7 @@ const SignatureCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.signature}
+                                    value={formData.signature ? formData.signature : ""}
                                     type='file'
                                     onChange={(e) => {
                                         errors["signature_content"] = "";
@@ -296,13 +296,13 @@ const SignatureCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.signature_content && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.signature_content}
                                     </div>
                                 )}
                                 {formData.signature_content && !errors.signature_content && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}

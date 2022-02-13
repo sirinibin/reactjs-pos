@@ -301,7 +301,7 @@ function ProductIndex(props) {
 
                     <div className="col text-end">
                         <Button
-                            hide={true}
+                            hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
@@ -391,7 +391,7 @@ function ProductIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ bproduct: "solid 0px" }}>
-                                        <ReactPaginate
+                                        {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -410,7 +410,7 @@ function ProductIndex(props) {
                                             previousLinkClassName="page-link"
                                             nextLinkClassName="page-link"
                                             forcePage={page - 1}
-                                        />
+                                        /> : ""}
                                     </div>
                                 </div>
                                 <div className="row">
@@ -432,7 +432,7 @@ function ProductIndex(props) {
                                     )}
                                 </div>
                                 <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                    <table className="table table-striped table-sm table-bproducted">
+                                    <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
                                                 <th>
@@ -447,10 +447,10 @@ function ProductIndex(props) {
                                                     >
                                                         Item Code
                                                         {sortField === "item_code" && sortProduct === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "item_code" && sortProduct === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -466,10 +466,10 @@ function ProductIndex(props) {
                                                     >
                                                         Part Number
                                                         {sortField === "part_number" && sortProduct === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "part_number" && sortProduct === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -485,10 +485,10 @@ function ProductIndex(props) {
                                                     >
                                                         Name
                                                         {sortField === "name" && sortProduct === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "name" && sortProduct === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -504,10 +504,10 @@ function ProductIndex(props) {
                                                     >
                                                         Categories
                                                         {sortField === "category_name" && sortProduct === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "category_name" && sortProduct === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -524,10 +524,10 @@ function ProductIndex(props) {
                                                     >
                                                         Created By
                                                         {sortField === "created_by_name" && sortProduct === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "created_by_name" && sortProduct === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -543,10 +543,10 @@ function ProductIndex(props) {
                                                     >
                                                         Created At
                                                         {sortField === "created_at" && sortProduct === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "created_at" && sortProduct === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -685,7 +685,7 @@ function ProductIndex(props) {
                                         <tbody className="text-center">
                                             {productList &&
                                                 productList.map((product) => (
-                                                    <tr>
+                                                    <tr key={product.id}>
                                                         <td>{product.item_code}</td>
                                                         <td>{product.part_number}</td>
                                                         <td>{product.name}</td>
@@ -693,7 +693,7 @@ function ProductIndex(props) {
                                                             <ul>
                                                                 {product.category_name &&
                                                                     product.category_name.map((name) => (
-                                                                        <li>{name}</li>
+                                                                        <li key={name}>{name}</li>
                                                                     ))}
                                                             </ul>
                                                         </td>
@@ -740,7 +740,7 @@ function ProductIndex(props) {
                                     </table>
                                 </div>
 
-                                <ReactPaginate
+                                {totalPages ? <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
                                     onPageChange={(event) => {
@@ -759,7 +759,7 @@ function ProductIndex(props) {
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
                                     forcePage={page - 1}
-                                />
+                                /> : ""}
                             </div>
                         </div>
                     </div>
