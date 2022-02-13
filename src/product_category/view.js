@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button, Table } from 'react-bootstrap';
+import { Modal, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 
 const ProductCategoryView = forwardRef((props, ref) => {
@@ -25,9 +25,6 @@ const ProductCategoryView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    const [isProcessing, setProcessing] = useState(false);
-
-
     function getProductCategory(id) {
         console.log("inside get ProductCategory");
         const requestOptions = {
@@ -38,10 +35,8 @@ const ProductCategoryView = forwardRef((props, ref) => {
             },
         };
 
-        setProcessing(true);
         fetch('/v1/product-category/' + id, requestOptions)
             .then(async response => {
-                setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -59,7 +54,6 @@ const ProductCategoryView = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
                 // setErrors(error);
             });
     }

@@ -23,8 +23,6 @@ const OrderView = forwardRef((props, ref) => {
     const cookies = new Cookies();
 
 
-
-    const [isProcessing, setProcessing] = useState(false);
     let [totalPrice, setTotalPrice] = useState(0.0);
     let [netTotal, setNetTotal] = useState(0.00);
     let [totalQuantity, setTotalQuantity] = useState(0);
@@ -74,10 +72,8 @@ const OrderView = forwardRef((props, ref) => {
             },
         };
 
-        setProcessing(true);
         fetch('/v1/order/' + id, requestOptions)
             .then(async response => {
-                setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -102,7 +98,6 @@ const OrderView = forwardRef((props, ref) => {
                 findNetTotal();
             })
             .catch(error => {
-                setProcessing(false);
                 // setErrors(error);
             });
     }

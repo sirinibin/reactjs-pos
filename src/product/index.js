@@ -272,7 +272,6 @@ function ProductIndex(props) {
         list();
     }
 
-    const UpdateFormRef = useRef();
     function openUpdateForm(id) {
         CreateFormRef.current.open(id);
     }

@@ -47,16 +47,12 @@ const QuotationPreview = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(props.show);
 
-    const [isProcessing, setProcessing] = useState(false);
-
     function handleClose() {
         setShow(false);
     }
 
 
     let [qrContent, setQrContent] = useState("");
-    let [qrContentLoaded, setQrContentLoaded] = useState(false);
-
 
     function getVendor(id) {
         console.log("inside get Order");
@@ -87,7 +83,7 @@ const QuotationPreview = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
+
             });
     }
 
@@ -148,41 +144,7 @@ const QuotationPreview = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
-            });
-    }
 
-
-
-    function getCustomer(id) {
-        console.log("inside get Customer");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
-            },
-        };
-
-        fetch('/v1/customer/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let customerData = data.result;
-                model.customer = customerData;
-                setModel({ ...model });
-            })
-            .catch(error => {
-                setProcessing(false);
             });
     }
 
@@ -215,7 +177,7 @@ const QuotationPreview = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
+
             });
     }
 
@@ -247,7 +209,7 @@ const QuotationPreview = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
+
             });
     }
 

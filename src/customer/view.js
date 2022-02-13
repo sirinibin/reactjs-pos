@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button, Table } from 'react-bootstrap';
+import { Modal, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 
 const CustomerView = forwardRef((props, ref) => {
@@ -25,8 +25,6 @@ const CustomerView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    const [isProcessing, setProcessing] = useState(false);
-
 
     function getCustomer(id) {
         console.log("inside get Customer");
@@ -38,10 +36,8 @@ const CustomerView = forwardRef((props, ref) => {
             },
         };
 
-        setProcessing(true);
         fetch('/v1/customer/' + id, requestOptions)
             .then(async response => {
-                setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -59,7 +55,6 @@ const CustomerView = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
                 // setErrors(error);
             });
     }

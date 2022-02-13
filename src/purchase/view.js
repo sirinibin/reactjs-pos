@@ -27,7 +27,6 @@ const PurchaseView = forwardRef((props, ref) => {
         setShow(false);
     };
 
-    const [isProcessing, setProcessing] = useState(false);
     let [totalPrice, setTotalPrice] = useState(0.0);
     let [netTotal, setNetTotal] = useState(0.00);
     let [totalQuantity, setTotalQuantity] = useState(0);
@@ -77,10 +76,8 @@ const PurchaseView = forwardRef((props, ref) => {
             },
         };
 
-        setProcessing(true);
         fetch('/v1/purchase/' + id, requestOptions)
             .then(async response => {
-                setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -106,7 +103,6 @@ const PurchaseView = forwardRef((props, ref) => {
                 findNetTotal();
             })
             .catch(error => {
-                setProcessing(false);
                 // setErrors(error);
             });
     }

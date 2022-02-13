@@ -1,31 +1,18 @@
-import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
+import { React, forwardRef } from "react";
 import NumberFormat from "react-number-format";
 import { format } from "date-fns";
-import converter from 'number-to-words';
 import n2words from 'n2words'
-import QRCode from "react-qr-code";
-//import { DateTime } from "react-intl-datetime-format"
-//import { IntlProvider } from "react-intl-datetime-format"
 
 const OrderPreviewContent = forwardRef((props, ref) => {
 
     let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
     let persianMap = persianDigits.split("");
 
-    function convertToEnglishNumber(input) {
-        return input.replace(/[\u06F0-\u06F90]/g, function (m) {
-            return persianDigits.indexOf(m);
-        });
-    }
-
     function convertToPersianNumber(input) {
         return input.replace(/\d/g, function (m) {
             return persianMap[parseInt(m)];
         });
-
-
     }
-
 
     function getArabicDate(engishDate) {
         let event = new Date(engishDate);
@@ -40,13 +27,6 @@ const OrderPreviewContent = forwardRef((props, ref) => {
             //  timeZoneName: "short",
         };
         return event.toLocaleDateString('ar-EG', options)
-    }
-
-    function getDecimalPortionInWords(number) {
-        let decimal = number - Math.floor(number)
-        console.log("decimal:", decimal);
-
-        return decimal;
     }
 
     return (<>
@@ -412,7 +392,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                     </th>
                                     <th style={{ width: "37%", height: "80px" }}>
                                         {props.model.delivered_by_signature ?
-                                            <img src={process.env.REACT_APP_API_URL + props.model.delivered_by_signature.signature + "?" + (Date.now())} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
+                                            <img alt="Signature" src={process.env.REACT_APP_API_URL + props.model.delivered_by_signature.signature + "?" + (Date.now())} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
                                             : null}
                                     </th>
                                     <th className="text-end" style={{ padding: "0px" }}>

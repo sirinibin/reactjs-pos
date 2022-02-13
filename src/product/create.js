@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import ProductView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
-import NumberFormat from "react-number-format";
 import ProductCategoryCreate from "../product_category/create.js";
 import Resizer from "react-image-file-resizer";
 
@@ -35,12 +34,11 @@ const ProductCreate = forwardRef((props, ref) => {
 
     let [barcode, setBarcode] = useState("");
     let [barcodeEnded, setBarcodeEnded] = useState(false);
-    let [focusOnProductSearch, setFocusOnProductSearch] = useState(false);
     function keyPress(e) {
         console.log("e.key:", e.key);
 
 
-        if (!barcodeEnded && e.key != "Enter") {
+        if (!barcodeEnded && e.key !== "Enter") {
             console.log()
             barcode += e.key;
             setBarcode(barcode);
@@ -303,17 +301,6 @@ const ProductCreate = forwardRef((props, ref) => {
             .join("&");
     }
 
-    function getBase64(file, cb) {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function () {
-            cb(reader.result);
-        };
-        reader.onerror = function (error) {
-            console.log('Error: ', error);
-        };
-    }
-
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -396,15 +383,6 @@ const ProductCreate = forwardRef((props, ref) => {
             }
         }
         return false;
-    }
-
-    function findStockByStoreID(storeID) {
-        for (var i = 0; i < selectedStocks.length; i++) {
-            if (selectedStocks[i].store_id === storeID) {
-                return selectedStocks[i];
-            }
-        }
-        return undefined;
     }
 
     function findStockIndexByStoreID(storeID) {
@@ -1043,7 +1021,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     placeholder="Purchase Unit Price" onChange={(e) => {
                                                         errors["purchase_unit_price_" + index] = "";
                                                         setErrors({ ...errors });
-                                                        if (!e.target.value || e.target.value == 0) {
+                                                        if (!e.target.value) {
                                                             errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
                                                             selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
@@ -1051,6 +1029,15 @@ const ProductCreate = forwardRef((props, ref) => {
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
+                                                        if (e.target.value === 0) {
+                                                            errors["purchase_unit_price_" + index] = "Purchase Unit Price should be > 0";
+                                                            selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
+                                                            setSelectedUnitPrices([...selectedUnitPrices]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+
                                                         selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
                                                         console.log("selectedUnitPrices[index].purchase_unit_price:", selectedUnitPrices[index].purchase_unit_price);
                                                         setSelectedUnitPrices([...selectedUnitPrices]);
@@ -1077,7 +1064,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     placeholder="Wholesale Unit Price" onChange={(e) => {
                                                         errors["wholesale_unit_price_" + index] = "";
                                                         setErrors({ ...errors });
-                                                        if (!e.target.value || e.target.value == 0) {
+                                                        if (!e.target.value) {
                                                             errors["wholesale_unit_price_" + index] = "Invalid Unit Price";
                                                             selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
@@ -1085,6 +1072,16 @@ const ProductCreate = forwardRef((props, ref) => {
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
+
+                                                        if (e.target.value === 0) {
+                                                            errors["wholesale_unit_price_" + index] = "Unit Price should be > 0";
+                                                            selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                            setSelectedUnitPrices([...selectedUnitPrices]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+
                                                         selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
                                                         console.log("selectedUnitPrices[index].wholesale_unit_price:", selectedUnitPrices[index].wholesale_unit_price);
                                                         setSelectedUnitPrices([...selectedUnitPrices]);
@@ -1110,14 +1107,24 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     placeholder="Retail Unit Price" onChange={(e) => {
                                                         errors["retail_unit_price_" + index] = "";
                                                         setErrors({ ...errors });
-                                                        if (!e.target.value || e.target.value == 0) {
-                                                            errors["retail_unit_price_" + index] = "Invalid Unit Price";
+                                                        if (!e.target.value) {
+                                                            errors["retail_unit_price_" + index] = "Invalid Retail Unit Price";
                                                             selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
+
+                                                        if (e.target.value === 0) {
+                                                            errors["retail_unit_price_" + index] = "Retail Unit Price should be > 0";
+                                                            selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
+                                                            setSelectedUnitPrices([...selectedUnitPrices]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+
                                                         selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
                                                         console.log("selectedUnitPrices[index].retail_unit_price:", selectedUnitPrices[index].retail_unit_price);
                                                         setSelectedUnitPrices([...selectedUnitPrices]);
@@ -1337,7 +1344,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
                                         let url = URL.createObjectURL(file);
-                                        let img = new Image;
+                                        let img = new Image();
 
                                         img.onload = function () {
                                             let originaleWidth = img.width;

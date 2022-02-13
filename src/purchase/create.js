@@ -329,15 +329,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
         return "";
     }
 
-    function GetProductStockInStore(storeId, stockList) {
-        for (var i = 0; i < stockList.length; i++) {
-            if (stockList[i].store_id === storeId) {
-                return stockList[i].stock;
-            }
-        }
-        return 0;
-    }
-
     async function suggestProducts(searchTerm) {
         console.log("Inside handle suggestProducts");
         setProductOptions([]);
@@ -972,7 +963,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     value={formData.discountValue}
                                     type='number'
                                     onChange={(e) => {
-                                        if (e.target.value == 0) {
+                                        if (!e.target.value) {
+                                            formData.discountValue = "";
+                                            errors["discount"] = "Invalid Discount";
+                                            setFormData({ ...formData });
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        if (e.target.value === 0) {
                                             formData.discountValue = e.target.value;
                                             setFormData({ ...formData });
                                             errors["discount"] = "";
@@ -981,13 +980,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             return;
                                         }
 
-                                        if (!e.target.value) {
-                                            formData.discountValue = "";
-                                            errors["discount"] = "Invalid Discount";
-                                            setFormData({ ...formData });
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
+
 
                                         errors["discount"] = "";
                                         setErrors({ ...errors });
@@ -1140,11 +1133,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         return;
                                     }
 
-                                    if (e.target.value == 0) {
+                                    if (e.target.value === 0) {
                                         if (selectedProduct[0]) {
                                             selectedProduct[0].quantity = e.target.value;
                                         }
-                                        errors["quantity"] = "Invalid Quantity";
+                                        errors["quantity"] = "Quantity should be > 0";
                                         setErrors({ ...errors });
                                         return;
                                     }
@@ -1355,7 +1348,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 placeholder="Quantity" onChange={(e) => {
                                                     errors["quantity_" + index] = "";
                                                     setErrors({ ...errors });
-                                                    if (!e.target.value || e.target.value == 0) {
+                                                    if (!e.target.value) {
                                                         errors["quantity_" + index] = "Invalid Quantity";
                                                         selectedProducts[index].quantity = e.target.value;
                                                         setSelectedProducts([...selectedProducts]);
@@ -1363,6 +1356,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         console.log("errors:", errors);
                                                         return;
                                                     }
+
+                                                    if (e.target.value === 0) {
+                                                        errors["quantity_" + index] = "Invalid Quantity should be > 0";
+                                                        selectedProducts[index].quantity = parseFloat(e.target.value);
+                                                        setSelectedProducts([...selectedProducts]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+
 
                                                     product.quantity = parseFloat(e.target.value);
                                                     reCalculate();
@@ -1393,7 +1396,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 placeholder="Purchase Unit Price" onChange={(e) => {
                                                     errors["purchase_unit_price_" + index] = "";
                                                     setErrors({ ...errors });
-                                                    if (!e.target.value || e.target.value == 0) {
+
+                                                    if (!e.target.value) {
                                                         errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
                                                         selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
                                                         setSelectedProducts([...selectedProducts]);
@@ -1401,6 +1405,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         console.log("errors:", errors);
                                                         return;
                                                     }
+
+                                                    if (e.target.value === 0) {
+                                                        errors["purchase_unit_price_" + index] = "Purchase Unit Price should be > 0";
+                                                        selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                        setSelectedProducts([...selectedProducts]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+
                                                     selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
                                                     console.log("selectedProducts[index].purchase_unit_price:", selectedProducts[index].purchase_unit_price);
                                                     setSelectedProducts([...selectedProducts]);
@@ -1427,7 +1441,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 placeholder="Wholesale Unit Price" onChange={(e) => {
                                                     errors["wholesale_unit_price_" + index] = "";
                                                     setErrors({ ...errors });
-                                                    if (!e.target.value || e.target.value == 0) {
+                                                    if (!e.target.value) {
                                                         errors["wholesale_unit_price_" + index] = "Invalid Wholesale Unit Price";
                                                         selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
                                                         setSelectedProducts([...selectedProducts]);
@@ -1435,6 +1449,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         console.log("errors:", errors);
                                                         return;
                                                     }
+
+                                                    if (e.target.value === 0) {
+                                                        errors["wholesale_unit_price_" + index] = "Wholesale Unit Price should be > 0";
+                                                        selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                        setSelectedProducts([...selectedProducts]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+
                                                     selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
                                                     console.log("selectedProducts[index].wholesale_unit_price:", selectedProducts[index].wholesale_unit_price);
                                                     setSelectedProducts([...selectedProducts]);
@@ -1461,7 +1485,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 placeholder="Retail Unit Price" onChange={(e) => {
                                                     errors["retail_unit_price_" + index] = "";
                                                     setErrors({ ...errors });
-                                                    if (!e.target.value || e.target.value == 0) {
+                                                    if (!e.target.value) {
                                                         errors["retail_unit_price_" + index] = "Invalid Retail Unit Price";
                                                         selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
                                                         setSelectedProducts([...selectedProducts]);
@@ -1469,6 +1493,17 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         console.log("errors:", errors);
                                                         return;
                                                     }
+
+                                                    if (e.target.value === 0) {
+                                                        errors["retail_unit_price_" + index] = "Retail Unit Price should be > 0";
+                                                        selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
+                                                        setSelectedProducts([...selectedProducts]);
+                                                        setErrors({ ...errors });
+                                                        console.log("errors:", errors);
+                                                        return;
+                                                    }
+
+
                                                     selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
                                                     console.log("selectedProducts[index].retail_unit_price:", selectedProducts[index].retail_unit_price);
                                                     setSelectedProducts([...selectedProducts]);

@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
-import { Modal, Button, Table } from 'react-bootstrap';
+import { Modal, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
 import Barcode from 'react-barcode';
@@ -29,8 +29,6 @@ const ProductView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    const [isProcessing, setProcessing] = useState(false);
-
 
     function getProduct(id) {
         console.log("inside get Product");
@@ -42,10 +40,8 @@ const ProductView = forwardRef((props, ref) => {
             },
         };
 
-        setProcessing(true);
         fetch('/v1/product/' + id, requestOptions)
             .then(async response => {
-                setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -63,7 +59,6 @@ const ProductView = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
                 // setErrors(error);
             });
     }
@@ -300,7 +295,7 @@ const ProductView = forwardRef((props, ref) => {
                                 <tr className="text-center">
                                     <td>{index + 1}</td>
                                     <td>
-                                        <img src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
+                                        <img alt="Product" src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
                                     </td>
                                 </tr>
                             ))}

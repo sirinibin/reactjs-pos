@@ -111,17 +111,6 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
             .join("&");
     }
 
-    function getBase64(file, cb) {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function () {
-            cb(reader.result);
-        };
-        reader.onerror = function (error) {
-            console.log('Error: ', error);
-        };
-    }
-
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");

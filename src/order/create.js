@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import OrderPreview from "./preview.js";
 import { Modal, Button, Form } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -29,13 +29,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
     let [barcode, setBarcode] = useState("");
     let [barcodeEnded, setBarcodeEnded] = useState(false);
-    let [focusOnProductSearch, setFocusOnProductSearch] = useState(false);
 
     function keyPress(e) {
         console.log("e.key:", e.key);
 
 
-        if (!barcodeEnded && e.key != "Enter" && e.key != "Backsspace") {
+        if (!barcodeEnded && e.key !== "Enter" && e.key !== "Backsspace") {
             console.log()
             barcode += e.key;
             setBarcode(barcode);
@@ -185,8 +184,6 @@ const OrderCreate = forwardRef((props, ref) => {
         store_id: "",
     });
 
-    let [unitPriceList, setUnitPriceList] = useState([]);
-
     //Store Auto Suggestion
     const [storeOptions, setStoreOptions] = useState([]);
     let [selectedStores, setSelectedStores] = useState([]);
@@ -314,12 +311,6 @@ const OrderCreate = forwardRef((props, ref) => {
         setIsCustomersLoading(false);
     }
 
-    function handlePriceTypeChange(priceType) {
-
-        console.log("Inside Price type change");
-        console.log(priceType);
-    }
-
     function GetProductUnitPriceInStore(storeId, unitPriceListArray) {
         if (!unitPriceListArray) {
             return "";
@@ -335,11 +326,11 @@ const OrderCreate = forwardRef((props, ref) => {
                     "unitPrice.retail_unit_price:",
                     unitPriceListArray[i].retail_unit_price
                 );
-                if (formData.price_type == "retail") {
+                if (formData.price_type === "retail") {
                     return unitPriceListArray[i].retail_unit_price;
-                } else if (formData.price_type == "wholesale") {
+                } else if (formData.price_type === "wholesale") {
                     return unitPriceListArray[i].wholesale_unit_price;
-                } else if (formData.price_type == "purchase") {
+                } else if (formData.price_type === "purchase") {
                     return unitPriceListArray[i].purchase_unit_price;
                 }
 
@@ -476,7 +467,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit: selectedProducts[i].unit,
             });
         }
-        if (!formData.discount && formData.discount != 0) {
+        if (!formData.discount && formData.discount !== 0) {
             return;
         }
 
@@ -765,8 +756,6 @@ const OrderCreate = forwardRef((props, ref) => {
         DetailsViewRef.current.open(id);
     }
 
-    const camref = useRef();
-
     const StoreCreateFormRef = useRef();
     function openStoreCreateForm() {
         StoreCreateFormRef.current.open();
@@ -782,10 +771,6 @@ const OrderCreate = forwardRef((props, ref) => {
         ProductCreateFormRef.current.open();
     }
 
-    const VendorCreateFormRef = useRef();
-    function openVendorCreateForm() {
-        VendorCreateFormRef.current.open();
-    }
 
     const UserCreateFormRef = useRef();
     function openUserCreateForm() {
@@ -1089,14 +1074,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                     value={formData.discountValue}
                                     type='number'
                                     onChange={(e) => {
-                                        if (e.target.value == 0) {
-                                            formData.discountValue = e.target.value;
-                                            setFormData({ ...formData });
-                                            errors["discount"] = "";
-                                            setErrors({ ...errors });
-                                            reCalculate();
-                                            return;
-                                        }
 
                                         if (!e.target.value) {
                                             formData.discountValue = "";
@@ -1105,6 +1082,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                             setErrors({ ...errors });
                                             return;
                                         }
+
+                                        if (e.target.value === 0) {
+                                            formData.discountValue = e.target.value;
+                                            setFormData({ ...formData });
+                                            errors["discount"] = "";
+                                            setErrors({ ...errors });
+                                            reCalculate();
+                                            return;
+                                        }
+
+
 
                                         errors["discount"] = "";
                                         setErrors({ ...errors });
@@ -1211,8 +1199,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                 isLoading={isProductsLoading}
                                 isInvalid={errors.product_id ? true : false}
                                 onChange={(selectedItems) => {
-                                    focusOnProductSearch = false;
-                                    setFocusOnProductSearch(false);
                                     if (selectedItems.length === 0) {
                                         errors["product_id"] = "Invalid Product selected";
                                         console.log(errors);
@@ -1321,9 +1307,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                         return;
                                     }
 
-                                    if (e.target.value == 0) {
-                                        selectedProduct[0].quantity = parseFloat(e.target.value);
-                                        setSelectedProduct([...selectedProduct]);
+                                    if (e.target.value === 0) {
+                                        if (selectedProduct[0]) {
+                                            selectedProduct[0].quantity = parseFloat(e.target.value);
+                                            setSelectedProduct([...selectedProduct]);
+                                        }
                                         errors["quantity"] = "Quantity should be more than zero";
                                         setErrors({ ...errors });
                                         return;
@@ -1474,8 +1462,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     placeholder="Quantity" onChange={(e) => {
                                                         errors["quantity_" + index] = "";
                                                         setErrors({ ...errors });
-                                                        if (!e.target.value || e.target.value == 0) {
+                                                        if (!e.target.value) {
                                                             errors["quantity_" + index] = "Invalid Quantity";
+                                                            selectedProducts[index].quantity = e.target.value;
+                                                            setSelectedProducts([...selectedProducts]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+
+                                                        if (e.target.value === 0) {
+                                                            errors["quantity_" + index] = "Quantity should be > 0";
                                                             selectedProducts[index].quantity = e.target.value;
                                                             setSelectedProducts([...selectedProducts]);
                                                             setErrors({ ...errors });
@@ -1524,7 +1521,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     placeholder="Unit Price" onChange={(e) => {
                                                         errors["unit_price_" + index] = "";
                                                         setErrors({ ...errors });
-                                                        if (!e.target.value || e.target.value == 0) {
+                                                        if (!e.target.value) {
                                                             errors["unit_price_" + index] = "Invalid Unit Price";
                                                             selectedProducts[index].unit_price = parseFloat(e.target.value);
                                                             setSelectedProducts([...selectedProducts]);
@@ -1532,6 +1529,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
+
+                                                        if (e.target.value === 0) {
+                                                            errors["unit_price_" + index] = "Unit Price should be > 0";
+                                                            selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                                            setSelectedProducts([...selectedProducts]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+
+
                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
                                                         console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
                                                         setSelectedProducts([...selectedProducts]);

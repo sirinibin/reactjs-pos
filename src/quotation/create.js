@@ -28,7 +28,6 @@ const QuotationCreate = forwardRef((props, ref) => {
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
-        status: "created",
         price_type: "retail",
       };
 
@@ -80,7 +79,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     is_discount_percent: false,
   });
 
-  let [unitPriceList, setUnitPriceList] = useState([]);
 
   //Store Auto Suggestion
   const [storeOptions, setStoreOptions] = useState([]);
@@ -325,11 +323,11 @@ const QuotationCreate = forwardRef((props, ref) => {
           "unitPrice.retail_unit_price:",
           unitPriceListArray[i].retail_unit_price
         );
-        if (formData.price_type == "retail") {
+        if (formData.price_type === "retail") {
           return unitPriceListArray[i].retail_unit_price;
-        } else if (formData.price_type == "wholesale") {
+        } else if (formData.price_type === "wholesale") {
           return unitPriceListArray[i].wholesale_unit_price;
-        } else if (formData.price_type == "purchase") {
+        } else if (formData.price_type === "purchase") {
           return unitPriceListArray[i].purchase_unit_price;
         }
       } else {
@@ -357,14 +355,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     return "";
   }
 
-  function GetProductStockInStore(storeId, stockList) {
-    for (var i = 0; i < stockList.length; i++) {
-      if (stockList[i].store_id === storeId) {
-        return stockList[i].stock;
-      }
-    }
-    return 0;
-  }
 
 
   async function suggestProducts(searchTerm) {
@@ -761,10 +751,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     ProductCreateFormRef.current.open();
   }
 
-  const VendorCreateFormRef = useRef();
-  function openVendorCreateForm() {
-    VendorCreateFormRef.current.open();
-  }
 
   const UserCreateFormRef = useRef();
   function openUserCreateForm() {
@@ -1024,7 +1010,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   value={formData.discountValue}
                   type='number'
                   onChange={(e) => {
-                    if (e.target.value == 0) {
+                    if (e.target.value === 0) {
                       formData.discountValue = e.target.value;
                       setFormData({ ...formData });
                       errors["discount"] = "";
@@ -1216,7 +1202,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     return;
                   }
 
-                  if (e.target.value == 0) {
+                  if (e.target.value === 0) {
                     selectedProduct[0].quantity = parseFloat(e.target.value);
                     setSelectedProduct([...selectedProduct]);
                     errors["quantity"] = "Quantity should be more than zero";
@@ -1387,7 +1373,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           placeholder="Quantity" onChange={(e) => {
                             errors["quantity_" + index] = "";
                             setErrors({ ...errors });
-                            if (!e.target.value || e.target.value == 0) {
+                            if (!e.target.value || e.target.value === 0) {
                               errors["quantity_" + index] = "Invalid Quantity";
                               selectedProducts[index].quantity = e.target.value;
                               setSelectedProducts([...selectedProducts]);
@@ -1425,7 +1411,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           placeholder="Unit Price" onChange={(e) => {
                             errors["unit_price_" + index] = "";
                             setErrors({ ...errors });
-                            if (!e.target.value || e.target.value == 0) {
+                            if (!e.target.value) {
                               errors["unit_price_" + index] = "Invalid Unit Price";
                               selectedProducts[index].unit_price = parseFloat(e.target.value);
                               setSelectedProducts([...selectedProducts]);
@@ -1433,6 +1419,16 @@ const QuotationCreate = forwardRef((props, ref) => {
                               console.log("errors:", errors);
                               return;
                             }
+
+                            if (e.target.value === 0) {
+                              errors["unit_price_" + index] = "Unit Price shoudl be >0";
+                              selectedProducts[index].unit_price = parseFloat(e.target.value);
+                              setSelectedProducts([...selectedProducts]);
+                              setErrors({ ...errors });
+                              console.log("errors:", errors);
+                              return;
+                            }
+
                             selectedProducts[index].unit_price = parseFloat(e.target.value);
                             console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
                             setSelectedProducts([...selectedProducts]);

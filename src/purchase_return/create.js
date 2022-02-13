@@ -25,12 +25,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             selectedProducts = [];
             setSelectedProducts([]);
 
-            selectedStores = [];
-            setSelectedStores([]);
-
-            selectedVendors = [];
-            setSelectedVendors([]);
-
             selectedPurchaseReturnedByUsers = [];
             setSelectedPurchaseReturnedByUsers([]);
 
@@ -80,21 +74,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         status: "purchase_returned",
     });
 
-    //Store Auto Suggestion
-    const [storeOptions, setStoreOptions] = useState([]);
-    let [selectedStores, setSelectedStores] = useState([]);
-    const [isStoresLoading, setIsStoresLoading] = useState(false);
 
-    //Vendor Auto Suggestion
-    const [vendorOptions, setVendorOptions] = useState([]);
-    let [selectedVendors, setSelectedVendors] = useState([]);
-    const [isVendorsLoading, setIsVendorsLoading] = useState(false);
-
-    //Product Auto Suggestion
-    const [productOptions, setProductOptions] = useState([]);
-    let [selectedProduct, setSelectedProduct] = useState([]);
     let [selectedProducts, setSelectedProducts] = useState([]);
-    const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     //Purchase Returned By Auto Suggestion
     const [purchaseReturnedByUserOptions, setPurchaseReturnedByUserOptions] = useState([]);
@@ -152,7 +133,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 let purchase = data.result;
                 formData = {
-                    vat_percent: 15.0,
                     date_str: format(new Date(), "MMM dd yyyy"),
                     signature_date_str: format(new Date(), "MMM dd yyyy"),
                     purchase_id: purchase.id,
@@ -197,19 +177,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 setSelectedProducts([...selectedProducts]);
 
 
-                let selectedStores = [
-                    {
-                        id: purchase.store_id,
-                        name: purchase.store_name,
-                    }
-                ];
-
-                let selectedVendors = [
-                    {
-                        id: purchase.vendor_id,
-                        name: purchase.vendor_name,
-                    }
-                ];
 
                 let selectedPurchaseReturnedByUsers = [
                     {
@@ -231,8 +198,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 setSelectedPurchaseReturnedByUsers([...selectedPurchaseReturnedByUsers]);
 
-                setSelectedStores([...selectedStores]);
-                setSelectedVendors([...selectedVendors]);
 
                 reCalculate();
                 setFormData({ ...formData });
@@ -252,82 +217,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             })
             .join("&");
     }
-
-    async function suggestStores(searchTerm) {
-        console.log("Inside handle suggestStores");
-        setStoreOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsStoresLoading(true);
-        let result = await fetch(
-            "/v1/store?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setStoreOptions(data.result);
-        setIsStoresLoading(false);
-    }
-
-    async function suggestVendors(searchTerm) {
-        console.log("Inside handle suggestVendors");
-        setVendorOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsVendorsLoading(true);
-        let result = await fetch(
-            "/v1/vendor?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setVendorOptions(data.result);
-        setIsVendorsLoading(false);
-    }
-
-
 
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggestUsers");
@@ -485,106 +374,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             });
     }
 
-    function isProductAdded(productID) {
-        for (var i = 0; i < selectedProducts.length; i++) {
-            if (selectedProducts[i].product_id === productID) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function addProduct() {
-        console.log("Inside Add product");
-
-        errors.product_id = "";
-        if (!selectedProduct[0] || !selectedProduct[0].id) {
-            errors.product_id = "No product selected";
-            setErrors({ ...errors });
-            return;
-        }
-
-        if (isProductAdded(selectedProduct[0].id)) {
-            errors.product_id = "Product Already Added";
-            setErrors({ ...errors });
-            return;
-        }
-
-        errors.quantity = "";
-        console.log("selectedProduct[0].quantity:", selectedProduct[0].quantity);
-
-        if (!selectedProduct[0].quantity || isNaN(selectedProduct[0].quantity)) {
-            errors.quantity = "Invalid Quantity";
-            setErrors({ ...errors });
-            return;
-        }
-
-        errors.purchasereturned_unit_price = "";
-
-        if (
-            !selectedProduct[0].purchasereturned_unit_price ||
-            isNaN(selectedProduct[0].purchasereturned_unit_price)
-        ) {
-            errors.purchasereturned_unit_price = "Invalid PurchaseReturned Unit Price";
-            setErrors({ ...errors });
-            return;
-        }
-
-
-        errors.wholesale_unit_price = "";
-        if (
-            !selectedProduct[0].wholesale_unit_price ||
-            isNaN(selectedProduct[0].wholesale_unit_price)
-        ) {
-            errors.wholesale_unit_price = "Invalid Wholesale Unit Price";
-            setErrors({ ...errors });
-            return;
-        }
-
-        errors.retail_unit_price = "";
-        if (
-            !selectedProduct[0].retail_unit_price ||
-            isNaN(selectedProduct[0].retail_unit_price)
-        ) {
-            errors.retail_unit_price = "Invalid Retail Unit Price";
-            setErrors({ ...errors });
-            return;
-        }
-
-
-        selectedProducts.push({
-            product_id: selectedProduct[0].id,
-            code: selectedProduct[0].item_code,
-            name: selectedProduct[0].name,
-            quantity: selectedProduct[0].quantity,
-            purchasereturned_unit_price: parseFloat(selectedProduct[0].purchasereturned_unit_price).toFixed(2),
-            retail_unit_price: parseFloat(selectedProduct[0].retail_unit_price).toFixed(2),
-            wholesale_unit_price: parseFloat(selectedProduct[0].wholesale_unit_price).toFixed(2),
-            unit: selectedProduct[0].unit,
-        });
-
-        selectedProduct[0].name = "";
-        selectedProduct[0].id = "";
-        selectedProduct[0].quantity = "";
-        selectedProduct[0].purchasereturned_unit_price = "";
-        selectedProduct[0].retail_unit_price = "";
-        selectedProduct[0].wholesale_unit_price = "";
-        selectedProduct[0].unit = "";
-
-        setSelectedProduct([...selectedProduct]);
-        setSelectedProducts([...selectedProducts]);
-        reCalculate();
-    }
-
-    function removeProduct(product) {
-        const index = selectedProducts.indexOf(product);
-        if (index > -1) {
-            selectedProducts.splice(index, 1);
-        }
-        setSelectedProducts(selectedProducts);
-
-        reCalculate();
-    }
 
     let [totalPrice, setTotalPrice] = useState(0.0);
 
@@ -678,21 +467,11 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         DetailsViewRef.current.open(id);
     }
 
-
     const StoreCreateFormRef = useRef();
-    function openStoreCreateForm() {
-        StoreCreateFormRef.current.open();
-    }
 
     const ProductCreateFormRef = useRef();
-    function openProductCreateForm() {
-        ProductCreateFormRef.current.open();
-    }
 
     const VendorCreateFormRef = useRef();
-    function openVendorCreateForm() {
-        VendorCreateFormRef.current.open();
-    }
 
     const UserCreateFormRef = useRef();
     function openUserCreateForm() {
@@ -759,7 +538,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    {selectedProducts.length == 0 && "Already Returned All purchased products"}
+                    {selectedProducts.length === 0 && "Already Returned All purchased products"}
 
                     {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         <h2>Select Products</h2>
@@ -811,9 +590,18 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                     placeholder="Quantity" onChange={(e) => {
                                                         errors["quantity_" + index] = "";
                                                         setErrors({ ...errors });
-                                                        if (!e.target.value || e.target.value == 0) {
+                                                        if (!e.target.value) {
                                                             errors["quantity_" + index] = "Invalid Quantity";
                                                             selectedProducts[index].quantity = e.target.value;
+                                                            setSelectedProducts([...selectedProducts]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+
+                                                        if (e.target.value === 0) {
+                                                            errors["quantity_" + index] = "Quantity should be >0";
+                                                            selectedProducts[index].quantity = parseFloat(e.target.value);
                                                             setSelectedProducts([...selectedProducts]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
@@ -849,14 +637,23 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                     placeholder="Purchase Return Unit Price" onChange={(e) => {
                                                         errors["purchasereturned_unit_price_" + index] = "";
                                                         setErrors({ ...errors });
-                                                        if (!e.target.value || e.target.value == 0) {
+
+                                                        if (!e.target.value) {
                                                             errors["purchasereturned_unit_price_" + index] = "Invalid Purchase Return Unit Price";
                                                             selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
                                                             setSelectedProducts([...selectedProducts]);
                                                             setErrors({ ...errors });
-                                                            console.log("errors:", errors);
                                                             return;
                                                         }
+
+                                                        if (e.target.value === 0) {
+                                                            errors["purchasereturned_unit_price_" + index] = "Purchase Return Unit Price should be >0";
+                                                            selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                            setSelectedProducts([...selectedProducts]);
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
+
                                                         selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
                                                         console.log("selectedProducts[index].purchase_unit_price:", selectedProducts[index].purchase_unit_price);
                                                         setSelectedProducts([...selectedProducts]);
@@ -1041,7 +838,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     value={formData.discountValue}
                                     type='number'
                                     onChange={(e) => {
-                                        if (e.target.value == 0) {
+                                        if (e.target.value === 0) {
                                             formData.discountValue = e.target.value;
                                             reCalculate();
                                             setFormData({ ...formData });

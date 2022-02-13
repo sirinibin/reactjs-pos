@@ -50,15 +50,12 @@ const OrderPreview = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(props.show);
 
-    const [isProcessing, setProcessing] = useState(false);
-
     function handleClose() {
         setShow(false);
     }
 
 
     let [qrContent, setQrContent] = useState("");
-    let [qrContentLoaded, setQrContentLoaded] = useState(false);
 
     function getQRCodeContents() {
         qrContent = "";
@@ -129,7 +126,7 @@ const OrderPreview = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
+
             });
     }
 
@@ -163,7 +160,7 @@ const OrderPreview = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
+
             });
     }
 
@@ -196,7 +193,7 @@ const OrderPreview = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
+
             });
     }
 
@@ -228,7 +225,6 @@ const OrderPreview = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
             });
     }
 

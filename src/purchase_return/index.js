@@ -322,19 +322,12 @@ function PurchaseReturnIndex(props) {
     }
 
 
-    function openUpdateForm(id) {
-        CreateFormRef.current.open(id);
-    }
-
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
         DetailsViewRef.current.open(id);
     }
 
     const CreateFormRef = useRef();
-    function openCreateForm() {
-        CreateFormRef.current.open();
-    }
 
     return (
         <>
