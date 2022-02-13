@@ -372,10 +372,10 @@ function ProductIndex(props) {
                                                         width: "55px",
                                                     }}
                                                 >
-                                                    <option value="5" selected>
+                                                    <option value="5">
                                                         5
                                                     </option>
-                                                    <option value="10" selected>
+                                                    <option value="10" >
                                                         10
                                                     </option>
                                                     <option value="20">20</option>
@@ -438,7 +438,7 @@ function ProductIndex(props) {
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -457,7 +457,7 @@ function ProductIndex(props) {
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -476,7 +476,7 @@ function ProductIndex(props) {
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -495,7 +495,7 @@ function ProductIndex(props) {
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -515,7 +515,7 @@ function ProductIndex(props) {
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -534,7 +534,7 @@ function ProductIndex(props) {
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -640,7 +640,7 @@ function ProductIndex(props) {
                                                     <small
                                                         style={{
                                                             color: "blue",
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={(e) =>

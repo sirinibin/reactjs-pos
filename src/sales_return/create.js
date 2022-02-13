@@ -561,20 +561,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            {/*
-            <div ref={camref}></div>
-        */}
-
-            {/*
-            <BarcodeScannerComponent
-                width={500}
-                height={500}
-                onUpdate={(err, result) => {
-                    console.log("Result:", result);
-                }}
-            />
-            */}
-
             <SalesReturnView ref={DetailsViewRef} />
             <ProductView ref={ProductDetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -645,7 +631,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             <td>{index + 1}</td>
                                             <td>{product.item_code}</td>
                                             <td style={{
-                                                "text-decoration": "underline",
+                                                textDecoration: "underline",
                                                 color: "blue",
                                                 cursor: "pointer",
                                             }}

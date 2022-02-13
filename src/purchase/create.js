@@ -1332,7 +1332,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         <td>{index + 1}</td>
                                         <td>{product.code}</td>
                                         <td style={{
-                                            "text-decoration": "underline",
+                                            textDecoration: "underline",
                                             color: "blue",
                                             cursor: "pointer",
                                         }}

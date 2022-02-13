@@ -510,7 +510,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     <Modal.Title>
                         {formData.purchase_code ? "Create Purchase Return for Purchase " : ""}
                         <span style={{
-                            "text-decoration": "underline",
+                            textDecoration: "underline",
                             color: "blue",
                             cursor: "pointer",
                         }}
@@ -575,7 +575,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                             <td>{index + 1}</td>
                                             <td>{product.item_code}</td>
                                             <td style={{
-                                                "text-decoration": "underline",
+                                                textDecoration: "underline",
                                                 color: "blue",
                                                 cursor: "pointer",
                                             }}

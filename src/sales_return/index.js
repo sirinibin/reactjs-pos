@@ -437,10 +437,10 @@ function SalesReturnIndex(props) {
                                                         width: "55px",
                                                     }}
                                                 >
-                                                    <option value="5" selected>
+                                                    <option value="5">
                                                         5
                                                     </option>
-                                                    <option value="10" selected>
+                                                    <option value="10">
                                                         10
                                                     </option>
                                                     <option value="20">20</option>
@@ -456,7 +456,8 @@ function SalesReturnIndex(props) {
                                 <br />
                                 <div className="row">
                                     <div className="col" style={{ bsalesreturn: "solid 0px" }}>
-                                        <ReactPaginate
+
+                                        {totalPages ? < ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -475,7 +476,7 @@ function SalesReturnIndex(props) {
                                             previousLinkClassName="page-link"
                                             nextLinkClassName="page-link"
                                             forcePage={page - 1}
-                                        />
+                                        /> : ""}
                                     </div>
                                 </div>
                                 <div className="row">
@@ -503,7 +504,7 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -512,17 +513,17 @@ function SalesReturnIndex(props) {
                                                     >
                                                         ID
                                                         {sortField === "code" && sortSalesReturn === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "code" && sortSalesReturn === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -531,17 +532,17 @@ function SalesReturnIndex(props) {
                                                     >
                                                         Order ID
                                                         {sortField === "order_code" && sortSalesReturn === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "order_code" && sortSalesReturn === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -550,17 +551,17 @@ function SalesReturnIndex(props) {
                                                     >
                                                         Date
                                                         {sortField === "date" && sortSalesReturn === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "date" && sortSalesReturn === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -569,10 +570,10 @@ function SalesReturnIndex(props) {
                                                     >
                                                         Net Total
                                                         {sortField === "net_total" && sortSalesReturn === "-" ? (
-                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "net_total" && sortSalesReturn === "" ? (
-                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -580,7 +581,7 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -589,17 +590,17 @@ function SalesReturnIndex(props) {
                                                     >
                                                         Created By
                                                         {sortField === "created_by" && sortSalesReturn === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "created_by" && sortSalesReturn === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -609,17 +610,17 @@ function SalesReturnIndex(props) {
                                                         Customer
                                                         {sortField === "customer_name" &&
                                                             sortSalesReturn === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "customer_name" && sortSalesReturn === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -628,17 +629,17 @@ function SalesReturnIndex(props) {
                                                     >
                                                         Status
                                                         {sortField === "status" && sortSalesReturn === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "status" && sortSalesReturn === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -647,10 +648,10 @@ function SalesReturnIndex(props) {
                                                     >
                                                         Created At
                                                         {sortField === "created_at" && sortSalesReturn === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "created_at" && sortSalesReturn === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -694,7 +695,7 @@ function SalesReturnIndex(props) {
                                                     <small
                                                         style={{
                                                             color: "blue",
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={(e) => setShowDateRange(!showDateRange)}
@@ -811,7 +812,7 @@ function SalesReturnIndex(props) {
                                                     <small
                                                         style={{
                                                             color: "blue",
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={(e) =>
@@ -856,7 +857,7 @@ function SalesReturnIndex(props) {
                                         <tbody className="text-center">
                                             {salesreturnList &&
                                                 salesreturnList.map((salesreturn) => (
-                                                    <tr>
+                                                    <tr key={salesreturn.code}>
                                                         <td>{salesreturn.code}</td>
                                                         <td>{salesreturn.order_code}</td>
                                                         <td>
@@ -925,7 +926,7 @@ function SalesReturnIndex(props) {
                                     </table>
                                 </div>
 
-                                <ReactPaginate
+                                {totalPages ? <ReactPaginate
                                     breakLabel="..."
                                     nextLabel="next >"
                                     onPageChange={(event) => {
@@ -944,7 +945,7 @@ function SalesReturnIndex(props) {
                                     previousLinkClassName="page-link"
                                     nextLinkClassName="page-link"
                                     forcePage={page - 1}
-                                />
+                                /> : ""}
                             </div>
                         </div>
                     </div>
