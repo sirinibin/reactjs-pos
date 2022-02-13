@@ -34,8 +34,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 payment_method: "cash",
                 price_type: "retail",
                 useLaserScanner:false,
+                store_id:"",
             };
-            setFormData(formData);
+            setFormData({...formData});
             setShow(true);
 
         },
@@ -127,56 +128,151 @@ const OrderCreate = forwardRef((props, ref) => {
     let [barcode, setBarcode] = useState("");
     let [barcodeEnded, setBarcodeEnded] = useState(false);
     let [focusOnProductSearch,setFocusOnProductSearch] = useState(false);
-    const keyPress = useCallback(
-        (e) => {
-            console.log("e.key:", e.key);
+
+    function keyPress(e) {
+        console.log("e.key:", e.key);
 
             
-            if (!barcodeEnded && e.key != "Enter") {
-                console.log()
-                barcode += e.key;
-                setBarcode(barcode);
-            }
+        if (!barcodeEnded && e.key != "Enter" && e.key != "Backsspace") {
+            console.log()
+            barcode += e.key;
+            setBarcode(barcode);
+        }
 
-            if (e.key === "Enter") {
-               // document.removeEventListener("keydown", keyPress);
-                console.log("barcode:", barcode);
-                barcodeEnded = true;
-                setBarcodeEnded(true);
-                focusOnProductSearch=true;
-                setFocusOnProductSearch(true);
-              // document.getElementById("product_id").value="XEZQUXC";
-                 suggestProducts(barcode);
-            }
-            
+        if (e.key === "Enter") {
+           // document.removeEventListener("keydown", keyPress);
+            console.log("barcode:", barcode);
+            barcodeEnded = true;
+            setBarcodeEnded(true);
+            //focusOnProductSearch=true;
+            //setFocusOnProductSearch(true);
+            // document.getElementById("product_id").value="XEZQUXC";
+            // suggestProducts(barcode);
+            getProductByItemCode(barcode);
+        }
 
-        },
-        []
-    );
-
-    /*
-    function addListener() {
-        //barcode = "";
-        //setBarcode(barcode);
-        document.addEventListener("keydown", keyPress);
-        console.log("Listener added, barcode:", barcode);
     }
-    */
 
-    /*
-    useEffect(() => {
-        console.log("Inside UseEffect")
-        document.addEventListener("keydown", keyPress);
-       // return () => document.removeEventListener("keydown", keyPress);
-    }, []);
-    */
+
+    function getProductByItemCode(itemCode) {
+        //itemCode = itemCode.trim();
+        //itemCode = itemCode.replace("Backspace", "");
+        
+        if(itemCode.includes("Backspace")){
+            errors.product_id = "Please try again";
+            barcode = "";
+            setBarcode(barcode);
+            barcodeEnded = false;
+            setBarcodeEnded(false);
+           // itemCode = itemCode.replace("Backspace", "");
+            setErrors({ ...errors });
+            return;
+        }
     
-    /*
-    useEffect(() => {
-        document.addEventListener('keydown', handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    });
-    */
+
+        console.log("inside get getProductByItemCode");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        errors["product_id"] = "";
+        setErrors({ ...errors });
+
+     
+        console.log("selectedStores[0]:",selectedStores[0]);
+
+        let store_id = undefined;
+        if(selectedStores[0]){
+            store_id = selectedStores[0].id;
+        }
+      
+        console.log("store_id:",store_id);
+
+        if (!store_id) {
+            errors.product_id = "Please Select a Store and try again";
+            setErrors({ ...errors });
+            return;
+        }
+        
+
+        setProcessing(true);
+        fetch('/v1/product/code/' + itemCode, requestOptions)
+            .then(async response => {
+                setProcessing(false);
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+
+                console.log("Response:");
+                console.log(data);
+
+                let product = data.result;
+
+                selectedProduct = [
+                    {
+                        id: product.id,
+                        item_code:product.item_code,
+                        name: product.name,
+                        search_label:product.search_label,
+                        quantity:1,
+                        unit:product.unit,
+                    }
+                ];
+
+                if (store_id) {
+                    product.unit_price = GetProductUnitPriceInStore(
+                         store_id,
+                        product.unit_prices
+                    );
+
+                    let stock = 0;
+                    if (product.stock) {
+                        stock = GetProductStockInStore(store_id, product.stock);
+                    }
+                    if (stock === 0) {
+                        errors["product_id"] = "This product is not available in store: " + selectedStores[0].name;
+                        setErrors({ ...errors });
+                    }
+
+                    selectedProduct[0].unit_price = product.unit_price;
+                    selectedProduct[0].stock = product.stock;
+                    console.log("selectedProduct[0].stock:",selectedProduct[0].stock);
+                }
+                setSelectedProduct([...selectedProduct]);
+                addProduct();
+
+                barcode = "";
+                setBarcode(barcode);
+                barcodeEnded = false;
+                setBarcodeEnded(false);
+
+            })
+            .catch(error => {
+                setProcessing(false);
+                selectedProduct = [];
+                setSelectedProduct([...selectedProduct]);
+                errors["product_id"] = "Product not found";
+                setErrors({ ...errors });
+                barcode = "";
+                setBarcode(barcode);
+                barcodeEnded = false;
+                setBarcodeEnded(false);
+                // setErrors(error);
+            });
+    }
+
+   
+
     function handleKeyDown(event) {
         console.log("event.key:", event.key);
 
@@ -220,13 +316,14 @@ const OrderCreate = forwardRef((props, ref) => {
         payment_method: "cash",
         price_type: "retail",
         useLaserScanner:false,
+        store_id:"",
     });
 
     let [unitPriceList, setUnitPriceList] = useState([]);
 
     //Store Auto Suggestion
     const [storeOptions, setStoreOptions] = useState([]);
-    const [selectedStores, setSelectedStores] = useState([]);
+    let [selectedStores, setSelectedStores] = useState([]);
     const [isStoresLoading, setIsStoresLoading] = useState(false);
 
     //Customer Auto Suggestion
@@ -584,6 +681,16 @@ const OrderCreate = forwardRef((props, ref) => {
             });
     }
 
+    function getProductIndex(productID) {
+        for (var i = 0; i < selectedProducts.length; i++) {
+            if (selectedProducts[i].product_id === productID) {
+                return i;
+            }
+        }
+        return false;
+    }
+
+
     function isProductAdded(productID) {
         for (var i = 0; i < selectedProducts.length; i++) {
             if (selectedProducts[i].product_id === productID) {
@@ -616,15 +723,7 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        if (isProductAdded(selectedProduct[0].id)) {
-            errors.product_id = "Product Already Added";
-            setErrors({ ...errors });
-            return;
-        }
-
-        errors.quantity = "";
-        console.log("selectedProduct[0].quantity:", selectedProduct[0].quantity);
-
+    
         if (!selectedProduct[0].quantity || isNaN(selectedProduct[0].quantity)) {
             errors.quantity = "Invalid Quantity";
             setErrors({ ...errors });
@@ -647,23 +746,47 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
+        let alreadyAdded=false;
+        let index=-1;
+        let quantity = 0.00;
+       
+
+        if (isProductAdded(selectedProduct[0].id)) {
+            alreadyAdded=true;
+            index = getProductIndex(selectedProduct[0].id);
+            quantity = parseFloat(selectedProducts[index].quantity + selectedProduct[0].quantity);
+        }else {
+            quantity = parseFloat(selectedProduct[0].quantity);
+        }
+
+        console.log("quantity:",quantity);
+
+        errors.quantity = "";
+
         let stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stock);
-        if (stock < selectedProduct[0].quantity) {
+        if (stock < quantity) {
             errors.product_id = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
             setErrors({ ...errors });
             return;
         }
 
-        selectedProducts.push({
-            product_id: selectedProduct[0].id,
-            code: selectedProduct[0].item_code,
-            name: selectedProduct[0].name,
-            quantity: selectedProduct[0].quantity,
-            stock: selectedProduct[0].stock,
-            unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
-            unit: selectedProduct[0].unit,
-        });
+        if(alreadyAdded){
+            selectedProducts[index].quantity = parseFloat(quantity);
+           // setSelectedProducts([...selectedProducts]);
+        }
 
+        if(!alreadyAdded){
+            selectedProducts.push({
+                product_id: selectedProduct[0].id,
+                code: selectedProduct[0].item_code,
+                name: selectedProduct[0].name,
+                quantity: selectedProduct[0].quantity,
+                stock: selectedProduct[0].stock,
+                unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
+                unit: selectedProduct[0].unit,
+            });
+        }
+       
         selectedProduct[0].name = "";
         selectedProduct[0].search_label = "";
         selectedProduct[0].id = "";
@@ -844,7 +967,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order, BarCode:"+barcode}
+                        {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order"}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -889,7 +1012,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }
                                         formData.store_id = selectedItems[0].id;
                                         setFormData({ ...formData });
-                                        setSelectedStores(selectedItems);
+                                        console.log("formData.store_id:",formData.store_id);
+                                        selectedStores = selectedItems;
+                                        setSelectedStores([...selectedItems]);
 
                                         if (formData.store_id) {
                                             if (selectedProduct[0] && selectedProduct[0].stock && selectedProduct[0].quantity) {
@@ -1217,7 +1342,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                     id="product_id"
                                     size="lg"
                                     labelKey="search_label"
-                                    open={focusOnProductSearch}
                                     isLoading={isProductsLoading}
                                     isInvalid={errors.product_id ? true : false}
                                     onChange={(selectedItems) => {
@@ -1481,6 +1605,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         }
 
                                                         product.quantity = parseFloat(e.target.value);
+                                                        selectedProducts[index].quantity = parseFloat(e.target.value);
                                                         reCalculate();
 
                                                         let stock = 0;

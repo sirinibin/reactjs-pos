@@ -14,11 +14,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
-            formData = {
-                unit: "",
-                useLaserScanner:false,
-                item_code:"",
-            };
+          
             selectedCategories = [];
             setSelectedCategories(selectedCategories);
 
@@ -27,9 +23,6 @@ const ProductCreate = forwardRef((props, ref) => {
 
             selectedStocks = [];
             setSelectedStocks(selectedStocks);
-
-            setFormData({...formData});
-
 
             if (id) {
                 getProduct(id);
@@ -43,8 +36,30 @@ const ProductCreate = forwardRef((props, ref) => {
     let [barcode, setBarcode] = useState("");
     let [barcodeEnded, setBarcodeEnded] = useState(false);
     let [focusOnProductSearch,setFocusOnProductSearch] = useState(false);
-    const keyPress = useCallback(
-        (e) => {
+    function keyPress(e) {
+        console.log("e.key:", e.key);
+
+            
+        if (!barcodeEnded && e.key != "Enter") {
+            console.log()
+            barcode += e.key;
+            setBarcode(barcode);
+        }
+
+        if (e.key === "Enter") {
+            document.removeEventListener("keydown", keyPress);
+            console.log("barcode:", barcode);
+            barcodeEnded = true;
+            setBarcodeEnded(true);
+            console.log("formData1:",formData);
+            formData.item_code = barcode;
+            formData.useLaserScanner = false;
+            setFormData(formData);
+            console.log("formData2:",formData);
+        }
+    }
+    /*
+    const keyPress = useCallback((e) => {
             console.log("e.key:", e.key);
 
             
@@ -59,15 +74,18 @@ const ProductCreate = forwardRef((props, ref) => {
                 console.log("barcode:", barcode);
                 barcodeEnded = true;
                 setBarcodeEnded(true);
+                console.log("formData1:",formData);
                 formData.item_code = barcode;
                 formData.useLaserScanner = false;
-                setFormData({...formData});
+                setFormData(formData);
+                console.log("formData2:",formData);
             }
             
 
         },
         []
     );
+    */
 
 
 
@@ -186,6 +204,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 setSelectedCategories(selectedCategories);
 
                 formData = data.result;
+                formData.name=data.result.name;
                 if (!formData.unit) {
                     formData.unit = "";
                 }
@@ -679,9 +698,10 @@ const ProductCreate = forwardRef((props, ref) => {
                                 checked={formData.useLaserScanner ? "checked" : null}
                              
                                 onChange={(e) => {
-                                    
+                                    console.log("formData-10:",formData);
                                     formData.useLaserScanner = !formData.useLaserScanner;
                                     setFormData({ ...formData });
+                                    console.log("formData-11:",formData);
 
                                     if(formData.useLaserScanner){
                                         console.log("adding keydown event");
