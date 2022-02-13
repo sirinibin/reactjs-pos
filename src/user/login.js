@@ -219,7 +219,7 @@ function Login() {
 
                                                     {isProcessing ?
                                                         <button class="btn btn-lg btn-primary" type="button" disabled>
-                                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden={true}></span>
                                                             Logging In...
                                                         </button> : null}
 

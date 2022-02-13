@@ -445,7 +445,7 @@ function PurchaseIndex(props) {
                                                     animation="border"
                                                     size="sm"
                                                     role="status"
-                                                    aria-hidden="true"
+                                                    aria-hidden={true}
                                                 />
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
@@ -818,7 +818,7 @@ function PurchaseIndex(props) {
                                                         options={userOptions}
                                                         placeholder="Select Users"
                                                         selected={selectedCreatedByUsers}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
@@ -838,7 +838,7 @@ function PurchaseIndex(props) {
                                                         options={vendorOptions}
                                                         placeholder="Select Vendor"
                                                         selected={selectedVendors}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestVendors(searchTerm);
                                                         }}
@@ -858,7 +858,7 @@ function PurchaseIndex(props) {
                                                         options={statusOptions}
                                                         placeholder="Select Status"
                                                         selected={selectedStatusList}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         multiple
                                                     />
                                                 </th>

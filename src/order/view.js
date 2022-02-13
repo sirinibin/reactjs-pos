@@ -148,29 +148,30 @@ const OrderView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <Table striped bordered hover responsive="xl">
-                    <tr>
-                        <th>Store:</th><td> {model.store_name}</td>
-                        <th>Customer:</th><td> {model.customer_name}</td>
-                        <th>Delivered by:</th><td> {model.delivered_by_name}</td>
-                    </tr>
-                    <tr>
-                        <th>Date:</th><td> {model.date_str}</td>
-                        <th>VAT %:</th><td> {model.vat_percent}%</td>
-                        <th>Discount :</th><td> {model.discount} SAR</td>
-                        <th>Discount %:</th><td> {model.discount_percent} SAR</td>
-                    </tr>
-                    <tr>
-                        <th>Status:</th><td> {model.status}</td>
-                        <th>Created At:</th><td> {model.created_at}</td>
-                        <th>Updated At:</th><td> {model.updated_at}</td>
-                    </tr>
-                    <tr>
-                        <th>Created By:</th><td> {model.created_by_name}</td>
-                        <th>Updated By:</th><td> {model.updated_by_name}</td>
-                        <th>Profit :</th><td> {model.profit} SAR</td>
-                        <th>Loss:</th><td> {model.loss} SAR</td>
-                    </tr>
-
+                    <tbody>
+                        <tr>
+                            <th>Store:</th><td> {model.store_name}</td>
+                            <th>Customer:</th><td> {model.customer_name}</td>
+                            <th>Delivered by:</th><td> {model.delivered_by_name}</td>
+                        </tr>
+                        <tr>
+                            <th>Date:</th><td> {model.date_str}</td>
+                            <th>VAT %:</th><td> {model.vat_percent}%</td>
+                            <th>Discount :</th><td> {model.discount} SAR</td>
+                            <th>Discount %:</th><td> {model.discount_percent}</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th><td> {model.status}</td>
+                            <th>Created At:</th><td> {model.created_at}</td>
+                            <th>Updated At:</th><td> {model.updated_at}</td>
+                        </tr>
+                        <tr>
+                            <th>Created By:</th><td> {model.created_by_name}</td>
+                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                            <th>Profit :</th><td> {model.profit} SAR</td>
+                            <th>Loss:</th><td> {model.loss} SAR</td>
+                        </tr>
+                    </tbody>
                 </Table>
 
                 <div className="table-responsive" style={{ overflowX: "auto" }}>
@@ -350,7 +351,7 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </th>
-                                <th colSpan="3" className="text-end">Net Profit</th>
+                                <th colSpan="3" className="text-end">Net Profit / Loss</th>
                                 <th className="text-center">
                                     <NumberFormat
                                         value={model.net_profit}

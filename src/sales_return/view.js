@@ -24,7 +24,6 @@ const SalesReturnView = forwardRef((props, ref) => {
 
 
 
-    const [isProcessing, setProcessing] = useState(false);
     let [totalPrice, setTotalPrice] = useState(0.0);
     let [netTotal, setNetTotal] = useState(0.00);
     let [totalQuantity, setTotalQuantity] = useState(0);
@@ -74,10 +73,8 @@ const SalesReturnView = forwardRef((props, ref) => {
             },
         };
 
-        setProcessing(true);
         fetch('/v1/sales-return/' + id, requestOptions)
             .then(async response => {
-                setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -102,7 +99,6 @@ const SalesReturnView = forwardRef((props, ref) => {
                 findNetTotal();
             })
             .catch(error => {
-                setProcessing(false);
                 // setErrors(error);
             });
     }
@@ -148,29 +144,30 @@ const SalesReturnView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <Table striped bsalesreturned hover responsive="lg">
-                    <tr>
+                    <tbody>
+                        <tr>
 
-                        <th>Order ID:</th><td> {model.order_code}</td>
-                        <th>Store:</th><td> {model.store_name}</td>
-                        <th>Customer:</th><td> {model.customer_name}</td>
-                        <th>Received by:</th><td> {model.received_by_name}</td>
-                    </tr>
-                    <tr>
-                        <th>Date:</th><td> {model.date_str}</td>
-                        <th>VAT %:</th><td> {model.vat_percent}%</td>
-                        <th>Discount :</th><td> {model.discount} SAR</td>
-                        <th>Discount %:</th><td> {model.discount_percent} SAR</td>
-                    </tr>
-                    <tr>
-                        <th>Status:</th><td> {model.status}</td>
-                        <th>Created At:</th><td> {model.created_at}</td>
-                        <th>Updated At:</th><td> {model.updated_at}</td>
-                    </tr>
-                    <tr>
-                        <th>Created By:</th><td> {model.created_by_name}</td>
-                        <th>Updated By:</th><td> {model.updated_by_name}</td>
-                    </tr>
-
+                            <th>Order ID: </th><td> {model.order_code}</td>
+                            <th>Store: </th><td> {model.store_name}</td>
+                            <th>Customer: </th><td> {model.customer_name}</td>
+                            <th>Received by: </th><td> {model.received_by_name}</td>
+                        </tr>
+                        <tr>
+                            <th>Date: </th><td> {model.date_str}</td>
+                            <th>VAT %: </th><td> {model.vat_percent}%</td>
+                            <th>Discount: </th><td> {model.discount} SAR</td>
+                            <th>Discount %: </th><td> {model.discount_percent}</td>
+                        </tr>
+                        <tr>
+                            <th>Status: </th><td> {model.status}</td>
+                            <th>Created At: </th><td> {model.created_at}</td>
+                            <th>Updated At: </th><td> {model.updated_at}</td>
+                        </tr>
+                        <tr>
+                            <th>Created By: </th><td> {model.created_by_name}</td>
+                            <th>Updated By: </th><td> {model.updated_by_name}</td>
+                        </tr>
+                    </tbody>
                 </Table>
 
 

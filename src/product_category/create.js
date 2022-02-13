@@ -325,7 +325,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                     options={parentCategoryOptions}
                                     placeholder="Select Parent Category"
                                     selected={selectedParentCategories}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestCategories(searchTerm);
                                     }}
@@ -356,7 +356,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                         animation="bproductcategory"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Processing..."
 
                                     : formData.id ? "Update" : "Create"

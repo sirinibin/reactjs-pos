@@ -90,35 +90,36 @@ const CustomerView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <Table striped bordered hover responsive="lg">
-                    <tr>
-                        <th>Name:</th><td> {model.name}</td>
-                        <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
-                    </tr>
-                    <tr>
-                        <th>Phone:</th><td> {model.phone}</td>
-                        <th>Phone in Arabic:</th><td> {model.phone_in_arabic}</td>
-                    </tr>
-                    <tr>
-                        <th>Address:</th><td> {model.address}</td>
-                        <th>Address in Arabic:</th><td> {model.address_in_arabic}</td>
-                    </tr>
-                    <tr>
-                        <th>VAT No:</th><td> {model.vat_no}</td>
-                        <th>VAT No(in Arabic):</th><td> {model.vat_no_in_arabic}</td>
-                    </tr>
-                    <tr>
-                        <th>Created At:</th><td> {model.created_at}</td>
-                        <th>Updated At:</th><td> {model.updated_at}</td>
-                    </tr>
-                    <tr>
-                        <th>Created By:</th><td> {model.created_by_name}</td>
-                        <th>Updated By:</th><td> {model.updated_by_name}</td>
-                    </tr>
-                    <tr>
-                        <th>E-mail:</th><td> {model.email}</td>
+                    <tbody>
+                        <tr>
+                            <th>Name:</th><td> {model.name}</td>
+                            <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th><td> {model.phone}</td>
+                            <th>Phone in Arabic:</th><td> {model.phone_in_arabic}</td>
+                        </tr>
+                        <tr>
+                            <th>Address:</th><td> {model.address}</td>
+                            <th>Address in Arabic:</th><td> {model.address_in_arabic}</td>
+                        </tr>
+                        <tr>
+                            <th>VAT No:</th><td> {model.vat_no}</td>
+                            <th>VAT No(in Arabic):</th><td> {model.vat_no_in_arabic}</td>
+                        </tr>
+                        <tr>
+                            <th>Created At:</th><td> {model.created_at}</td>
+                            <th>Updated At:</th><td> {model.updated_at}</td>
+                        </tr>
+                        <tr>
+                            <th>Created By:</th><td> {model.created_by_name}</td>
+                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                        </tr>
+                        <tr>
+                            <th>E-mail:</th><td> {model.email}</td>
 
-                    </tr>
-
+                        </tr>
+                    </tbody>
                 </Table>
 
                 {/*

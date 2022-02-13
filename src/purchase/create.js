@@ -812,7 +812,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     options={storeOptions}
                                     placeholder="Select Store"
                                     selected={selectedStores}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestStores(searchTerm);
                                     }}
@@ -858,7 +858,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     options={vendorOptions}
                                     placeholder="Select Vendor"
                                     selected={selectedVendors}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestVendors(searchTerm);
                                     }}
@@ -933,7 +933,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    defaultValue="10.00"
                                     id="validationCustom01"
                                     placeholder="VAT %"
                                     aria-label="Select Store"
@@ -1064,66 +1063,66 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         <div className="col-md-12">
                             <label className="form-label">Product*</label>
 
-                        
-                                <Typeahead
-                                    id="product_id"
-                                    size="lg"
-                                    labelKey="search_label"
-                                    isLoading={isProductsLoading}
-                                    isInvalid={errors.product_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        if (selectedItems.length === 0) {
-                                            errors["product_id"] = "Invalid Product selected";
-                                            console.log(errors);
-                                            setErrors(errors);
-                                            setSelectedProduct([]);
-                                            console.log(errors);
-                                            return;
-                                        }
 
-                                        errors["product_id"] = "";
-                                        setErrors({ ...errors });
+                            <Typeahead
+                                id="product_id"
+                                size="lg"
+                                labelKey="search_label"
+                                isLoading={isProductsLoading}
+                                isInvalid={errors.product_id ? true : false}
+                                onChange={(selectedItems) => {
+                                    if (selectedItems.length === 0) {
+                                        errors["product_id"] = "Invalid Product selected";
+                                        console.log(errors);
+                                        setErrors(errors);
+                                        setSelectedProduct([]);
+                                        console.log(errors);
+                                        return;
+                                    }
 
-                                        if (formData.store_id) {
-                                            selectedItems[0].purchase_unit_price = GetProductUnitPriceInStore(
-                                                formData.store_id,
-                                                selectedItems[0].purchase_unit_prices
-                                            );
+                                    errors["product_id"] = "";
+                                    setErrors({ ...errors });
 
-                                        }
+                                    if (formData.store_id) {
+                                        selectedItems[0].purchase_unit_price = GetProductUnitPriceInStore(
+                                            formData.store_id,
+                                            selectedItems[0].purchase_unit_prices
+                                        );
+
+                                    }
 
 
-                                        selectedProduct = selectedItems;
-                                        selectedProduct[0].quantity = 1;
-                                        console.log("selectedItems:", selectedItems);
-                                        setSelectedProduct([...selectedProduct]);
-                                        console.log("selectedProduct:", selectedProduct);
-                                    }}
-                                    options={productOptions}
-                                    placeholder="Select Product"
-                                    selected={selectedProduct}
-                                    highlightOnlyResult="true"
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestProducts(searchTerm);
-                                    }}
+                                    selectedProduct = selectedItems;
+                                    selectedProduct[0].quantity = 1;
+                                    console.log("selectedItems:", selectedItems);
+                                    setSelectedProduct([...selectedProduct]);
+                                    console.log("selectedProduct:", selectedProduct);
+                                }}
+                                options={productOptions}
+                                placeholder="Select Product"
+                                selected={selectedProduct}
+                                highlightOnlyResult={true}
+                                onInputChange={(searchTerm, e) => {
+                                    suggestProducts(searchTerm);
+                                }}
 
-                                />
-                                <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.product_id ? (
-                                    <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
-                                        {errors.product_id}
+                            />
+                            <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                            {errors.product_id ? (
+                                <div style={{ color: "red" }}>
+                                    <i class="bi bi-x-lg"> </i>
+                                    {errors.product_id}
+                                </div>
+                            ) : null}
+                            {selectedProduct[0] &&
+                                selectedProduct[0].id &&
+                                !errors.product_id && (
+                                    <div style={{ color: "green" }}>
+                                        <i class="bi bi-check-lg"> </i>
+                                        Looks good!
                                     </div>
-                                ) : null}
-                                {selectedProduct[0] &&
-                                    selectedProduct[0].id &&
-                                    !errors.product_id && (
-                                        <div style={{ color: "green" }}>
-                                            <i class="bi bi-check-lg"> </i>
-                                            Looks good!
-                                        </div>
-                                    )}
-                            
+                                )}
+
                         </div>
 
                         <div className="col-md-2">
@@ -1250,7 +1249,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 className="form-control"
                                 id="wholesale_unit_price"
                                 placeholder="Wholesale Unit Price"
-                                defaultValue=""
                             />
 
                             {errors.wholesale_unit_price ? (
@@ -1294,7 +1292,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 className="form-control"
                                 id="retail_unit_price"
                                 placeholder="Retail Unit Price"
-                                defaultValue=""
                             />
 
                             {errors.retail_unit_price ? (
@@ -1318,7 +1315,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 className="btn btn-primary form-control"
                                 onClick={addProduct}
                             >
-                                 ADD
+                                ADD
                             </Button>
                         </div>
 
@@ -1598,7 +1595,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     options={orderPlacedByUserOptions}
                                     placeholder="Select User"
                                     selected={selectedOrderPlacedByUsers}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestUsers(searchTerm);
                                     }}
@@ -1646,7 +1643,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     options={orderPlacedBySignatureOptions}
                                     placeholder="Select Signature"
                                     selected={selectedOrderPlacedBySignatures}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestSignatures(searchTerm);
                                     }}
@@ -1710,7 +1707,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         animation="border"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Creating..."
 
                                     : formData.id ? "Update" : "Create"

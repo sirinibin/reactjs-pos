@@ -302,7 +302,7 @@ function UserIndex(props) {
                                                     animation="buser"
                                                     size="sm"
                                                     role="status"
-                                                    aria-hidden="true"
+                                                    aria-hidden={true}
                                                 />
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
@@ -539,7 +539,7 @@ function UserIndex(props) {
                                                         options={userOptions}
                                                         placeholder="Select Users"
                                                         selected={selectedCreatedByUsers}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}

@@ -21,8 +21,6 @@ const SignatureCreate = forwardRef((props, ref) => {
 
     }));
 
-    const selectedDate = new Date();
-
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
     const cookies = new Cookies();
@@ -92,25 +90,6 @@ const SignatureCreate = forwardRef((props, ref) => {
                 setProcessing(false);
                 setErrors(error);
             });
-    }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
-    function getBase64(file, cb) {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function () {
-            cb(reader.result);
-        };
-        reader.onerror = function (error) {
-            console.log('Error: ', error);
-        };
     }
 
     function handleCreate(event) {
@@ -292,7 +271,7 @@ const SignatureCreate = forwardRef((props, ref) => {
 
 
                                         let url = URL.createObjectURL(file);
-                                        let img = new Image;
+                                        let img = new Image();
 
                                         img.onload = function () {
                                             let originaleWidth = img.width;
@@ -341,7 +320,7 @@ const SignatureCreate = forwardRef((props, ref) => {
                                         animation="bsignature"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Processing..."
 
                                     : formData.id ? "Update" : "Create"

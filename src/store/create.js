@@ -4,7 +4,6 @@ import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import StoreView from "./view.js";
 import Resizer from "react-image-file-resizer";
-import { toArabic } from 'arabic-digits';
 
 const StoreCreate = forwardRef((props, ref) => {
 
@@ -21,7 +20,6 @@ const StoreCreate = forwardRef((props, ref) => {
 
     }));
 
-    const selectedDate = new Date();
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -82,15 +80,6 @@ const StoreCreate = forwardRef((props, ref) => {
     }
 
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
     function resizeFIle(file, w, h, cb) {
         Resizer.imageFileResizer(
             file,
@@ -106,16 +95,6 @@ const StoreCreate = forwardRef((props, ref) => {
         );
     }
 
-    function getBase64(file, cb) {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function () {
-            cb(reader.result);
-        };
-        reader.onerror = function (error) {
-            console.log('Error: ', error);
-        };
-    }
 
     function handleCreate(event) {
         event.preventDefault();
@@ -249,11 +228,6 @@ const StoreCreate = forwardRef((props, ref) => {
     let persianDigits = "۰۱۲۳٤۵٦۷۸۹";
     let persianMap = persianDigits.split("");
 
-    function convertToEnglishNumber(input) {
-        return input.replace(/[\u06F0-\u06F90]/g, function (m) {
-            return persianDigits.indexOf(m);
-        });
-    }
 
     function convertToArabicNumber(input) {
         return input.replace(/\d/g, function (m) {
@@ -303,7 +277,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         animation="border"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Creating..."
 
                                     : ""
@@ -751,7 +725,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                                         let url = URL.createObjectURL(file);
-                                        let img = new Image;
+                                        let img = new Image();
 
                                         img.onload = function () {
                                             let originaleWidth = img.width;
@@ -1256,7 +1230,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                         animation="border"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Creating..."
 
                                     : formData.id ? "Update" : "Create"

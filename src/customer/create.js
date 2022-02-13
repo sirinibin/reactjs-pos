@@ -20,8 +20,6 @@ const CustomerCreate = forwardRef((props, ref) => {
 
     }));
 
-    const selectedDate = new Date();
-
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
     const cookies = new Cookies();
@@ -78,24 +76,6 @@ const CustomerCreate = forwardRef((props, ref) => {
             });
     }
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
-    function getBase64(file, cb) {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function () {
-            cb(reader.result);
-        };
-        reader.onerror = function (error) {
-            console.log('Error: ', error);
-        };
-    }
 
     function handleCreate(event) {
         event.preventDefault();
@@ -172,11 +152,6 @@ const CustomerCreate = forwardRef((props, ref) => {
     let persianDigits = "۰۱۲۳٤۵٦۷۸۹";
     let persianMap = persianDigits.split("");
 
-    function convertToEnglishNumber(input) {
-        return input.replace(/[\u06F0-\u06F90]/g, function (m) {
-            return persianDigits.indexOf(m);
-        });
-    }
 
     function convertToPersianNumber(input) {
         if (!input) {
@@ -464,7 +439,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         animation="bcustomer"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Processing..."
 
                                     : formData.id ? "Update" : "Create"

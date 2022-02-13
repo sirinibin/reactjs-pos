@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle,useCallback } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
@@ -14,7 +14,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
-          
+
             selectedCategories = [];
             setSelectedCategories(selectedCategories);
 
@@ -35,11 +35,11 @@ const ProductCreate = forwardRef((props, ref) => {
 
     let [barcode, setBarcode] = useState("");
     let [barcodeEnded, setBarcodeEnded] = useState(false);
-    let [focusOnProductSearch,setFocusOnProductSearch] = useState(false);
+    let [focusOnProductSearch, setFocusOnProductSearch] = useState(false);
     function keyPress(e) {
         console.log("e.key:", e.key);
 
-            
+
         if (!barcodeEnded && e.key != "Enter") {
             console.log()
             barcode += e.key;
@@ -51,11 +51,11 @@ const ProductCreate = forwardRef((props, ref) => {
             console.log("barcode:", barcode);
             barcodeEnded = true;
             setBarcodeEnded(true);
-            console.log("formData1:",formData);
+            console.log("formData1:", formData);
             formData.item_code = barcode;
             formData.useLaserScanner = false;
             setFormData(formData);
-            console.log("formData2:",formData);
+            console.log("formData2:", formData);
         }
     }
     /*
@@ -142,8 +142,8 @@ const ProductCreate = forwardRef((props, ref) => {
     let [formData, setFormData] = useState({
         images_content: [],
         unit: "",
-        useLaserScanner:false,
-        item_code:"",
+        useLaserScanner: false,
+        item_code: "",
     });
 
     const [show, SetShow] = useState(false);
@@ -204,12 +204,12 @@ const ProductCreate = forwardRef((props, ref) => {
                 setSelectedCategories(selectedCategories);
 
                 formData = data.result;
-                formData.name=data.result.name;
+                formData.name = data.result.name;
                 if (!formData.unit) {
                     formData.unit = "";
                 }
                 formData.images_content = [];
-                formData.useLaserScanner=false;
+                formData.useLaserScanner = false;
                 setFormData({ ...formData });
             })
             .catch(error => {
@@ -696,25 +696,25 @@ const ProductCreate = forwardRef((props, ref) => {
                                 label="Use Laser Scanner to Read Barcode"
                                 value={formData.useLaserScanner}
                                 checked={formData.useLaserScanner ? "checked" : null}
-                             
+
                                 onChange={(e) => {
-                                    console.log("formData-10:",formData);
+                                    console.log("formData-10:", formData);
                                     formData.useLaserScanner = !formData.useLaserScanner;
                                     setFormData({ ...formData });
-                                    console.log("formData-11:",formData);
+                                    console.log("formData-11:", formData);
 
-                                    if(formData.useLaserScanner){
+                                    if (formData.useLaserScanner) {
                                         console.log("adding keydown event");
                                         document.addEventListener("keydown", keyPress);
-                                    }else {
+                                    } else {
                                         console.log("removing keydown event");
                                         document.removeEventListener("keydown", keyPress);
                                     }
-                                    
+
                                     console.log("e.target.value:", formData.useLaserScanner);
-                                
-                                 
-                                   
+
+
+
                                 }}
                             />
 
@@ -807,7 +807,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                     options={categoryOptions}
                                     placeholder="Select Categories"
                                     selected={selectedCategories}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestCategories(searchTerm);
                                     }}
@@ -883,7 +883,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                     options={storeOptions}
                                     placeholder="Select Store"
                                     selected={selectedUnitPrice}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestStores(searchTerm);
                                     }}
@@ -1181,7 +1181,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                     options={storeOptions}
                                     placeholder="Select Store"
                                     selected={selectedStock}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestStores(searchTerm);
                                     }}
@@ -1400,7 +1400,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                         animation="bproduct"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Processing..."
 
                                     : formData.id ? "Update" : "Create"

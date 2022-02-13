@@ -171,40 +171,41 @@ const ProductView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <Table striped bordered hover responsive="lg">
-                    <tr>
-                        <th>Barcode (Note:Click on Image to Print):</th><td> <div ref={barcodeRef} onClick={printBarCode} style={{
-                            cursor: "pointer",
-                        }}>  <Barcode value={model.item_code} width={2} /> </div></td>
-                        <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode} style={{
-                            cursor: "pointer",
-                        }} > {model.item_code ? <QRCode value={model.item_code} size={128} /> : null}</div> </td>
-                    </tr>
-                    <tr>
-                        <th>Name:</th><td> {model.name}</td>
-                        <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
-                    </tr>
-                    <tr>
-                        <th>Item Code:</th><td> {model.item_code}</td>
-                        <th>Part Number:</th><td> {model.part_number}</td>
-                        <th>Categories:</th><td>
-                            <ul>
-                                {model.category_name &&
-                                    model.category_name.map((name) => (
-                                        <li>{name}</li>
-                                    ))}
-                            </ul>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>Unit:</th><td> {model.unit ? model.unit : "Unit(s)"}</td>
-                        <th>Created At:</th><td> {model.created_at}</td>
-                        <th>Updated At:</th><td> {model.updated_at}</td>
-                    </tr>
-                    <tr>
-                        <th>Created By:</th><td> {model.created_by_name}</td>
-                        <th>Updated By:</th><td> {model.updated_by_name}</td>
-                    </tr>
-
+                    <tbody>
+                        <tr>
+                            <th>Barcode (Note:Click on Image to Print):</th><td> <div ref={barcodeRef} onClick={printBarCode} style={{
+                                cursor: "pointer",
+                            }}>  <Barcode value={model.item_code} width={2} /> </div></td>
+                            <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode} style={{
+                                cursor: "pointer",
+                            }} > {model.item_code ? <QRCode value={model.item_code} size={128} /> : null}</div> </td>
+                        </tr>
+                        <tr>
+                            <th>Name:</th><td> {model.name}</td>
+                            <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
+                        </tr>
+                        <tr>
+                            <th>Item Code:</th><td> {model.item_code}</td>
+                            <th>Part Number:</th><td> {model.part_number}</td>
+                            <th>Categories:</th><td>
+                                <ul>
+                                    {model.category_name &&
+                                        model.category_name.map((name) => (
+                                            <li>{name}</li>
+                                        ))}
+                                </ul>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Unit:</th><td> {model.unit ? model.unit : "Unit(s)"}</td>
+                            <th>Created At:</th><td> {model.created_at}</td>
+                            <th>Updated At:</th><td> {model.updated_at}</td>
+                        </tr>
+                        <tr>
+                            <th>Created By:</th><td> {model.created_by_name}</td>
+                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                        </tr>
+                    </tbody>
                 </Table>
                 <h4>Unit Prices</h4>
                 <div className="table-responsive" style={{ overflowX: "auto" }}>

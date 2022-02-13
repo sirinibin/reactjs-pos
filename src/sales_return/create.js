@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import SalesReturnPreview from "./preview.js";
 import { Modal, Button, Form } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -13,8 +13,6 @@ import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import SalesReturnView from "./view.js";
-import BarcodeScannerComponent from "react-qr-barcode-scanner";
-import Quagga from 'quagga';
 import ProductView from "./../product/view.js";
 
 const SalesReturnCreate = forwardRef((props, ref) => {
@@ -128,13 +126,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 setSelectedStores(selectedStores);
                 console.log("selectedStores:", selectedStores);
 
-                let selectedCustomers = [
-                    {
-                        id: order.customer_id,
-                        name: order.customer_name,
-                    }
-                ];
-
                 let selectedReceivedByUsers = [
                     {
                         id: order.delivered_by,
@@ -154,8 +145,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 setSelectedReceivedByUsers([...selectedReceivedByUsers]);
 
-
-                setSelectedCustomers([...selectedCustomers]);
 
 
                 reCalculate();
@@ -251,23 +240,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         price_type: "retail",
     });
 
-    let [unitPriceList, setUnitPriceList] = useState([]);
-
-    //Store Auto Suggestion
-    const [storeOptions, setStoreOptions] = useState([]);
     let [selectedStores, setSelectedStores] = useState([]);
-    const [isStoresLoading, setIsStoresLoading] = useState(false);
 
-    //Customer Auto Suggestion
-    const [customerOptions, setCustomerOptions] = useState([]);
-    let [selectedCustomers, setSelectedCustomers] = useState([]);
-    const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+
+
 
     //Product Auto Suggestion
-    const [productOptions, setProductOptions] = useState([]);
-    let [selectedProduct, setSelectedProduct] = useState([]);
     let [selectedProducts, setSelectedProducts] = useState([]);
-    const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     //Received By Auto Suggestion
     const [receivedByUserOptions, setReceivedByUserOptions] = useState([]);
@@ -304,154 +283,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 return `search[${key}]=${object[key]}`;
             })
             .join("&");
-    }
-
-    async function suggestStores(searchTerm) {
-        console.log("Inside handle suggestStores");
-        setStoreOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsStoresLoading(true);
-        let result = await fetch(
-            "/v1/store?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setStoreOptions(data.result);
-        setIsStoresLoading(false);
-    }
-
-    async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
-        setCustomerOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsCustomersLoading(true);
-        let result = await fetch(
-            "/v1/customer?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setCustomerOptions(data.result);
-        setIsCustomersLoading(false);
-    }
-
-    function handlePriceTypeChange(priceType) {
-
-        console.log("Inside Price type change");
-        console.log(priceType);
-    }
-
-    function GetProductUnitPriceInStore(storeId, unitPriceListArray) {
-        if (!unitPriceListArray) {
-            return "";
-        }
-
-        for (var i = 0; i < unitPriceListArray.length; i++) {
-            console.log("unitPriceListArray[i]:", unitPriceListArray[i]);
-            console.log("store_id:", storeId);
-
-            if (unitPriceListArray[i].store_id === storeId) {
-                console.log("macthed");
-                console.log(
-                    "unitPrice.retail_unit_price:",
-                    unitPriceListArray[i].retail_unit_price
-                );
-                if (formData.price_type == "retail") {
-                    return unitPriceListArray[i].retail_unit_price;
-                } else if (formData.price_type == "wholesale") {
-                    return unitPriceListArray[i].wholesale_unit_price;
-                }
-
-            } else {
-                console.log("not matched");
-            }
-        }
-        return "";
-    }
-
-
-
-
-    async function suggestProducts(searchTerm) {
-        console.log("Inside handle suggestProducts");
-        setProductOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,item_code,name,unit_prices,stock,unit";
-        setIsProductsLoading(true);
-        let result = await fetch(
-            "/v1/product?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setProductOptions(data.result);
-        setIsProductsLoading(false);
     }
 
     async function suggestUsers(searchTerm) {
@@ -611,109 +442,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             });
     }
 
-    function isProductAdded(productID) {
-        for (var i = 0; i < selectedProducts.length; i++) {
-            if (selectedProducts[i].product_id === productID) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function GetProductStockInStore(storeId, stockList) {
-        if (!stockList) {
-            return 0.0;
-        }
-
-        for (var i = 0; i < stockList.length; i++) {
-            if (stockList[i].store_id === storeId) {
-                return stockList[i].stock;
-            }
-        }
-        return 0.0;
-    }
-
-    function addProduct() {
-        console.log("Inside Add product");
-
-        errors.product_id = "";
-        if (!selectedProduct[0] || !selectedProduct[0].id) {
-            errors.product_id = "No product selected";
-            setErrors({ ...errors });
-            return;
-        }
-
-        if (isProductAdded(selectedProduct[0].id)) {
-            errors.product_id = "Product Already Added";
-            setErrors({ ...errors });
-            return;
-        }
-
-        errors.quantity = "";
-        console.log("selectedProduct[0].quantity:", selectedProduct[0].quantity);
-
-        if (!selectedProduct[0].quantity || isNaN(selectedProduct[0].quantity)) {
-            errors.quantity = "Invalid Quantity";
-            setErrors({ ...errors });
-            return;
-        }
-
-        errors.unit_price = "";
-        if (
-            !selectedProduct[0].unit_price ||
-            isNaN(selectedProduct[0].unit_price)
-        ) {
-            errors.unit_price = "Invalid Unit Price";
-            setErrors({ ...errors });
-            return;
-        }
-
-        if (!formData.store_id) {
-            errors.product_id = "Please Select a Store and try again";
-            setErrors({ ...errors });
-            return;
-        }
-
-        let stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stock);
-        if (stock < selectedProduct[0].quantity) {
-            errors.product_id = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
-            setErrors({ ...errors });
-            return;
-        }
-
-        selectedProducts.push({
-            product_id: selectedProduct[0].id,
-            code: selectedProduct[0].item_code,
-            name: selectedProduct[0].name,
-            quantity: selectedProduct[0].quantity,
-            stock: selectedProduct[0].stock,
-            unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
-            unit: selectedProduct[0].unit,
-        });
-
-        selectedProduct[0].name = "";
-        selectedProduct[0].id = "";
-        selectedProduct[0].quantity = "";
-        selectedProduct[0].unit_price = "";
-        selectedProduct[0].unit = "";
-
-        setSelectedProduct([...selectedProduct]);
-        setSelectedProducts([...selectedProducts]);
-        console.log("selectedProduct:", selectedProduct);
-        console.log("selectedProducts:", selectedProducts);
-
-        reCalculate();
-    }
-
-    function removeProduct(product) {
-        const index = selectedProducts.indexOf(product);
-        if (index > -1) {
-            selectedProducts.splice(index, 1);
-        }
-        setSelectedProducts(selectedProducts);
-
-        reCalculate();
-    }
 
     let [totalPrice, setTotalPrice] = useState(0.0);
 
@@ -806,27 +534,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         DetailsViewRef.current.open(id);
     }
 
-    const camref = useRef();
-
     const StoreCreateFormRef = useRef();
-    function openStoreCreateForm() {
-        StoreCreateFormRef.current.open();
-    }
 
     const CustomerCreateFormRef = useRef();
-    function openCustomerCreateForm() {
-        CustomerCreateFormRef.current.open();
-    }
-
     const ProductCreateFormRef = useRef();
-    function openProductCreateForm() {
-        ProductCreateFormRef.current.open();
-    }
 
-    const VendorCreateFormRef = useRef();
-    function openVendorCreateForm() {
-        VendorCreateFormRef.current.open();
-    }
+
 
     const UserCreateFormRef = useRef();
     function openUserCreateForm() {
@@ -896,7 +609,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    {selectedProducts.length == 0 && "Already Returned All sold products"}
+                    {selectedProducts.length === 0 && "Already Returned All sold products"}
                     {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         <h2>Select Products</h2>
                         {errors["product_id"] && (
@@ -947,7 +660,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     placeholder="Quantity" onChange={(e) => {
                                                         errors["quantity_" + index] = "";
                                                         setErrors({ ...errors });
-                                                        if (!e.target.value || e.target.value == 0) {
+                                                        if (!e.target.value) {
                                                             errors["quantity_" + index] = "Invalid Quantity";
                                                             selectedProducts[index].quantity = e.target.value;
                                                             setSelectedProducts([...selectedProducts]);
@@ -955,6 +668,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
+
+                                                        if (e.target.value === 0) {
+                                                            errors["quantity_" + index] = "Quantity should be >0";
+                                                            selectedProducts[index].quantity = parseFloat(e.target.value);
+                                                            setSelectedProducts([...selectedProducts]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+
 
                                                         product.quantity = parseFloat(e.target.value);
                                                         selectedProducts[index].quantity = parseFloat(e.target.value);
@@ -982,14 +705,25 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     placeholder="Unit Price" onChange={(e) => {
                                                         errors["unit_price_" + index] = "";
                                                         setErrors({ ...errors });
-                                                        if (!e.target.value || e.target.value == 0) {
+                                                        if (!e.target.value) {
                                                             errors["unit_price_" + index] = "Invalid Unit Price";
+                                                            selectedProducts[index].unit_price = e.target.value;
+                                                            setSelectedProducts([...selectedProducts]);
+                                                            setErrors({ ...errors });
+                                                            console.log("errors:", errors);
+                                                            return;
+                                                        }
+
+                                                        if (e.target.value === 0) {
+                                                            errors["unit_price_" + index] = "Invalid Unit Price should be > 0";
                                                             selectedProducts[index].unit_price = parseFloat(e.target.value);
                                                             setSelectedProducts([...selectedProducts]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
+
+
                                                         selectedProducts[index].unit_price = parseFloat(e.target.value);
                                                         console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
                                                         setSelectedProducts([...selectedProducts]);
@@ -1134,7 +868,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     value={formData.discountValue}
                                     type='number'
                                     onChange={(e) => {
-                                        if (e.target.value == 0) {
+                                        if (e.target.value === 0) {
                                             formData.discountValue = e.target.value;
                                             setFormData({ ...formData });
                                             errors["discount"] = "";
@@ -1247,7 +981,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     options={receivedByUserOptions}
                                     placeholder="Select User"
                                     selected={selectedReceivedByUsers}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestUsers(searchTerm);
                                     }}
@@ -1296,7 +1030,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     options={receivedBySignatureOptions}
                                     placeholder="Select Signature"
                                     selected={selectedReceivedBySignatures}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestSignatures(searchTerm);
                                     }}
@@ -1485,7 +1219,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         animation="bsalesreturn"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Creating..."
 
                                     : formData.id ? "Update" : "Create"

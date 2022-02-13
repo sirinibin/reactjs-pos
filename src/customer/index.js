@@ -231,7 +231,6 @@ function CustomerIndex(props) {
         list();
     }
 
-    const UpdateFormRef = useRef();
     function openUpdateForm(id) {
         CreateFormRef.current.open(id);
     }
@@ -303,7 +302,7 @@ function CustomerIndex(props) {
                                                     animation="bcustomer"
                                                     size="sm"
                                                     role="status"
-                                                    aria-hidden="true"
+                                                    aria-hidden={true}
                                                 />
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
@@ -540,7 +539,7 @@ function CustomerIndex(props) {
                                                         options={userOptions}
                                                         placeholder="Select Users"
                                                         selected={selectedCreatedByUsers}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}

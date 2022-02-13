@@ -230,7 +230,6 @@ function SignatureIndex(props) {
         list();
     }
 
-    const UpdateFormRef = useRef();
     function openUpdateForm(id) {
         CreateFormRef.current.open(id);
     }
@@ -302,7 +301,7 @@ function SignatureIndex(props) {
                                                     animation="bsignature"
                                                     size="sm"
                                                     role="status"
-                                                    aria-hidden="true"
+                                                    aria-hidden={true}
                                                 />
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
@@ -480,7 +479,7 @@ function SignatureIndex(props) {
                                                         options={userOptions}
                                                         placeholder="Select Users"
                                                         selected={selectedCreatedByUsers}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}

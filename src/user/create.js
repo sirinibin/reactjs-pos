@@ -20,7 +20,6 @@ const UserCreate = forwardRef((props, ref) => {
 
     }));
 
-    const selectedDate = new Date();
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -76,25 +75,6 @@ const UserCreate = forwardRef((props, ref) => {
                 setProcessing(false);
                 setErrors(error);
             });
-    }
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
-    function getBase64(file, cb) {
-        let reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = function () {
-            cb(reader.result);
-        };
-        reader.onerror = function (error) {
-            console.log('Error: ', error);
-        };
     }
 
     function handleCreate(event) {
@@ -338,7 +318,7 @@ const UserCreate = forwardRef((props, ref) => {
                                         animation="buser"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Creating..."
 
                                     : formData.id ? "Update" : "Create"

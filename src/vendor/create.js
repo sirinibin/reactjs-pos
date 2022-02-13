@@ -82,14 +82,6 @@ const VendorCreate = forwardRef((props, ref) => {
     }
 
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -199,11 +191,6 @@ const VendorCreate = forwardRef((props, ref) => {
     let persianDigits = "۰۱۲۳٤۵٦۷۸۹";
     let persianMap = persianDigits.split("");
 
-    function convertToEnglishNumber(input) {
-        return input.replace(/[\u06F0-\u06F90]/g, function (m) {
-            return persianDigits.indexOf(m);
-        });
-    }
 
     function convertToArabicNumber(input) {
         return input.replace(/\d/g, function (m) {
@@ -253,7 +240,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         animation="bvendor"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Creating..."
 
                                     : ""
@@ -1091,7 +1078,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         animation="bvendor"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Creating..."
 
                                     : formData.id ? "Update" : "Create"

@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button, Table } from 'react-bootstrap';
+import { Modal, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 
 const UserView = forwardRef((props, ref) => {
@@ -25,8 +25,6 @@ const UserView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    const [isProcessing, setProcessing] = useState(false);
-
 
     function getUser(id) {
         console.log("inside get User");
@@ -38,10 +36,9 @@ const UserView = forwardRef((props, ref) => {
             },
         };
 
-        setProcessing(true);
         fetch('/v1/user/' + id, requestOptions)
             .then(async response => {
-                setProcessing(false);
+
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -59,7 +56,6 @@ const UserView = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
                 // setErrors(error);
             });
     }
@@ -90,23 +86,24 @@ const UserView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <Table striped bordered hover responsive="lg">
-                    <tr>
-                        <th>Name:</th><td> {model.name}</td>
-                        <th>E-mail:</th><td> {model.email}</td>
-                    </tr>
-                    <tr>
-                        <th>Mob:</th><td> {model.mob}</td>
-                        <th>Password:</th><td> ***********</td>
-                    </tr>
-                    <tr>
-                        <th>Created At:</th><td> {model.created_at}</td>
-                        <th>Updated At:</th><td> {model.updated_at}</td>
-                    </tr>
-                    <tr>
-                        <th>Created By:</th><td> {model.created_by_name}</td>
-                        <th>Updated By:</th><td> {model.updated_by_name}</td>
-                    </tr>
-
+                    <tbody>
+                        <tr>
+                            <th>Name:</th><td> {model.name}</td>
+                            <th>E-mail:</th><td> {model.email}</td>
+                        </tr>
+                        <tr>
+                            <th>Mob:</th><td> {model.mob}</td>
+                            <th>Password:</th><td> ***********</td>
+                        </tr>
+                        <tr>
+                            <th>Created At:</th><td> {model.created_at}</td>
+                            <th>Updated At:</th><td> {model.updated_at}</td>
+                        </tr>
+                        <tr>
+                            <th>Created By:</th><td> {model.created_by_name}</td>
+                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                        </tr>
+                    </tbody>
                 </Table>
 
                 {/*

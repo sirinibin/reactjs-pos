@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button, Table } from 'react-bootstrap';
+import { Modal, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 
 const SignatureView = forwardRef((props, ref) => {
@@ -25,8 +25,6 @@ const SignatureView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    const [isProcessing, setProcessing] = useState(false);
-
 
     function getSignature(id) {
         console.log("inside get Signature");
@@ -38,10 +36,8 @@ const SignatureView = forwardRef((props, ref) => {
             },
         };
 
-        setProcessing(true);
         fetch('/v1/signature/' + id, requestOptions)
             .then(async response => {
-                setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -59,7 +55,6 @@ const SignatureView = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-                setProcessing(false);
                 // setErrors(error);
             });
     }
@@ -90,21 +85,21 @@ const SignatureView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <Table striped bsignatureed hover responsive="lg">
-                    <tr>
-                        <th>Name:</th><td> {model.name}</td>
-                    </tr>
-                    <tr>
-                        <th>Created At:</th><td> {model.created_at}</td>
-                        <th>Updated At:</th><td> {model.updated_at}</td>
-                    </tr>
-                    <tr>
-                        <th>Created By:</th><td> {model.created_by_name}</td>
-                        <th>Updated By:</th><td> {model.updated_by_name}</td>
-                    </tr>
-
-
+                    <tbody>
+                        <tr>
+                            <th>Name:</th><td> {model.name}</td>
+                        </tr>
+                        <tr>
+                            <th>Created At:</th><td> {model.created_at}</td>
+                            <th>Updated At:</th><td> {model.updated_at}</td>
+                        </tr>
+                        <tr>
+                            <th>Created By:</th><td> {model.created_by_name}</td>
+                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                        </tr>
+                    </tbody>
                 </Table>
-                <div>Signature:<img src={process.env.REACT_APP_API_URL + model.signature + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + model.signature} style={{ width: 100, height: 80 }} /></div>
+                <div>Signature:<img alt="Signature" src={process.env.REACT_APP_API_URL + model.signature + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + model.signature} style={{ width: 100, height: 80 }} /></div>
 
                 {/*
                     <form className="row g-3 needs-validation" >

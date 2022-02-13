@@ -399,7 +399,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       requestOptions
     );
     let data = await result.json();
-    console.log("data.result:",data.result);
+    console.log("data.result:", data.result);
 
     //productOptions=data.result;
     console.log("Setting product options");
@@ -863,7 +863,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   options={storeOptions}
                   placeholder="Select Store"
                   selected={selectedStores}
-                  highlightOnlyResult="true"
+                  highlightOnlyResult={true}
                   onInputChange={(searchTerm, e) => {
                     suggestStores(searchTerm);
                   }}
@@ -909,7 +909,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   options={customerOptions}
                   placeholder="Select Customer"
                   selected={selectedCustomers}
-                  highlightOnlyResult="true"
+                  highlightOnlyResult={true}
                   onInputChange={(searchTerm, e) => {
                     suggestCustomers(searchTerm);
                   }}
@@ -1112,69 +1112,69 @@ const QuotationCreate = forwardRef((props, ref) => {
             <div className="col-md-12">
               <label className="form-label">Product*</label>
 
-          
-                <Typeahead
-                  id="product_id"
-                  size="lg"
-                  labelKey="search_label"
-                  isLoading={isProductsLoading}
-                  isInvalid={errors.product_id ? true : false}
-                  onChange={(selectedItems) => {
-                    if (selectedItems.length === 0) {
-                      console.log("Inside Invalid");
-                      errors["product_id"] = "Invalid Product selected123";
-                      console.log(errors);
-                      setErrors(errors);
-                      setSelectedProduct([]);
-                      console.log(errors);
-                      return;
-                    }
 
-                    errors["product_id"] = "";
-                    setErrors({ ...errors });
+              <Typeahead
+                id="product_id"
+                size="lg"
+                labelKey="search_label"
+                isLoading={isProductsLoading}
+                isInvalid={errors.product_id ? true : false}
+                onChange={(selectedItems) => {
+                  if (selectedItems.length === 0) {
+                    console.log("Inside Invalid");
+                    errors["product_id"] = "Invalid Product selected123";
+                    console.log(errors);
+                    setErrors(errors);
+                    setSelectedProduct([]);
+                    console.log(errors);
+                    return;
+                  }
 
-                    if (formData.store_id) {
-                      selectedItems[0].unit_price = GetProductUnitPriceInStore(
-                        formData.store_id,
-                        selectedItems[0].unit_prices
-                      );
+                  errors["product_id"] = "";
+                  setErrors({ ...errors });
 
-                      selectedItems[0].purchase_unit_price = GetProductPurchaseUnitPriceInStore(
-                        formData.store_id,
-                        selectedItems[0].unit_prices
-                      );
-                    }
+                  if (formData.store_id) {
+                    selectedItems[0].unit_price = GetProductUnitPriceInStore(
+                      formData.store_id,
+                      selectedItems[0].unit_prices
+                    );
 
-                    selectedProduct = selectedItems;
-                    selectedProduct[0].quantity = 1;
-                    console.log("selectedItems:", selectedItems);
-                    setSelectedProduct([...selectedProduct]);
-                    console.log("selectedProduct:", selectedProduct);
-                  }}
-                  options={productOptions}
-                  placeholder="Select Product"
-                  selected={selectedProduct}
-                  highlightOnlyResult="true"
-                  onInputChange={(searchTerm, e) => {
-                    console.log("Inside input change");
-                    suggestProducts(searchTerm);
-                  }}
-                />
-                <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                {errors.product_id ? (
-                  <div style={{ color: "red" }}>
-                    <i class="bi bi-x-lg"> </i>
-                    {errors.product_id}
+                    selectedItems[0].purchase_unit_price = GetProductPurchaseUnitPriceInStore(
+                      formData.store_id,
+                      selectedItems[0].unit_prices
+                    );
+                  }
+
+                  selectedProduct = selectedItems;
+                  selectedProduct[0].quantity = 1;
+                  console.log("selectedItems:", selectedItems);
+                  setSelectedProduct([...selectedProduct]);
+                  console.log("selectedProduct:", selectedProduct);
+                }}
+                options={productOptions}
+                placeholder="Select Product"
+                selected={selectedProduct}
+                highlightOnlyResult={true}
+                onInputChange={(searchTerm, e) => {
+                  console.log("Inside input change");
+                  suggestProducts(searchTerm);
+                }}
+              />
+              <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+              {errors.product_id ? (
+                <div style={{ color: "red" }}>
+                  <i class="bi bi-x-lg"> </i>
+                  {errors.product_id}
+                </div>
+              ) : null}
+              {selectedProduct[0] &&
+                selectedProduct[0].id &&
+                !errors.product_id && (
+                  <div style={{ color: "green" }}>
+                    <i class="bi bi-check-lg"> </i>
+                    Looks good!
                   </div>
-                ) : null}
-                {selectedProduct[0] &&
-                  selectedProduct[0].id &&
-                  !errors.product_id && (
-                    <div style={{ color: "green" }}>
-                      <i class="bi bi-check-lg"> </i>
-                      Looks good!
-                    </div>
-                  )}
+                )}
             </div>
 
             <div className="col-md-2">
@@ -1325,7 +1325,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                 className="form-control"
                 id="unit_price"
                 placeholder="Unit Price"
-                defaultValue=""
               />
 
               {errors.unit_price ? (
@@ -1560,7 +1559,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   options={deliveredByUserOptions}
                   placeholder="Select User"
                   selected={selectedDeliveredByUsers}
-                  highlightOnlyResult="true"
+                  highlightOnlyResult={true}
                   onInputChange={(searchTerm, e) => {
                     suggestUsers(searchTerm);
                   }}
@@ -1609,7 +1608,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   options={deliveredBySignatureOptions}
                   placeholder="Select Signature"
                   selected={selectedDeliveredBySignatures}
-                  highlightOnlyResult="true"
+                  highlightOnlyResult={true}
                   onInputChange={(searchTerm, e) => {
                     suggestSignatures(searchTerm);
                   }}
@@ -1673,7 +1672,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     animation="border"
                     size="sm"
                     role="status"
-                    aria-hidden="true"
+                    aria-hidden={true}
                   /> + " Processing..."
 
                   : formData.id ? "Update" : "Create"

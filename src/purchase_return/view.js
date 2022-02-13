@@ -147,28 +147,29 @@ const PurchaseReturnView = forwardRef((props, ref) => {
             <Modal.Body>
 
                 <Table striped bordered hover responsive="lg">
-                    <tr>
-                        <th>Store:</th><td> {model.store_name}</td>
-                        <th>Vendor:</th><td> {model.vendor_name}</td>
-                        <th>Purchase Returned by:</th><td> {model.purchase_returned_by_name}</td>
-                    </tr>
-                    <tr>
-                        <th>Date:</th><td> {model.date_str}</td>
-                        <th>VAT %:</th><td> {model.vat_percent}%</td>
-                        <th>Discount :</th><td> {model.discount} SAR</td>
-                        <th>Discount %:</th><td> {model.discount_percent} SAR</td>
-                    </tr>
-                    <tr>
-                        <th>Status:</th><td> {model.status}</td>
-                        <th>Signature Date:</th><td> {model.signature_date_str}</td>
-                        <th>Created At:</th><td> {model.created_at}</td>
-                        <th>Updated At:</th><td> {model.updated_at}</td>
-                    </tr>
-                    <tr>
-                        <th>Created By:</th><td> {model.created_by_name}</td>
-                        <th>Updated By:</th><td> {model.updated_by_name}</td>
-                    </tr>
-
+                    <tbody>
+                        <tr>
+                            <th>Store:</th><td> {model.store_name}</td>
+                            <th>Vendor:</th><td> {model.vendor_name}</td>
+                            <th>Purchase Returned by:</th><td> {model.purchase_returned_by_name}</td>
+                        </tr>
+                        <tr>
+                            <th>Date:</th><td> {model.date_str}</td>
+                            <th>VAT %:</th><td> {model.vat_percent}%</td>
+                            <th>Discount :</th><td> {model.discount} SAR</td>
+                            <th>Discount %:</th><td> {model.discount_percent} SAR</td>
+                        </tr>
+                        <tr>
+                            <th>Status:</th><td> {model.status}</td>
+                            <th>Signature Date:</th><td> {model.signature_date_str}</td>
+                            <th>Created At:</th><td> {model.created_at}</td>
+                            <th>Updated At:</th><td> {model.updated_at}</td>
+                        </tr>
+                        <tr>
+                            <th>Created By:</th><td> {model.created_by_name}</td>
+                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                        </tr>
+                    </tbody>
                 </Table>
 
                 <div className="table-responsive" style={{ overflowX: "auto" }}>

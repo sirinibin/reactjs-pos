@@ -332,9 +332,6 @@ function SalesReturnIndex(props) {
     }
 
     const CreateFormRef = useRef();
-    function openCreateForm() {
-        CreateFormRef.current.open();
-    }
 
 
     return (
@@ -411,7 +408,7 @@ function SalesReturnIndex(props) {
                                                     animation="bsalesreturn"
                                                     size="sm"
                                                     role="status"
-                                                    aria-hidden="true"
+                                                    aria-hidden={true}
                                                 />
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
@@ -756,7 +753,7 @@ function SalesReturnIndex(props) {
                                                         options={userOptions}
                                                         placeholder="Select Users"
                                                         selected={selectedCreatedByUsers}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
@@ -776,7 +773,7 @@ function SalesReturnIndex(props) {
                                                         options={customerOptions}
                                                         placeholder="Select customers"
                                                         selected={selectedCustomers}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCustomers(searchTerm);
                                                         }}
@@ -796,7 +793,7 @@ function SalesReturnIndex(props) {
                                                         options={statusOptions}
                                                         placeholder="Select Status"
                                                         selected={selectedStatusList}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         multiple
                                                     />
                                                 </th>
@@ -881,8 +878,8 @@ function SalesReturnIndex(props) {
                                                         </td>
                                                         <td>
                                                             {/*
-                                                        <SalesReturnUpdate id={salesreturn.id} showUpdateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
-                                                          <SalesReturnView id={salesreturn.id} showViewButton={"true"} show={false} />
+                                                        <SalesReturnUpdate id={salesreturn.id} showUpdateButton={{true}} refreshList={list} showToastMessage={props.showToastMessage} />
+                                                          <SalesReturnView id={salesreturn.id} showViewButton={{true}} show={false} />
                                                         */}
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {

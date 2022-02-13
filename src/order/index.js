@@ -403,7 +403,7 @@ function OrderIndex(props) {
 
                     <div className="col text-end">
                         <Button
-                            hide={true}
+                            hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
@@ -445,7 +445,7 @@ function OrderIndex(props) {
                                                     animation="border"
                                                     size="sm"
                                                     role="status"
-                                                    aria-hidden="true"
+                                                    aria-hidden={true}
                                                 />
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
@@ -474,10 +474,10 @@ function OrderIndex(props) {
                                                         width: "55px",
                                                     }}
                                                 >
-                                                    <option value="5" selected>
+                                                    <option value="5">
                                                         5
                                                     </option>
-                                                    <option value="10" selected>
+                                                    <option value="10">
                                                         10
                                                     </option>
                                                     <option value="20">20</option>
@@ -540,7 +540,7 @@ function OrderIndex(props) {
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -549,17 +549,17 @@ function OrderIndex(props) {
                                                     >
                                                         ID
                                                         {sortField === "code" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "code" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -568,17 +568,17 @@ function OrderIndex(props) {
                                                     >
                                                         Date
                                                         {sortField === "date" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "date" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -587,17 +587,17 @@ function OrderIndex(props) {
                                                     >
                                                         Net Total
                                                         {sortField === "net_total" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "net_total" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -606,17 +606,17 @@ function OrderIndex(props) {
                                                     >
                                                         Profit
                                                         {sortField === "profit" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "profit" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -625,17 +625,17 @@ function OrderIndex(props) {
                                                     >
                                                         Loss
                                                         {sortField === "loss" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-numeric-down"></i>
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "loss" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-numeric-up"></i>
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -644,17 +644,17 @@ function OrderIndex(props) {
                                                     >
                                                         Created By
                                                         {sortField === "created_by" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "created_by" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -664,17 +664,17 @@ function OrderIndex(props) {
                                                         Customer
                                                         {sortField === "customer_name" &&
                                                             sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "customer_name" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -683,17 +683,17 @@ function OrderIndex(props) {
                                                     >
                                                         Status
                                                         {sortField === "status" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-alpha-up-alt"></i>
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "status" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-alpha-up"></i>
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
                                                 <th>
                                                     <b
                                                         style={{
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
@@ -702,10 +702,10 @@ function OrderIndex(props) {
                                                     >
                                                         Created At
                                                         {sortField === "created_at" && sortOrder === "-" ? (
-                                                            <i class="bi bi-sort-down"></i>
+                                                            <i className="bi bi-sort-down"></i>
                                                         ) : null}
                                                         {sortField === "created_at" && sortOrder === "" ? (
-                                                            <i class="bi bi-sort-up"></i>
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -739,7 +739,7 @@ function OrderIndex(props) {
                                                     <small
                                                         style={{
                                                             color: "blue",
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={(e) => setShowDateRange(!showDateRange)}
@@ -818,7 +818,7 @@ function OrderIndex(props) {
                                                         options={userOptions}
                                                         placeholder="Select Users"
                                                         selected={selectedCreatedByUsers}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
@@ -838,7 +838,7 @@ function OrderIndex(props) {
                                                         options={customerOptions}
                                                         placeholder="Select customers"
                                                         selected={selectedCustomers}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCustomers(searchTerm);
                                                         }}
@@ -858,7 +858,7 @@ function OrderIndex(props) {
                                                         options={statusOptions}
                                                         placeholder="Select Status"
                                                         selected={selectedStatusList}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         multiple
                                                     />
                                                 </th>
@@ -876,7 +876,7 @@ function OrderIndex(props) {
                                                     <small
                                                         style={{
                                                             color: "blue",
-                                                            "text-decoration": "underline",
+                                                            textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={(e) =>
@@ -944,8 +944,8 @@ function OrderIndex(props) {
                                                         </td>
                                                         <td>
                                                             {/*
-                                                        <OrderUpdate id={order.id} showUpdateButton={"true"} refreshList={list} showToastMessage={props.showToastMessage} />
-                                                          <OrderView id={order.id} showViewButton={"true"} show={false} />
+                                                        <OrderUpdate id={order.id} showUpdateButton={{true}} refreshList={list} showToastMessage={props.showToastMessage} />
+                                                          <OrderView id={order.id} showViewButton={{true}} show={false} />
                                                         */}
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {

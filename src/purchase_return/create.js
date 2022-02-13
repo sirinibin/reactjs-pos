@@ -1002,7 +1002,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    defaultValue="10.00"
                                     id="validationCustom01"
                                     placeholder="VAT %"
                                     aria-label="Select Store"
@@ -1048,7 +1047,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                             setFormData({ ...formData });
                                             errors["discount"] = "";
                                             setErrors({ ...errors });
-                                           
+
                                             return;
                                         }
 
@@ -1064,9 +1063,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         errors["discount"] = "";
                                         setErrors({ ...errors });
 
-                                        console.log("e.target.value:",e.target.value);
+                                        console.log("e.target.value:", e.target.value);
                                         formData.discountValue = e.target.value;
-                                        
+
                                         reCalculate();
                                         setFormData({ ...formData });
                                     }}
@@ -1159,7 +1158,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     options={purchaseReturnedByUserOptions}
                                     placeholder="Select User"
                                     selected={selectedPurchaseReturnedByUsers}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestUsers(searchTerm);
                                     }}
@@ -1207,7 +1206,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     options={purchaseReturnedBySignatureOptions}
                                     placeholder="Select Signature"
                                     selected={selectedPurchaseReturnedBySignatures}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestSignatures(searchTerm);
                                     }}
@@ -1271,7 +1270,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         animation="border"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Creating..."
 
                                     : formData.id ? "Update" : "Create"

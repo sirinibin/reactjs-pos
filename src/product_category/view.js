@@ -90,18 +90,20 @@ const ProductCategoryView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <Table striped bordered hover responsive="lg">
-                    <tr>
-                        <th>Name:</th><td> {model.name}</td>
-                        <th>Parent Category Name:</th><td> {model.parent_name}</td>
-                    </tr>
-                    <tr>
-                        <th>Created At:</th><td> {model.created_at}</td>
-                        <th>Updated At:</th><td> {model.updated_at}</td>
-                    </tr>
-                    <tr>
-                        <th>Created By:</th><td> {model.created_by_name}</td>
-                        <th>Updated By:</th><td> {model.updated_by_name}</td>
-                    </tr>
+                    <tbody>
+                        <tr>
+                            <th>Name:</th><td> {model.name}</td>
+                            <th>Parent Category Name:</th><td> {model.parent_name}</td>
+                        </tr>
+                        <tr>
+                            <th>Created At:</th><td> {model.created_at}</td>
+                            <th>Updated At:</th><td> {model.updated_at}</td>
+                        </tr>
+                        <tr>
+                            <th>Created By:</th><td> {model.created_by_name}</td>
+                            <th>Updated By:</th><td> {model.updated_by_name}</td>
+                        </tr>
+                    </tbody>
                 </Table>
 
                 {/*

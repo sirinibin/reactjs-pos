@@ -13,126 +13,28 @@ import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import OrderView from "./view.js";
-import BarcodeScannerComponent from "react-qr-barcode-scanner";
-import Quagga from 'quagga';
+//import BarcodeScannerComponent from "react-qr-barcode-scanner";
+//import Quagga from 'quagga';
 import ProductView from "./../product/view.js";
 
 const OrderCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open() {
-            formData={
-                vat_percent: 15.0,
-                discountValue: 0.0,
-                discount: 0.0,
-                discount_percent: 0.0,
-                is_discount_percent: false,
-                date_str: format(new Date(), "MMM dd yyyy"),
-                signature_date_str: format(new Date(), "MMM dd yyyy"),
-                status: "delivered",
-                payment_status: "paid",
-                payment_method: "cash",
-                price_type: "retail",
-                useLaserScanner:false,
-                store_id:"",
-            };
-            setFormData({...formData});
             setShow(true);
 
         },
     }));
-    /*
-    function getOrder() {
-        console.log("inside get Order");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
-            },
-        };
-
-        fetch('/v1/order/' + props.id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                setErrors({});
-
-                console.log("Response:");
-                console.log(data);
-
-                let order = data.result;
-
-                selectedProducts = order.products;
-                setSelectedProducts([...selectedProducts]);
 
 
-                formData = order;
-                setFormData({ ...formData });
-
-                selectedStores = [
-                    {
-                        id: order.store_id,
-                        name: order.store_name,
-                    }
-                ];
-
-                setSelectedStores(selectedStores);
-
-                let selectedCustomers = [
-                    {
-                        id: order.customer_id,
-                        name: order.customer_name,
-                    }
-                ];
-
-                let selectedDeliveredByUsers = [
-                    {
-                        id: order.delivered_by,
-                        name: order.delivered_by_name
-                    }
-                ];
-
-                if (order.delivered_by_signature_id) {
-                    let selectedDeliveredBySignatures = [
-                        {
-                            id: order.delivered_by_signature_id,
-                            name: order.delivered_by_signature_name,
-                        }
-                    ];
-                    setSelectedDeliveredBySignatures([...selectedDeliveredBySignatures]);
-                }
-
-                setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
-
-
-                setSelectedCustomers([...selectedCustomers]);
-
-                reCalculate();
-            })
-            .catch(error => {
-                setProcessing(false);
-                setErrors(error);
-            });
-    }
-    */
-
-    
     let [barcode, setBarcode] = useState("");
     let [barcodeEnded, setBarcodeEnded] = useState(false);
-    let [focusOnProductSearch,setFocusOnProductSearch] = useState(false);
+    let [focusOnProductSearch, setFocusOnProductSearch] = useState(false);
 
     function keyPress(e) {
         console.log("e.key:", e.key);
 
-            
+
         if (!barcodeEnded && e.key != "Enter" && e.key != "Backsspace") {
             console.log()
             barcode += e.key;
@@ -140,14 +42,9 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         if (e.key === "Enter") {
-           // document.removeEventListener("keydown", keyPress);
             console.log("barcode:", barcode);
             barcodeEnded = true;
             setBarcodeEnded(true);
-            //focusOnProductSearch=true;
-            //setFocusOnProductSearch(true);
-            // document.getElementById("product_id").value="XEZQUXC";
-            // suggestProducts(barcode);
             getProductByItemCode(barcode);
         }
 
@@ -155,20 +52,16 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     function getProductByItemCode(itemCode) {
-        //itemCode = itemCode.trim();
-        //itemCode = itemCode.replace("Backspace", "");
-        
-        if(itemCode.includes("Backspace")){
+        if (itemCode.includes("Backspace")) {
             errors.product_id = "Please try again";
             barcode = "";
             setBarcode(barcode);
             barcodeEnded = false;
             setBarcodeEnded(false);
-           // itemCode = itemCode.replace("Backspace", "");
             setErrors({ ...errors });
             return;
         }
-    
+
 
         console.log("inside get getProductByItemCode");
         const requestOptions = {
@@ -182,22 +75,22 @@ const OrderCreate = forwardRef((props, ref) => {
         errors["product_id"] = "";
         setErrors({ ...errors });
 
-     
-        console.log("selectedStores[0]:",selectedStores[0]);
+
+        console.log("selectedStores[0]:", selectedStores[0]);
 
         let store_id = undefined;
-        if(selectedStores[0]){
+        if (selectedStores[0]) {
             store_id = selectedStores[0].id;
         }
-      
-        console.log("store_id:",store_id);
+
+        console.log("store_id:", store_id);
 
         if (!store_id) {
             errors.product_id = "Please Select a Store and try again";
             setErrors({ ...errors });
             return;
         }
-        
+
 
         setProcessing(true);
         fetch('/v1/product/code/' + itemCode, requestOptions)
@@ -212,26 +105,22 @@ const OrderCreate = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-
-                console.log("Response:");
-                console.log(data);
-
                 let product = data.result;
 
                 selectedProduct = [
                     {
                         id: product.id,
-                        item_code:product.item_code,
+                        item_code: product.item_code,
                         name: product.name,
-                        search_label:product.search_label,
-                        quantity:1,
-                        unit:product.unit,
+                        search_label: product.search_label,
+                        quantity: 1,
+                        unit: product.unit,
                     }
                 ];
 
                 if (store_id) {
                     product.unit_price = GetProductUnitPriceInStore(
-                         store_id,
+                        store_id,
                         product.unit_prices
                     );
 
@@ -246,7 +135,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                     selectedProduct[0].unit_price = product.unit_price;
                     selectedProduct[0].stock = product.stock;
-                    console.log("selectedProduct[0].stock:",selectedProduct[0].stock);
+                    console.log("selectedProduct[0].stock:", selectedProduct[0].stock);
                 }
                 setSelectedProduct([...selectedProduct]);
                 addProduct();
@@ -271,29 +160,6 @@ const OrderCreate = forwardRef((props, ref) => {
             });
     }
 
-   
-
-    function handleKeyDown(event) {
-        console.log("event.key:", event.key);
-
-        /*
-        if (event.key == "Enter") {
-            barcode = "";
-            setBarcode(barcode);
-        }
-        else if (event.key == "Shift") {
-            console.log("barcode:", barcode);
-        } else {
-            barcode += event.key;
-            setBarcode(barcode);
-        }
-        */
-
-    /*
-    if (event.keyCode === KEY_ESCAPE) {
-        /* do your action here */
-   //  }  
-    }
 
     const selectedDate = new Date();
 
@@ -315,8 +181,8 @@ const OrderCreate = forwardRef((props, ref) => {
         payment_status: "paid",
         payment_method: "cash",
         price_type: "retail",
-        useLaserScanner:false,
-        store_id:"",
+        useLaserScanner: false,
+        store_id: "",
     });
 
     let [unitPriceList, setUnitPriceList] = useState([]);
@@ -723,7 +589,7 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-    
+
         if (!selectedProduct[0].quantity || isNaN(selectedProduct[0].quantity)) {
             errors.quantity = "Invalid Quantity";
             setErrors({ ...errors });
@@ -746,20 +612,20 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        let alreadyAdded=false;
-        let index=-1;
+        let alreadyAdded = false;
+        let index = -1;
         let quantity = 0.00;
-       
+
 
         if (isProductAdded(selectedProduct[0].id)) {
-            alreadyAdded=true;
+            alreadyAdded = true;
             index = getProductIndex(selectedProduct[0].id);
             quantity = parseFloat(selectedProducts[index].quantity + selectedProduct[0].quantity);
-        }else {
+        } else {
             quantity = parseFloat(selectedProduct[0].quantity);
         }
 
-        console.log("quantity:",quantity);
+        console.log("quantity:", quantity);
 
         errors.quantity = "";
 
@@ -770,12 +636,12 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        if(alreadyAdded){
+        if (alreadyAdded) {
             selectedProducts[index].quantity = parseFloat(quantity);
-           // setSelectedProducts([...selectedProducts]);
+            // setSelectedProducts([...selectedProducts]);
         }
 
-        if(!alreadyAdded){
+        if (!alreadyAdded) {
             selectedProducts.push({
                 product_id: selectedProduct[0].id,
                 code: selectedProduct[0].item_code,
@@ -786,7 +652,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit: selectedProduct[0].unit,
             });
         }
-       
+
         selectedProduct[0].name = "";
         selectedProduct[0].search_label = "";
         selectedProduct[0].id = "";
@@ -1012,7 +878,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }
                                         formData.store_id = selectedItems[0].id;
                                         setFormData({ ...formData });
-                                        console.log("formData.store_id:",formData.store_id);
+                                        console.log("formData.store_id:", formData.store_id);
                                         selectedStores = selectedItems;
                                         setSelectedStores([...selectedItems]);
 
@@ -1063,7 +929,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     options={storeOptions}
                                     placeholder="Select Store"
                                     selected={selectedStores}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestStores(searchTerm);
                                     }}
@@ -1071,12 +937,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 <Button hide={true} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 <div style={{ color: "red" }}>
-                                    <i class="bi x-lg"> </i>
+                                    <i className="bi x-lg"> </i>
                                     {errors.store_id}
                                 </div>
                                 {formData.store_id && !errors.store_id && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1109,7 +975,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     options={customerOptions}
                                     placeholder="Select Customer"
                                     selected={selectedCustomers}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestCustomers(searchTerm);
                                     }}
@@ -1117,13 +983,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                 <Button hide={true} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.customer_id && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.customer_id}
                                     </div>
                                 )}
                                 {formData.customer_id && !errors.customer_id && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1147,13 +1013,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 {errors.date_str && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.date_str}
                                     </div>
                                 )}
                                 {formData.date_str && !errors.date_str && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1192,13 +1058,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.vat_percent && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.vat_percent}
                                     </div>
                                 )}
                                 {formData.vat_percent && !errors.vat_percent && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1255,13 +1121,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.discount && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.discount}
                                     </div>
                                 )}
                                 {!errors.discount && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1299,13 +1165,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                 </select>
                                 {errors.status && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.status}
                                     </div>
                                 )}
                                 {formData.status && !errors.status && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1320,98 +1186,98 @@ const OrderCreate = forwardRef((props, ref) => {
                                 id="use_laser_scanner"
                                 label="Use Laser Scanner to Read Barcode"
                                 onChange={(e) => {
-                                    
+
                                     formData.useLaserScanner = !formData.useLaserScanner;
 
-                                    if(formData.useLaserScanner){
+                                    if (formData.useLaserScanner) {
                                         console.log("adding keydown event");
                                         document.addEventListener("keydown", keyPress);
-                                    }else {
+                                    } else {
                                         console.log("removing keydown event");
                                         document.removeEventListener("keydown", keyPress);
                                     }
-                                    
+
                                     console.log("e.target.value:", formData.useLaserScanner);
-                                
+
                                     setFormData({ ...formData });
-                                   
+
                                 }}
                             />
 
-                                <Typeahead
-                                    id="product_id"
-                                    size="lg"
-                                    labelKey="search_label"
-                                    isLoading={isProductsLoading}
-                                    isInvalid={errors.product_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        focusOnProductSearch=false;
-                                        setFocusOnProductSearch(false);
-                                        if (selectedItems.length === 0) {
-                                            errors["product_id"] = "Invalid Product selected";
-                                            console.log(errors);
-                                            setErrors(errors);
-                                            setSelectedProduct([]);
-                                            console.log(errors);
-                                            return;
-                                        }
+                            <Typeahead
+                                id="product_id"
+                                size="lg"
+                                labelKey="search_label"
+                                isLoading={isProductsLoading}
+                                isInvalid={errors.product_id ? true : false}
+                                onChange={(selectedItems) => {
+                                    focusOnProductSearch = false;
+                                    setFocusOnProductSearch(false);
+                                    if (selectedItems.length === 0) {
+                                        errors["product_id"] = "Invalid Product selected";
+                                        console.log(errors);
+                                        setErrors(errors);
+                                        setSelectedProduct([]);
+                                        console.log(errors);
+                                        return;
+                                    }
 
-                                        errors["product_id"] = "";
+                                    errors["product_id"] = "";
+                                    setErrors({ ...errors });
+
+                                    if (!formData.store_id) {
+                                        errors.product_id = "Please Select a Store and try again";
                                         setErrors({ ...errors });
+                                        return;
+                                    }
 
-                                        if (!formData.store_id) {
-                                            errors.product_id = "Please Select a Store and try again";
+                                    if (formData.store_id) {
+                                        selectedItems[0].unit_price = GetProductUnitPriceInStore(
+                                            formData.store_id,
+                                            selectedItems[0].unit_prices
+                                        );
+
+                                        let stock = 0;
+                                        if (selectedItems[0].stock) {
+                                            stock = GetProductStockInStore(formData.store_id, selectedItems[0].stock);
+                                        }
+                                        if (stock === 0) {
+                                            errors["product_id"] = "This product is not available in store: " + selectedStores[0].name;
                                             setErrors({ ...errors });
-                                            return;
                                         }
 
-                                        if (formData.store_id) {
-                                            selectedItems[0].unit_price = GetProductUnitPriceInStore(
-                                                formData.store_id,
-                                                selectedItems[0].unit_prices
-                                            );
 
-                                            let stock = 0;
-                                            if (selectedItems[0].stock) {
-                                                stock = GetProductStockInStore(formData.store_id, selectedItems[0].stock);
-                                            }
-                                            if (stock === 0) {
-                                                errors["product_id"] = "This product is not available in store: " + selectedStores[0].name;
-                                                setErrors({ ...errors });
-                                            }
+                                    }
 
-
-                                        }
-
-                                        selectedProduct = selectedItems;
-                                        selectedProduct[0].quantity = 1;
-                                        console.log("selectedItems:", selectedItems);
-                                        setSelectedProduct([...selectedItems]);
-                                        console.log("selectedProduct:", selectedProduct);
-                                    }}
-                                    options={productOptions}
-                                    placeholder="Select Product"
-                                    selected={selectedProduct}
-                                    highlightOnlyResult="true"
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestProducts(searchTerm);
-                                    }}
-                                />
-                                <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.product_id ? (
-                                    <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
-                                        {errors.product_id}
+                                    selectedProduct = selectedItems;
+                                    selectedProduct[0].quantity = 1;
+                                    console.log("selectedItems:", selectedItems);
+                                    setSelectedProduct([...selectedItems]);
+                                    console.log("selectedProduct:", selectedProduct);
+                                }}
+                                options={productOptions}
+                                placeholder="Select Product"
+                                selected={selectedProduct}
+                                highlightOnlyResult={true}
+                                onInputChange={(searchTerm, e) => {
+                                    suggestProducts(searchTerm);
+                                }}
+                            />
+                            <Button hide={true} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                            {errors.product_id ? (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.product_id}
+                                </div>
+                            ) : ""}
+                            {selectedProduct[0] &&
+                                selectedProduct[0].id &&
+                                !errors.product_id && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
                                     </div>
-                                ) : null}
-                                {selectedProduct[0] &&
-                                    selectedProduct[0].id &&
-                                    !errors.product_id && (
-                                        <div style={{ color: "green" }}>
-                                            <i class="bi bi-check-lg"> </i>
-                                            Looks good!
-                                        </div>
-                                    )}
+                                )}
                         </div>
 
                         <div className="col-md-2">
@@ -1441,14 +1307,14 @@ const OrderCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <label className="form-label">Qty{selectedProduct[0] && selectedProduct[0].unit ? "(" + selectedProduct[0].unit + ")" : ""}*</label>
                             <input
-                                value={selectedProduct[0] ? selectedProduct[0].quantity : null}
+                                value={selectedProduct[0] ? selectedProduct[0].quantity : ""}
                                 onChange={(e) => {
 
                                     if (!e.target.value) {
-                                        if(selectedProduct[0] && selectedProduct[0].quantity){
+                                        if (selectedProduct[0] && selectedProduct[0].quantity) {
                                             selectedProduct[0].quantity = "";
                                         }
-                                     
+
                                         setSelectedProduct([...selectedProduct]);
                                         errors["quantity"] = "Quantity is required";
                                         setErrors({ ...errors });
@@ -1492,16 +1358,16 @@ const OrderCreate = forwardRef((props, ref) => {
                             />
                             {errors.quantity ? (
                                 <div style={{ color: "red" }}>
-                                    <i class="bi bi-x-lg"> </i>
+                                    <i className="bi bi-x-lg"> </i>
                                     {errors.quantity}
                                 </div>
-                            ) : null}
+                            ) : ""}
 
                             {selectedProduct[0] &&
                                 selectedProduct[0].quantity > 0 &&
                                 !errors["quantity"] && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1509,16 +1375,30 @@ const OrderCreate = forwardRef((props, ref) => {
                         <div className="col-md-2">
                             <label className="form-label">Unit Price*</label>
                             <input
-                                type="text"
+                                type="number"
                                 value={
-                                    selectedProduct[0] ? selectedProduct[0].unit_price : null
+                                    selectedProduct[0] ? selectedProduct[0].unit_price : ""
                                 }
                                 onChange={(e) => {
                                     console.log("Inside onchange unit price:");
 
-                                    if (isNaN(e.target.value) || e.target.value === "0") {
+                                    if (!e.target.value) {
                                         errors["unit_price"] = "Invalid Unit Price";
+                                        if (selectedProduct[0]) {
+                                            selectedProduct[0].unit_price = e.target.value;
+                                            setSelectedProduct([...selectedProduct]);
+                                        }
                                         setErrors({ ...errors });
+                                        return;
+                                    }
+
+                                    if (e.target.value === 0) {
+                                        errors["unit_price"] = "Invalid Unit Price should be > 0";
+                                        setErrors({ ...errors });
+                                        if (selectedProduct[0]) {
+                                            selectedProduct[0].unit_price = e.target.value;
+                                            setSelectedProduct([...selectedProduct]);
+                                        }
                                         return;
                                     }
                                     errors["unit_price"] = "";
@@ -1533,20 +1413,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                 className="form-control"
                                 id="unit_price"
                                 placeholder="Unit Price"
-                                defaultValue=""
                             />
 
                             {errors.unit_price ? (
                                 <div style={{ color: "red" }}>
-                                    <i class="bi bi-x-lg"> </i>
+                                    <i className="bi bi-x-lg"> </i>
                                     {errors.unit_price}
                                 </div>
-                            ) : null}
+                            ) : ""}
                             {selectedProduct[0] &&
                                 selectedProduct[0].unit_price &&
                                 !errors.unit_price && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>Looks good!
+                                        <i className="bi bi-check-lg"> </i>Looks good!
                                     </div>
                                 )}
                         </div>
@@ -1557,7 +1436,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 className="btn btn-primary form-control"
                                 onClick={addProduct}
                             >
-                                 ADD
+                                ADD
                             </Button>
                         </div>
 
@@ -1627,16 +1506,16 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
                                                 {errors["quantity_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i class="bi bi-x-lg"> </i>
+                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["quantity_" + index]}
                                                     </div>
                                                 )}
                                                 {((selectedProducts[index].quantity) && !errors["quantity_" + index]) ? (
                                                     <div style={{ color: "green" }}>
-                                                        <i class="bi bi-check-lg"> </i>
+                                                        <i className="bi bi-check-lg"> </i>
                                                         Looks good!
                                                     </div>
-                                                ) : null}
+                                                ) : ""}
                                             </td>
                                             <td style={{ width: "150px" }}>
 
@@ -1661,16 +1540,16 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     }} /> SAR
                                                 {errors["unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i class="bi bi-x-lg"> </i>
+                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["unit_price_" + index]}
                                                     </div>
                                                 )}
                                                 {(selectedProducts[index].unit_price && !errors["unit_price_" + index]) ? (
                                                     <div style={{ color: "green" }}>
-                                                        <i class="bi bi-check-lg"> </i>
+                                                        <i className="bi bi-check-lg"> </i>
                                                         Looks good!
                                                     </div>
-                                                ) : null}
+                                                ) : ""}
                                             </td>
                                             <td>
                                                 <NumberFormat
@@ -1688,7 +1567,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         removeProduct(product);
                                                     }}
                                                 >
-                                                    <i class="bi bi-x-lg"> </i>
+                                                    <i className="bi bi-x-lg"> </i>
                                                 </div>
                                             </td>
                                         </tr>
@@ -1779,7 +1658,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     options={deliveredByUserOptions}
                                     placeholder="Select User"
                                     selected={selectedDeliveredByUsers}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestUsers(searchTerm);
                                     }}
@@ -1788,12 +1667,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                 <Button hide={true} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.delivered_by ? (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i> {errors.delivered_by}
+                                        <i className="bi bi-x-lg"> </i> {errors.delivered_by}
                                     </div>
-                                ) : null}
+                                ) : ""}
                                 {formData.delivered_by && !errors.delivered_by && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>Looks good!
+                                        <i className="bi bi-check-lg"> </i>Looks good!
                                     </div>
                                 )}
                             </div>
@@ -1828,7 +1707,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     options={deliveredBySignatureOptions}
                                     placeholder="Select Signature"
                                     selected={selectedDeliveredBySignatures}
-                                    highlightOnlyResult="true"
+                                    highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestSignatures(searchTerm);
                                     }}
@@ -1837,14 +1716,14 @@ const OrderCreate = forwardRef((props, ref) => {
                                 <Button hide={true} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.delivered_by_signature_id ? (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>{" "}
+                                        <i className="bi bi-x-lg"> </i>{" "}
                                         {errors.delivered_by_signature_id}
                                     </div>
-                                ) : null}
+                                ) : ""}
                                 {formData.delivered_by_signature_id &&
                                     !errors.delivered_by_signature_id && (
                                         <div style={{ color: "green" }}>
-                                            <i class="bi bi-check-lg"> </i> Looks good!
+                                            <i className="bi bi-check-lg"> </i> Looks good!
                                         </div>
                                     )}
                             </div>
@@ -1868,13 +1747,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 {errors.signature_date_str && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.signature_date_str}
                                     </div>
                                 )}
                                 {formData.signature_date_str && !errors.signature_date_str && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1909,13 +1788,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.payment_method}
                                     </div>
                                 )}
                                 {formData.payment_method && !errors.payment_method && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1951,13 +1830,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                 </select>
                                 {errors.payment_status && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.payment_status}
                                     </div>
                                 )}
                                 {formData.payment_status && !errors.payment_status && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -1992,13 +1871,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.partial_payment_amount && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.v}
                                     </div>
                                 )}
                                 {formData.partial_payment_amount && !errors.partial_payment_amount && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -2016,7 +1895,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         animation="border"
                                         size="sm"
                                         role="status"
-                                        aria-hidden="true"
+                                        aria-hidden={true}
                                     /> + " Creating..."
 
                                     : "Create"

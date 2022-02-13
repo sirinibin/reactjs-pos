@@ -344,7 +344,7 @@ function ProductIndex(props) {
                                                     animation="bproduct"
                                                     size="sm"
                                                     role="status"
-                                                    aria-hidden="true"
+                                                    aria-hidden={true}
                                                 />
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
@@ -600,7 +600,7 @@ function ProductIndex(props) {
                                                         options={categoryOptions}
                                                         placeholder="Select Categories"
                                                         selected={selectedProductCategories}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCategories(searchTerm);
                                                         }}
@@ -620,7 +620,7 @@ function ProductIndex(props) {
                                                         options={productOptions}
                                                         placeholder="Select Users"
                                                         selected={selectedCreatedByProducts}
-                                                        highlightOnlyResult="true"
+                                                        highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
