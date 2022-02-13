@@ -21,6 +21,21 @@ const OrderCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open() {
+            formData={
+                vat_percent: 15.0,
+                discountValue: 0.0,
+                discount: 0.0,
+                discount_percent: 0.0,
+                is_discount_percent: false,
+                date_str: format(new Date(), "MMM dd yyyy"),
+                signature_date_str: format(new Date(), "MMM dd yyyy"),
+                status: "delivered",
+                payment_status: "paid",
+                payment_method: "cash",
+                price_type: "retail",
+                useLaserScanner:false,
+            };
+            setFormData(formData);
             setShow(true);
 
         },
@@ -108,13 +123,15 @@ const OrderCreate = forwardRef((props, ref) => {
     }
     */
 
-    /*
+    
     let [barcode, setBarcode] = useState("");
     let [barcodeEnded, setBarcodeEnded] = useState(false);
+    let [focusOnProductSearch,setFocusOnProductSearch] = useState(false);
     const keyPress = useCallback(
         (e) => {
             console.log("e.key:", e.key);
 
+            
             if (!barcodeEnded && e.key != "Enter") {
                 console.log()
                 barcode += e.key;
@@ -122,16 +139,22 @@ const OrderCreate = forwardRef((props, ref) => {
             }
 
             if (e.key === "Enter") {
-                document.removeEventListener("keydown", keyPress);
+               // document.removeEventListener("keydown", keyPress);
                 console.log("barcode:", barcode);
                 barcodeEnded = true;
                 setBarcodeEnded(true);
+                focusOnProductSearch=true;
+                setFocusOnProductSearch(true);
+              // document.getElementById("product_id").value="XEZQUXC";
+                 suggestProducts(barcode);
             }
+            
 
         },
         []
     );
 
+    /*
     function addListener() {
         //barcode = "";
         //setBarcode(barcode);
@@ -139,18 +162,21 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("Listener added, barcode:", barcode);
     }
     */
+
     /*
     useEffect(() => {
+        console.log("Inside UseEffect")
         document.addEventListener("keydown", keyPress);
-        return () => document.removeEventListener("keydown", keyPress);
-    }, [keyPress]);
+       // return () => document.removeEventListener("keydown", keyPress);
+    }, []);
     */
+    
     /*
     useEffect(() => {
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
     });
-    let [barcode, setBarcode] = useState("");
+    */
     function handleKeyDown(event) {
         console.log("event.key:", event.key);
 
@@ -170,8 +196,8 @@ const OrderCreate = forwardRef((props, ref) => {
     /*
     if (event.keyCode === KEY_ESCAPE) {
         /* do your action here */
-    // }  
-    // }
+   //  }  
+    }
 
     const selectedDate = new Date();
 
@@ -193,6 +219,7 @@ const OrderCreate = forwardRef((props, ref) => {
         payment_status: "paid",
         payment_method: "cash",
         price_type: "retail",
+        useLaserScanner:false,
     });
 
     let [unitPriceList, setUnitPriceList] = useState([]);
@@ -817,7 +844,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static">
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order"}
+                        {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order, BarCode:"+barcode}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -1162,14 +1189,40 @@ const OrderCreate = forwardRef((props, ref) => {
                         <div className="col-md-12">
                             <label className="form-label">Product*</label>
 
-                         
+                            <Form.Check
+                                type="switch"
+                                as="input"
+                                id="use_laser_scanner"
+                                label="Use Laser Scanner to Read Barcode"
+                                onChange={(e) => {
+                                    
+                                    formData.useLaserScanner = !formData.useLaserScanner;
+
+                                    if(formData.useLaserScanner){
+                                        console.log("adding keydown event");
+                                        document.addEventListener("keydown", keyPress);
+                                    }else {
+                                        console.log("removing keydown event");
+                                        document.removeEventListener("keydown", keyPress);
+                                    }
+                                    
+                                    console.log("e.target.value:", formData.useLaserScanner);
+                                
+                                    setFormData({ ...formData });
+                                   
+                                }}
+                            />
+
                                 <Typeahead
                                     id="product_id"
                                     size="lg"
                                     labelKey="search_label"
+                                    open={focusOnProductSearch}
                                     isLoading={isProductsLoading}
                                     isInvalid={errors.product_id ? true : false}
                                     onChange={(selectedItems) => {
+                                        focusOnProductSearch=false;
+                                        setFocusOnProductSearch(false);
                                         if (selectedItems.length === 0) {
                                             errors["product_id"] = "Invalid Product selected";
                                             console.log(errors);
@@ -1256,9 +1309,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 }}
                             >
-                                <option value="retail" SELECTED>Retail</option>
+                                <option value="retail" >Retail</option>
                                 <option value="wholesale">Wholesale</option>
-                                <option value="purchase" SELECTED>Purchase</option>
+                                <option value="purchase">Purchase</option>
                             </select>
                         </div>
                         <div className="col-md-2">
@@ -1831,7 +1884,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
-                            <Button variant="primary" type="submit" >
+                            <Button variant="primary" onClick={handleCreate}>
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
@@ -1841,7 +1894,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         aria-hidden="true"
                                     /> + " Creating..."
 
-                                    : formData.id ? "Update" : "Create"
+                                    : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button } from "react-bootstrap";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle,useCallback } from "react";
+import { Modal, Button, Form } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import ProductView from "./view.js";
@@ -15,7 +15,9 @@ const ProductCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id) {
             formData = {
-                unit: ""
+                unit: "",
+                useLaserScanner:false,
+                item_code:"",
             };
             selectedCategories = [];
             setSelectedCategories(selectedCategories);
@@ -26,7 +28,7 @@ const ProductCreate = forwardRef((props, ref) => {
             selectedStocks = [];
             setSelectedStocks(selectedStocks);
 
-            setFormData(formData);
+            setFormData({...formData});
 
 
             if (id) {
@@ -37,6 +39,36 @@ const ProductCreate = forwardRef((props, ref) => {
         },
 
     }));
+
+    let [barcode, setBarcode] = useState("");
+    let [barcodeEnded, setBarcodeEnded] = useState(false);
+    let [focusOnProductSearch,setFocusOnProductSearch] = useState(false);
+    const keyPress = useCallback(
+        (e) => {
+            console.log("e.key:", e.key);
+
+            
+            if (!barcodeEnded && e.key != "Enter") {
+                console.log()
+                barcode += e.key;
+                setBarcode(barcode);
+            }
+
+            if (e.key === "Enter") {
+                document.removeEventListener("keydown", keyPress);
+                console.log("barcode:", barcode);
+                barcodeEnded = true;
+                setBarcodeEnded(true);
+                formData.item_code = barcode;
+                formData.useLaserScanner = false;
+                setFormData({...formData});
+            }
+            
+
+        },
+        []
+    );
+
 
 
     function resizeFIle(file, w, h, cb) {
@@ -92,6 +124,8 @@ const ProductCreate = forwardRef((props, ref) => {
     let [formData, setFormData] = useState({
         images_content: [],
         unit: "",
+        useLaserScanner:false,
+        item_code:"",
     });
 
     const [show, SetShow] = useState(false);
@@ -156,6 +190,7 @@ const ProductCreate = forwardRef((props, ref) => {
                     formData.unit = "";
                 }
                 formData.images_content = [];
+                formData.useLaserScanner=false;
                 setFormData({ ...formData });
             })
             .catch(error => {
@@ -635,6 +670,33 @@ const ProductCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-6">
                             <label className="form-label">Item CODE(Optional)</label>
+                            <Form.Check
+                                type="switch"
+                                as="input"
+                                id="use_laser_scanner"
+                                label="Use Laser Scanner to Read Barcode"
+                                value={formData.useLaserScanner}
+                                checked={formData.useLaserScanner ? "checked" : null}
+                             
+                                onChange={(e) => {
+                                    
+                                    formData.useLaserScanner = !formData.useLaserScanner;
+                                    setFormData({ ...formData });
+
+                                    if(formData.useLaserScanner){
+                                        console.log("adding keydown event");
+                                        document.addEventListener("keydown", keyPress);
+                                    }else {
+                                        console.log("removing keydown event");
+                                        document.removeEventListener("keydown", keyPress);
+                                    }
+                                    
+                                    console.log("e.target.value:", formData.useLaserScanner);
+                                
+                                 
+                                   
+                                }}
+                            />
 
                             <div className="input-group mb-3">
                                 <input
@@ -758,7 +820,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                 }}
                             >
-                                <option value="" SELECTED>PC</option>
+                                <option value="">PC</option>
                                 <option value="drum">Drum</option>
                                 <option value="set">Set</option>
                                 <option value="Kg">Kg</option>
@@ -1311,7 +1373,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
-                            <Button variant="primary" type="submit" >
+                            <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
