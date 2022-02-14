@@ -544,7 +544,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                         <h2>Select Products</h2>
                         {errors["product_id"] && (
                             <div style={{ color: "red" }}>
-                                <i class="bi bi-x-lg"> </i>
+                                <i className="bi bi-x-lg"> </i>
                                 {errors["product_id"]}
                             </div>
                         )}
@@ -619,13 +619,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                     }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
                                                 {errors["quantity_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i class="bi bi-x-lg"> </i>
+                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["quantity_" + index]}
                                                     </div>
                                                 )}
                                                 {((selectedProducts[index].quantity) && !errors["quantity_" + index]) ? (
                                                     <div style={{ color: "green" }}>
-                                                        <i class="bi bi-check-lg"> </i>
+                                                        <i className="bi bi-check-lg"> </i>
                                                         Looks good!
                                                     </div>
                                                 ) : null}
@@ -662,13 +662,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                     }} /> SAR
                                                 {errors["purchasereturned_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i class="bi bi-x-lg"> </i>
+                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["purchasereturned_unit_price_" + index]}
                                                     </div>
                                                 )}
                                                 {(selectedProducts[index].purchasereturned_unit_price && !errors["purchasereturned_unit_price_" + index]) ? (
                                                     <div style={{ color: "green" }}>
-                                                        <i class="bi bi-check-lg"> </i>
+                                                        <i className="bi bi-check-lg"> </i>
                                                         Looks good!
                                                     </div>
                                                 ) : null}
@@ -762,13 +762,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                                 {errors.date_str && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.date_str}
                                     </div>
                                 )}
                                 {formData.date_str && !errors.date_str && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -806,13 +806,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.vat_percent && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.vat_percent}
                                     </div>
                                 )}
                                 {formData.vat_percent && !errors.vat_percent && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -874,13 +874,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                 />
                                 {errors.discount && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.discount}
                                     </div>
                                 )}
                                 {!errors.discount && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -916,13 +916,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                 </select>
                                 {errors.status && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.status}
                                     </div>
                                 )}
                                 {formData.status && !errors.status && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
@@ -963,12 +963,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                 <Button hide={true.toString()} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.purchase_returned_by ? (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i> {errors.purchase_returned_by}
+                                        <i className="bi bi-x-lg"> </i> {errors.purchase_returned_by}
                                     </div>
                                 ) : null}
                                 {formData.purchase_returned_by && !errors.purchase_returned_by && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>Looks good!
+                                        <i className="bi bi-check-lg"> </i>Looks good!
                                     </div>
                                 )}
                             </div>
@@ -1012,14 +1012,14 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                 <Button hide={true.toString()} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.purchase_returned_by_signature_id ? (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>{" "}
+                                        <i className="bi bi-x-lg"> </i>{" "}
                                         {errors.purchase_returned_by_signature_id}
                                     </div>
                                 ) : null}
                                 {formData.purchase_returned_by_signature_id &&
                                     !errors.purchase_returned_by_signature_id && (
                                         <div style={{ color: "green" }}>
-                                            <i class="bi bi-check-lg"> </i> Looks good!
+                                            <i className="bi bi-check-lg"> </i> Looks good!
                                         </div>
                                     )}
                             </div>
@@ -1042,13 +1042,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                                 {errors.signature_date_str && (
                                     <div style={{ color: "red" }}>
-                                        <i class="bi bi-x-lg"> </i>
+                                        <i className="bi bi-x-lg"> </i>
                                         {errors.signature_date_str}
                                     </div>
                                 )}
                                 {formData.signature_date_str && !errors.signature_date_str && (
                                     <div style={{ color: "green" }}>
-                                        <i class="bi bi-check-lg"> </i>
+                                        <i className="bi bi-check-lg"> </i>
                                         Looks good!
                                     </div>
                                 )}
