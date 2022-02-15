@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import ProductView from "./view.js";
@@ -31,61 +31,6 @@ const ProductCreate = forwardRef((props, ref) => {
         },
 
     }));
-
-    let [barcode, setBarcode] = useState("");
-    let [barcodeEnded, setBarcodeEnded] = useState(false);
-    function keyPress(e) {
-        console.log("e.key:", e.key);
-
-
-        if (!barcodeEnded && e.key !== "Enter") {
-            console.log()
-            barcode += e.key;
-            setBarcode(barcode);
-        }
-
-        if (e.key === "Enter") {
-            document.removeEventListener("keydown", keyPress);
-            console.log("barcode:", barcode);
-            barcodeEnded = true;
-            setBarcodeEnded(true);
-            console.log("formData1:", formData);
-            formData.item_code = barcode;
-            formData.useLaserScanner = false;
-            setFormData(formData);
-            console.log("formData2:", formData);
-        }
-    }
-    /*
-    const keyPress = useCallback((e) => {
-            console.log("e.key:", e.key);
-
-            
-            if (!barcodeEnded && e.key != "Enter") {
-                console.log()
-                barcode += e.key;
-                setBarcode(barcode);
-            }
-
-            if (e.key === "Enter") {
-                document.removeEventListener("keydown", keyPress);
-                console.log("barcode:", barcode);
-                barcodeEnded = true;
-                setBarcodeEnded(true);
-                console.log("formData1:",formData);
-                formData.item_code = barcode;
-                formData.useLaserScanner = false;
-                setFormData(formData);
-                console.log("formData2:",formData);
-            }
-            
-
-        },
-        []
-    );
-    */
-
-
 
     function resizeFIle(file, w, h, cb) {
         Resizer.imageFileResizer(
@@ -667,35 +612,6 @@ const ProductCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-6">
                             <label className="form-label">Item CODE(Optional)</label>
-                            <Form.Check
-                                type="switch"
-                                as="input"
-                                id="use_laser_scanner"
-                                label="Use Laser Scanner to Read Barcode"
-                                value={formData.useLaserScanner ? formData.useLaserScanner : false}
-                                checked={formData.useLaserScanner ? "checked" : null}
-
-                                onChange={(e) => {
-                                    console.log("formData-10:", formData);
-                                    formData.useLaserScanner = !formData.useLaserScanner;
-                                    setFormData({ ...formData });
-                                    console.log("formData-11:", formData);
-
-                                    if (formData.useLaserScanner) {
-                                        console.log("adding keydown event");
-                                        document.addEventListener("keydown", keyPress);
-                                    } else {
-                                        console.log("removing keydown event");
-                                        document.removeEventListener("keydown", keyPress);
-                                    }
-
-                                    console.log("e.target.value:", formData.useLaserScanner);
-
-
-
-                                }}
-                            />
-
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.item_code ? formData.item_code : ""}

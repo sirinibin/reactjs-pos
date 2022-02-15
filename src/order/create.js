@@ -27,27 +27,29 @@ const OrderCreate = forwardRef((props, ref) => {
     }));
 
 
-    let [barcode, setBarcode] = useState("");
+
+    /*
+     let [barcode, setBarcode] = useState("");
     let [barcodeEnded, setBarcodeEnded] = useState(false);
-
-    function keyPress(e) {
-        console.log("e.key:", e.key);
-
-
-        if (!barcodeEnded && e.key !== "Enter" && e.key !== "Backsspace") {
-            console.log()
-            barcode += e.key;
-            setBarcode(barcode);
+        function keyPress(e) {
+            console.log("e.key:", e.key);
+    
+    
+            if (!barcodeEnded && e.key !== "Enter" && e.key !== "Backsspace") {
+                console.log()
+                barcode += e.key;
+                setBarcode(barcode);
+            }
+    
+            if (e.key === "Enter") {
+                console.log("barcode:", barcode);
+                barcodeEnded = true;
+                setBarcodeEnded(true);
+                getProductByItemCode(barcode);
+            }
+    
         }
-
-        if (e.key === "Enter") {
-            console.log("barcode:", barcode);
-            barcodeEnded = true;
-            setBarcodeEnded(true);
-            getProductByItemCode(barcode);
-        }
-
-    }
+    
 
 
     function getProductByItemCode(itemCode) {
@@ -158,6 +160,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 // setErrors(error);
             });
     }
+    */
 
 
     const selectedDate = new Date();
@@ -343,6 +346,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
+    let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
     async function suggestProducts(searchTerm) {
         console.log("Inside handle suggestProducts");
@@ -377,8 +381,76 @@ const OrderCreate = forwardRef((props, ref) => {
         );
         let data = await result.json();
 
-        setProductOptions(data.result);
+        let products = data.result;
+        if (searchTerm === "" && products.length === 0) {
+            openProductSearchResult = false;
+            setOpenProductSearchResult(false);
+            setIsProductsLoading(false);
+            return;
+        }
+
+        let productFound = false;
+
+        for (let i = 0; i < data.result.length; i++) {
+            if (products[i].item_code === searchTerm) {
+                selectProduct(products[i]);
+                productFound = true;
+            }
+        }
+
+        if (!productFound) {
+            setOpenProductSearchResult(true);
+            setProductOptions(products);
+        }
         setIsProductsLoading(false);
+    }
+
+    function selectProduct(product) {
+        let store_id = undefined;
+        if (selectedStores[0]) {
+            store_id = selectedStores[0].id;
+        }
+        if (!store_id) {
+            setOpenProductSearchResult(false);
+            errors.product_id = "Please Select a Store and try again";
+            setErrors({ ...errors });
+            return;
+        }
+
+        setOpenProductSearchResult(false);
+        selectedProduct = [
+            {
+                id: product.id,
+                item_code: product.item_code,
+                name: product.name,
+                search_label: product.search_label,
+                quantity: 1,
+                unit: product.unit,
+            }
+        ];
+
+
+        if (store_id) {
+            product.unit_price = GetProductUnitPriceInStore(
+                store_id,
+                product.unit_prices
+            );
+
+            let stock = 0;
+            if (product.stock) {
+                stock = GetProductStockInStore(store_id, product.stock);
+            }
+            if (stock === 0) {
+                errors["product_id"] = "This product is not available in store: " + selectedStores[0].name;
+                setErrors({ ...errors });
+            }
+
+            selectedProduct[0].unit_price = product.unit_price;
+            selectedProduct[0].stock = product.stock;
+            console.log("selectedProduct[0].stock:", selectedProduct[0].stock);
+        }
+        setSelectedProduct([...selectedProduct]);
+        addProduct();
     }
 
     async function suggestUsers(searchTerm) {
@@ -622,8 +694,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stock);
         if (stock < quantity) {
-            errors.product_id = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
+            errors.product_id = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for product: " + selectedProduct[0].name;
             setErrors({ ...errors });
+            clearSelectedProduct();
             return;
         }
 
@@ -644,12 +717,7 @@ const OrderCreate = forwardRef((props, ref) => {
             });
         }
 
-        selectedProduct[0].name = "";
-        selectedProduct[0].search_label = "";
-        selectedProduct[0].id = "";
-        selectedProduct[0].quantity = "";
-        selectedProduct[0].unit_price = "";
-        selectedProduct[0].unit = "";
+        clearSelectedProduct();
 
         setSelectedProduct([...selectedProduct]);
         setSelectedProducts([...selectedProducts]);
@@ -658,13 +726,22 @@ const OrderCreate = forwardRef((props, ref) => {
 
         reCalculate();
     }
+    function clearSelectedProduct() {
+        selectedProduct[0].name = "";
+        selectedProduct[0].search_label = "";
+        selectedProduct[0].id = "";
+        selectedProduct[0].quantity = "";
+        selectedProduct[0].unit_price = "";
+        selectedProduct[0].unit = "";
+        setSelectedProduct([...selectedProduct]);
+    }
 
     function removeProduct(product) {
         const index = selectedProducts.indexOf(product);
         if (index > -1) {
             selectedProducts.splice(index, 1);
         }
-        setSelectedProducts(selectedProducts);
+        setSelectedProducts([...selectedProducts]);
 
         reCalculate();
     }
@@ -685,20 +762,22 @@ const OrderCreate = forwardRef((props, ref) => {
     let [vatPrice, setVatPrice] = useState(0.00);
 
     function findVatPrice() {
+        vatPrice = 0.00;
         if (totalPrice > 0) {
             vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
             console.log("vatPrice:", vatPrice);
-            setVatPrice(vatPrice);
         }
+        setVatPrice(vatPrice);
     }
 
     let [netTotal, setNetTotal] = useState(0.00);
 
     function findNetTotal() {
+        netTotal = 0.00;
         if (totalPrice > 0) {
             netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
-            setNetTotal(netTotal);
         }
+        setNetTotal(netTotal);
 
     }
 
@@ -1167,7 +1246,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
                         <div className="col-md-12">
                             <label className="form-label">Product*</label>
-
+                            {/*  
                             <Form.Check
                                 type="switch"
                                 as="input"
@@ -1191,11 +1270,14 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 }}
                             />
+                            */}
 
                             <Typeahead
                                 id="product_id"
                                 size="lg"
                                 labelKey="search_label"
+                                clearButton={true}
+                                open={openProductSearchResult}
                                 isLoading={isProductsLoading}
                                 isInvalid={errors.product_id ? true : false}
                                 onChange={(selectedItems) => {
@@ -1240,9 +1322,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                     console.log("selectedItems:", selectedItems);
                                     setSelectedProduct([...selectedItems]);
                                     console.log("selectedProduct:", selectedProduct);
+                                    setOpenProductSearchResult(false);
                                 }}
                                 options={productOptions}
-                                placeholder="Select Product"
+                                placeholder="Type / Scan Item Code or Name"
                                 selected={selectedProduct}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
