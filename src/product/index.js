@@ -201,7 +201,7 @@ function ProductIndex(props) {
             },
         };
         let Select =
-            "select=id,item_code,part_number,name,category_name,created_by_name,created_at";
+            "select=id,item_code,part_number,name,category_name,created_by_name,created_at,rack";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -499,6 +499,25 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("rack");
+                                                        }}
+                                                    >
+                                                        Rack
+                                                        {sortField === "rack" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "rack" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("category_name");
                                                         }}
                                                     >
@@ -582,6 +601,16 @@ function ProductIndex(props) {
                                                         id="name"
                                                         onChange={(e) =>
                                                             searchByFieldValue("name", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="rack"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("rack", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -689,6 +718,7 @@ function ProductIndex(props) {
                                                         <td>{product.item_code}</td>
                                                         <td>{product.part_number}</td>
                                                         <td>{product.name}</td>
+                                                        <td>{product.rack}</td>
                                                         <td>
                                                             <ul>
                                                                 {product.category_name &&

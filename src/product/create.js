@@ -721,6 +721,40 @@ const ProductCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
+                            <label className="form-label">Rack / Location (Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.rack ? formData.rack : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["rack"] = "";
+                                        setErrors({ ...errors });
+                                        formData.rack = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="rack"
+                                    placeholder="Rack/Location"
+                                />
+                                {errors.rack && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.rack}
+                                    </div>
+                                )}
+                                {formData.rack && !errors.rack && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <div className="col-md-6">
                             <label className="form-label">Categories*</label>
 
                             <div className="input-group mb-3">
