@@ -254,6 +254,9 @@ function QuotationIndex(props) {
     };
     let Select =
       "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
+    if (cookies.get("store_id")) {
+      searchParams.store_id = cookies.get("store_id");
+    }
     setSearchParams(searchParams);
     let queryParams = ObjectToSearchQueryParams(searchParams);
     if (queryParams !== "") {

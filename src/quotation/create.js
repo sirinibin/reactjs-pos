@@ -560,6 +560,10 @@ const QuotationCreate = forwardRef((props, ref) => {
     formData.discount_percent = parseFloat(formData.discount_percent);
     formData.vat_percent = parseFloat(formData.vat_percent);
 
+    if (cookies.get('store_id')) {
+      formData.store_id = cookies.get('store_id');
+    }
+
     console.log("formData.discount:", formData.discount);
 
     let endPoint = "/v1/quotation";
@@ -907,7 +911,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         </Modal.Header>
         <Modal.Body>
           <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-            <div className="col-md-6">
+            {!cookies.get('store_name') ? <div className="col-md-6">
               <label className="form-label">Store*</label>
 
               <div className="input-group mb-3">
@@ -953,7 +957,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   </div>
                 )}
               </div>
-            </div>
+            </div> : ""}
             <div className="col-md-6">
               <label className="form-label">Customer*</label>
 
@@ -1205,6 +1209,17 @@ const QuotationCreate = forwardRef((props, ref) => {
 
                   errors["product_id"] = "";
                   setErrors({ ...errors });
+
+                  if (cookies.get('store_id')) {
+                    formData.store_id = cookies.get('store_id');
+                    selectedStores = [
+                      {
+                        id: cookies.get('store_id'),
+                        name: cookies.get('store_name'),
+                      },
+                    ];
+                    setSelectedStores([...selectedStores]);
+                  }
 
                   if (formData.store_id) {
                     selectedItems[0].unit_price = GetProductUnitPriceInStore(

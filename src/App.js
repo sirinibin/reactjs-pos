@@ -24,7 +24,48 @@ function App() {
           <Dashboard />
         </Route>
 
+        <Route path="/dashboard/salesreturn">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/purchases">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/purchasereturn">
+          <Dashboard />
+        </Route>
+
+
         <Route path="/dashboard/quotations">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/vendors">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/stores">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/customers">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/products">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/product_category">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/users">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/signatures">
           <Dashboard />
         </Route>
 

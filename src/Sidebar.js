@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import {
     Link
 } from "react-router-dom";
+import Cookies from "universal-cookie";
 
 function Sidebar(props) {
+
+    const cookies = new Cookies();
+
 
     const [appState, ChangeState] = useState({
         activeTab: '',
@@ -46,7 +50,9 @@ function Sidebar(props) {
     return <nav id="sidebar" className={'sidebar ' + props.isSidebarOpen + ' js-sidebar'}>
         <div className="sidebar-content js-simplebar">
             <div className="sidebar-brand">
-                <span className="align-middle">Start POS</span>
+                <span className="align-middle">
+                    {cookies.get('store_name') ? cookies.get('store_name') : "Start POS"}
+                </span>
             </div>
 
             <ul className="sidebar-nav">

@@ -248,6 +248,9 @@ function PurchaseReturnIndex(props) {
         };
         let Select =
             "select=id,code,purchase_code,purchase_id,date,net_total,created_by_name,vendor_name,status,created_at";
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {

@@ -12,6 +12,12 @@ import ReactPaginate from "react-paginate";
 function StoreIndex(props) {
     const cookies = new Cookies();
 
+    function selectStore(store) {
+        cookies.set('store_name', store.name, { path: '/' });
+        cookies.set('store_id', store.id, { path: '/' });
+        window.location = "/dashboard/stores";
+    }
+
     const selectedDate = new Date();
 
     //list
@@ -555,6 +561,14 @@ function StoreIndex(props) {
                                                             )}
                                                         </td>
                                                         <td>
+                                                            {cookies.get('store_id') !== store.id ?
+                                                                <Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                    selectStore(store);
+                                                                }}>
+                                                                    <i className="bi bi-select"></i>
+                                                                    SELECT
+                                                                </Button> : "SELECTED"}
+
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(store.id);
                                                             }}>

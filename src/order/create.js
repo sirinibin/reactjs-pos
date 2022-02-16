@@ -19,6 +19,7 @@ import ProductView from "./../product/view.js";
 
 const OrderCreate = forwardRef((props, ref) => {
 
+
     useImperativeHandle(ref, () => ({
         open() {
             setShow(true);
@@ -50,8 +51,8 @@ const OrderCreate = forwardRef((props, ref) => {
     
         }
     
-
-
+ 
+ 
     function getProductByItemCode(itemCode) {
         if (itemCode.includes("Backspace")) {
             errors.product_id = "Please try again";
@@ -62,8 +63,8 @@ const OrderCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
-
-
+ 
+ 
         console.log("inside get getProductByItemCode");
         const requestOptions = {
             method: 'GET',
@@ -72,42 +73,42 @@ const OrderCreate = forwardRef((props, ref) => {
                 'Authorization': cookies.get('access_token'),
             },
         };
-
+ 
         errors["product_id"] = "";
         setErrors({ ...errors });
-
-
+ 
+ 
         console.log("selectedStores[0]:", selectedStores[0]);
-
+ 
         let store_id = undefined;
         if (selectedStores[0]) {
             store_id = selectedStores[0].id;
         }
-
+ 
         console.log("store_id:", store_id);
-
+ 
         if (!store_id) {
             errors.product_id = "Please Select a Store and try again";
             setErrors({ ...errors });
             return;
         }
-
-
+ 
+ 
         setProcessing(true);
         fetch('/v1/product/code/' + itemCode, requestOptions)
             .then(async response => {
                 setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
-
+ 
                 // check for error response
                 if (!response.ok) {
                     const error = (data && data.errors);
                     return Promise.reject(error);
                 }
-
+ 
                 let product = data.result;
-
+ 
                 selectedProduct = [
                     {
                         id: product.id,
@@ -118,13 +119,13 @@ const OrderCreate = forwardRef((props, ref) => {
                         unit: product.unit,
                     }
                 ];
-
+ 
                 if (store_id) {
                     product.unit_price = GetProductUnitPriceInStore(
                         store_id,
                         product.unit_prices
                     );
-
+ 
                     let stock = 0;
                     if (product.stock) {
                         stock = GetProductStockInStore(store_id, product.stock);
@@ -133,19 +134,19 @@ const OrderCreate = forwardRef((props, ref) => {
                         errors["product_id"] = "This product is not available in store: " + selectedStores[0].name;
                         setErrors({ ...errors });
                     }
-
+ 
                     selectedProduct[0].unit_price = product.unit_price;
                     selectedProduct[0].stock = product.stock;
                     console.log("selectedProduct[0].stock:", selectedProduct[0].stock);
                 }
                 setSelectedProduct([...selectedProduct]);
                 addProduct();
-
+ 
                 barcode = "";
                 setBarcode(barcode);
                 barcodeEnded = false;
                 setBarcodeEnded(false);
-
+ 
             })
             .catch(error => {
                 setProcessing(false);
@@ -548,6 +549,10 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.vat_percent = parseFloat(formData.vat_percent);
         formData.partial_payment_amount = parseFloat(formData.partial_payment_amount);
 
+        if (cookies.get('store_id')) {
+            formData.store_id = cookies.get('store_id');
+        }
+
 
         let endPoint = "/v1/order";
         let method = "POST";
@@ -920,7 +925,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <div className="col-md-6">
+                        {!cookies.get('store_name') ? <div className="col-md-6">
                             <label className="form-label">Store*</label>
 
                             <div className="input-group mb-3">
@@ -1011,7 +1016,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
                         <div className="col-md-6">
                             <label className="form-label">Customer*</label>
 
@@ -1292,6 +1297,18 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                     errors["product_id"] = "";
                                     setErrors({ ...errors });
+
+                                    if (cookies.get('store_id')) {
+                                        formData.store_id = cookies.get('store_id');
+                                        selectedStores = [
+                                            {
+                                                id: cookies.get('store_id'),
+                                                name: cookies.get('store_name'),
+                                            },
+                                        ];
+                                        setSelectedStores([...selectedStores]);
+                                    }
+
 
                                     if (!formData.store_id) {
                                         errors.product_id = "Please Select a Store and try again";
