@@ -25,12 +25,12 @@ const ProductCreate = forwardRef((props, ref) => {
             setSelectedStocks(selectedStocks);
 
 
-            formData={
+            formData = {
                 images_content: [],
                 unit: "",
                 item_code: "",
             };
-            setFormData({formData});
+            setFormData({ formData });
 
             if (id) {
                 getProduct(id);
@@ -373,6 +373,16 @@ const ProductCreate = forwardRef((props, ref) => {
     }
 
     function addStock() {
+
+        if (cookies.get("store_id")) {
+            if (selectedStock[0]) {
+                selectedStock[0].id = cookies.get("store_id");
+                selectedStock[0].name = cookies.get("store_name");
+                setSelectedStock([...selectedStock]);
+            }
+
+        }
+
         if (!selectedStock[0].id) {
             errors.store_id2 = "Store is required";
             setErrors({ ...errors });
@@ -419,6 +429,15 @@ const ProductCreate = forwardRef((props, ref) => {
         errors.retail_unit_price = "";
         errors.store_id1 = "";
         setErrors({ ...errors });
+
+        if (cookies.get("store_id")) {
+            if (selectedUnitPrice[0]) {
+                selectedUnitPrice[0].id = cookies.get("store_id");
+                selectedUnitPrice[0].name = cookies.get("store_name");
+                setSelectedUnitPrice([...selectedUnitPrice]);
+            }
+
+        }
 
         if (!selectedUnitPrice[0].id) {
             errors.store_id1 = "Store is required";
@@ -551,6 +570,21 @@ const ProductCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                        <Modal.Footer>
+                            <Button variant="primary" type="submit" >
+                                {isProcessing ?
+                                    <Spinner
+                                        as="span"
+                                        animation="bproduct"
+                                        size="sm"
+                                        role="status"
+                                        aria-hidden={true}
+                                    /> + " Processing..."
+
+                                    : formData.id ? "Update" : "Create"
+                                }
+                            </Button>
+                        </Modal.Footer>
 
                         <div className="col-md-6">
                             <label className="form-label">Name*</label>
@@ -756,7 +790,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
                         <h4>Unit Price</h4>
-                        <div className="col-md-4">
+
+                        {!cookies.get('store_name') ? <div className="col-md-4" >
                             <label className="form-label">Select Store*</label>
 
                             <div className="input-group mb-3">
@@ -805,7 +840,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
 
                         <div className="col-md-2">
                             <label className="form-label">Purchase*</label>
@@ -1083,7 +1118,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             </table>
                         </div>
                         <h4>Stock</h4>
-                        <div className="col-md-5">
+                        {!cookies.get('store_name') ? <div className="col-md-5">
                             <label className="form-label">Select Store*</label>
 
                             <div className="input-group mb-3">
@@ -1133,7 +1168,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
 
                         <div className="col-md-2">
                             <label className="form-label">Stock*</label>
@@ -1295,7 +1330,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                             }
                                             formData.images_content[0] = result;
                                             setFormData({ ...formData });
-
+    
                                             console.log("formData.images_content[0]:", formData.images_content[0]);
                                         });
                                         */
