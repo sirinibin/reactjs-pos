@@ -29,6 +29,18 @@ const ProductView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
+    function getProductRetailPrice(product) {
+        let store_id = cookies.get("store_id");
+        if (!store_id || !product.unit_prices) {
+            return "";
+        }
+        for (let i = 0; i < product.unit_prices.length; i++) {
+            if (product.unit_prices[i].store_id === store_id) {
+                return parseFloat(product.unit_prices[i].retail_unit_price + parseFloat(product.unit_prices[i].retail_unit_price * 0.15)).toFixed(2);
+            }
+        }
+        return "";
+    }
 
     function getProduct(id) {
         console.log("inside get Product");
@@ -89,7 +101,7 @@ const ProductView = forwardRef((props, ref) => {
 
             const style = `
                 height:20vh;
-                width:20vw;
+                width:40vw;
                 position:absolute;
                 left:0:
                 top:0;
@@ -109,7 +121,9 @@ const ProductView = forwardRef((props, ref) => {
         const opt = {
             scale: 4
         }
+
         const elem = qrcodeRef.current;
+
         html2canvas(elem, opt).then(canvas => {
             const iframe = document.createElement('iframe')
             iframe.name = 'printf'
@@ -168,9 +182,24 @@ const ProductView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
-                            <th>Barcode (Note:Click on Image to Print):</th><td> <div ref={barcodeRef} onClick={printBarCode} style={{
-                                cursor: "pointer",
-                            }}>  {model.item_code ? <Barcode value={model.item_code} width={2} /> : ""} </div></td>
+                            <th>Barcode (Note:Click on Image to Print):</th>
+                            <td>
+                                <div ref={barcodeRef} onClick={printBarCode} style={{
+                                    cursor: "pointer",
+                                }}>
+                                    <div className="row">
+                                        <div className="col text-center">
+                                            <b>{cookies.get("store_name")}</b>
+                                        </div>
+                                    </div>
+                                    {model.item_code ? <Barcode value={model.item_code} width={2} /> : ""}
+                                    <div className="row">
+                                        <div className="col text-center">
+                                            <b>{"Unit Price: " + getProductRetailPrice(model) + " SAR"}</b>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                             <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode} style={{
                                 cursor: "pointer",
                             }} > {model.item_code ? <QRCode value={model.item_code} size={128} /> : ""}</div> </td>
