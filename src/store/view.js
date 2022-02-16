@@ -89,6 +89,7 @@ const StoreView = forwardRef((props, ref) => {
                         <tr>
                             <th>Name:</th><td> {model.name}</td>
                             <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
+                            <th>Code:</th><td> {model.code}</td>
                         </tr>
                         <tr>
                             <th>Title:</th><td> {model.title}</td>

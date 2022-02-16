@@ -165,7 +165,7 @@ function StoreIndex(props) {
             },
         };
         let Select =
-            "select=id,name,created_by_name,created_at";
+            "select=id,name,code,created_by_name,created_at";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -425,6 +425,25 @@ function StoreIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("code");
+                                                        }}
+                                                    >
+                                                        Code
+                                                        {sortField === "code" && sortStore === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "code" && sortStore === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("created_by_name");
                                                         }}
                                                     >
@@ -468,6 +487,16 @@ function StoreIndex(props) {
                                                         id="name"
                                                         onChange={(e) =>
                                                             searchByFieldValue("name", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("code", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -553,6 +582,7 @@ function StoreIndex(props) {
                                                 storeList.map((store) => (
                                                     <tr key={store.id}>
                                                         <td>{store.name}</td>
+                                                        <td>{store.code}</td>
                                                         <td>{store.created_by_name}</td>
                                                         <td>
                                                             {format(
