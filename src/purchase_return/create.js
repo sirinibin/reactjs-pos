@@ -541,6 +541,25 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     {selectedProducts.length === 0 && "Already Returned All purchased products"}
 
                     {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+
+                        <div className="col-md-12 align-self-end text-end">
+                            <Button variant="primary" type="submit" >
+                                {isProcessing ?
+                                    <Spinner
+                                        as="span"
+                                        animation="border"
+                                        size="sm"
+                                        role="status"
+                                        aria-hidden={true}
+                                    /> + " Creating..."
+
+                                    : ""
+                                }
+                                {formData.id ? "Update" : "Create"}
+
+                            </Button>
+                        </div>
+
                         <h2>Select Products</h2>
                         {errors["product_id"] && (
                             <div style={{ color: "red" }}>

@@ -48,6 +48,16 @@ const QuotationCreate = forwardRef((props, ref) => {
 
       reCalculate();
 
+      if (cookies.get("user_id")) {
+        selectedDeliveredByUsers = [{
+          id: cookies.get("user_id"),
+          name: cookies.get("user_name"),
+        }];
+        formData.delivered_by = cookies.get("user_id");
+        setFormData({ ...formData });
+        setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
+      }
+
       setFormData({ ...formData });
       if (id) {
         getQuotation(id);
@@ -911,6 +921,24 @@ const QuotationCreate = forwardRef((props, ref) => {
         </Modal.Header>
         <Modal.Body>
           <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+            <div className="col-md-12 align-self-end text-end">
+              <Button variant="primary" type="submit" >
+                {isProcessing ?
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden={true}
+                  /> + " Creating..."
+
+                  : ""
+                }
+                {formData.id ? "Update" : "Create"}
+
+              </Button>
+            </div>
+
             {!cookies.get('store_name') ? <div className="col-md-6">
               <label className="form-label">Store*</label>
 
@@ -1005,186 +1033,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 )}
               </div>
             </div>
-            <div className="col-md-6">
-              <label className="form-label">Date*</label>
 
-              <div className="input-group mb-3">
-                <DatePicker
-                  id="date_str"
-                  value={formData.date_str}
-                  selected={selectedDate}
-                  className="form-control"
-                  dateFormat="MMM dd yyyy"
-                  onChange={(value) => {
-                    formData.date_str = format(new Date(value), "MMM dd yyyy");
-                    setFormData({ ...formData });
-                  }}
-                />
-
-                {errors.date_str && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.date_str}
-                  </div>
-                )}
-                {formData.date_str && !errors.date_str && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <label className="form-label">VAT %*</label>
-
-              <div className="input-group mb-3">
-                <input
-                  value={formData.vat_percent}
-                  type='number'
-                  onChange={(e) => {
-                    console.log("Inside onchange vat percent");
-                    if (isNaN(e.target.value)) {
-                      errors["vat_percent"] = "Invalid Quantity";
-                      setErrors({ ...errors });
-                      return;
-                    }
-
-                    errors["vat_percent"] = "";
-                    setErrors({ ...errors });
-
-                    formData.vat_percent = e.target.value;
-                    findVatPrice();
-                    findNetTotal();
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-                  id="validationCustom01"
-                  placeholder="VAT %"
-                  aria-label="Select Store"
-                  aria-describedby="button-addon1"
-                />
-                {errors.vat_percent && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.vat_percent}
-                  </div>
-                )}
-                {formData.vat_percent && !errors.vat_percent && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="col-md-6">
-              <label className="form-label">Discount*</label>
-              <Form.Check
-                type="switch"
-                id="custom-switch"
-                label="%"
-                value={formData.is_discount_percent}
-                checked={formData.is_discount_percent ? "checked" : ""}
-                onChange={(e) => {
-                  formData.is_discount_percent = !formData.is_discount_percent;
-                  console.log("e.target.value:", formData.is_discount_percent);
-                  setFormData({ ...formData });
-                  reCalculate();
-                }}
-              />
-              <div className="input-group mb-3">
-                <input
-                  value={formData.discountValue}
-                  type='number'
-                  onChange={(e) => {
-                    if (e.target.value === 0) {
-                      formData.discountValue = e.target.value;
-                      setFormData({ ...formData });
-                      errors["discount"] = "";
-                      setErrors({ ...errors });
-                      reCalculate();
-                      return;
-                    }
-
-                    if (!e.target.value) {
-                      formData.discountValue = "";
-                      errors["discount"] = "Invalid Discount";
-                      setFormData({ ...formData });
-                      setErrors({ ...errors });
-                      return;
-                    }
-
-                    errors["discount"] = "";
-                    setErrors({ ...errors });
-
-                    formData.discountValue = e.target.value;
-                    setFormData({ ...formData });
-                    reCalculate();
-                  }}
-                  className="form-control"
-                  id="validationCustom02"
-                  placeholder="Discount"
-                />
-                {errors.discount && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.discount}
-                  </div>
-                )}
-                {!errors.discount && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="col-md-6">
-              <label className="form-label">Status*</label>
-
-              <div className="input-group mb-3">
-                <select
-                  onChange={(e) => {
-                    console.log("Inside onchange status");
-                    if (!e.target.value) {
-                      errors["status"] = "Invalid Status";
-                      setErrors({ ...errors });
-                      return;
-                    }
-
-                    errors["status"] = "";
-                    setErrors({ ...errors });
-
-                    formData.status = e.target.value;
-                    setFormData({ ...formData });
-                    console.log(formData);
-                  }}
-                  className="form-control"
-                >
-                  <option value="created">Created</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="pending">Pending</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                {errors.status && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.status}
-                  </div>
-                )}
-                {formData.status && !errors.status && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
-              </div>
-            </div>
             <div className="col-md-12">
               <label className="form-label">Product*</label>
 
@@ -1663,6 +1512,187 @@ const QuotationCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="col-md-6">
+              <label className="form-label">Date*</label>
+
+              <div className="input-group mb-3">
+                <DatePicker
+                  id="date_str"
+                  value={formData.date_str}
+                  selected={selectedDate}
+                  className="form-control"
+                  dateFormat="MMM dd yyyy"
+                  onChange={(value) => {
+                    formData.date_str = format(new Date(value), "MMM dd yyyy");
+                    setFormData({ ...formData });
+                  }}
+                />
+
+                {errors.date_str && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.date_str}
+                  </div>
+                )}
+                {formData.date_str && !errors.date_str && (
+                  <div style={{ color: "green" }}>
+                    <i className="bi bi-check-lg"> </i>
+                    Looks good!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="col-md-6">
+              <label className="form-label">VAT %*</label>
+
+              <div className="input-group mb-3">
+                <input
+                  value={formData.vat_percent}
+                  type='number'
+                  onChange={(e) => {
+                    console.log("Inside onchange vat percent");
+                    if (isNaN(e.target.value)) {
+                      errors["vat_percent"] = "Invalid Quantity";
+                      setErrors({ ...errors });
+                      return;
+                    }
+
+                    errors["vat_percent"] = "";
+                    setErrors({ ...errors });
+
+                    formData.vat_percent = e.target.value;
+                    findVatPrice();
+                    findNetTotal();
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+                  id="validationCustom01"
+                  placeholder="VAT %"
+                  aria-label="Select Store"
+                  aria-describedby="button-addon1"
+                />
+                {errors.vat_percent && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.vat_percent}
+                  </div>
+                )}
+                {formData.vat_percent && !errors.vat_percent && (
+                  <div style={{ color: "green" }}>
+                    <i className="bi bi-check-lg"> </i>
+                    Looks good!
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Discount*</label>
+              <Form.Check
+                type="switch"
+                id="custom-switch"
+                label="%"
+                value={formData.is_discount_percent}
+                checked={formData.is_discount_percent ? "checked" : ""}
+                onChange={(e) => {
+                  formData.is_discount_percent = !formData.is_discount_percent;
+                  console.log("e.target.value:", formData.is_discount_percent);
+                  setFormData({ ...formData });
+                  reCalculate();
+                }}
+              />
+              <div className="input-group mb-3">
+                <input
+                  value={formData.discountValue}
+                  type='number'
+                  onChange={(e) => {
+                    if (e.target.value === 0) {
+                      formData.discountValue = e.target.value;
+                      setFormData({ ...formData });
+                      errors["discount"] = "";
+                      setErrors({ ...errors });
+                      reCalculate();
+                      return;
+                    }
+
+                    if (!e.target.value) {
+                      formData.discountValue = "";
+                      errors["discount"] = "Invalid Discount";
+                      setFormData({ ...formData });
+                      setErrors({ ...errors });
+                      return;
+                    }
+
+                    errors["discount"] = "";
+                    setErrors({ ...errors });
+
+                    formData.discountValue = e.target.value;
+                    setFormData({ ...formData });
+                    reCalculate();
+                  }}
+                  className="form-control"
+                  id="validationCustom02"
+                  placeholder="Discount"
+                />
+                {errors.discount && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.discount}
+                  </div>
+                )}
+                {!errors.discount && (
+                  <div style={{ color: "green" }}>
+                    <i className="bi bi-check-lg"> </i>
+                    Looks good!
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label">Status*</label>
+
+              <div className="input-group mb-3">
+                <select
+                  onChange={(e) => {
+                    console.log("Inside onchange status");
+                    if (!e.target.value) {
+                      errors["status"] = "Invalid Status";
+                      setErrors({ ...errors });
+                      return;
+                    }
+
+                    errors["status"] = "";
+                    setErrors({ ...errors });
+
+                    formData.status = e.target.value;
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+                >
+                  <option value="created">Created</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="pending">Pending</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="rejected">Rejected</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+                {errors.status && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.status}
+                  </div>
+                )}
+                {formData.status && !errors.status && (
+                  <div style={{ color: "green" }}>
+                    <i className="bi bi-check-lg"> </i>
+                    Looks good!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="col-md-6">
               <label className="form-label">Delivered By*</label>
 
               <div className="input-group mb-3">
@@ -1795,7 +1825,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               <Button variant="secondary" onClick={handleClose}>
                 Close
               </Button>
-              <Button variant="primary" onClick={handleCreate} >
+              <Button variant="primary" type="submit" >
                 {isProcessing ?
                   <Spinner
                     as="span"

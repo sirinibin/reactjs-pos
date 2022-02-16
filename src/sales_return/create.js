@@ -19,6 +19,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
+
             formData = {
                 order_id: id,
                 vat_percent: 15.0,
@@ -33,6 +34,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 payment_method: "cash",
                 price_type: "retail"
             };
+            if (cookies.get("user_id")) {
+                selectedReceivedByUsers = [{
+                    id: cookies.get("user_id"),
+                    name: cookies.get("user_name"),
+                }];
+                formData.received_by = cookies.get("user_id");
+                setFormData({ ...formData });
+                setSelectedReceivedByUsers([...selectedReceivedByUsers]);
+            }
             setFormData({ ...formData });
             if (id) {
                 getOrder(id);
