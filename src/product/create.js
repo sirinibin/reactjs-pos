@@ -570,21 +570,24 @@ const ProductCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <Modal.Footer>
+
+                        <div className="col-md-12 align-self-end text-end">
                             <Button variant="primary" type="submit" >
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
-                                        animation="bproduct"
+                                        animation="border"
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
-                                    /> + " Processing..."
+                                    /> + " Creating..."
 
-                                    : formData.id ? "Update" : "Create"
+                                    : ""
                                 }
+                                {formData.id ? "Update" : "Create"}
+
                             </Button>
-                        </Modal.Footer>
+                        </div>
 
                         <div className="col-md-6">
                             <label className="form-label">Name*</label>
@@ -1359,7 +1362,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
-                            <Button variant="primary" onClick={handleCreate} >
+                            <Button variant="primary" type="submit" >
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
