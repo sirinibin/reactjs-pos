@@ -186,16 +186,31 @@ const ProductView = forwardRef((props, ref) => {
                             <td>
                                 <div ref={barcodeRef} onClick={printBarCode} style={{
                                     cursor: "pointer",
+                                    border: "solid 1px",
+                                    marginTop: "10px",
                                 }}>
-                                    <div className="row">
+                                    <div className="row" style={{
+                                        border: "solid 0px",
+                                        marginTop: "20px",
+                                    }}>
                                         <div className="col text-center">
-                                            <b>{cookies.get("store_name")}</b>
+                                            <h4>{cookies.get("store_name")}</h4>
                                         </div>
                                     </div>
                                     {model.item_code ? <Barcode value={model.item_code} width={2} /> : ""}
                                     <div className="row">
                                         <div className="col text-center">
-                                            <b>{"Unit Price: " + getProductRetailPrice(model) + " SAR"}</b>
+                                            {/* <h3>{"Unit Price: " + getProductRetailPrice(model) + " SAR"}</h3> */}
+                                            <h3>
+                                                <NumberFormat
+                                                    value={getProductRetailPrice(model)}
+                                                    displayType={"text"}
+                                                    thousandSeparator={true}
+                                                    prefix={"Unit Price: "}
+                                                    suffix={" SAR"}
+                                                    renderText={(value, props) => value}
+                                                />
+                                            </h3>
                                         </div>
                                     </div>
                                 </div>
