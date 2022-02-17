@@ -403,7 +403,7 @@ const OrderCreate = forwardRef((props, ref) => {
         let productFound = false;
 
         for (let i = 0; i < data.result.length; i++) {
-            if (products[i].item_code === searchTerm) {
+            if (products[i].bar_code === searchTerm) {
                 selectProduct(products[i]);
                 productFound = true;
             }
