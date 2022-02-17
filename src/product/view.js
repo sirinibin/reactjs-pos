@@ -193,7 +193,7 @@ const ProductView = forwardRef((props, ref) => {
                                     marginTop: "10px",
                                 }}>
                                     <div className="row" >
-                                        <div className="col text-center">
+                                        <div className="col text-left">
                                             <span style={{
                                                 border: "solid 0px",
                                                 fontSize: "12px"
@@ -201,31 +201,32 @@ const ProductView = forwardRef((props, ref) => {
                                             </span>
                                         </div>
                                     </div>
-                                    <div className="row" >
-                                        <div className="col text-center">
-                                            {model.item_code ? <Barcode value={model.bar_code} width={1} /> : ""}
-                                        </div>
-                                    </div>
                                     <div className="row" style={{
                                         border: "solid 0px",
                                     }}>
-                                        <div className="col text-center" style={{
+                                        <div className="col text-left" style={{
                                             fontSize: 10,
                                         }}>
                                             {model.name}
                                         </div>
                                     </div>
+                                    <div className="row" >
+                                        <div className="col text-center">
+                                            {model.item_code ? <Barcode value={model.bar_code} width={1} /> : ""}
+                                        </div>
+                                    </div>
                                     <div className="row">
-                                        <div className="col text-center" style={{
+                                        <div className="col text-left" style={{
                                             fontSize: 10,
+                                            fontWeight: "bold",
                                         }} >
 
                                             <NumberFormat
                                                 value={getProductRetailPrice(model)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                prefix={"Unit Price: "}
-                                                suffix={" SAR"}
+                                                prefix={"SAR: "}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </div>
