@@ -198,30 +198,25 @@ const ProductView = forwardRef((props, ref) => {
                                     border: "solid 1px",
                                     marginTop: "10px",
                                 }}>
-                                    <div className="row" style={{
-                                        border: "solid 0px",
-                                        marginTop: "20px",
-                                    }}>
+                                    <div className="row" >
                                         <div className="col text-center">
-                                            <span style={{
-                                                fontSize: 12,
-                                            }}>{cookies.get("store_name")}</span>
+                                            <h4>{cookies.get("store_name")}</h4>
                                         </div>
                                     </div>
                                     {model.item_code ? <Barcode value={model.bar_code} width={1} /> : ""}
                                     <div className="row" style={{
                                         border: "solid 0px",
                                     }}>
-                                        <div className="col text-center" style={{
+                                        <h4 className="col text-center" style={{
                                             fontSize: 12,
                                         }}>
-                                            <b>{model.name}</b>
-                                        </div>
+                                            {model.name}
+                                        </h4>
                                     </div>
                                     <div className="row">
                                         <div className="col text-center">
                                             {/* <h3>{"Unit Price: " + getProductRetailPrice(model) + " SAR"}</h3> */}
-                                            <span style={{
+                                            <h4 style={{
                                                 fontSize: 12,
                                                 fontWeight: "bold"
                                             }} >
@@ -233,7 +228,7 @@ const ProductView = forwardRef((props, ref) => {
                                                     suffix={" SAR"}
                                                     renderText={(value, props) => value}
                                                 />
-                                            </span>
+                                            </h4>
                                         </div>
                                     </div>
                                 </div>
