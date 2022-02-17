@@ -215,7 +215,7 @@ const ProductView = forwardRef((props, ref) => {
                                         <div className="col text-center">
                                             {/* <h3>{"Unit Price: " + getProductRetailPrice(model) + " SAR"}</h3> */}
                                             <span style={{
-                                                fontSize: 20,
+                                                fontSize: 14,
                                                 fontWeight: "bold"
                                             }} >
                                                 <NumberFormat
