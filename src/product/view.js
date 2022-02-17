@@ -198,10 +198,17 @@ const ProductView = forwardRef((props, ref) => {
                                         </div>
                                     </div>
                                     {model.item_code ? <Barcode value={model.item_code} width={2} /> : ""}
+                                    <div className="row" style={{
+                                        border: "solid 0px",
+                                    }}>
+                                        <div className="col text-center">
+                                            <h4>{model.name}</h4>
+                                        </div>
+                                    </div>
                                     <div className="row">
                                         <div className="col text-center">
                                             {/* <h3>{"Unit Price: " + getProductRetailPrice(model) + " SAR"}</h3> */}
-                                            <h3>
+                                            <h4>
                                                 <NumberFormat
                                                     value={getProductRetailPrice(model)}
                                                     displayType={"text"}
@@ -210,7 +217,7 @@ const ProductView = forwardRef((props, ref) => {
                                                     suffix={" SAR"}
                                                     renderText={(value, props) => value}
                                                 />
-                                            </h3>
+                                            </h4>
                                         </div>
                                     </div>
                                 </div>
