@@ -100,25 +100,19 @@ const ProductView = forwardRef((props, ref) => {
             })
 
             const style = `
-                height:16vh;
+                height:15vh;
                 width:35vw;
                 position:relative;
                 left:0:
                 top:0;
-                margin-left:33%;
+                margin-left:250;
                 margin-top:3%;
                 margin-bottom:50%;
             `;
 
-
-            const bodyStyle = `
-                height:30vh;
-            `;
-
-
             const url = `<img style="${style}" src="${imgUrl}"/>`;
             var newWin = window.frames["printf"];
-            newWin.document.write(`<body onload="window.print()" style="${bodyStyle}">${url}</body>`);
+            newWin.document.write(`<body onload="window.print()" >${url}</body>`);
             newWin.document.close();
 
         });
@@ -200,35 +194,40 @@ const ProductView = forwardRef((props, ref) => {
                                 }}>
                                     <div className="row" >
                                         <div className="col text-center">
-                                            <h4>{cookies.get("store_name")}</h4>
+                                            <span style={{
+                                                border: "solid 0px",
+                                                fontSize: "12px"
+                                            }} >{cookies.get("store_name")}
+                                            </span>
                                         </div>
                                     </div>
-                                    {model.item_code ? <Barcode value={model.bar_code} width={1} /> : ""}
+                                    <div className="row" >
+                                        <div className="col text-center">
+                                            {model.item_code ? <Barcode value={model.bar_code} width={1} /> : ""}
+                                        </div>
+                                    </div>
                                     <div className="row" style={{
                                         border: "solid 0px",
                                     }}>
-                                        <h4 className="col text-center" style={{
-                                            fontSize: 12,
+                                        <div className="col text-center" style={{
+                                            fontSize: 10,
                                         }}>
                                             {model.name}
-                                        </h4>
+                                        </div>
                                     </div>
                                     <div className="row">
-                                        <div className="col text-center">
-                                            {/* <h3>{"Unit Price: " + getProductRetailPrice(model) + " SAR"}</h3> */}
-                                            <h4 style={{
-                                                fontSize: 12,
-                                                fontWeight: "bold"
-                                            }} >
-                                                <NumberFormat
-                                                    value={getProductRetailPrice(model)}
-                                                    displayType={"text"}
-                                                    thousandSeparator={true}
-                                                    prefix={"Unit Price: "}
-                                                    suffix={" SAR"}
-                                                    renderText={(value, props) => value}
-                                                />
-                                            </h4>
+                                        <div className="col text-center" style={{
+                                            fontSize: 10,
+                                        }} >
+
+                                            <NumberFormat
+                                                value={getProductRetailPrice(model)}
+                                                displayType={"text"}
+                                                thousandSeparator={true}
+                                                prefix={"Unit Price: "}
+                                                suffix={" SAR"}
+                                                renderText={(value, props) => value}
+                                            />
                                         </div>
                                     </div>
                                 </div>
