@@ -303,6 +303,7 @@ function ProductIndex(props) {
                 productname: productList[i].name,
                 price: getProductRetailPrice(productList[i]),
                 barcode: productList[i].bar_code,
+                rack: productList[i].rack,
             });
         }
         console.log("jsonContent:", jsonContent);
