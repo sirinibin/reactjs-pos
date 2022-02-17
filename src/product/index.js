@@ -201,7 +201,7 @@ function ProductIndex(props) {
             },
         };
         let Select =
-            "select=id,item_code,part_number,name,category_name,created_by_name,created_at,rack";
+            "select=id,item_code,bar_code,part_number,name,category_name,created_by_name,created_at,rack";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -461,6 +461,25 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("bar_code");
+                                                        }}
+                                                    >
+                                                        Bar Code
+                                                        {sortField === "bar_code" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "bar_code" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("part_number");
                                                         }}
                                                     >
@@ -581,6 +600,16 @@ function ProductIndex(props) {
                                                         id="item_code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("item_code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="bar_code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("bar_code", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -716,6 +745,7 @@ function ProductIndex(props) {
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
                                                         <td>{product.item_code}</td>
+                                                        <td>{product.bar_code}</td>
                                                         <td>{product.part_number}</td>
                                                         <td>{product.name}</td>
                                                         <td>{product.rack}</td>
