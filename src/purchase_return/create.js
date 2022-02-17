@@ -42,6 +42,15 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "purchase_returned",
             };
+            if (cookies.get("user_id")) {
+                selectedPurchaseReturnedByUsers = [{
+                    id: cookies.get("user_id"),
+                    name: cookies.get("user_name"),
+                }];
+                formData.purchase_returned_by = cookies.get("user_id");
+                setFormData({ ...formData });
+                setSelectedPurchaseReturnedByUsers([...selectedPurchaseReturnedByUsers]);
+            }
 
             setFormData({ ...formData });
 
@@ -177,6 +186,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 setSelectedProducts([...selectedProducts]);
 
 
+                /*
 
                 let selectedPurchaseReturnedByUsers = [
                     {
@@ -184,7 +194,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                         name: purchase.order_placed_by_name
                     }
                 ];
+                */
 
+                /*
                 if (purchase.order_placed_by_signature_id) {
                     let selectedPurchaseReturnedBySignatures = [
                         {
@@ -195,8 +207,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                     setSelectedPurchaseReturnedBySignatures([...selectedPurchaseReturnedBySignatures]);
                 }
+                */
 
-                setSelectedPurchaseReturnedByUsers([...selectedPurchaseReturnedByUsers]);
+                // setSelectedPurchaseReturnedByUsers([...selectedPurchaseReturnedByUsers]);
 
 
                 reCalculate();

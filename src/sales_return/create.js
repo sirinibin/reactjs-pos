@@ -108,8 +108,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 //console.log("formData.order_id:", formData.order_id);
                 formData.order_code = order.code;
                 formData.store_id = order.store_id;
+                /*
                 formData.received_by = order.delivered_by;
                 formData.received_by_signature_id = order.delivered_by_signature_id;
+                */
                 formData.customer_id = order.customer_id;
 
                 formData.is_discount_percent = order.is_discount_percent;
@@ -136,13 +138,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 setSelectedStores(selectedStores);
                 console.log("selectedStores:", selectedStores);
 
+                /*
                 let selectedReceivedByUsers = [
                     {
                         id: order.delivered_by,
                         name: order.delivered_by_name
                     }
                 ];
+                */
 
+                /*
                 if (order.delivered_by_signature_id) {
                     let selectedReceivedBySignatures = [
                         {
@@ -152,8 +157,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     ];
                     setSelectedReceivedBySignatures([...selectedReceivedBySignatures]);
                 }
+                */
 
-                setSelectedReceivedByUsers([...selectedReceivedByUsers]);
+                //setSelectedReceivedByUsers([...selectedReceivedByUsers]);
 
 
 
