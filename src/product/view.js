@@ -106,7 +106,7 @@ const ProductView = forwardRef((props, ref) => {
                 left:0:
                 top:0;
                 margin-left:34%;
-                margin-top:0%;
+                margin-top:10%;
             `;
 
             const url = `<img style="${style}" src="${imgUrl}"/>`;
@@ -196,21 +196,28 @@ const ProductView = forwardRef((props, ref) => {
                                         marginTop: "20px",
                                     }}>
                                         <div className="col text-center">
-                                            <h4>{cookies.get("store_name")}</h4>
+                                            <span style={{
+                                                fontSize: 14,
+                                            }}>{cookies.get("store_name")}</span>
                                         </div>
                                     </div>
                                     {model.item_code ? <Barcode value={model.item_code} width={1} /> : ""}
                                     <div className="row" style={{
                                         border: "solid 0px",
                                     }}>
-                                        <div className="col text-center">
-                                            <h4>{model.name}</h4>
+                                        <div className="col text-center" style={{
+                                            fontSize: 12,
+                                        }}>
+                                            <b>{model.name}</b>
                                         </div>
                                     </div>
                                     <div className="row">
                                         <div className="col text-center">
                                             {/* <h3>{"Unit Price: " + getProductRetailPrice(model) + " SAR"}</h3> */}
-                                            <h4>
+                                            <span style={{
+                                                fontSize: 20,
+                                                fontWeight: "bold"
+                                            }} >
                                                 <NumberFormat
                                                     value={getProductRetailPrice(model)}
                                                     displayType={"text"}
@@ -219,7 +226,7 @@ const ProductView = forwardRef((props, ref) => {
                                                     suffix={" SAR"}
                                                     renderText={(value, props) => value}
                                                 />
-                                            </h4>
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
