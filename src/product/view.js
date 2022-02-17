@@ -106,7 +106,7 @@ const ProductView = forwardRef((props, ref) => {
                 left:0:
                 top:0;
                 margin-left:34%;
-                margin-top:10%;
+                margin-top:3%;
             `;
 
             const url = `<img style="${style}" src="${imgUrl}"/>`;
