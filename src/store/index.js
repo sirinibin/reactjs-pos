@@ -15,6 +15,14 @@ function StoreIndex(props) {
     function selectStore(store) {
         cookies.set('store_name', store.name, { path: '/' });
         cookies.set('store_id', store.id, { path: '/' });
+        cookies.set('vat_percent', store.vat_percent, { path: '/' });
+        window.location = "/dashboard/stores";
+    }
+
+    function selectAllStore() {
+        cookies.remove('store_name', { path: '/' });
+        cookies.remove('store_id', { path: '/' });
+        cookies.remove('vat_percent', { path: '/' });
         window.location = "/dashboard/stores";
     }
 
@@ -271,6 +279,20 @@ function StoreIndex(props) {
                             onClick={openCreateForm}
                         >
                             <i className="bi bi-plus-lg"></i> Create
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="row">
+
+                    <div className="col text-end">
+                        <Button
+                            hide={true.toString()}
+                            variant="primary"
+                            className="btn btn-primary mb-3"
+                            onClick={selectAllStore}
+                        >
+                            <i className="bi bi-plus-lg"></i> Select All Stores
                         </Button>
                     </div>
                 </div>

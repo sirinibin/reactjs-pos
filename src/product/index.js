@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import ProductCreate from "./create.js";
+import ProductJson from "./json.js";
 import ProductView from "./view.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
@@ -201,7 +202,7 @@ function ProductIndex(props) {
             },
         };
         let Select =
-            "select=id,item_code,bar_code,part_number,name,category_name,created_by_name,created_at,rack";
+            "select=id,item_code,bar_code,part_number,name,category_name,created_by_name,created_at,rack,unit_prices";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -287,17 +288,60 @@ function ProductIndex(props) {
     }
 
 
+    const ProductJsonDialogRef = useRef();
+    function openJsonDialog() {
+        let jsonContent = getProductsJson();
+        ProductJsonDialogRef.current.open(jsonContent);
+    }
+
+
+    function getProductsJson() {
+        let jsonContent = [];
+        for (let i = 0; i < productList.length; i++) {
+            jsonContent.push({
+                storename: cookies.get("store_name"),
+                productname: productList[i].name,
+                price: getProductRetailPrice(productList[i]),
+                barcode: productList[i].bar_code,
+            });
+        }
+        console.log("jsonContent:", jsonContent);
+        return jsonContent;
+    }
+
+    function getProductRetailPrice(product) {
+        let store_id = cookies.get("store_id");
+        let vat_percent = 0.15;
+        if (cookies.get("vat_percent")) {
+            vat_percent = parseFloat(cookies.get("vat_percent") / 100).toFixed(2);
+        }
+
+        if (!store_id || !product.unit_prices) {
+            return "0.00";
+        }
+
+        for (let i = 0; i < product.unit_prices.length; i++) {
+            if (product.unit_prices[i].store_id === store_id) {
+                // product.unit_prices[i].retail_unit_price = product.unit_prices[i].retail_unit_price; /* $2,500.00 */
+                return parseFloat(product.unit_prices[i].retail_unit_price + parseFloat(product.unit_prices[i].retail_unit_price * vat_percent)).toFixed(2);
+            }
+        }
+        return "0.00";
+    }
 
     return (
         <>
             <ProductCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} />
+            <ProductJson ref={ProductJsonDialogRef} />
 
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Products</h1>
                     </div>
+
+
 
                     <div className="col text-end">
                         <Button
@@ -310,6 +354,22 @@ function ProductIndex(props) {
                         </Button>
                     </div>
                 </div>
+
+                <div className="row">
+
+
+                    <div className="col text-end">
+                        <Button
+                            hide={true.toString()}
+                            variant="primary"
+                            className="btn btn-primary mb-3"
+                            onClick={openJsonDialog}
+                        >
+                            Get JSON for Bar Tender
+                        </Button>
+                    </div>
+                </div>
+
 
                 <div className="row">
                     <div className="col-12">

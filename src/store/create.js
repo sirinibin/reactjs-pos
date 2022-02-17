@@ -199,6 +199,11 @@ const StoreCreate = forwardRef((props, ref) => {
                 if (props.refreshList) {
                     props.refreshList();
                 }
+                if (cookies.get("store_id")) {
+                    if (cookies.get("store_id") === data.result.id) {
+                        cookies.set('vat_percent', data.result.vat_percent, { path: '/' });
+                    }
+                }
 
                 handleClose();
                 openDetailsView(data.result.id);
