@@ -105,8 +105,9 @@ const ProductView = forwardRef((props, ref) => {
                 position:relative;
                 left:0:
                 top:0;
-                margin-left:34%;
+                margin-left:33%;
                 margin-top:3%;
+                margin-bottom:50%;
             `;
 
             const url = `<img style="${style}" src="${imgUrl}"/>`;
@@ -197,7 +198,7 @@ const ProductView = forwardRef((props, ref) => {
                                     }}>
                                         <div className="col text-center">
                                             <span style={{
-                                                fontSize: 14,
+                                                fontSize: 12,
                                             }}>{cookies.get("store_name")}</span>
                                         </div>
                                     </div>
@@ -215,7 +216,7 @@ const ProductView = forwardRef((props, ref) => {
                                         <div className="col text-center">
                                             {/* <h3>{"Unit Price: " + getProductRetailPrice(model) + " SAR"}</h3> */}
                                             <span style={{
-                                                fontSize: 14,
+                                                fontSize: 12,
                                                 fontWeight: "bold"
                                             }} >
                                                 <NumberFormat
