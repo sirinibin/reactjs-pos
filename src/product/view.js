@@ -110,9 +110,15 @@ const ProductView = forwardRef((props, ref) => {
                 margin-bottom:50%;
             `;
 
+
+            const bodyStyle = `
+                height:30vh;
+            `;
+
+
             const url = `<img style="${style}" src="${imgUrl}"/>`;
             var newWin = window.frames["printf"];
-            newWin.document.write(`<body onload="window.print()">${url}</body>`);
+            newWin.document.write(`<body onload="window.print()" style="${bodyStyle}">${url}</body>`);
             newWin.document.close();
 
         });
