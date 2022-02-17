@@ -101,7 +101,7 @@ const ProductView = forwardRef((props, ref) => {
 
             const style = `
                 height:16vh;
-                width:34vw;
+                width:35vw;
                 position:relative;
                 left:0:
                 top:0;
