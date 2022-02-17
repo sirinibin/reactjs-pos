@@ -199,7 +199,7 @@ const ProductView = forwardRef((props, ref) => {
                                             <h4>{cookies.get("store_name")}</h4>
                                         </div>
                                     </div>
-                                    {model.item_code ? <Barcode value={model.item_code} width={2} /> : ""}
+                                    {model.item_code ? <Barcode value={model.item_code} width={1} /> : ""}
                                     <div className="row" style={{
                                         border: "solid 0px",
                                     }}>
