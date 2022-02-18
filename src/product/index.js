@@ -298,19 +298,23 @@ function ProductIndex(props) {
     function getProductsJson() {
         let jsonContent = [];
         for (let i = 0; i < productList.length; i++) {
+
+            let price = getProductPrice(productList[i]);
+
             jsonContent.push({
                 storename: cookies.get("store_name"),
                 productname: productList[i].name,
-                price: getProductRetailPrice(productList[i]),
                 barcode: productList[i].bar_code,
                 rack: productList[i].rack,
+                price: price.retail_unit_price,
+                purchase_unit_price_secret: price.purchase_unit_price_secret,
             });
         }
         console.log("jsonContent:", jsonContent);
         return jsonContent;
     }
 
-    function getProductRetailPrice(product) {
+    function getProductPrice(product) {
         let store_id = cookies.get("store_id");
         let vat_percent = 0.15;
         if (cookies.get("vat_percent")) {
@@ -318,16 +322,25 @@ function ProductIndex(props) {
         }
 
         if (!store_id || !product.unit_prices) {
-            return "0.00";
+            return {
+                retail_unit_price: "0.00",
+                purchase_unit_price_secret: "",
+            };
         }
 
         for (let i = 0; i < product.unit_prices.length; i++) {
             if (product.unit_prices[i].store_id === store_id) {
                 // product.unit_prices[i].retail_unit_price = product.unit_prices[i].retail_unit_price; /* $2,500.00 */
-                return parseFloat(product.unit_prices[i].retail_unit_price + parseFloat(product.unit_prices[i].retail_unit_price * vat_percent)).toFixed(2);
+                return {
+                    retail_unit_price: parseFloat(product.unit_prices[i].retail_unit_price + parseFloat(product.unit_prices[i].retail_unit_price * vat_percent)).toFixed(2),
+                    purchase_unit_price_secret: product.unit_prices[i].purchase_unit_price_secret,
+                }
             }
         }
-        return "0.00";
+        return {
+            retail_unit_price: "0.00",
+            purchase_unit_price_secret: "",
+        };
     }
 
     return (
