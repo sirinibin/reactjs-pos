@@ -332,7 +332,7 @@ function ProductIndex(props) {
             if (product.unit_prices[i].store_id === store_id) {
                 // product.unit_prices[i].retail_unit_price = product.unit_prices[i].retail_unit_price; /* $2,500.00 */
                 let res = {
-                    retail_unit_price: "",
+                    retail_unit_price: "0.00",
                     purchase_unit_price_secret: "",
                 };
 
