@@ -331,10 +331,15 @@ function ProductIndex(props) {
         for (let i = 0; i < product.unit_prices.length; i++) {
             if (product.unit_prices[i].store_id === store_id) {
                 // product.unit_prices[i].retail_unit_price = product.unit_prices[i].retail_unit_price; /* $2,500.00 */
-                return {
+                let res = {
                     retail_unit_price: parseFloat(product.unit_prices[i].retail_unit_price + parseFloat(product.unit_prices[i].retail_unit_price * vat_percent)).toFixed(2),
-                    purchase_unit_price_secret: product.unit_prices[i].purchase_unit_price_secret,
+                    purchase_unit_price_secret: "",
+                };
+
+                if (product.unit_prices[i].purchase_unit_price_secret) {
+                    res.purchase_unit_price_secret = product.unit_prices[i].purchase_unit_price_secret;
                 }
+                return res;
             }
         }
         return {
