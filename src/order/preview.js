@@ -1,6 +1,6 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from 'react-bootstrap';
-import QuotationPreviewContent from './previewContent.js';
+import OrderPreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
@@ -274,7 +274,7 @@ const OrderPreview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <QuotationPreviewContent model={model} />
+                    <OrderPreviewContent model={model} />
                 </div>
             </Modal.Body>
             <Modal.Footer>
