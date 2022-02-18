@@ -30,7 +30,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
     }
 
 
-    let [border, setBorder] = useState("1");
+    let [border, setBorder] = useState("0");
     return (<>
 
         <div
