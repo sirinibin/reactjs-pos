@@ -456,6 +456,9 @@ function ProductIndex(props) {
                                                     <option value="40">40</option>
                                                     <option value="50">50</option>
                                                     <option value="100">100</option>
+                                                    <option value="200">200</option>
+                                                    <option value="300">300</option>
+                                                    <option value="500">500</option>
                                                 </select>
                                             </>
                                         )}
