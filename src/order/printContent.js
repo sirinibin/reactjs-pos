@@ -1,4 +1,4 @@
-import { React, forwardRef } from "react";
+import { React, forwardRef, useState } from "react";
 import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
@@ -29,6 +29,8 @@ const OrderPrintContent = forwardRef((props, ref) => {
         return event.toLocaleDateString('ar-EG', options)
     }
 
+
+    let [border, setBorder] = useState("1");
     return (<>
 
         <div
@@ -44,26 +46,26 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
 
         >
-            <div style={{ fontSize: "4mm", position: "relative", left: "117px", top: "2px", border: "solid 0px", }}>
+            <div style={{ fontSize: "4mm", position: "relative", left: "117px", top: "2px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.name : ""}
             </div>
-            <div style={{ fontSize: "4mm", position: "relative", left: "117px", top: "0px", border: "solid 0px", }}>
+            <div style={{ fontSize: "4mm", position: "relative", left: "117px", top: "0px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.name_in_arabic : ""}
             </div>
 
-            <div style={{ fontSize: "4mm", position: "relative", left: "117px", top: "0px", border: "solid 0px", }}>
+            <div style={{ fontSize: "4mm", position: "relative", left: "117px", top: "0px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.vat_no : ""}
             </div>
-            <div style={{ fontSize: "4mm", position: "relative", left: "117px", top: "0px", border: "solid 0px", }}>
+            <div style={{ fontSize: "4mm", position: "relative", left: "117px", top: "0px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.vat_no_in_arabic : ""}
             </div>
-            <div style={{ fontSize: "4mm", position: "relative", left: "800px", top: "-97.4px", border: "solid 0px", }}>
+            <div style={{ fontSize: "4mm", position: "relative", left: "800px", top: "-97.4px", border: "solid " + border + "px", }}>
                 {props.model.created_at ? format(
                     new Date(props.model.created_at),
                     "MMM dd yyyy h:mma"
                 ) : ""}
             </div>
-            <div style={{ fontSize: "4mm", position: "relative", left: "800px", top: "-97.4px", border: "solid 0px", }}>
+            <div style={{ fontSize: "4mm", position: "relative", left: "800px", top: "-97.4px", border: "solid " + border + "px", }}>
                 {props.model.code ? props.model.code : ""}
             </div>
             {/*
