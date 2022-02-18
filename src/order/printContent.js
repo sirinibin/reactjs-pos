@@ -50,6 +50,13 @@ const OrderPrintContent = forwardRef((props, ref) => {
             <div style={{ fontSize: "4mm", position: "relative", left: "105px", top: "20px", border: "solid 0px", }}>
                 {props.model.customer ? props.model.customer.name_in_arabic : ""}
             </div>
+
+            <div className="row" style={{ fontSize: "4mm", position: "relative", left: "117px", top: "20px", border: "solid 0px", }}>
+                {props.model.customer ? props.model.customer.vat_no : ""}
+            </div>
+            <div style={{ fontSize: "4mm", position: "relative", left: "105px", top: "20px", border: "solid 0px", }}>
+                {props.model.customer ? props.model.customer.vat_no_in_arabic : ""}
+            </div>
             {/*
             <div className="row" style={{ fontSize: "3mm" }}>
                 <div className="col">
