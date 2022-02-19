@@ -69,39 +69,56 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 {props.model.code ? props.model.code : ""}
             </h1>
 
-            <table border="1" style={{ fontSize: "4mm", position: "relative", left: "50px", top: "25px", border: "solid 1px", }}>
+            <table border="1" style={{ fontSize: "4mm", position: "relative", left: "20px", top: "25px", border: "solid 1px", }}>
                 <tbody>
                     {props.model.products && props.model.products.map((product, index) => (
                         <tr key={product.item_code} >
-                            <th className="text-center" style={{ border: "solid 1px", width: "80px", }}>{index + 1}</th>
-                            <th className="text-center" style={{ border: "solid 1px", width: "160px", }} >{product.code ? product.code : product.item_code ? product.item_code : null}</th>
-                            <th className="text-left" style={{ border: "solid 1px", width: "420px", paddingLeft: "5px" }} >
-                                <ul
-                                    className="list-unstyled"
-                                    style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
-                                >
-                                    <li>{product.name_in_arabic}</li>
-                                    <li>{product.name}</li>
-                                </ul>
+                            <th className="text-center" style={{ border: "solid 1px", width: "80px", }}>
+                                <h1 style={{ fontSize: "4mm" }}>{index + 1}
+                                </h1>
                             </th>
-                            <th className="text-center" style={{ border: "solid 1px", width: "120px", }}>{product.quantity}  {product.unit ? product.unit : ""}</th>
+                            <th className="text-center" style={{ border: "solid 1px", width: "160px", }} >
+                                <h1 style={{ fontSize: "4mm" }}>
+                                    {product.code ? product.code : product.item_code ? product.item_code : null}
+                                </h1>
+                            </th>
+                            <th className="text-left" style={{ border: "solid 1px", width: "420px", paddingLeft: "5px" }} >
+                                <h1 style={{ fontSize: "4mm" }}>
+                                    <ul
+                                        className="list-unstyled"
+                                        style={{ fontSize: "4mm", height: "35px", marginBottom: "0px" }}
+                                    >
+                                        <li>{product.name_in_arabic}</li>
+                                        <li>{product.name}</li>
+                                    </ul>
+                                </h1>
+                            </th>
+                            <th className="text-center" style={{ border: "solid 1px", width: "120px", }}>
+                                <h1 style={{ fontSize: "4mm" }}>
+                                    {product.quantity}  {product.unit ? product.unit : ""}
+                                </h1>
+                            </th>
                             <th className="text-center" style={{ border: "solid 1px", width: "140px", }}>
-                                <NumberFormat
-                                    value={product.unit_price}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
+                                <h1 style={{ fontSize: "4mm" }}>
+                                    <NumberFormat
+                                        value={product.unit_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </h1>
                             </th>
                             <th className="text-center" style={{ border: "solid 1px", width: "140px", }} >
-                                <NumberFormat
-                                    value={(product.unit_price * product.quantity).toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
+                                <h1 style={{ fontSize: "4mm" }}>
+                                    <NumberFormat
+                                        value={(product.unit_price * product.quantity).toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </h1>
                             </th>
                         </tr>
                     ))}
