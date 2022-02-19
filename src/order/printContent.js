@@ -88,7 +88,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 {(product.name || product.name_in_arabic) ? <h4 style={{ fontSize: "3mm" }}>
                                     <ul
                                         className="list-unstyled"
-                                        style={{ fontSize: "3mm", marginBottom: "2px", verticalAlign: "center", }}
+                                        style={{ fontSize: "3mm", height: "12px", marginBottom: "2px", verticalAlign: "center", }}
                                     >
                                         {product.name_in_arabic ? <li>{product.name_in_arabic}</li> : ""}
                                         {product.name ? <li>{product.name}</li> : ""}
