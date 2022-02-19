@@ -98,10 +98,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     {product.quantity}  {product.unit ? product.unit : ""}
                                 </h1>
                             </th>
-                            <th className="text-center" style={{ border: "solid 1px", width: "164px", }}>
+                            <th className="text-end" style={{ border: "solid 1px", width: "164px", paddingRight: "5px" }}>
                                 <h1 style={{ fontSize: "4mm" }}>
                                     <NumberFormat
-                                        value={product.unit_price}
+                                        value={(product.unit_price).toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
@@ -109,7 +109,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     />
                                 </h1>
                             </th>
-                            <th className="text-end" style={{ border: "solid 1px", width: "149px", }} >
+                            <th className="text-end" style={{ border: "solid 1px", width: "149px", paddingRight: "5px" }} >
                                 <h1 style={{ fontSize: "4mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price * product.quantity).toFixed(2)}
