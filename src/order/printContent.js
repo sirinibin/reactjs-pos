@@ -85,11 +85,14 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 </h4>
                             </td>
                             <td className="text-left" style={{ border: "solid 0px", width: "299px", paddingLeft: "5px" }} >
-                                <div style={{ height: "24px" }} >
-                                    {product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "1px" }}>
+                                <div style={{ height: "23px" }} >
+                                    {product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
                                         {product.name_in_arabic}
                                     </h4> : ""}
-                                    {product.name ? <h4 style={{ fontSize: "3mm", position: "relative", top: "-9px" }}>
+                                    {product.name && product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "-11px" }}>
+                                        {product.name}
+                                    </h4> : ""}
+                                    {product.name && !product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "2px" }}>
                                         {product.name}
                                     </h4> : ""}
                                 </div>
