@@ -77,12 +77,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 <h1 style={{ fontSize: "4mm" }}>{index + 1}
                                 </h1>
                             </th>
-                            <th className="text-center" style={{ border: "solid 1px", width: "142px", }} >
+                            <th className="text-center" style={{ border: "solid 1px", width: "141px", }} >
                                 <h1 style={{ fontSize: "4mm" }}>
                                     {product.code ? product.code : product.item_code ? product.item_code : null}
                                 </h1>
                             </th>
-                            <th className="text-left" style={{ border: "solid 1px", width: "442px", paddingLeft: "5px" }} >
+                            <th className="text-left" style={{ border: "solid 1px", width: "443px", paddingLeft: "5px" }} >
                                 <h1 style={{ fontSize: "4mm" }}>
                                     <ul
                                         className="list-unstyled"
@@ -98,7 +98,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     {product.quantity}  {product.unit ? product.unit : ""}
                                 </h1>
                             </th>
-                            <th className="text-center" style={{ border: "solid 1px", width: "160px", }}>
+                            <th className="text-center" style={{ border: "solid 1px", width: "161px", }}>
                                 <h1 style={{ fontSize: "4mm" }}>
                                     <NumberFormat
                                         value={product.unit_price}
@@ -109,7 +109,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     />
                                 </h1>
                             </th>
-                            <th className="text-center" style={{ border: "solid 1px", width: "147px", }} >
+                            <th className="text-center" style={{ border: "solid 1px", width: "149px", }} >
                                 <h1 style={{ fontSize: "4mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price * product.quantity).toFixed(2)}
