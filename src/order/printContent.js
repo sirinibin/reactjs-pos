@@ -46,46 +46,46 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
 
         >
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "110px", top: "14px", border: "solid " + border + "px", }}>
+            <h3 style={{ fontSize: "4mm", position: "absolute", left: "100px", top: "14px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.name ? props.model.customer.name : "N/A"}
-            </h1>
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "110px", top: "25px", border: "solid " + border + "px", }}>
+            </h3>
+            <h3 style={{ fontSize: "4mm", position: "absolute", left: "100px", top: "27px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.name_in_arabic ? props.model.customer.name_in_arabic : "N/A"}
-            </h1>
+            </h3>
 
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "110px", top: "45px", border: "solid " + border + "px", }}>
+            <h3 style={{ fontSize: "4mm", position: "absolute", left: "100px", top: "45px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.vat_no ? props.model.customer.vat_no : "N/A"}
-            </h1>
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "115px", top: "65px", border: "solid " + border + "px", }}>
+            </h3>
+            <h3 style={{ fontSize: "4mm", position: "absolute", left: "105px", top: "65px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : "N/A"}
-            </h1>
+            </h3>
 
 
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "550px", top: "14px", border: "solid " + border + "px", }}>
+            <h3 style={{ fontSize: "4mm", position: "absolute", left: "570px", top: "14px", border: "solid " + border + "px", }}>
                 {props.model.created_at ? format(
                     new Date(props.model.created_at),
                     "MMM dd yyyy h:mma"
                 ) : ""}
-            </h1>
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "550px", top: "35px", border: "solid " + border + "px", }}>
+            </h3>
+            <h3 style={{ fontSize: "4mm", position: "absolute", left: "570px", top: "35px", border: "solid " + border + "px", }}>
                 {props.model.code ? props.model.code : ""}
-            </h1>
+            </h3>
 
             <table style={{ fontSize: "4mm", position: "absolute", left: "19px", top: "120px", border: "solid 1px", }}>
                 <tbody>
                     {props.model.products && props.model.products.map((product, index) => (
                         <tr key={product.item_code} style={{ height: "28px", verticalAlign: "center", borderBottom: "solid 1px" }}>
-                            <td className="text-center" style={{ border: "solid 1px", width: "45px", }}>
-                                <h1 style={{ fontSize: "4mm" }}>{index + 1}
-                                </h1>
+                            <td className="text-center" style={{ border: "solid 1px", width: "47px", }}>
+                                <h3 style={{ fontSize: "4mm" }}>{index + 1}
+                                </h3>
                             </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "90px", }} >
-                                <h1 style={{ fontSize: "4mm" }}>
+                            <td className="text-center" style={{ border: "solid 1px", width: "89px", }} >
+                                <h3 style={{ fontSize: "4mm" }}>
                                     {product.code ? product.code : product.item_code ? product.item_code : null}
-                                </h1>
+                                </h3>
                             </td>
                             <td className="text-left" style={{ border: "solid 1px", width: "300px", paddingLeft: "5px", verticalAlign: "center", }} >
-                                {(product.name || product.name_in_arabic) ? <h1 style={{ fontSize: "4mm" }}>
+                                {(product.name || product.name_in_arabic) ? <h3 style={{ fontSize: "4mm" }}>
                                     <ul
                                         className="list-unstyled"
                                         style={{ fontSize: "4mm", height: "28px", marginBottom: "0px", verticalAlign: "center", }}
@@ -93,15 +93,15 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         {product.name_in_arabic ? <li>{product.name_in_arabic}</li> : ""}
                                         {product.name ? <li>{product.name}</li> : ""}
                                     </ul>
-                                </h1> : ""}
+                                </h3> : ""}
                             </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "90px", }}>
-                                <h1 style={{ fontSize: "4mm" }}>
+                            <td className="text-center" style={{ border: "solid 1px", width: "85px", }}>
+                                <h3 style={{ fontSize: "4mm" }}>
                                     {product.quantity}  {product.unit ? product.unit : ""}
-                                </h1>
+                                </h3>
                             </td>
-                            <td className="text-end" style={{ border: "solid 1px", width: "124px", paddingRight: "5px" }}>
-                                <h1 style={{ fontSize: "4mm" }}>
+                            <td className="text-end" style={{ border: "solid 1px", width: "105px", paddingRight: "5px" }}>
+                                <h3 style={{ fontSize: "4mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price).toFixed(2)}
                                         displayType={"text"}
@@ -109,10 +109,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         suffix={" SAR"}
                                         renderText={(value, props) => value}
                                     />
-                                </h1>
+                                </h3>
                             </td>
-                            <td className="text-end" style={{ border: "solid 1px", width: "120px", paddingRight: "5px" }} >
-                                <h1 style={{ fontSize: "4mm" }}>
+                            <td className="text-end" style={{ border: "solid 1px", width: "110px", paddingRight: "5px" }} >
+                                <h3 style={{ fontSize: "4mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price * product.quantity).toFixed(2)}
                                         displayType={"text"}
@@ -120,7 +120,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         suffix={" SAR"}
                                         renderText={(value, props) => value}
                                     />
-                                </h1>
+                                </h3>
                             </td>
                         </tr>
 
@@ -128,11 +128,11 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <table style={{ fontSize: "4mm", position: "absolute", left: "660px", top: "520px", border: "solid 1px", }}>
+            <table style={{ fontSize: "4mm", position: "absolute", left: "630px", top: "500px", border: "solid 1px", }}>
                 <tbody>
                     <tr className="text-end" style={{ height: "34px", verticalAlign: "center", border: "solid 1px", }}>
-                        <td style={{ width: "139px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h1 style={{ fontSize: "4mm", }}>
+                        <td style={{ width: "110px", paddingRight: "5px", paddingTop: "10px" }}>
+                            <h3 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
                                     displayType={"text"}
                                     value={props.model.total.toFixed(2)}
@@ -140,12 +140,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </h1>
+                            </h3>
                         </td>
                     </tr>
                     <tr className="text-end" style={{ height: "34px", verticalAlign: "center", border: "solid 0px", }}>
-                        <td style={{ width: "120px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h1 style={{ fontSize: "4mm", }}>
+                        <td style={{ width: "110px", paddingRight: "5px", paddingTop: "10px" }}>
+                            <h3 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
                                     value={props.model.vat_price.toFixed(2)}
                                     displayType={"text"}
@@ -153,12 +153,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </h1>
+                            </h3>
                         </td>
                     </tr>
                     <tr className="text-end" style={{ height: "34px", verticalAlign: "center", border: "solid 0px", }}>
-                        <td style={{ width: "120px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h1 style={{ fontSize: "4mm", }}>
+                        <td style={{ width: "110px", paddingRight: "5px", paddingTop: "10px" }}>
+                            <h3 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
                                     value={props.model.discount.toFixed(2)}
                                     displayType={"text"}
@@ -166,12 +166,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </h1>
+                            </h3>
                         </td>
                     </tr>
                     <tr className="text-end" style={{ height: "34px", verticalAlign: "center", border: "solid 0px", }}>
-                        <td style={{ width: "120px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h1 style={{ fontSize: "4mm", }}>
+                        <td style={{ width: "110px", paddingRight: "5px", paddingTop: "10px" }}>
+                            <h3 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
                                     value={props.model.net_total.toFixed(2)}
                                     displayType={"text"}
@@ -179,7 +179,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </h1>
+                            </h3>
                         </td>
                     </tr>
 
@@ -223,9 +223,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
             <div className="row">
                 <div className="col">
                     <u
-                    ><h1 className="text-center" style={{ fontSize: "4mm" }}>
+                    ><h3 className="text-center" style={{ fontSize: "4mm" }}>
                             INVOICE / فاتورة
-                        </h1>
+                        </h3>
                     </u>
                 </div>
             </div>
