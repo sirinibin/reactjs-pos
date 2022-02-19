@@ -126,9 +126,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <table style={{ fontSize: "4mm", position: "absolute", left: "980px", top: "770px", border: "solid 1px", }}>
+            <table style={{ fontSize: "4mm", position: "absolute", left: "970px", top: "760px", border: "solid 1px", }}>
                 <tbody>
-                    <tr className="text-end" style={{ height: "45px", verticalAlign: "center", }}>
+                    <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 1px", }}>
                         <td style={{ width: "149px", paddingRight: "5px" }}>
                             <h1 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
@@ -141,7 +141,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h1>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "45px", verticalAlign: "center" }}>
+                    <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 1px", }}>
                         <td style={{ width: "149px", paddingRight: "5px" }}>
                             <h1 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
@@ -154,7 +154,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h1>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "45px", verticalAlign: "center" }}>
+                    <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 1px", }}>
                         <td style={{ width: "149px", paddingRight: "5px" }}>
                             <h1 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
@@ -167,7 +167,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h1>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "45px", verticalAlign: "center" }}>
+                    <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 1px", }}>
                         <td style={{ width: "149px", paddingRight: "5px" }}>
                             <h1 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
