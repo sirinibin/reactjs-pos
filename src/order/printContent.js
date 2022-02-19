@@ -46,7 +46,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
 
         >
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "11px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "10px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.name : ""}
             </h1>
             <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "18px", border: "solid " + border + "px", }}>
@@ -56,7 +56,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
             <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "16px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.vat_no : ""}
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "145px", top: "10px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "145px", top: "9px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.vat_no_in_arabic : ""}
             </h1>
             <h1 style={{ fontSize: "4mm", position: "relative", left: "850px", top: "-91px", border: "solid " + border + "px", }}>
