@@ -46,10 +46,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
 
         >
-            <h3 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: "12px", border: "solid " + border + "px", }}>
+            <h3 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: "13px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.name ? props.model.customer.name : "N/A"}
             </h3>
-            <h3 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: "25px", border: "solid " + border + "px", }}>
+            <h3 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: "26px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.name_in_arabic ? props.model.customer.name_in_arabic : "N/A"}
             </h3>
 
@@ -61,7 +61,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
             </h3>
 
 
-            <h3 style={{ fontSize: "3mm", position: "absolute", left: "570px", top: "12px", border: "solid " + border + "px", }}>
+            <h3 style={{ fontSize: "3mm", position: "absolute", left: "570px", top: "13px", border: "solid " + border + "px", }}>
                 {props.model.created_at ? format(
                     new Date(props.model.created_at),
                     "MMM dd yyyy h:mma"
@@ -79,12 +79,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 <h3 style={{ fontSize: "3mm" }}>{index + 1}
                                 </h3>
                             </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "92px", }} >
+                            <td className="text-center" style={{ border: "solid 1px", width: "93px", }} >
                                 <h3 style={{ fontSize: "3mm" }}>
                                     {product.code ? product.code : product.item_code ? product.item_code : null}
                                 </h3>
                             </td>
-                            <td className="text-left" style={{ border: "solid 1px", width: "300px", paddingLeft: "5px", verticalAlign: "center", }} >
+                            <td className="text-left" style={{ border: "solid 1px", width: "299px", paddingLeft: "5px", verticalAlign: "center", }} >
                                 {(product.name || product.name_in_arabic) ? <h3 style={{ fontSize: "3mm" }}>
                                     <ul
                                         className="list-unstyled"
@@ -95,12 +95,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     </ul>
                                 </h3> : ""}
                             </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "82px", }}>
+                            <td className="text-center" style={{ border: "solid 1px", width: "80px", }}>
                                 <h3 style={{ fontSize: "3mm" }}>
                                     {product.quantity}  {product.unit ? product.unit : ""}
                                 </h3>
                             </td>
-                            <td className="text-end" style={{ border: "solid 1px", width: "106px", paddingRight: "5px" }}>
+                            <td className="text-end" style={{ border: "solid 1px", width: "108px", paddingRight: "5px" }}>
                                 <h3 style={{ fontSize: "3mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price).toFixed(2)}
@@ -128,9 +128,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <table style={{ fontSize: "3mm", position: "absolute", left: "650px", top: "510px", border: "solid 1px", }}>
+            <table style={{ fontSize: "3mm", position: "absolute", left: "648px", top: "510px", border: "solid 1px", }}>
                 <tbody>
-                    <tr className="text-end" style={{ height: "30px", verticalAlign: "center", border: "solid 1px", }}>
+                    <tr className="text-end" style={{ height: "28px", verticalAlign: "center", border: "solid 1px", }}>
                         <td style={{ width: "100px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h3 style={{ fontSize: "3mm", }}>
                                 <NumberFormat
@@ -143,7 +143,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h3>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "30px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "28px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "100px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h3 style={{ fontSize: "3mm", }}>
                                 <NumberFormat
@@ -156,7 +156,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h3>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "30px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "28px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "100px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h3 style={{ fontSize: "3mm", }}>
                                 <NumberFormat
@@ -169,7 +169,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h3>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "30px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "28px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "100px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h3 style={{ fontSize: "3mm", }}>
                                 <NumberFormat
