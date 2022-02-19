@@ -71,7 +71,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 {props.model.code ? props.model.code : ""}
             </h4>
 
-            <table style={{ fontSize: "3mm", position: "absolute", left: "18px", top: "116px", border: "solid 0px", }}>
+            <table style={{ fontSize: "3mm", position: "absolute", left: "18px", top: "115px", border: "solid 0px", }}>
                 <tbody>
                     {props.model.products && props.model.products.map((product, index) => (
                         <tr key={product.item_code} style={{ height: "14px", verticalAlign: "center", borderBottom: "solid 1px" }}>
@@ -88,7 +88,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 {(product.name || product.name_in_arabic) ? <h4 style={{ fontSize: "3mm" }}>
                                     <ul
                                         className="list-unstyled"
-                                        style={{ fontSize: "3mm", height: "14px", marginBottom: "2px", verticalAlign: "center", }}
+                                        style={{ fontSize: "3mm", marginBottom: "2px", verticalAlign: "center", }}
                                     >
                                         {product.name_in_arabic ? <li>{product.name_in_arabic}</li> : ""}
                                         {product.name ? <li>{product.name}</li> : ""}
