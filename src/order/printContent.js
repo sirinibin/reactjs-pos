@@ -121,9 +121,49 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 </h1>
                             </th>
                         </tr>
+
                     ))}
                 </tbody>
             </table>
+
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "1000px", top: "450px", border: "solid " + border + "px", }}>
+                <NumberFormat
+                    value={props.model.total}
+                    displayType={"text"}
+                    thousandSeparator={true}
+                    suffix={" SAR"}
+                    renderText={(value, props) => value}
+                />
+            </h1>
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "1000px", top: "450px", border: "solid " + border + "px", }}>
+                <NumberFormat
+                    value={props.model.vat_price}
+                    displayType={"text"}
+                    thousandSeparator={true}
+                    suffix={" SAR"}
+                    renderText={(value, props) => value}
+                />
+            </h1>
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "1000px", top: "450px", border: "solid " + border + "px", }}>
+                <NumberFormat
+                    value={props.model.discount}
+                    displayType={"text"}
+                    thousandSeparator={true}
+                    suffix={" SAR"}
+                    renderText={(value, props) => value}
+                />
+            </h1>
+
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "1000px", top: "450px", border: "solid " + border + "px", }}>
+                <NumberFormat
+                    value={props.model.net_total}
+                    displayType={"text"}
+                    thousandSeparator={true}
+                    suffix={" SAR"}
+                    renderText={(value, props) => value}
+                />
+            </h1>
+
             {/*
             <div className="row" style={{ fontSize: "3mm" }}>
                 <div className="col">
