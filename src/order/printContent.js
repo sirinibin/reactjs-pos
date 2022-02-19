@@ -49,17 +49,17 @@ const OrderPrintContent = forwardRef((props, ref) => {
             <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "12px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.name : ""}
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "17px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "18px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.name_in_arabic : ""}
             </h1>
 
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "15px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "17px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.vat_no : ""}
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "140px", top: "15px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "145px", top: "12px", border: "solid " + border + "px", }}>
                 {props.model.customer ? props.model.customer.vat_no_in_arabic : ""}
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "850px", top: "-92px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "relative", left: "850px", top: "-90px", border: "solid " + border + "px", }}>
                 {props.model.created_at ? format(
                     new Date(props.model.created_at),
                     "MMM dd yyyy h:mma"
