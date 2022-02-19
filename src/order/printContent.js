@@ -61,13 +61,13 @@ const OrderPrintContent = forwardRef((props, ref) => {
             </h1>
 
 
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "875px", top: "16px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "775px", top: "16px", border: "solid " + border + "px", }}>
                 {props.model.created_at ? format(
                     new Date(props.model.created_at),
                     "MMM dd yyyy h:mma"
                 ) : ""}
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "875px", top: "40px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "775px", top: "42px", border: "solid " + border + "px", }}>
                 {props.model.code ? props.model.code : ""}
             </h1>
 
@@ -79,12 +79,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 <h1 style={{ fontSize: "4mm" }}>{index + 1}
                                 </h1>
                             </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "135px", }} >
+                            <td className="text-center" style={{ border: "solid 1px", width: "130px", }} >
                                 <h1 style={{ fontSize: "4mm" }}>
                                     {product.code ? product.code : product.item_code ? product.item_code : null}
                                 </h1>
                             </td>
-                            <td className="text-left" style={{ border: "solid 1px", width: "400px", paddingLeft: "5px", verticalAlign: "center", }} >
+                            <td className="text-left" style={{ border: "solid 1px", width: "370px", paddingLeft: "5px", verticalAlign: "center", }} >
                                 {(product.name || product.name_in_arabic) ? <h1 style={{ fontSize: "4mm" }}>
                                     <ul
                                         className="list-unstyled"
@@ -95,7 +95,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     </ul>
                                 </h1> : ""}
                             </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "110px", }}>
+                            <td className="text-center" style={{ border: "solid 1px", width: "100px", }}>
                                 <h1 style={{ fontSize: "4mm" }}>
                                     {product.quantity}  {product.unit ? product.unit : ""}
                                 </h1>
@@ -111,7 +111,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     />
                                 </h1>
                             </td>
-                            <td className="text-end" style={{ border: "solid 1px", width: "149px", paddingRight: "5px" }} >
+                            <td className="text-end" style={{ border: "solid 1px", width: "139px", paddingRight: "5px" }} >
                                 <h1 style={{ fontSize: "4mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price * product.quantity).toFixed(2)}
@@ -128,10 +128,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <table style={{ fontSize: "4mm", position: "absolute", left: "820px", top: "630px", border: "solid 1px", }}>
+            <table style={{ fontSize: "4mm", position: "absolute", left: "780px", top: "610px", border: "solid 1px", }}>
                 <tbody>
                     <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 1px", }}>
-                        <td style={{ width: "149px", paddingRight: "5px", paddingTop: "10px" }}>
+                        <td style={{ width: "139px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h1 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
                                     displayType={"text"}
