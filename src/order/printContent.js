@@ -40,68 +40,68 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 backgroundColor: "white",
                 border: "solid 0px",
                 borderColor: "silver",
-                borderRadius: "3mm",
+                borderRadius: "2mm",
                 padding: "10px"
             }}
 
 
         >
-            <h3 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: "13px", border: "solid " + border + "px", }}>
+            <h4 style={{ fontSize: "2mm", position: "absolute", left: "100px", top: "14px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.name ? props.model.customer.name : "N/A"}
-            </h3>
-            <h3 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: "26px", border: "solid " + border + "px", }}>
+            </h4>
+            <h4 style={{ fontSize: "2mm", position: "absolute", left: "100px", top: "28px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.name_in_arabic ? props.model.customer.name_in_arabic : "N/A"}
-            </h3>
+            </h4>
 
-            <h3 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: "45px", border: "solid " + border + "px", }}>
+            <h4 style={{ fontSize: "2mm", position: "absolute", left: "100px", top: "46px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.vat_no ? props.model.customer.vat_no : "N/A"}
-            </h3>
-            <h3 style={{ fontSize: "3mm", position: "absolute", left: "105px", top: "60px", border: "solid " + border + "px", }}>
+            </h4>
+            <h4 style={{ fontSize: "2mm", position: "absolute", left: "105px", top: "60px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : "N/A"}
-            </h3>
+            </h4>
 
 
-            <h3 style={{ fontSize: "3mm", position: "absolute", left: "570px", top: "13px", border: "solid " + border + "px", }}>
+            <h4 style={{ fontSize: "2mm", position: "absolute", left: "570px", top: "14px", border: "solid " + border + "px", }}>
                 {props.model.created_at ? format(
                     new Date(props.model.created_at),
                     "MMM dd yyyy h:mma"
                 ) : ""}
-            </h3>
-            <h3 style={{ fontSize: "3mm", position: "absolute", left: "570px", top: "33px", border: "solid " + border + "px", }}>
+            </h4>
+            <h4 style={{ fontSize: "2mm", position: "absolute", left: "570px", top: "34px", border: "solid " + border + "px", }}>
                 {props.model.code ? props.model.code : ""}
-            </h3>
+            </h4>
 
-            <table style={{ fontSize: "3mm", position: "absolute", left: "19px", top: "115px", border: "solid 1px", }}>
+            <table style={{ fontSize: "2mm", position: "absolute", left: "19px", top: "116px", border: "solid 1px", }}>
                 <tbody>
                     {props.model.products && props.model.products.map((product, index) => (
                         <tr key={product.item_code} style={{ height: "28px", verticalAlign: "center", borderBottom: "solid 1px" }}>
                             <td className="text-center" style={{ border: "solid 1px", width: "47px", }}>
-                                <h3 style={{ fontSize: "3mm" }}>{index + 1}
-                                </h3>
+                                <h4 style={{ fontSize: "2mm" }}>{index + 1}
+                                </h4>
                             </td>
                             <td className="text-center" style={{ border: "solid 1px", width: "93px", }} >
-                                <h3 style={{ fontSize: "3mm" }}>
+                                <h4 style={{ fontSize: "2mm" }}>
                                     {product.code ? product.code : product.item_code ? product.item_code : null}
-                                </h3>
+                                </h4>
                             </td>
                             <td className="text-left" style={{ border: "solid 1px", width: "299px", paddingLeft: "5px", verticalAlign: "center", }} >
-                                {(product.name || product.name_in_arabic) ? <h3 style={{ fontSize: "3mm" }}>
+                                {(product.name || product.name_in_arabic) ? <h4 style={{ fontSize: "2mm" }}>
                                     <ul
                                         className="list-unstyled"
-                                        style={{ fontSize: "3mm", height: "28px", marginBottom: "0px", verticalAlign: "center", }}
+                                        style={{ fontSize: "2mm", height: "28px", marginBottom: "0px", verticalAlign: "center", }}
                                     >
                                         {product.name_in_arabic ? <li>{product.name_in_arabic}</li> : ""}
                                         {product.name ? <li>{product.name}</li> : ""}
                                     </ul>
-                                </h3> : ""}
+                                </h4> : ""}
                             </td>
                             <td className="text-center" style={{ border: "solid 1px", width: "78px", }}>
-                                <h3 style={{ fontSize: "3mm" }}>
+                                <h4 style={{ fontSize: "2mm" }}>
                                     {product.quantity}  {product.unit ? product.unit : ""}
-                                </h3>
+                                </h4>
                             </td>
                             <td className="text-end" style={{ border: "solid 1px", width: "110px", paddingRight: "5px" }}>
-                                <h3 style={{ fontSize: "3mm" }}>
+                                <h4 style={{ fontSize: "2mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price).toFixed(2)}
                                         displayType={"text"}
@@ -109,10 +109,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         suffix={" SAR"}
                                         renderText={(value, props) => value}
                                     />
-                                </h3>
+                                </h4>
                             </td>
                             <td className="text-end" style={{ border: "solid 1px", width: "100px", paddingRight: "5px" }} >
-                                <h3 style={{ fontSize: "3mm" }}>
+                                <h4 style={{ fontSize: "2mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price * product.quantity).toFixed(2)}
                                         displayType={"text"}
@@ -120,7 +120,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         suffix={" SAR"}
                                         renderText={(value, props) => value}
                                     />
-                                </h3>
+                                </h4>
                             </td>
                         </tr>
 
@@ -128,11 +128,11 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: "508px", border: "solid 1px", }}>
+            <table style={{ fontSize: "2mm", position: "absolute", left: "646px", top: "509px", border: "solid 1px", }}>
                 <tbody>
-                    <tr className="text-end" style={{ height: "26px", verticalAlign: "center", border: "solid 1px", }}>
+                    <tr className="text-end" style={{ height: "24px", verticalAlign: "center", border: "solid 1px", }}>
                         <td style={{ width: "100px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h3 style={{ fontSize: "3mm", }}>
+                            <h4 style={{ fontSize: "2mm", }}>
                                 <NumberFormat
                                     displayType={"text"}
                                     value={props.model.total.toFixed(2)}
@@ -140,12 +140,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </h3>
+                            </h4>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "26px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "24px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "100px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h3 style={{ fontSize: "3mm", }}>
+                            <h4 style={{ fontSize: "2mm", }}>
                                 <NumberFormat
                                     value={props.model.vat_price.toFixed(2)}
                                     displayType={"text"}
@@ -153,12 +153,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </h3>
+                            </h4>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "26px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "24px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "100px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h3 style={{ fontSize: "3mm", }}>
+                            <h4 style={{ fontSize: "2mm", }}>
                                 <NumberFormat
                                     value={props.model.discount.toFixed(2)}
                                     displayType={"text"}
@@ -166,12 +166,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </h3>
+                            </h4>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "26px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "24px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "100px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h3 style={{ fontSize: "3mm", }}>
+                            <h4 style={{ fontSize: "2mm", }}>
                                 <NumberFormat
                                     value={props.model.net_total.toFixed(2)}
                                     displayType={"text"}
@@ -179,7 +179,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </h3>
+                            </h4>
                         </td>
                     </tr>
 
@@ -188,10 +188,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
 
             {/*
-            <div className="row" style={{ fontSize: "3mm" }}>
+            <div className="row" style={{ fontSize: "2mm" }}>
                 <div className="col">
                     <ul className="list-unstyled text-left">
-                        <li><h4 style={{ fontSize: "3mm" }}>{props.model.store ? props.model.store.name : "<STORE_NAME>"}</h4></li>
+                        <li><h4 style={{ fontSize: "2mm" }}>{props.model.store ? props.model.store.name : "<STORE_NAME>"}</h4></li>
                         <li>{props.model.store ? props.model.store.title : "<STORE_TITLE>"}</li>
                         
                         <li>C.R. / {props.model.store ? props.model.store.registration_number : "<STORE_CR_NO>"}</li>
@@ -206,7 +206,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 <div className="col">
                     <ul className="list-unstyled text-end">
                         <li>
-                            <h4 style={{ fontSize: "3mm" }}>
+                            <h4 style={{ fontSize: "2mm" }}>
                                 <strong>
                                     {props.model.store ? props.model.store.name_in_arabic : "<STORE_NAME_ARABIC>"}
                                 </strong>
@@ -223,13 +223,13 @@ const OrderPrintContent = forwardRef((props, ref) => {
             <div className="row">
                 <div className="col">
                     <u
-                    ><h3 className="text-center" style={{ fontSize: "3mm" }}>
+                    ><h4 className="text-center" style={{ fontSize: "2mm" }}>
                             INVOICE / فاتورة
-                        </h3>
+                        </h4>
                     </u>
                 </div>
             </div>
-            <div className="row table-active" style={{ fontSize: "3mm" }}>
+            <div className="row table-active" style={{ fontSize: "2mm" }}>
                 <div className="col">
                     <ul className="list-unstyled mb0 text-start">
                         <li><strong>Order: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
@@ -255,7 +255,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     </ul>
                 </div>
             </div>
-            <div className="row" style={{ fontSize: "3mm" }}>
+            <div className="row" style={{ fontSize: "2mm" }}>
                 <div className="col text-start">Page 1 of 1</div>
                 <div className="col text-end">صفحة ۱ من ۱</div>
             </div>
@@ -271,7 +271,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
                         <table
                             className="table table-bordered"
-                            style={{ fontSize: "3mm", borderRadius: "6px" }}
+                            style={{ fontSize: "2mm", borderRadius: "6px" }}
                         >
                             <thead>
                                 <tr>
@@ -279,7 +279,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", height: "35px", marginBottom: "0px"
+                                                fontSize: "2mm", height: "35px", marginBottom: "0px"
                                             }}
                                         >
                                             <li>رقم سري</li>
@@ -290,7 +290,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fonSize: "3mm", height: "35px", marginBottom: "0px"
+                                                fonSize: "2mm", height: "35px", marginBottom: "0px"
                                             }}
                                         >
                                             <li>رمز الصنف</li>
@@ -301,7 +301,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", height: "35px", marginBottom: "0px"
+                                                fontSize: "2mm", height: "35px", marginBottom: "0px"
                                             }}
                                         >
                                             <li>وصف</li>
@@ -311,7 +311,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     <th className="per1 text-center" style={{ padding: "0px" }}>
                                         <ul
                                             className="list-unstyled"
-                                            style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
+                                            style={{ fontSize: "2mm", height: "35px", marginBottom: "0px" }}
                                         >
                                             <li>كمية</li>
                                             <li>Qty</li>
@@ -320,7 +320,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     <th className="per10 text-center" style={{ padding: "0px" }}>
                                         <ul
                                             className="list-unstyled"
-                                            style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
+                                            style={{ fontSize: "2mm", height: "35px", marginBottom: "0px" }}
                                         >
                                             <li>سعر الوحدة</li>
                                             <li>Unit Price</li>
@@ -329,7 +329,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     <th className="per20 text-center" style={{ padding: "0px" }}>
                                         <ul
                                             className="list-unstyled"
-                                            style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
+                                            style={{ fontSize: "2mm", height: "35px", marginBottom: "0px" }}
                                         >
                                             <li>المبلغ الإجمالي</li>
                                             <li>Total Amount</li>
@@ -345,7 +345,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <td>
                                             <ul
                                                 className="list-unstyled"
-                                                style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
+                                                style={{ fontSize: "2mm", height: "35px", marginBottom: "0px" }}
                                             >
                                                 <li>{product.name_in_arabic}</li>
                                                 <li>{product.name}</li>
@@ -382,7 +382,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", marginBottom: "0px"
+                                                fontSize: "2mm", marginBottom: "0px"
                                             }}
                                         >
                                             <li>المجموع:</li>
@@ -406,7 +406,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", marginBottom: "0px"
+                                                fontSize: "2mm", marginBottom: "0px"
                                             }}
                                         >
                                             <li>ضريبة:</li>
@@ -429,7 +429,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", marginBottom: "0px"
+                                                fontSize: "2mm", marginBottom: "0px"
                                             }}
                                         >
                                             <li>خصم:</li>
@@ -451,7 +451,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", marginBottom: "0px"
+                                                fontSize: "2mm", marginBottom: "0px"
                                             }}
                                         >
                                             <li>الإجمالي الصافي:</li>
@@ -473,7 +473,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", marginBottom: "0px"
+                                                fontSize: "2mm", marginBottom: "0px"
                                             }}
                                         >
                                             <li>بكلمات:</li>
@@ -491,7 +491,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     >
                                         <ul
                                             className="list-unstyled"
-                                            style={{ fontSize: "3mm", marginBottom: "0px" }}
+                                            style={{ fontSize: "2mm", marginBottom: "0px" }}
                                         >
                                             <li>{n2words(props.model.net_total, { lang: 'ar' })}</li>
                                             <li>{n2words(props.model.net_total, { lang: 'en' })}</li>
@@ -501,13 +501,13 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </tfoot>
                         </table>
 
-                        <table className="table table-bordered" style={{ fontSize: "3mm" }}>
+                        <table className="table table-bordered" style={{ fontSize: "2mm" }}>
                             <thead>
                                 <tr>
                                     <th className="text-end" style={{ width: "13%", padding: "0px" }}>
                                         <ul
                                             className="list-unstyled"
-                                            style={{ fontSize: "3mm", marginBottom: "0px" }}
+                                            style={{ fontSize: "2mm", marginBottom: "0px" }}
                                         >
                                             <li>سلمت بواسطة:</li>
                                             <li>Delivered By:</li>
@@ -517,7 +517,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     <th className="text-end" style={{ width: "13%", padding: "0px" }}>
                                         <ul
                                             className="list-unstyled"
-                                            style={{ fontSize: "3mm", marginBottom: "0px" }}
+                                            style={{ fontSize: "2mm", marginBottom: "0px" }}
                                         >
                                             <li>استلمت من قبل:</li>
                                             <li>Received By:</li>
@@ -529,7 +529,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 </tr>
                                 <tr>
                                     <th className="text-end" style={{ padding: "0px" }}>
-                                        <ul className="list-unstyled" style={{ fontSize: "3mm" }}>
+                                        <ul className="list-unstyled" style={{ fontSize: "2mm" }}>
                                             <li>إمضاء:</li>
                                             <li>Signature:</li>
                                         </ul>
@@ -540,7 +540,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                             : null}
                                     </th>
                                     <th className="text-end" style={{ padding: "0px" }}>
-                                        <ul className="list-unstyled" style={{ fontSize: "3mm" }}>
+                                        <ul className="list-unstyled" style={{ fontSize: "2mm" }}>
                                             <li>إمضاء:</li>
                                             <li>Signature:</li>
                                         </ul>
@@ -552,7 +552,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", marginBottom: "0px"
+                                                fontSize: "2mm", marginBottom: "0px"
                                             }}
                                         >
                                             <li>تاريخ:</li>
@@ -563,7 +563,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", height: "35px", marginBottom: "0px"
+                                                fontSize: "2mm", height: "35px", marginBottom: "0px"
                                             }}
                                         >
                                             <li>{props.model.signature_date_str ? getArabicDate(props.model.signature_date_str) : ""}</li>
@@ -574,7 +574,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         <ul
                                             className="list-unstyled"
                                             style={{
-                                                fontSize: "3mm", marginBottom: "0px"
+                                                fontSize: "2mm", marginBottom: "0px"
                                             }}
                                         >
                                             <li>تاريخ:</li>
@@ -588,7 +588,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     </div>
                 </div>
             </div>
-            <div className="row" style={{ fontSize: "3mm" }}>
+            <div className="row" style={{ fontSize: "2mm" }}>
                 <div className="col-md-2 text-start">
                     {props.model.QRImageData && <img src={props.model.QRImageData} alt="Invoice QR Code" />}
         </div>
