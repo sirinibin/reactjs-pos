@@ -126,9 +126,22 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <table style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "820px", border: "solid " + border + "px", }}>
+            <table style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "780x", border: "solid " + border + "px", }}>
                 <tbody>
-                    <tr className="text-end">
+                    <tr className="text-end" style={{ height: "28px", verticalAlign: "center" }}>
+                        <td>
+                            <h1 style={{ fontSize: "4mm", border: "solid " + border + "px", }}>
+                                <NumberFormat
+                                    value={props.model.total.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </h1>
+                        </td>
+                    </tr>
+                    <tr className="text-end" style={{ height: "28px", verticalAlign: "center" }}>
                         <td>
                             <h1 style={{ fontSize: "4mm", border: "solid " + border + "px", }}>
                                 <NumberFormat
@@ -141,7 +154,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h1>
                         </td>
                     </tr>
-                    <tr className="text-end">
+                    <tr className="text-end" style={{ height: "28px", verticalAlign: "center" }}>
                         <td>
                             <h1 style={{ fontSize: "4mm", border: "solid " + border + "px", }}>
                                 <NumberFormat
@@ -154,7 +167,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h1>
                         </td>
                     </tr>
-                    <tr className="text-end">
+                    <tr className="text-end" style={{ height: "28px", verticalAlign: "center" }}>
                         <td>
                             <h1 style={{ fontSize: "4mm", border: "solid " + border + "px", }}>
                                 <NumberFormat
