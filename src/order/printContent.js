@@ -71,36 +71,36 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 {props.model.code ? props.model.code : ""}
             </h4>
 
-            <table style={{ fontSize: "3mm", position: "absolute", left: "18px", top: "116px", border: "solid 1px", }}>
+            <table style={{ fontSize: "3mm", position: "absolute", left: "18px", top: "116px", border: "solid 0px", }}>
                 <tbody>
                     {props.model.products && props.model.products.map((product, index) => (
-                        <tr key={product.item_code} style={{ height: "15px", verticalAlign: "center", borderBottom: "solid 1px" }}>
-                            <td className="text-center" style={{ border: "solid 1px", width: "48px", }}>
+                        <tr key={product.item_code} style={{ height: "14px", verticalAlign: "center", borderBottom: "solid 1px" }}>
+                            <td className="text-center" style={{ border: "solid 0px", width: "48px", }}>
                                 <h4 style={{ fontSize: "3mm" }}>{index + 1}
                                 </h4>
                             </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "93px", }} >
+                            <td className="text-center" style={{ border: "solid 0px", width: "93px", }} >
                                 <h4 style={{ fontSize: "3mm" }}>
                                     {product.code ? product.code : product.item_code ? product.item_code : null}
                                 </h4>
                             </td>
-                            <td className="text-left" style={{ border: "solid 1px", width: "299px", paddingLeft: "5px", verticalAlign: "center", }} >
+                            <td className="text-left" style={{ border: "solid 0px", width: "299px", paddingLeft: "5px", verticalAlign: "center", paddingBottom: "1px" }} >
                                 {(product.name || product.name_in_arabic) ? <h4 style={{ fontSize: "3mm" }}>
                                     <ul
                                         className="list-unstyled"
-                                        style={{ fontSize: "3mm", height: "15px", marginBottom: "0px", verticalAlign: "center", }}
+                                        style={{ fontSize: "3mm", height: "14px", marginBottom: "0px", verticalAlign: "center", }}
                                     >
                                         {product.name_in_arabic ? <li>{product.name_in_arabic}</li> : ""}
                                         {product.name ? <li>{product.name}</li> : ""}
                                     </ul>
                                 </h4> : ""}
                             </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "77px", }}>
+                            <td className="text-center" style={{ border: "solid 0px", width: "77px", }}>
                                 <h4 style={{ fontSize: "3mm" }}>
                                     {product.quantity}  {product.unit ? product.unit : ""}
                                 </h4>
                             </td>
-                            <td className="text-end" style={{ border: "solid 1px", width: "111px", paddingRight: "5px" }}>
+                            <td className="text-end" style={{ border: "solid 0px", width: "111px", paddingRight: "5px" }}>
                                 <h4 style={{ fontSize: "3mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price).toFixed(2)}
@@ -111,7 +111,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     />
                                 </h4>
                             </td>
-                            <td className="text-end" style={{ border: "solid 1px", width: "99px", paddingRight: "5px" }} >
+                            <td className="text-end" style={{ border: "solid 0px", width: "99px", paddingRight: "5px" }} >
                                 <h4 style={{ fontSize: "3mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price * product.quantity).toFixed(2)}
