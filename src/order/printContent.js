@@ -128,7 +128,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <table style={{ fontSize: "4mm", position: "absolute", left: "830px", top: "680px", border: "solid 1px", }}>
+            <table style={{ fontSize: "4mm", position: "absolute", left: "820px", top: "630px", border: "solid 1px", }}>
                 <tbody>
                     <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 1px", }}>
                         <td style={{ width: "149px", paddingRight: "5px", paddingTop: "10px" }}>
