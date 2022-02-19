@@ -98,7 +98,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     {product.quantity}  {product.unit ? product.unit : ""}
                                 </h1>
                             </th>
-                            <th className="text-center" style={{ border: "solid 1px", width: "163px", }}>
+                            <th className="text-center" style={{ border: "solid 1px", width: "164px", }}>
                                 <h1 style={{ fontSize: "4mm" }}>
                                     <NumberFormat
                                         value={product.unit_price}
