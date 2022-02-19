@@ -46,45 +46,45 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
 
         >
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "140px", top: "15px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "100px", top: "15px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.name ? props.model.customer.name : "N/A"}
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "140px", top: "35px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "100px", top: "35px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.name_in_arabic ? props.model.customer.name_in_arabic : "N/A"}
             </h1>
 
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "140px", top: "55px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "100px", top: "45px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.vat_no ? props.model.customer.vat_no : "N/A"}
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "145px", top: "75px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "105px", top: "65px", border: "solid " + border + "px", }}>
                 {props.model.customer && props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : "N/A"}
             </h1>
 
 
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "675px", top: "15px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "475px", top: "15px", border: "solid " + border + "px", }}>
                 {props.model.created_at ? format(
                     new Date(props.model.created_at),
                     "MMM dd yyyy h:mma"
                 ) : ""}
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "675px", top: "40px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "475px", top: "40px", border: "solid " + border + "px", }}>
                 {props.model.code ? props.model.code : ""}
             </h1>
 
-            <table style={{ fontSize: "4mm", position: "absolute", left: "21px", top: "120px", border: "solid 1px", }}>
+            <table style={{ fontSize: "4mm", position: "absolute", left: "20px", top: "120px", border: "solid 1px", }}>
                 <tbody>
                     {props.model.products && props.model.products.map((product, index) => (
                         <tr key={product.item_code} style={{ height: "28px", verticalAlign: "center", borderBottom: "solid 1px" }}>
-                            <td className="text-center" style={{ border: "solid 1px", width: "60px", }}>
+                            <td className="text-center" style={{ border: "solid 1px", width: "58px", }}>
                                 <h1 style={{ fontSize: "4mm" }}>{index + 1}
                                 </h1>
                             </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "110px", }} >
+                            <td className="text-center" style={{ border: "solid 1px", width: "100px", }} >
                                 <h1 style={{ fontSize: "4mm" }}>
                                     {product.code ? product.code : product.item_code ? product.item_code : null}
                                 </h1>
                             </td>
-                            <td className="text-left" style={{ border: "solid 1px", width: "350px", paddingLeft: "5px", verticalAlign: "center", }} >
+                            <td className="text-left" style={{ border: "solid 1px", width: "300px", paddingLeft: "5px", verticalAlign: "center", }} >
                                 {(product.name || product.name_in_arabic) ? <h1 style={{ fontSize: "4mm" }}>
                                     <ul
                                         className="list-unstyled"
@@ -100,7 +100,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     {product.quantity}  {product.unit ? product.unit : ""}
                                 </h1>
                             </td>
-                            <td className="text-end" style={{ border: "solid 1px", width: "154px", paddingRight: "5px" }}>
+                            <td className="text-end" style={{ border: "solid 1px", width: "134px", paddingRight: "5px" }}>
                                 <h1 style={{ fontSize: "4mm" }}>
                                     <NumberFormat
                                         value={(product.unit_price).toFixed(2)}
@@ -128,9 +128,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <table style={{ fontSize: "4mm", position: "absolute", left: "700px", top: "560px", border: "solid 1px", }}>
+            <table style={{ fontSize: "4mm", position: "absolute", left: "650px", top: "500px", border: "solid 1px", }}>
                 <tbody>
-                    <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 1px", }}>
+                    <tr className="text-end" style={{ height: "34px", verticalAlign: "center", border: "solid 1px", }}>
                         <td style={{ width: "139px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h1 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
@@ -143,7 +143,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h1>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "34px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "149px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h1 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
@@ -156,7 +156,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h1>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "34px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "149px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h1 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
@@ -169,7 +169,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h1>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "44px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "34px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "149px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h1 style={{ fontSize: "4mm", }}>
                                 <NumberFormat
