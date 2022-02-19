@@ -126,7 +126,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "1000px", top: "450px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "850px", border: "solid " + border + "px", }}>
                 <NumberFormat
                     value={props.model.total}
                     displayType={"text"}
@@ -135,7 +135,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     renderText={(value, props) => value}
                 />
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "1000px", top: "450px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "850px", border: "solid " + border + "px", }}>
                 <NumberFormat
                     value={props.model.vat_price}
                     displayType={"text"}
@@ -144,7 +144,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     renderText={(value, props) => value}
                 />
             </h1>
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "1000px", top: "450px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "850px", border: "solid " + border + "px", }}>
                 <NumberFormat
                     value={props.model.discount}
                     displayType={"text"}
@@ -154,7 +154,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 />
             </h1>
 
-            <h1 style={{ fontSize: "4mm", position: "relative", left: "1000px", top: "450px", border: "solid " + border + "px", }}>
+            <h1 style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "850px", border: "solid " + border + "px", }}>
                 <NumberFormat
                     value={props.model.net_total}
                     displayType={"text"}
