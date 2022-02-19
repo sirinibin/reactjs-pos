@@ -79,21 +79,20 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 <h4 style={{ fontSize: "3mm" }}>{index + 1}
                                 </h4>
                             </td>
-                            <td className="text-center" style={{ border: "solid 0px", width: "93px", }} >
+                            <td className="text-center" style={{ border: "solid 0px", width: "93px" }} >
                                 <h4 style={{ fontSize: "3mm" }}>
                                     {product.code ? product.code : product.item_code ? product.item_code : null}
                                 </h4>
                             </td>
-                            <td className="text-left" style={{ border: "solid 1px", width: "299px", paddingLeft: "5px" }} >
-                                {(product.name || product.name_in_arabic) ? <h4 style={{ fontSize: "3mm" }}>
-                                    <ul
-                                        className="list-unstyled"
-                                        style={{ fontSize: "3mm", height: "8px" }}
-                                    >
-                                        {product.name_in_arabic ? <li>{product.name_in_arabic}</li> : ""}
-                                        {product.name ? <li>{product.name}</li> : ""}
-                                    </ul>
-                                </h4> : ""}
+                            <td className="text-left" style={{ border: "solid 0px", width: "299px", paddingLeft: "5px" }} >
+                                <div style={{ height: "26px" }} >
+                                    {product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "1px" }}>
+                                        {product.name_in_arabic}
+                                    </h4> : ""}
+                                    {product.name ? <h4 style={{ fontSize: "3mm", position: "relative", top: "-9px" }}>
+                                        {product.name}
+                                    </h4> : ""}
+                                </div>
                             </td>
                             <td className="text-center" style={{ border: "solid 0px", width: "77px", }}>
                                 <h4 style={{ fontSize: "3mm" }}>
@@ -130,7 +129,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
             <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: "509px", border: "solid 1px", }}>
                 <tbody>
-                    <tr className="text-end" style={{ height: "12px", verticalAlign: "center", border: "solid 1px", }}>
+                    <tr className="text-end" style={{ height: "10px", verticalAlign: "center", border: "solid 1px", }}>
                         <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h4 style={{ fontSize: "3mm", }}>
                                 <NumberFormat
@@ -143,7 +142,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h4>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "12px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "10px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h4 style={{ fontSize: "3mm", }}>
                                 <NumberFormat
@@ -156,7 +155,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h4>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "12px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "10px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h4 style={{ fontSize: "3mm", }}>
                                 <NumberFormat
@@ -169,7 +168,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h4>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "12px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ height: "10px", verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
                             <h4 style={{ fontSize: "3mm", }}>
                                 <NumberFormat
