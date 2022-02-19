@@ -69,13 +69,13 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 {props.model.code ? props.model.code : ""}
             </h1>
 
-            <table border="1" style={{ fontSize: "4mm", position: "relative", left: "80px", top: "30px", border: "solid 1px", }}>
+            <table border="1" style={{ fontSize: "4mm", position: "relative", left: "50px", top: "25px", border: "solid 1px", }}>
                 <tbody>
                     {props.model.products && props.model.products.map((product, index) => (
                         <tr key={product.item_code} >
-                            <td className="text-center" style={{ border: "solid 1px", width: "60px", }}>{index + 1}</td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "160px", }} >{product.code ? product.code : product.item_code ? product.item_code : null}</td>
-                            <td className="text-left" style={{ border: "solid 1px", width: "380px", paddingLeft: "5px" }} >
+                            <th className="text-center" style={{ border: "solid 1px", width: "80px", }}>{index + 1}</th>
+                            <th className="text-center" style={{ border: "solid 1px", width: "160px", }} >{product.code ? product.code : product.item_code ? product.item_code : null}</th>
+                            <th className="text-left" style={{ border: "solid 1px", width: "420px", paddingLeft: "5px" }} >
                                 <ul
                                     className="list-unstyled"
                                     style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
@@ -83,9 +83,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     <li>{product.name_in_arabic}</li>
                                     <li>{product.name}</li>
                                 </ul>
-                            </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "140px", }}>{product.quantity}  {product.unit ? product.unit : ""}</td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "130px", }}>
+                            </th>
+                            <th className="text-center" style={{ border: "solid 1px", width: "120px", }}>{product.quantity}  {product.unit ? product.unit : ""}</th>
+                            <th className="text-center" style={{ border: "solid 1px", width: "140px", }}>
                                 <NumberFormat
                                     value={product.unit_price}
                                     displayType={"text"}
@@ -93,8 +93,8 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </td>
-                            <td className="text-center" style={{ border: "solid 1px", width: "120px", }} >
+                            </th>
+                            <th className="text-center" style={{ border: "solid 1px", width: "140px", }} >
                                 <NumberFormat
                                     value={(product.unit_price * product.quantity).toFixed(2)}
                                     displayType={"text"}
@@ -102,7 +102,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     suffix={" SAR"}
                                     renderText={(value, props) => value}
                                 />
-                            </td>
+                            </th>
                         </tr>
                     ))}
                 </tbody>
