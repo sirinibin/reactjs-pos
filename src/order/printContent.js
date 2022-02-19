@@ -74,7 +74,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
             <table style={{ fontSize: "3mm", position: "absolute", left: "18px", top: "115px", border: "solid 0px", }}>
                 <tbody>
                     {props.model.products && props.model.products.map((product, index) => (
-                        <tr key={product.item_code} style={{ height: "14px", verticalAlign: "center", borderBottom: "solid 1px" }}>
+                        <tr key={product.item_code} style={{ height: "13px", verticalAlign: "center", borderBottom: "solid 1px" }}>
                             <td className="text-center" style={{ border: "solid 0px", width: "48px", }}>
                                 <h4 style={{ fontSize: "3mm" }}>{index + 1}
                                 </h4>
