@@ -82,7 +82,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     {product.code ? product.code : product.item_code ? product.item_code : null}
                                 </h1>
                             </th>
-                            <th className="text-left" style={{ border: "solid 0px", width: "445px", paddingLeft: "5px" }} >
+                            <th className="text-left" style={{ border: "solid 0px", width: "445px", paddingLeft: "5px", verticalAlign: "center", }} >
                                 <h1 style={{ fontSize: "4mm" }}>
                                     <ul
                                         className="list-unstyled"
