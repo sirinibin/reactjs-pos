@@ -68,6 +68,45 @@ const OrderPrintContent = forwardRef((props, ref) => {
             <h1 style={{ fontSize: "4mm", position: "relative", left: "850px", top: "-79px", border: "solid " + border + "px", }}>
                 {props.model.code ? props.model.code : ""}
             </h1>
+
+            <table border="1" style={{ fontSize: "4mm", position: "relative", left: "80px", top: "30px", border: "solid 1px", }}>
+                <tbody>
+                    {props.model.products && props.model.products.map((product, index) => (
+                        <tr key={product.item_code} >
+                            <td className="text-center" style={{ border: "solid 1px", width: "60px", }}>{index + 1}</td>
+                            <td className="text-center" style={{ border: "solid 1px", width: "160px", }} >{product.code ? product.code : product.item_code ? product.item_code : null}</td>
+                            <td className="text-left" style={{ border: "solid 1px", width: "380px", paddingLeft: "5px" }} >
+                                <ul
+                                    className="list-unstyled"
+                                    style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
+                                >
+                                    <li>{product.name_in_arabic}</li>
+                                    <li>{product.name}</li>
+                                </ul>
+                            </td>
+                            <td className="text-center" style={{ border: "solid 1px", width: "140px", }}>{product.quantity}  {product.unit ? product.unit : ""}</td>
+                            <td className="text-center" style={{ border: "solid 1px", width: "130px", }}>
+                                <NumberFormat
+                                    value={product.unit_price}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </td>
+                            <td className="text-center" style={{ border: "solid 1px", width: "120px", }} >
+                                <NumberFormat
+                                    value={(product.unit_price * product.quantity).toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
             {/*
             <div className="row" style={{ fontSize: "3mm" }}>
                 <div className="col">
