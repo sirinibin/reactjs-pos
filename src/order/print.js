@@ -255,7 +255,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
+        <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
             <Modal.Header>
                 <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
