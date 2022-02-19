@@ -126,43 +126,50 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "850px", border: "solid " + border + "px", }}>
-                <NumberFormat
-                    value={props.model.total}
-                    displayType={"text"}
-                    thousandSeparator={true}
-                    suffix={" SAR"}
-                    renderText={(value, props) => value}
-                />
-            </h1>
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "870px", border: "solid " + border + "px", }}>
-                <NumberFormat
-                    value={props.model.vat_price}
-                    displayType={"text"}
-                    thousandSeparator={true}
-                    suffix={" SAR"}
-                    renderText={(value, props) => value}
-                />
-            </h1>
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "890px", border: "solid " + border + "px", }}>
-                <NumberFormat
-                    value={props.model.discount}
-                    displayType={"text"}
-                    thousandSeparator={true}
-                    suffix={" SAR"}
-                    renderText={(value, props) => value}
-                />
-            </h1>
+            <table style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "820px", border: "solid " + border + "px", }}>
+                <tbody>
+                    <tr className="text-end">
+                        <td>
+                            <h1 style={{ fontSize: "4mm", border: "solid " + border + "px", }}>
+                                <NumberFormat
+                                    value={props.model.vat_price.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </h1>
+                        </td>
+                    </tr>
+                    <tr className="text-end">
+                        <td>
+                            <h1 style={{ fontSize: "4mm", border: "solid " + border + "px", }}>
+                                <NumberFormat
+                                    value={props.model.discount.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </h1>
+                        </td>
+                    </tr>
+                    <tr className="text-end">
+                        <td>
+                            <h1 style={{ fontSize: "4mm", border: "solid " + border + "px", }}>
+                                <NumberFormat
+                                    value={props.model.net_total.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </h1>
+                        </td>
+                    </tr>
 
-            <h1 style={{ fontSize: "4mm", position: "absolute", left: "1000px", top: "910px", border: "solid " + border + "px", }}>
-                <NumberFormat
-                    value={props.model.net_total}
-                    displayType={"text"}
-                    thousandSeparator={true}
-                    suffix={" SAR"}
-                    renderText={(value, props) => value}
-                />
-            </h1>
+                </tbody>
+            </table>
 
             {/*
             <div className="row" style={{ fontSize: "3mm" }}>
