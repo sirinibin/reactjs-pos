@@ -115,7 +115,10 @@ const OrderPrint = forwardRef((props, ref) => {
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: model.created_at,
+                    invoiceTimestamp: format(
+                        new Date(model.created_at),
+                        "MMM dd yyyy h:mma"
+                    ),
                     invoiceTotal: model.net_total,
                     invoiceVatTotal: model.vat_price,
                 });
