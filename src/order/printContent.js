@@ -188,10 +188,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <h4 style={{ fontSize: "3mm", position: "absolute", right: "330px", top: "550px" }}>
+            <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: "555px" }}>
                 {n2words(props.model.net_total, { lang: 'ar' })}
             </h4>
-            <h4 style={{ fontSize: "3mm", position: "absolute", left: "40px", top: "565px" }}>
+            <h4 style={{ fontSize: "3mm", position: "absolute", left: "50px", top: "565px" }}>
                 {n2words(props.model.net_total, { lang: 'en' })}
             </h4>
 
@@ -200,7 +200,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
             </h4>
 
-            <div style={{ position: "absolute", left: "570px", top: "610px", width: "300px", height: "300px" }} >
+            <div style={{ position: "absolute", left: "565px", top: "620px", width: "300px", height: "300px" }} >
                 {props.model.QRImageData && <img src={props.model.QRImageData} alt="Invoice QR Code" />}
             </div>
 
