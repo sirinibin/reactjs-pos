@@ -203,7 +203,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     {n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}
                 </h4> : ""}
 
-                <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: (652 + page.top) + "px" }}>
+                <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: (654 + page.top) + "px" }}>
                     {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
                 </h4>
 
