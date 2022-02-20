@@ -134,7 +134,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 <tbody>
                     <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h4 style={{ fontSize: "3mm", height: "8px", }}>
+                            <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                 <NumberFormat
                                     displayType={"text"}
                                     value={props.model.total.toFixed(2)}
@@ -147,7 +147,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     </tr>
                     <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h4 style={{ fontSize: "3mm", height: "8px", }}>
+                            <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                 <NumberFormat
                                     value={props.model.vat_price.toFixed(2)}
                                     displayType={"text"}
@@ -158,9 +158,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h4>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "8px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h4 style={{ fontSize: "3mm", height: "8px", }}>
+                            <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                 <NumberFormat
                                     value={props.model.discount.toFixed(2)}
                                     displayType={"text"}
@@ -171,9 +171,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             </h4>
                         </td>
                     </tr>
-                    <tr className="text-end" style={{ height: "8px", verticalAlign: "center", border: "solid 0px", }}>
+                    <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
-                            <h4 style={{ fontSize: "3mm", height: "8px", }}>
+                            <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                 <NumberFormat
                                     value={props.model.net_total.toFixed(2)}
                                     displayType={"text"}
