@@ -173,7 +173,7 @@ function StoreIndex(props) {
             },
         };
         let Select =
-            "select=id,name,code,created_by_name,created_at";
+            "select=id,name,code,created_by_name,created_at,vat_percent";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
