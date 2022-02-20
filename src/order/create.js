@@ -402,12 +402,15 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let productFound = false;
 
-        for (let i = 0; i < data.result.length; i++) {
-            if (products[i].bar_code === searchTerm) {
-                selectProduct(products[i]);
-                productFound = true;
+        if (data.result && data.result.length > 0) {
+            for (let i = 0; i < data.result.length; i++) {
+                if (products[i].bar_code === searchTerm) {
+                    selectProduct(products[i]);
+                    productFound = true;
+                }
             }
         }
+
 
         if (!productFound) {
             setOpenProductSearchResult(true);
