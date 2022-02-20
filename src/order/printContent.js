@@ -73,7 +73,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     {props.model.code ? props.model.code : ""}
                 </h4>
 
-                <h4 style={{ fontSize: "3mm", position: "absolute", right: "39px", top: (65 + page.top) + "px", border: "solid " + border + "px", }}>
+                <h4 style={{ fontSize: "3mm", position: "absolute", right: "43px", top: (65 + page.top) + "px", border: "solid " + border + "px", }}>
                     {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                 </h4>
 
