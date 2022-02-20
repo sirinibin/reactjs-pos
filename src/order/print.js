@@ -112,14 +112,19 @@ const OrderPrint = forwardRef((props, ref) => {
                 let storeData = data.result;
                 model.store = storeData;
 
+                var d = new Date(model.created_at);
+                var local = d.getTime();
+                var offset = d.getTimezoneOffset() * (60 * 1000);
+                var utc = new Date(local + offset);
+                var riyadh = new Date(utc.getTime() + (3 * 60 * 60 * 1000));
+
+                console.log("riyadh:", riyadh);
+
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: format(
-                        new Date(model.created_at),
-                        "MMM dd yyyy h:mma"
-                    ),
-                    invoiceTotal: model.net_total,
+                    invoiceTimestamp: riyadh,
+                    invoiceTotal: model.net,
                     invoiceVatTotal: model.vat_price,
                 });
 
