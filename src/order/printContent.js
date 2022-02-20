@@ -78,7 +78,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                         {page.products && page.products.map((product, index) => (
                             <tr key={product.item_code} style={{ paddingTop: "1px", height: "8px", borderBottom: "solid 1px" }}>
                                 <td className="text-center" style={{ border: "solid 0px", width: "48px", }}>
-                                    <h4 style={{ fontSize: "3mm" }}>{index + 1 + (pageIndex * model.pageSize)}
+                                    <h4 style={{ fontSize: "3mm" }}>{index + 1 + (pageIndex * props.model.pageSize)}
                                     </h4>
                                 </td>
                                 <td className="text-center" style={{ border: "solid 0px", width: "93px" }} >
