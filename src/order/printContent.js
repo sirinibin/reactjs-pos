@@ -130,7 +130,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: "509px", border: "solid 1px", }}>
+            <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: "510px", border: "solid 0px", }}>
                 <tbody>
                     <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                         <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
@@ -188,12 +188,21 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
-            <h4 style={{ fontSize: "3mm", position: "absolute", right: "340px", top: "530px" }}>
+            <h4 style={{ fontSize: "3mm", position: "absolute", right: "330px", top: "550px" }}>
                 {n2words(props.model.net_total, { lang: 'ar' })}
             </h4>
-            <h4 style={{ fontSize: "3mm", position: "absolute", left: "35px", top: "540px" }}>
+            <h4 style={{ fontSize: "3mm", position: "absolute", left: "40px", top: "550px" }}>
                 {n2words(props.model.net_total, { lang: 'en' })}
             </h4>
+
+
+            <h4 style={{ fontSize: "3mm", position: "absolute", left: "200px", top: "750px" }}>
+                {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
+            </h4>
+
+            <div style={{ position: "absolute", left: "600px", top: "750px" }} >
+                {props.model.QRImageData && <img src={props.model.QRImageData} alt="Invoice QR Code" />}
+            </div>
 
 
             {/*
