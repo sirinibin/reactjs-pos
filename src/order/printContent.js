@@ -73,7 +73,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     {props.model.code ? props.model.code : ""}
                 </h4>
 
-                <h4 style={{ fontSize: "3mm", position: "absolute", right: "65px", top: (63 + page.top) + "px", border: "solid " + border + "px", }}>
+                <h4 style={{ fontSize: "3mm", position: "absolute", right: "68px", top: (63 + page.top) + "px", border: "solid " + border + "px", }}>
                     {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                 </h4>
 
@@ -197,7 +197,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
 
                 {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: (555 + page.top) + "px" }}>
-                    {n2words(props.model.net_total, { lang: 'ar' }) + "ريال سعودي "}
+                    {n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}
                 </h4> : ""}
                 {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "50px", top: (565 + page.top) + "px" }}>
                     {n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}
