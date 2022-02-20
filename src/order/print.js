@@ -4,6 +4,7 @@ import OrderPrintContent from './printContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
+import { format } from "date-fns";
 
 const OrderPrint = forwardRef((props, ref) => {
 
@@ -113,18 +114,19 @@ const OrderPrint = forwardRef((props, ref) => {
                 model.store = storeData;
 
                 var d = new Date(model.created_at);
-                var local = d.getTime();
-                var offset = d.getTimezoneOffset() * (60 * 1000);
-                var utc = new Date(local + offset);
-                var riyadh = new Date(utc.getTime() + (3 * 60 * 60 * 1000));
+                console.log("d:", d);
 
-                console.log("riyadh:", riyadh);
 
+                let d2 = format(
+                    new Date(d),
+                    "yyyy-MM-dd h:m:mma"
+                );
+                console.log("d2:", d2);
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: riyadh,
-                    invoiceTotal: model.net,
+                    invoiceTimestamp: d2,
+                    invoiceTotal: model.net_total,
                     invoiceVatTotal: model.vat_price,
                 });
 
