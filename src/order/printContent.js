@@ -189,6 +189,17 @@ const OrderPrintContent = forwardRef((props, ref) => {
             </table>
 
 
+            <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: "555px" }}>
+                {n2words(props.model.net_total, { lang: 'ar' })}
+            </h4>
+            <h4 style={{ fontSize: "3mm", position: "absolute", left: "50px", top: "565px" }}>
+                {n2words(props.model.net_total, { lang: 'en' })}
+            </h4>
+
+            <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: "652px" }}>
+                {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
+            </h4>
+
             {/*
             <div className="row" style={{ fontSize: "3mm" }}>
                 <div className="col">
