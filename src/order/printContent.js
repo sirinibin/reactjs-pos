@@ -33,9 +33,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
     let [border, setBorder] = useState("0");
     return (<>
 
-        {props.model.pages && props.model.pages.map((page, index) => (
+        {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
-                key={index}
+                key={pageIndex}
                 className="container"
                 id="printableArea"
                 style={{
@@ -78,7 +78,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                         {page.products && page.products.map((product, index) => (
                             <tr key={product.item_code} style={{ paddingTop: "1px", height: "8px", borderBottom: "solid 1px" }}>
                                 <td className="text-center" style={{ border: "solid 0px", width: "48px", }}>
-                                    <h4 style={{ fontSize: "3mm" }}>{index + 1}
+                                    <h4 style={{ fontSize: "3mm" }}>{index + 1 + (pageIndex * 10)}
                                     </h4>
                                 </td>
                                 <td className="text-center" style={{ border: "solid 0px", width: "93px" }} >
