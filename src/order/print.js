@@ -63,7 +63,7 @@ const OrderPrint = forwardRef((props, ref) => {
                         }
                     }
 
-                    top += 1075;
+                    top += 1050;
                     offset += pageSize;
                     if ((i + 1) === totalPages) {
                         model.pages[i].lastPage = true;
