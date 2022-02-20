@@ -73,6 +73,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     {props.model.code ? props.model.code : ""}
                 </h4>
 
+                <h4 style={{ fontSize: "3mm", position: "absolute", right: "39px", top: (65 + page.top) + "px", border: "solid " + border + "px", }}>
+                    {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
+                </h4>
+
                 <table style={{ fontSize: "3mm", position: "absolute", left: "18px", top: (119 + page.top) + "px", border: "solid 0px", }}>
                     <tbody>
                         {page.products && page.products.map((product, index) => (

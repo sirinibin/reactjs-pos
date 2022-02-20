@@ -42,6 +42,8 @@ const OrderPrint = forwardRef((props, ref) => {
                     totalPages++;
                 }
 
+                model.total_pages = totalPages;
+
 
                 model.pages = [];
 
