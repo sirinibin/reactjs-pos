@@ -188,6 +188,13 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </tbody>
             </table>
 
+            <h4 style={{ fontSize: "3mm", position: "absolute", right: "340px", top: "530px" }}>
+                {n2words(props.model.net_total, { lang: 'ar' })}
+            </h4>
+            <h4 style={{ fontSize: "3mm", position: "absolute", left: "35px", top: "540px" }}>
+                {n2words(props.model.net_total, { lang: 'en' })}
+            </h4>
+
 
             {/*
             <div className="row" style={{ fontSize: "3mm" }}>
