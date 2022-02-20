@@ -196,11 +196,11 @@ const OrderPrintContent = forwardRef((props, ref) => {
             </h4>
 
 
-            <h4 style={{ fontSize: "3mm", position: "absolute", left: "200px", top: "650px" }}>
+            <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: "652px" }}>
                 {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
             </h4>
 
-            <div style={{ position: "absolute", left: "560px", top: "630px" }} >
+            <div style={{ position: "absolute", left: "570px", top: "610px", width: "300px", height: "300px" }} >
                 {props.model.QRImageData && <img src={props.model.QRImageData} alt="Invoice QR Code" />}
             </div>
 
