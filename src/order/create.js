@@ -409,14 +409,13 @@ const OrderCreate = forwardRef((props, ref) => {
                     productFound = true;
                 }
             }
+            if (!productFound) {
+                setOpenProductSearchResult(true);
+                setProductOptions(products);
+            }
+            setIsProductsLoading(false);
         }
 
-
-        if (!productFound) {
-            setOpenProductSearchResult(true);
-            setProductOptions(products);
-        }
-        setIsProductsLoading(false);
     }
 
     function selectProduct(product) {
