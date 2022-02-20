@@ -82,7 +82,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                 <div className="col">
                     <u
                     ><h1 className="text-center" style={{ fontSize: "4mm" }}>
-                            RETURN INVOICE / فاتورة الإرجاع
+                            SALES RETURN INVOICE / فاتورة الإرجاع
                         </h1>
                     </u>
                 </div>
