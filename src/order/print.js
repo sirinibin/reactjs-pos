@@ -31,6 +31,7 @@ const OrderPrint = forwardRef((props, ref) => {
                 }
 
                 let pageSize = 10;
+                model.pageSize = pageSize;
                 let totalProducts = model.products.length;
                 let top = 0;
                 let totalPagesInt = parseInt(totalProducts / pageSize);
@@ -62,7 +63,7 @@ const OrderPrint = forwardRef((props, ref) => {
                         }
                     }
 
-                    top += 1200;
+                    top += 1075;
                     offset += pageSize;
                     if ((i + 1) === totalPages) {
                         model.pages[i].lastPage = true;
