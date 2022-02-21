@@ -414,9 +414,11 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         if (!productFound) {
+            openProductSearchResult = true;
             setOpenProductSearchResult(true);
             setProductOptions(products);
         } else {
+            openProductSearchResult = false;
             setOpenProductSearchResult(false);
         }
         setIsProductsLoading(false);

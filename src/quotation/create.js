@@ -376,6 +376,9 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     console.log("searchTerm:" + searchTerm);
     if (!searchTerm) {
+      openProductSearchResult = false;
+      setOpenProductSearchResult(false);
+      setIsProductsLoading(false);
       return;
     }
 
@@ -404,7 +407,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     let data = await result.json();
 
     let products = data.result;
-    if (searchTerm === "" && products.length === 0) {
+    if (products.length === 0) {
       openProductSearchResult = false;
       setOpenProductSearchResult(false);
       setIsProductsLoading(false);
@@ -423,6 +426,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     if (!productFound) {
       setOpenProductSearchResult(true);
       setProductOptions(products);
+    } else {
+      setOpenProductSearchResult(false);
     }
     setIsProductsLoading(false);
   }
