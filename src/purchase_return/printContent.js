@@ -48,7 +48,7 @@ const PurchaseReturnPrintContent = forwardRef((props, ref) => {
 
 
             >
-                <h4 style={{ fontSize: "4mm", position: "absolute", left: "300px", top: (12 + page.top) + "px", border: "solid " + border + "px", }}>
+                <h4 style={{ fontSize: "4mm", position: "absolute", left: "300px", top: (40 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
                     {"PURCHASE RETURN / أمر شراء"}
                 </h4>
 
