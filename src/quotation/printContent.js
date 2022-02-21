@@ -48,7 +48,7 @@ const QuotationPrintContent = forwardRef((props, ref) => {
 
 
             >
-                <h2 style={{ fontSize: "4mm", position: "absolute", left: "305px", top: (120 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
+                <h2 style={{ fontSize: "4mm", position: "absolute", left: "305px", top: (20 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
                     {"QUOTATION / اقتباس"}
                 </h2>
 
