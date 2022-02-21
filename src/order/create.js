@@ -365,6 +365,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
+            openProductSearchResult = false;
+            setOpenProductSearchResult(false);
             return;
         }
 
@@ -393,7 +395,7 @@ const OrderCreate = forwardRef((props, ref) => {
         let data = await result.json();
 
         let products = data.result;
-        if (searchTerm === "" && products.length === 0) {
+        if (products.length === 0) {
             openProductSearchResult = false;
             setOpenProductSearchResult(false);
             setIsProductsLoading(false);
@@ -409,12 +411,15 @@ const OrderCreate = forwardRef((props, ref) => {
                     productFound = true;
                 }
             }
-            if (!productFound) {
-                setOpenProductSearchResult(true);
-                setProductOptions(products);
-            }
-            setIsProductsLoading(false);
         }
+
+        if (!productFound) {
+            setOpenProductSearchResult(true);
+            setProductOptions(products);
+        } else {
+            setOpenProductSearchResult(false);
+        }
+        setIsProductsLoading(false);
 
     }
 
@@ -1127,6 +1132,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 id="product_id"
                                 size="lg"
                                 labelKey="search_label"
+                                emptyLabel=""
                                 clearButton={true}
                                 open={openProductSearchResult}
                                 isLoading={isProductsLoading}
