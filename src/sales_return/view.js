@@ -140,7 +140,7 @@ const SalesReturnView = forwardRef((props, ref) => {
 
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
-                        <i className="bi bi-display"></i> E-Invoice
+                        <i className="bi bi-display"></i> E-Return Invoice
                     </Button>
                     <button
                         type="button"

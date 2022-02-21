@@ -3,6 +3,8 @@ import PurchasePreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
+import PurchasePrint from './print.js';
+
 
 
 const PurchaseView = forwardRef((props, ref) => {
@@ -113,24 +115,30 @@ const PurchaseView = forwardRef((props, ref) => {
         PreviewRef.current.open(model);
     }
 
+    const PrintRef = useRef();
+    function openPrint() {
+        PrintRef.current.open(model);
+    }
+
     return (<>
         <PurchasePreview ref={PreviewRef} />
+        <PurchasePrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Purchase #{model.code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
-                    <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
-                        <i className="bi bi-display"></i> Preview
+                    <Button variant="primary" className="btn btn-primary mb-3" onClick={openPrint}>
+                        <i className="bi bi-printer"></i> Print
                     </Button>
-                    {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewPurchaseModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
+
+
+                </div>
+
+                <div className="col align-self-end text-end">
+                    <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
+                        <i className="bi bi-display"></i> E-Purchase Invoice
+                    </Button>
                     <button
                         type="button"
                         className="btn-close"
