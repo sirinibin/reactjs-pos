@@ -378,7 +378,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         let data = await result.json();
 
         let products = data.result;
-        if (products.length === 0) {
+        if (!products || products.length === 0) {
             openProductSearchResult = false;
             setOpenProductSearchResult(false);
             setIsProductsLoading(false);
