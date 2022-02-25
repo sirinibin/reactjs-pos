@@ -92,7 +92,8 @@ function OrderIndex(props) {
 
 
     let [totalSales, setTotalSales] = useState(0.00);
-    let [profit, setProfit] = useState(0.00);
+    let [netProfit, setNetProfit] = useState(0.00);
+    let [vatPrice, setVatPrice] = useState(0.00);
     let [loss, setLoss] = useState(0.00);
 
     function ObjectToSearchQueryParams(object) {
@@ -254,7 +255,7 @@ function OrderIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
+            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,loss,net_profit";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -306,11 +307,14 @@ function OrderIndex(props) {
                 totalSales = data.meta.total_sales;
                 setTotalSales(totalSales);
 
-                profit = data.meta.profit;
-                setProfit(profit);
+                netProfit = data.meta.net_profit;
+                setNetProfit(netProfit);
 
                 loss = data.meta.loss;
                 setLoss(loss);
+
+                vatPrice = data.meta.vat_price;
+                setVatPrice(vatPrice);
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -377,9 +381,9 @@ function OrderIndex(props) {
                             </Badge>
                         </h1>
                         <h1 className="text-end">
-                            Profit: <Badge bg="secondary">
+                            Net Profit: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={profit}
+                                    value={netProfit}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -391,6 +395,17 @@ function OrderIndex(props) {
                             Loss: <Badge bg="secondary">
                                 <NumberFormat
                                     value={loss}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            VAT Collected: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={vatPrice.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -606,14 +621,14 @@ function OrderIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("profit");
+                                                            sort("net_profit");
                                                         }}
                                                     >
-                                                        Profit
-                                                        {sortField === "profit" && sortOrder === "-" ? (
+                                                        Net Profit
+                                                        {sortField === "net_profit" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
-                                                        {sortField === "profit" && sortOrder === "" ? (
+                                                        {sortField === "net_profit" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
@@ -793,9 +808,9 @@ function OrderIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="profit"
+                                                        id="net_profit"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("profit", e.target.value)
+                                                            searchByFieldValue("net_profit", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -932,7 +947,7 @@ function OrderIndex(props) {
                                                             {format(new Date(order.date), "MMM dd yyyy")}
                                                         </td>
                                                         <td>{order.net_total.toFixed(2)} SAR</td>
-                                                        <td>{order.profit.toFixed(2)} SAR</td>
+                                                        <td>{order.net_profit.toFixed(2)} SAR</td>
                                                         <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td>
                                                         <td>{order.created_by_name}</td>
                                                         <td>{order.customer_name}</td>
