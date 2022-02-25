@@ -931,9 +931,9 @@ function OrderIndex(props) {
                                                         <td>
                                                             {format(new Date(order.date), "MMM dd yyyy")}
                                                         </td>
-                                                        <td>{order.net_total} SAR</td>
-                                                        <td>{order.profit} SAR</td>
-                                                        <td>{order.loss ? order.loss : 0.0} SAR</td>
+                                                        <td>{order.net_total.toFixed(2)} SAR</td>
+                                                        <td>{order.profit.toFixed(2)} SAR</td>
+                                                        <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td>
                                                         <td>{order.created_by_name}</td>
                                                         <td>{order.customer_name}</td>
                                                         <td>
