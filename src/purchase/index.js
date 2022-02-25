@@ -15,8 +15,8 @@ function PurchaseIndex(props) {
     const cookies = new Cookies();
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
-    let [retailProfit, setRetailProfit] = useState(0.00);
-    let [wholesaleProfit, setWholesaleProfit] = useState(0.00);
+    let [netRetailProfit, setNetRetailProfit] = useState(0.00);
+    let [netWholesaleProfit, setNetWholesaleProfit] = useState(0.00);
 
     //list
     const [purchaseList, setPurchaseList] = useState([]);
@@ -250,7 +250,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,vendor_name,status,created_at,retail_profit,wholesale_profit";
+            "select=id,code,date,net_total,created_by_name,vendor_name,status,created_at,net_retail_profit,net_wholesale_profit";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -300,11 +300,11 @@ function PurchaseIndex(props) {
                 totalPurchase = data.meta.total_purchase;
                 setTotalPurchase(totalPurchase);
 
-                retailProfit = data.meta.retail_profit;
-                setRetailProfit(retailProfit);
+                netRetailProfit = data.meta.net_retail_profit;
+                setNetRetailProfit(netRetailProfit);
 
-                wholesaleProfit = data.meta.wholesale_profit;
-                setWholesaleProfit(wholesaleProfit);
+                netWholesaleProfit = data.meta.net_wholesale_profit;
+                setNetWholesaleProfit(netWholesaleProfit);
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -375,9 +375,9 @@ function PurchaseIndex(props) {
                             </Badge>
                         </h1>
                         <h1 className="text-end">
-                            Expected Retail Profit: <Badge bg="secondary">
+                            Expected Net Retail Profit: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={retailProfit}
+                                    value={netRetailProfit}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -386,9 +386,9 @@ function PurchaseIndex(props) {
                             </Badge>
                         </h1>
                         <h1 className="text-end">
-                            Expected Wholesale Profit: <Badge bg="secondary">
+                            Expected Net Wholesale Profit: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={wholesaleProfit}
+                                    value={netWholesaleProfit}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -607,11 +607,11 @@ function PurchaseIndex(props) {
                                                             sort("retail_profit");
                                                         }}
                                                     >
-                                                        Expected Retail Profit
-                                                        {sortField === "retail_profit" && sortOrder === "-" ? (
+                                                        Expected Net Retail Profit
+                                                        {sortField === "net_retail_profit" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
-                                                        {sortField === "retail_profit" && sortOrder === "" ? (
+                                                        {sortField === "net_retail_profit" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
@@ -626,11 +626,11 @@ function PurchaseIndex(props) {
                                                             sort("wholesale_profit");
                                                         }}
                                                     >
-                                                        Expected Wholesale Profit
-                                                        {sortField === "wholesale_profit" && sortOrder === "-" ? (
+                                                        Expected Net Wholesale Profit
+                                                        {sortField === "net_wholesale_profit" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
-                                                        {sortField === "wholesale_profit" && sortOrder === "" ? (
+                                                        {sortField === "net_wholesale_profit" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
@@ -791,9 +791,9 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="retail_profit"
+                                                        id="net_retail_profit"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("retail_profit", e.target.value)
+                                                            searchByFieldValue("net_retail_profit", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -801,9 +801,9 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="wholesale_profit"
+                                                        id="net_wholesale_profit"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("wholesale_profit", e.target.value)
+                                                            searchByFieldValue("net_wholesale_profit", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -940,7 +940,7 @@ function PurchaseIndex(props) {
                                                         </td>
                                                         <td>
                                                             <NumberFormat
-                                                                value={purchase.retail_profit}
+                                                                value={purchase.net_retail_profit}
                                                                 displayType={"text"}
                                                                 thousandSeparator={true}
                                                                 suffix={" SAR"}
@@ -949,7 +949,7 @@ function PurchaseIndex(props) {
                                                         </td>
                                                         <td>
                                                             <NumberFormat
-                                                                value={purchase.wholesale_profit}
+                                                                value={purchase.net_wholesale_profit}
                                                                 displayType={"text"}
                                                                 thousandSeparator={true}
                                                                 suffix={" SAR"}

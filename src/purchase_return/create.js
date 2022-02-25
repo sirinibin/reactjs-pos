@@ -153,9 +153,10 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     purchase_returned_by: purchase.order_placed_by,
                     purchase_returned_by_signature_id: purchase.order_placed_by_signature_id,
                     is_discount_percent: purchase.is_discount_percent,
-                    discount: purchase.discount,
                     discount_percent: purchase.discount_percent,
                 };
+
+                formData.discount = (purchase.discount - purchase.return_discount);
 
                 if (formData.is_discount_percent) {
                     formData.discountValue = formData.discount_percent;
@@ -185,33 +186,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 setSelectedProducts([...selectedProducts]);
 
-
-                /*
-
-                let selectedPurchaseReturnedByUsers = [
-                    {
-                        id: purchase.order_placed_by,
-                        name: purchase.order_placed_by_name
-                    }
-                ];
-                */
-
-                /*
-                if (purchase.order_placed_by_signature_id) {
-                    let selectedPurchaseReturnedBySignatures = [
-                        {
-                            id: purchase.order_placed_by_signature_id,
-                            name: purchase.order_placed_by_signature_name,
-                        }
-                    ];
-
-                    setSelectedPurchaseReturnedBySignatures([...selectedPurchaseReturnedBySignatures]);
-                }
-                */
-
-                // setSelectedPurchaseReturnedByUsers([...selectedPurchaseReturnedByUsers]);
-
-
+                setFormData({ ...formData });
                 reCalculate();
                 setFormData({ ...formData });
 
