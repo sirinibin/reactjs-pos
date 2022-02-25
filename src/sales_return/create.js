@@ -45,6 +45,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             }
             setFormData({ ...formData });
             if (id) {
+                reCalculate();
                 getOrder(id);
             }
             setShow(true);
@@ -115,8 +116,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 formData.customer_id = order.customer_id;
 
                 formData.is_discount_percent = order.is_discount_percent;
-                formData.discount = order.discount;
-                formData.discount_percent = order.discount_percent;
+                formData.discount = (order.discount - order.return_discount);
+
+                // formData.discount_percent = order.discount_percent;
 
                 if (formData.is_discount_percent) {
                     formData.discountValue = formData.discount_percent;
@@ -124,7 +126,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     formData.discountValue = formData.discount;
                 }
 
-                setFormData({ ...formData });
+                // setFormData({ ...formData });
                 console.log("formData:", formData);
 
 
@@ -138,32 +140,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 setSelectedStores(selectedStores);
                 console.log("selectedStores:", selectedStores);
 
-                /*
-                let selectedReceivedByUsers = [
-                    {
-                        id: order.delivered_by,
-                        name: order.delivered_by_name
-                    }
-                ];
-                */
-
-                /*
-                if (order.delivered_by_signature_id) {
-                    let selectedReceivedBySignatures = [
-                        {
-                            id: order.delivered_by_signature_id,
-                            name: order.delivered_by_signature_name,
-                        }
-                    ];
-                    setSelectedReceivedBySignatures([...selectedReceivedBySignatures]);
-                }
-                */
-
-                //setSelectedReceivedByUsers([...selectedReceivedByUsers]);
-
-
-
+                setFormData({ ...formData });
                 reCalculate();
+                setFormData({ ...formData });
             })
             .catch(error => {
                 setProcessing(false);

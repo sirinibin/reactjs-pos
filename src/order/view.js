@@ -305,8 +305,8 @@ const OrderView = forwardRef((props, ref) => {
                                     />
                                 </td>
                                 <td colSpan="3"></td>
-                                <td className="text-center">0 SAR</td>
-                                <td className="text-center">0 SAR</td>
+                                <td className="text-center">0.00 SAR</td>
+                                <td className="text-center">0.00 SAR</td>
                             </tr>
                             <tr>
                                 <th colSpan="5" className="text-end">
@@ -324,7 +324,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <td colSpan="3"></td>
                                 <td className="text-center">
                                     <NumberFormat
-                                        value={(0 - model.discount)}
+                                        value={(model.discount - model.return_discount).toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
