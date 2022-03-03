@@ -14,6 +14,7 @@ function SalesReturnIndex(props) {
     const cookies = new Cookies();
 
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
+    let [vatPrice, setVatPrice] = useState(0.00);
 
     //list
     const [salesreturnList, setSalesReturnList] = useState([]);
@@ -300,6 +301,9 @@ function SalesReturnIndex(props) {
                 totalSalesReturn = data.meta.total_sales_return;
                 setTotalSalesReturn(totalSalesReturn);
 
+                vatPrice = data.meta.vat_price;
+                setVatPrice(vatPrice);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -349,6 +353,17 @@ function SalesReturnIndex(props) {
                             Sales Return: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalSalesReturn}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            VAT Returned: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={vatPrice}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
