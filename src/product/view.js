@@ -193,7 +193,7 @@ const ProductView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
-                            <th>Barcode (Note:Click on Image to Print):</th>
+                            <th>Barcode (Note:Save & Print):</th>
                             <td>
                                 <img alt="Barcode" src={model.barcode_base64} />
 
