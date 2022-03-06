@@ -13,6 +13,7 @@ import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import OrderView from "./view.js";
+import "./style.css";
 //import BarcodeScannerComponent from "react-qr-barcode-scanner";
 //import Quagga from 'quagga';
 import ProductView from "./../product/view.js";
@@ -918,7 +919,8 @@ const OrderCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" fullscreen
+                onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order"}
@@ -926,6 +928,21 @@ const OrderCreate = forwardRef((props, ref) => {
 
                     <div className="col align-self-end text-end">
                         <OrderPreview />
+                        <Button variant="primary" onClick={handleCreate} >
+                            {isProcessing ?
+                                <Spinner
+                                    as="span"
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                    aria-hidden={true}
+                                /> + " Creating..."
+
+                                : ""
+                            }
+                            {formData.id ? "Update" : "Create"}
+
+                        </Button>
                         {/*
                         <button
                             className="btn btn-primary mb-3"
@@ -944,24 +961,6 @@ const OrderCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <div className="col-md-12 align-self-end text-end">
-                            <Button variant="primary" type="submit" >
-                                {isProcessing ?
-                                    <Spinner
-                                        as="span"
-                                        animation="border"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden={true}
-                                    /> + " Creating..."
-
-                                    : ""
-                                }
-                                {formData.id ? "Update" : "Create"}
-
-                            </Button>
-                        </div>
-
                         {!cookies.get('store_name') ? <div className="col-md-6">
                             <label className="form-label">Store*</label>
 

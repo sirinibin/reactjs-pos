@@ -897,16 +897,19 @@ const QuotationCreate = forwardRef((props, ref) => {
       <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+      <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
         <Modal.Header>
           <Modal.Title>
             {formData.id ? "Update Quotation #" + formData.code : "Create New Quotation"}
           </Modal.Title>
 
+
           <div className="col align-self-end text-end">
             <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
               <i className="bi bi-display"></i> Preview
             </Button>
+
+
 
             {/*
                         <button
@@ -916,6 +919,24 @@ const QuotationCreate = forwardRef((props, ref) => {
                         >
                             <i className="bi bi-display"></i> Preview
                         </button> */}
+
+          </div>
+          <div className="col align-self-end text-end">
+            <Button variant="primary" className="mb-3" onClick={handleCreate} >
+              {isProcessing ?
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden={true}
+                /> + " Creating..."
+
+                : ""
+              }
+              {formData.id ? "Update" : "Create"}
+
+            </Button>
             <button
               type="button"
               className="btn-close"
@@ -926,24 +947,6 @@ const QuotationCreate = forwardRef((props, ref) => {
         </Modal.Header>
         <Modal.Body>
           <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-            <div className="col-md-12 align-self-end text-end">
-              <Button variant="primary" type="submit" >
-                {isProcessing ?
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden={true}
-                  /> + " Creating..."
-
-                  : ""
-                }
-                {formData.id ? "Update" : "Create"}
-
-              </Button>
-            </div>
-
             {!cookies.get('store_name') ? <div className="col-md-6">
               <label className="form-label">Store*</label>
 
