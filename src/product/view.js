@@ -52,7 +52,13 @@ const ProductView = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/product/' + id, requestOptions)
+        let storeParam = "";
+        let store_id = cookies.get("store_id");
+        if (store_id) {
+            storeParam = "?store_id=" + store_id;
+        }
+
+        fetch('/v1/product/' + id + store_id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
