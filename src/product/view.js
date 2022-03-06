@@ -53,12 +53,14 @@ const ProductView = forwardRef((props, ref) => {
         };
 
         let storeParam = "";
+
         let store_id = cookies.get("store_id");
         if (store_id) {
             storeParam = "?store_id=" + store_id;
         }
 
-        fetch('/v1/product/' + id + store_id, requestOptions)
+
+        fetch('/v1/product/' + id + storeParam, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -193,51 +195,10 @@ const ProductView = forwardRef((props, ref) => {
                         <tr>
                             <th>Barcode (Note:Click on Image to Print):</th>
                             <td>
-                                <div ref={barcodeRef} onClick={printBarCode} style={{
-                                    cursor: "pointer",
-                                    border: "solid 1px",
-                                    marginTop: "10px",
-                                }}>
-                                    <div className="row" >
-                                        <div className="col text-left">
-                                            <span style={{
-                                                border: "solid 0px",
-                                                fontSize: "12px"
-                                            }} >{cookies.get("store_name")}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="row" style={{
-                                        border: "solid 0px",
-                                    }}>
-                                        <div className="col text-left" style={{
-                                            fontSize: 10,
-                                        }}>
-                                            {model.name}
-                                        </div>
-                                    </div>
-                                    <div className="row" >
-                                        <div className="col text-center">
-                                            {model.item_code ? <Barcode value={model.bar_code} width={1} /> : ""}
-                                        </div>
-                                    </div>
-                                    <div className="row">
-                                        <div className="col text-left" style={{
-                                            fontSize: 10,
-                                            fontWeight: "bold",
-                                        }} >
+                                <img alt="Barcode" src={model.barcode_base64} />
 
-                                            <NumberFormat
-                                                value={getProductRetailPrice(model)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                prefix={"SAR: "}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
+
+
                             </td>
                             <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode} style={{
                                 cursor: "pointer",
