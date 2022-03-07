@@ -5,7 +5,8 @@ import NumberFormat from "react-number-format";
 import Barcode from 'react-barcode';
 import QRCode from "react-qr-code";
 import html2canvas from 'html2canvas';
-
+//let ThermalPrinterEncoder = require('thermal-printer-encoder');
+import ThermalPrinterEncoder from 'thermal-printer-encoder';
 const ProductView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
@@ -88,8 +89,29 @@ const ProductView = forwardRef((props, ref) => {
     const qrcodeRef = useRef();
 
 
-    function printBarCode(e) {
+    function printBarCode(event) {
+        console.log("Clicked:");
 
+        console.log(event.target.getAttribute("src"));
+
+        let encoder = new ThermalPrinterEncoder({
+            language: 'esc-pos'
+        });
+
+        let img = new Image();
+        img.src = event.target.getAttribute("src");
+
+        img.onload = function () {
+            console.log("Inside onload")
+            let result = encoder
+                .image(img, 320, 320, 'atkinson')
+                .encode();
+            console.log("result:", result);
+
+        }
+
+
+        /*
         const opt = {
             scale: 4
         }
@@ -124,6 +146,7 @@ const ProductView = forwardRef((props, ref) => {
             newWin.document.close();
 
         });
+        */
 
     }
 
@@ -193,13 +216,12 @@ const ProductView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
-                            <th>Barcode (Note:Save & Print):</th>
+                            <th  >Barcode (Note:Save & Print):</th>
                             <td>
                                 <img alt="Barcode" src={model.barcode_base64} style={{
                                     width: "400px",
                                     height: "300px",
-                                }} />
-
+                                }} onClick={printBarCode} />
 
 
                             </td>
