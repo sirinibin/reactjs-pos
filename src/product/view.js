@@ -195,7 +195,10 @@ const ProductView = forwardRef((props, ref) => {
                         <tr>
                             <th>Barcode (Note:Save & Print):</th>
                             <td>
-                                <img alt="Barcode" src={model.barcode_base64} />
+                                <img alt="Barcode" src={model.barcode_base64} style={{
+                                    width: "400px",
+                                    height: "300px",
+                                }} />
 
 
 
