@@ -459,6 +459,7 @@ const ProductCreate = forwardRef((props, ref) => {
         }
 
 
+        /*
         if (!selectedUnitPrice[0].wholesale_unit_price) {
             errors.wholesale_unit_price = "Wholesale Unit Price is required";
             setErrors({ ...errors });
@@ -484,6 +485,7 @@ const ProductCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
+        */
 
 
         if (isUnitPriceAddedToStore(selectedUnitPrice[0].id)) {
@@ -492,13 +494,23 @@ const ProductCreate = forwardRef((props, ref) => {
             return;
         }
 
-        selectedUnitPrices.push({
+        let unitPrice = {
             store_id: selectedUnitPrice[0].id,
             store_name: selectedUnitPrice[0].name,
             purchase_unit_price: parseFloat(selectedUnitPrice[0].purchase_unit_price),
-            retail_unit_price: parseFloat(selectedUnitPrice[0].retail_unit_price),
-            wholesale_unit_price: parseFloat(selectedUnitPrice[0].wholesale_unit_price),
-        });
+        };
+
+        if (selectedUnitPrice[0].retail_unit_price) {
+            unitPrice.retail_unit_price = parseFloat(selectedUnitPrice[0].retail_unit_price);
+        }
+
+        if (selectedUnitPrice[0].wholesale_unit_price) {
+            unitPrice.wholesale_unit_price = parseFloat(selectedUnitPrice[0].wholesale_unit_price);
+        }
+
+        selectedUnitPrices.push(unitPrice);
+
+
         setSelectedUnitPrices([...selectedUnitPrices]);
 
         selectedUnitPrice[0].id = "";
@@ -916,7 +928,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-2">
-                            <label className="form-label">Wholesale*</label>
+                            <label className="form-label">Wholesale</label>
 
                             <div className="input-group mb-3">
 
@@ -953,7 +965,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Retail*</label>
+                            <label className="form-label">Retail</label>
 
                             <div className="input-group mb-3">
 
