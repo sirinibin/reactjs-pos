@@ -645,6 +645,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 return;
             }
 
+            /*
             errors.purchase_unit_price = "";
             if (
                 !selectedProduct[0].purchase_unit_price ||
@@ -674,6 +675,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 setErrors({ ...errors });
                 return;
             }
+            */
 
 
         }
@@ -683,16 +685,27 @@ const PurchaseCreate = forwardRef((props, ref) => {
             let index = getProductIndex(selectedProduct[0].id);
             selectedProducts[index].quantity = parseFloat(selectedProducts[index].quantity + selectedProduct[0].quantity);
         } else {
-            selectedProducts.push({
+            let item = {
                 product_id: selectedProduct[0].id,
                 code: selectedProduct[0].item_code,
                 name: selectedProduct[0].name,
                 quantity: selectedProduct[0].quantity,
-                purchase_unit_price: parseFloat(selectedProduct[0].purchase_unit_price).toFixed(2),
-                retail_unit_price: parseFloat(selectedProduct[0].retail_unit_price).toFixed(2),
-                wholesale_unit_price: parseFloat(selectedProduct[0].wholesale_unit_price).toFixed(2),
                 unit: selectedProduct[0].unit,
-            });
+            };
+
+            if (selectedProduct[0].purchase_unit_price) {
+                item.purchase_unit_price = parseFloat(selectedProduct[0].purchase_unit_price).toFixed(2);
+            }
+
+            if (selectedProduct[0].retail_unit_price) {
+                item.retail_unit_price = parseFloat(selectedProduct[0].retail_unit_price).toFixed(2);
+            }
+
+            if (selectedProduct[0].wholesale_unit_price) {
+                item.wholesale_unit_price = parseFloat(selectedProduct[0].wholesale_unit_price).toFixed(2);
+            }
+
+            selectedProducts.push(item);
         }
 
 
@@ -1060,6 +1073,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     setSelectedProduct([...selectedProduct]);
                                     setOpenProductSearchResult(false);
                                     console.log("selectedProduct:", selectedProduct);
+                                    addProduct();
                                 }}
                                 options={productOptions}
                                 placeholder="Type / Scan Item Code or Name"
@@ -1086,245 +1100,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
 
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Qty{selectedProduct[0] && selectedProduct[0].unit ? "(" + selectedProduct[0].unit + ")" : ""}*</label>
-                            <input
-                                value={selectedProduct[0] ? selectedProduct[0].quantity : ""}
-                                onChange={(e) => {
-                                    console.log("Inside onchange qty");
-                                    if (!e.target.value) {
-                                        errors["quantity"] = "Invalid Quantity";
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].quantity = e.target.value;
-                                        }
-                                        setErrors({ ...errors });
-                                        return;
-                                    }
-
-                                    if (e.target.value === 0) {
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].quantity = e.target.value;
-                                        }
-                                        errors["quantity"] = "Quantity should be > 0";
-                                        setErrors({ ...errors });
-                                        return;
-                                    }
-
-                                    errors["quantity"] = "";
-                                    setErrors({ ...errors });
-
-                                    if (selectedProduct[0]) {
-                                        selectedProduct[0].quantity = parseFloat(e.target.value);
-                                        setSelectedProduct([...selectedProduct]);
-                                        console.log(selectedProduct);
-                                    }
-                                }}
-                                type="number"
-                                className="form-control"
-                                id="quantity"
-                                placeholder="Quantity"
-                            />
-                            {errors.quantity ? (
-                                <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.quantity}
-                                </div>
-                            ) : ""}
-
-                            {selectedProduct[0] &&
-                                selectedProduct[0].quantity &&
-                                !errors["quantity"] && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                        </div>
-                        <div className="col-md-2">
-                            <label className="form-label">Purchase Unit Price*</label>
-                            <input
-                                type="number"
-                                value={
-                                    selectedProduct[0] ? selectedProduct[0].purchase_unit_price : ""
-                                }
-                                onChange={(e) => {
-                                    console.log("Inside onchange purchase unit price:");
-
-                                    if (!e.target.value) {
-                                        errors["purchase_unit_price"] = "Invalid Purchase Unit Price";
-                                        setErrors({ ...errors });
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].purchase_unit_price = e.target.value;
-                                            setSelectedProduct([...selectedProduct]);
-                                        }
-                                        return;
-                                    }
-
-                                    if (e.target.value === 0) {
-                                        errors["purchase_unit_price"] = "Purchase Unit Price should be > 0";
-                                        setErrors({ ...errors });
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].purchase_unit_price = parseFloat(e.target.value);
-                                            setSelectedProduct([...selectedProduct]);
-                                        }
-                                        return;
-                                    }
-
-                                    errors["purchase_unit_price"] = "";
-                                    setErrors({ ...errors });
-
-                                    //setFormData({ ...formData });
-                                    if (selectedProduct[0]) {
-                                        selectedProduct[0].purchase_unit_price = parseFloat(e.target.value);
-                                        setSelectedProduct([...selectedProduct]);
-                                    }
-                                }}
-                                className="form-control"
-                                id="purchase_unit_price"
-                                placeholder="Purchase Unit Price"
-                            />
-
-                            {errors.purchase_unit_price ? (
-                                <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.purchase_unit_price}
-                                </div>
-                            ) : ""}
-                            {selectedProduct[0] &&
-                                selectedProduct[0].purchase_unit_price &&
-                                !errors.purchase_unit_price && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>Looks good!
-                                    </div>
-                                )}
-                        </div>
-                        <div className="col-md-2">
-                            <label className="form-label">Wholesale Unit Price*</label>
-                            <input
-                                type="number"
-                                value={
-                                    selectedProduct[0] ? selectedProduct[0].wholesale_unit_price : ""
-                                }
-                                onChange={(e) => {
-                                    console.log("Inside onchange selling unit price:");
-
-                                    if (!e.target.value) {
-                                        errors["wholesale_unit_price"] = "Invalid Wholesale Unit Price";
-                                        setErrors({ ...errors });
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].wholesale_unit_price = e.target.value;
-                                            setSelectedProduct([...selectedProduct]);
-                                        }
-                                        return;
-                                    }
-
-                                    if (e.target.value === 0) {
-                                        errors["wholesale_unit_price"] = "Wholesale Unit Price should be > 0";
-                                        setErrors({ ...errors });
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].wholesale_unit_price = parseFloat(e.target.value);
-                                            setSelectedProduct([...selectedProduct]);
-                                        }
-                                        return;
-                                    }
-
-                                    errors["wholesale_unit_price"] = "";
-                                    setErrors({ ...errors });
-
-                                    //setFormData({ ...formData });
-                                    if (selectedProduct[0]) {
-                                        selectedProduct[0].wholesale_unit_price = parseFloat(e.target.value);
-                                        setSelectedProduct([...selectedProduct]);
-                                    }
-                                }}
-                                className="form-control"
-                                id="wholesale_unit_price"
-                                placeholder="Wholesale Unit Price"
-                            />
-
-                            {errors.wholesale_unit_price ? (
-                                <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.wholesale_unit_price}
-                                </div>
-                            ) : ""}
-                            {selectedProduct[0] &&
-                                selectedProduct[0].wholesale_unit_price &&
-                                !errors.wholesale_unit_price && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>Looks good!
-                                    </div>
-                                )}
-                        </div>
-                        <div className="col-md-2">
-                            <label className="form-label">Retail Unit Price*</label>
-                            <input
-                                type="number"
-                                value={
-                                    selectedProduct[0] ? selectedProduct[0].retail_unit_price : ""
-                                }
-                                onChange={(e) => {
-                                    console.log("Inside onchange retail unit price:");
-
-                                    if (!e.target.value) {
-                                        errors["retail_unit_price"] = "Invalid Retail Unit Price";
-                                        setErrors({ ...errors });
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].retail_unit_price = e.target.value;
-                                            setSelectedProduct([...selectedProduct]);
-                                        }
-                                        return;
-                                    }
-
-                                    if (e.target.value === 0) {
-                                        errors["retail_unit_price"] = "Retail Unit Price should be >0";
-                                        setErrors({ ...errors });
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].retail_unit_price = parseFloat(e.target.value);
-                                            setSelectedProduct([...selectedProduct]);
-                                        }
-                                        return;
-                                    }
-
-                                    errors["retail_unit_price"] = "";
-                                    setErrors({ ...errors });
-
-                                    //setFormData({ ...formData });
-                                    if (selectedProduct[0]) {
-                                        selectedProduct[0].retail_unit_price = parseFloat(e.target.value);
-                                        setSelectedProduct([...selectedProduct]);
-                                    }
-                                }}
-                                className="form-control"
-                                id="retail_unit_price"
-                                placeholder="Retail Unit Price"
-                            />
-
-                            {errors.retail_unit_price ? (
-                                <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.retail_unit_price}
-                                </div>
-                            ) : ""}
-                            {selectedProduct[0] &&
-                                selectedProduct[0].retail_unit_price &&
-                                !errors.retails_unit_price && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>Looks good!
-                                    </div>
-                                )}
-                        </div>
-                        <div className="col-md-1">
-                            <label className="form-label">&nbsp;</label>
-                            <Button
-                                variant="primary"
-                                className="btn btn-primary form-control"
-                                onClick={addProduct}
-                            >
-                                ADD
-                            </Button>
                         </div>
 
                         <table className="table table-striped table-sm table-bordered">
