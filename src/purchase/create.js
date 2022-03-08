@@ -47,6 +47,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "created",
             };
+            if (cookies.get('store_id')) {
+                formData.store_id = cookies.get('store_id');
+            }
 
             if (cookies.get("user_id")) {
                 selectedOrderPlacedByUsers = [{
@@ -317,9 +320,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     function GetProductUnitPriceInStore(storeId, purchaseUnitPriceListArray) {
+        console.log("Inside GetProductUnitPriceInStore");
         if (!purchaseUnitPriceListArray) {
             return "";
         }
+        console.log("Cool")
 
         for (var i = 0; i < purchaseUnitPriceListArray.length; i++) {
             console.log("purchaseUnitPriceListArray[i]:", purchaseUnitPriceListArray[i]);
@@ -331,7 +336,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     "unitPrice.retail_unit_price:",
                     purchaseUnitPriceListArray[i].purchase_unit_price
                 );
-                return purchaseUnitPriceListArray[i].purchase_unit_price;
+                return purchaseUnitPriceListArray[i];
             } else {
                 console.log("not matched");
             }
@@ -1031,17 +1036,26 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     }
 
 
-                                    if (formData.store_id) {
-                                        selectedItems[0].purchase_unit_price = GetProductUnitPriceInStore(
-                                            formData.store_id,
-                                            selectedItems[0].purchase_unit_prices
-                                        );
-
-                                    }
-
 
                                     selectedProduct = selectedItems;
                                     selectedProduct[0].quantity = 1;
+
+                                    if (formData.store_id) {
+                                        let unitPrice = GetProductUnitPriceInStore(
+                                            formData.store_id,
+                                            selectedItems[0].unit_prices
+                                        );
+
+                                        selectedItems[0].purchase_unit_price = unitPrice.purchase_unit_price;
+
+                                        selectedProduct[0].purchase_unit_price = unitPrice.purchase_unit_price;
+                                        selectedProduct[0].wholesale_unit_price = unitPrice.wholesale_unit_price;
+                                        selectedProduct[0].retail_unit_price = unitPrice.retail_unit_price;
+
+                                        console.log("selectedProduct[0]:", selectedProduct[0]);
+
+                                    }
+
                                     console.log("selectedItems:", selectedItems);
                                     setSelectedProduct([...selectedProduct]);
                                     setOpenProductSearchResult(false);
