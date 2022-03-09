@@ -341,6 +341,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     "unitPrice.retail_unit_price:",
                     unitPriceListArray[i].retail_unit_price
                 );
+                return unitPriceListArray[i];
+                /*
                 if (formData.price_type === "retail") {
                     return unitPriceListArray[i].retail_unit_price;
                 } else if (formData.price_type === "wholesale") {
@@ -348,6 +350,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 } else if (formData.price_type === "purchase") {
                     return unitPriceListArray[i].purchase_unit_price;
                 }
+                */
 
             } else {
                 console.log("not matched");
@@ -452,10 +455,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         if (store_id) {
-            product.unit_price = GetProductUnitPriceInStore(
+
+            let unitPrice = GetProductUnitPriceInStore(
                 store_id,
                 product.unit_prices
             );
+            product.unit_price = unitPrice.retail_unit_price;
 
             let stock = 0;
             if (product.stock) {
@@ -469,9 +474,10 @@ const OrderCreate = forwardRef((props, ref) => {
             selectedProduct[0].unit_price = product.unit_price;
             selectedProduct[0].stock = product.stock;
             console.log("selectedProduct[0].stock:", selectedProduct[0].stock);
+            addProduct();
         }
         setSelectedProduct([...selectedProduct]);
-        addProduct();
+
     }
 
     async function suggestUsers(searchTerm) {
@@ -1172,10 +1178,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }
 
                                     if (formData.store_id) {
-                                        selectedItems[0].unit_price = GetProductUnitPriceInStore(
+                                        let unit_price = GetProductUnitPriceInStore(
                                             formData.store_id,
                                             selectedItems[0].unit_prices
                                         );
+
+                                        selectedItems[0].unit_price = unit_price.retail_unit_price;
 
                                         let stock = 0;
                                         if (selectedItems[0].stock) {
@@ -1185,12 +1193,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                             errors["product_id"] = "This product is not available in store: " + selectedStores[0].name;
                                             setErrors({ ...errors });
                                         }
-
-
                                     }
 
                                     selectedProduct = selectedItems;
                                     selectedProduct[0].quantity = 1;
+                                    addProduct();
+
                                     console.log("selectedItems:", selectedItems);
                                     setSelectedProduct([...selectedItems]);
                                     console.log("selectedProduct:", selectedProduct);
@@ -1221,167 +1229,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 )}
                         </div>
 
-                        <div className="col-md-2">
-                            <label className="form-label">Price type</label>
-                            <select className="form-control" value={formData.price_type}
-                                onChange={(e) => {
 
-                                    formData.price_type = e.target.value;
-                                    console.log("Inside onchange price type:", formData.price_type);
-                                    setFormData({ ...formData });
-
-                                    if (formData.store_id && selectedProduct[0]) {
-                                        selectedProduct[0].unit_price = GetProductUnitPriceInStore(
-                                            formData.store_id,
-                                            selectedProduct[0].unit_prices
-                                        );
-                                    }
-
-
-                                }}
-                            >
-                                <option value="retail" >Retail</option>
-                                <option value="wholesale">Wholesale</option>
-                                <option value="purchase">Purchase</option>
-                            </select>
-                        </div>
-                        <div className="col-md-2">
-                            <label className="form-label">Qty{selectedProduct[0] && selectedProduct[0].unit ? "(" + selectedProduct[0].unit + ")" : ""}*</label>
-                            <input
-                                value={selectedProduct[0] ? selectedProduct[0].quantity : ""}
-                                onChange={(e) => {
-
-                                    if (!e.target.value) {
-                                        if (selectedProduct[0] && selectedProduct[0].quantity) {
-                                            selectedProduct[0].quantity = "";
-                                        }
-
-                                        setSelectedProduct([...selectedProduct]);
-                                        errors["quantity"] = "Quantity is required";
-                                        setErrors({ ...errors });
-                                        return;
-                                    }
-
-                                    if (e.target.value === 0) {
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].quantity = parseFloat(e.target.value);
-                                            setSelectedProduct([...selectedProduct]);
-                                        }
-                                        errors["quantity"] = "Quantity should be more than zero";
-                                        setErrors({ ...errors });
-                                        return;
-                                    }
-
-
-
-                                    errors["quantity"] = "";
-                                    errors["product_id"] = "";
-                                    setErrors({ ...errors });
-
-                                    if (selectedProduct[0]) {
-                                        selectedProduct[0].quantity = parseFloat(e.target.value);
-                                        setSelectedProduct([...selectedProduct]);
-                                        console.log(selectedProduct);
-
-                                        let stock = 0;
-                                        if (selectedProduct[0].stock) {
-                                            stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stock);
-                                        }
-
-                                        if (stock < parseFloat(selectedProduct[0].quantity)) {
-                                            errors.product_id = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
-                                            setErrors({ ...errors });
-                                        }
-                                    }
-                                }}
-                                type="number"
-                                className="form-control"
-                                id="quantity"
-                                placeholder="Quantity"
-                            />
-                            {errors.quantity ? (
-                                <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.quantity}
-                                </div>
-                            ) : ""}
-
-                            {selectedProduct[0] &&
-                                selectedProduct[0].quantity > 0 &&
-                                !errors["quantity"] && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                        </div>
-                        <div className="col-md-2">
-                            <label className="form-label">Unit Price*</label>
-                            <input
-                                type="number"
-                                value={
-                                    selectedProduct[0] ? selectedProduct[0].unit_price : ""
-                                }
-                                onChange={(e) => {
-                                    console.log("Inside onchange unit price:");
-
-                                    if (!e.target.value) {
-                                        errors["unit_price"] = "Invalid Unit Price";
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].unit_price = e.target.value;
-                                            setSelectedProduct([...selectedProduct]);
-                                        }
-                                        setErrors({ ...errors });
-                                        return;
-                                    }
-
-                                    if (e.target.value === 0) {
-                                        errors["unit_price"] = "Invalid Unit Price should be > 0";
-                                        setErrors({ ...errors });
-                                        if (selectedProduct[0]) {
-                                            selectedProduct[0].unit_price = e.target.value;
-                                            setSelectedProduct([...selectedProduct]);
-                                        }
-                                        return;
-                                    }
-                                    errors["unit_price"] = "";
-                                    setErrors({ ...errors });
-
-                                    //setFormData({ ...formData });
-                                    if (selectedProduct[0]) {
-                                        selectedProduct[0].unit_price = e.target.value;
-                                        setSelectedProduct([...selectedProduct]);
-                                    }
-                                }}
-                                className="form-control"
-                                id="unit_price"
-                                placeholder="Unit Price"
-                            />
-
-                            {errors.unit_price ? (
-                                <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.unit_price}
-                                </div>
-                            ) : ""}
-                            {selectedProduct[0] &&
-                                selectedProduct[0].unit_price &&
-                                !errors.unit_price && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>Looks good!
-                                    </div>
-                                )}
-                        </div>
-                        <div className="col-md-1">
-                            <label className="form-label">&nbsp;</label>
-                            <Button
-                                variant="primary"
-                                className="btn btn-primary form-control"
-                                onClick={addProduct}
-                            >
-                                ADD
-                            </Button>
-                        </div>
 
                         <div className="table-responsive" style={{ overflowX: "auto" }}>
                             <table className="table table-striped table-sm table-bordered">
