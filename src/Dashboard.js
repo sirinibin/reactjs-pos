@@ -24,6 +24,7 @@ import Login from './user/login.js';
 import { Redirect } from 'react-router-dom'
 import Toast from 'react-bootstrap/Toast'
 import ToastContainer from 'react-bootstrap/ToastContainer'
+import './dashboard.css'
 
 function Dashboard() {
 

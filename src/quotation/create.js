@@ -1201,7 +1201,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           </div>
                         ) : null}
                       </td>
-                      <td>
+                      <td style={{ width: "100px" }}>
                         <NumberFormat
                           value={(product.purchase_unit_price).toFixed(2)}
                           displayType={"text"}
