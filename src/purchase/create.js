@@ -710,6 +710,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
         clearSelectedProduct();
+        selectedProducts.reverse();
 
         setSelectedProduct([...selectedProduct]);
         setSelectedProducts([...selectedProducts]);

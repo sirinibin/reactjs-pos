@@ -742,6 +742,8 @@ const OrderCreate = forwardRef((props, ref) => {
             });
         }
 
+        selectedProducts.reverse();
+
         clearSelectedProduct();
 
         setSelectedProduct([...selectedProduct]);

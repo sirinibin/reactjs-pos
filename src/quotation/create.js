@@ -710,6 +710,8 @@ const QuotationCreate = forwardRef((props, ref) => {
       });
     }
 
+    selectedProducts.reverse();
+
     clearSelectedProduct();
 
     setSelectedProduct([...selectedProduct]);
