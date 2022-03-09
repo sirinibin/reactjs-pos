@@ -333,6 +333,8 @@ const QuotationCreate = forwardRef((props, ref) => {
           "unitPrice.retail_unit_price:",
           unitPriceListArray[i].retail_unit_price
         );
+        return unitPriceListArray[i];
+        /*
         if (formData.price_type === "retail") {
           return unitPriceListArray[i].retail_unit_price;
         } else if (formData.price_type === "wholesale") {
@@ -340,6 +342,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         } else if (formData.price_type === "purchase") {
           return unitPriceListArray[i].purchase_unit_price;
         }
+        */
       } else {
         console.log("not matched");
       }
@@ -697,17 +700,24 @@ const QuotationCreate = forwardRef((props, ref) => {
       selectedProducts[index].quantity = parseFloat(selectedProducts[index].quantity + selectedProduct[0].quantity);
     }
     else {
-      selectedProducts.push({
+      let item = {
         product_id: selectedProduct[0].id,
         code: selectedProduct[0].item_code,
         part_number: selectedProduct[0].part_number,
         name: selectedProduct[0].name,
         name_in_arabic: selectedProduct[0].name_in_arabic,
         quantity: selectedProduct[0].quantity,
-        unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
-        purchase_unit_price: parseFloat(selectedProduct[0].purchase_unit_price).toFixed(2),
         unit: selectedProduct[0].unit,
-      });
+      };
+
+      if (selectedProduct[0].unit_price) {
+        item.unit_price = selectedProduct[0].unit_price;
+      }
+      if (selectedProduct[0].purchase_unit_price) {
+        item.purchase_unit_price = selectedProduct[0].purchase_unit_price;
+      }
+
+      selectedProducts.push(item);
     }
 
     selectedProducts.reverse();
@@ -1081,19 +1091,18 @@ const QuotationCreate = forwardRef((props, ref) => {
                   }
 
                   if (formData.store_id) {
-                    selectedItems[0].unit_price = GetProductUnitPriceInStore(
+                    let unitPrice = GetProductUnitPriceInStore(
                       formData.store_id,
                       selectedItems[0].unit_prices
                     );
 
-                    selectedItems[0].purchase_unit_price = GetProductPurchaseUnitPriceInStore(
-                      formData.store_id,
-                      selectedItems[0].unit_prices
-                    );
+                    selectedItems[0].unit_price = unitPrice.retail_unit_price;
+                    selectedItems[0].purchase_unit_price = unitPrice.purchase_unit_price;
                   }
 
                   selectedProduct = selectedItems;
                   selectedProduct[0].quantity = 1;
+                  addProduct();
                   console.log("selectedItems:", selectedItems);
                   setSelectedProduct([...selectedProduct]);
                   setOpenProductSearchResult(false);
@@ -1125,212 +1134,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                 )}
             </div>
 
-            <div className="col-md-2">
-              <label className="form-label">Price type</label>
-              <select className="form-control" value={formData.price_type}
-                onChange={(e) => {
-
-                  formData.price_type = e.target.value;
-                  console.log("Inside onchange price type:", formData.price_type);
-                  setFormData({ ...formData });
-
-                  if (formData.store_id && selectedProduct[0]) {
-                    selectedProduct[0].unit_price = GetProductUnitPriceInStore(
-                      formData.store_id,
-                      selectedProduct[0].unit_prices
-                    );
-                  }
-
-
-                }}
-              >
-                <option value="retail">Retail</option>
-                <option value="wholesale">Wholesale</option>
-                <option value="purchase">Purchase</option>
-              </select>
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label">Qty{selectedProduct[0] && selectedProduct[0].unit ? "(" + selectedProduct[0].unit + ")" : ""}*</label>
-              <input
-                value={selectedProduct[0] ? selectedProduct[0].quantity : ""}
-                onChange={(e) => {
-                  console.log("Inside onchange qty");
-                  if (!e.target.value) {
-                    selectedProduct[0].quantity = "";
-                    setSelectedProduct([...selectedProduct]);
-                    errors["quantity"] = "Quantity is required";
-                    setErrors({ ...errors });
-                    return;
-                  }
-
-                  if (e.target.value === 0) {
-                    selectedProduct[0].quantity = parseFloat(e.target.value);
-                    setSelectedProduct([...selectedProduct]);
-                    errors["quantity"] = "Quantity should be more than zero";
-                    setErrors({ ...errors });
-                    return;
-                  }
-
-                  errors["quantity"] = "";
-                  setErrors({ ...errors });
-
-                  if (selectedProduct[0]) {
-                    selectedProduct[0].quantity = parseFloat(e.target.value);
-                    setSelectedProduct([...selectedProduct]);
-                    console.log(selectedProduct);
-                  }
-                }}
-                type="number"
-                className="form-control"
-                id="quantity"
-                placeholder="Quantity"
-              />
-              {errors.quantity ? (
-                <div style={{ color: "red" }}>
-                  <i className="bi bi-x-lg"> </i>
-                  {errors.quantity}
-                </div>
-              ) : null}
-
-              {selectedProduct[0] &&
-                selectedProduct[0].quantity > 0 &&
-                !errors["quantity"] && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
-            </div>
-            <div className="col-md-2">
-              <label className="form-label">Purchase Unit Price*</label>
-              <input
-                type="number"
-                value={
-                  selectedProduct[0] ? selectedProduct[0].purchase_unit_price : ""
-                }
-                onChange={(e) => {
-                  console.log("Inside onchange purchase unit price:");
-
-                  if (!e.target.value) {
-                    errors["purchase_unit_price"] = "Invalid Purchase Unit Price";
-                    setErrors({ ...errors });
-                    if (selectedProduct[0]) {
-                      selectedProduct[0].purchase_unit_price = e.target.value;
-                      setSelectedProduct([...selectedProduct]);
-                    }
-                    return;
-                  }
-
-                  if (e.target.value === 0) {
-                    errors["purchase_unit_price"] = "Purchase Unit Price should be > 0";
-                    setErrors({ ...errors });
-                    if (selectedProduct[0]) {
-                      selectedProduct[0].purchase_unit_price = parseFloat(e.target.value);
-                      setSelectedProduct([...selectedProduct]);
-                    }
-                    return;
-                  }
-
-                  errors["purchase_unit_price"] = "";
-                  setErrors({ ...errors });
-
-
-                  if (selectedProduct[0]) {
-                    selectedProduct[0].purchase_unit_price = parseFloat(e.target.value);
-                    setSelectedProduct([...selectedProduct]);
-                  }
-                }}
-                className="form-control"
-                id="unit_price"
-                placeholder="Purchase Unit Price"
-              />
-
-              {errors.purchase_unit_price ? (
-                <div style={{ color: "red" }}>
-                  <i className="bi bi-x-lg"> </i>
-                  {errors.purchase_unit_price}
-                </div>
-              ) : null}
-              {selectedProduct[0] &&
-                selectedProduct[0].purchase_unit_price &&
-                !errors.purchase_unit_price && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>Looks good!
-                  </div>
-                )}
-            </div>
-
-            <div className="col-md-2">
-              <label className="form-label">Unit Price*</label>
-              <input
-                type="number"
-                value={
-                  selectedProduct[0] ? selectedProduct[0].unit_price : ""
-                }
-                onChange={(e) => {
-                  console.log("Inside onchange unit price:");
-
-                  if (!e.target.value) {
-                    errors["unit_price"] = "Invalid Unit Price";
-                    setErrors({ ...errors });
-                    if (selectedProduct[0]) {
-                      selectedProduct[0].unit_price = e.target.value;
-                      setSelectedProduct([...selectedProduct]);
-                    }
-                    return;
-                  }
-
-                  if (e.target.value === 0) {
-                    errors["unit_price"] = "Invalid Unit Price";
-                    setErrors({ ...errors });
-                    if (selectedProduct[0]) {
-                      selectedProduct[0].unit_price = parseFloat(e.target.value);
-                      setSelectedProduct([...selectedProduct]);
-                    }
-                    return;
-                  }
-
-
-                  errors["unit_price"] = "";
-                  setErrors({ ...errors });
-
-                  //setFormData({ ...formData });
-                  if (selectedProduct[0]) {
-                    selectedProduct[0].unit_price = parseFloat(e.target.value);
-                    setSelectedProduct([...selectedProduct]);
-                  }
-                }}
-                className="form-control"
-                id="unit_price"
-                placeholder="Unit Price"
-              />
-
-              {errors.unit_price ? (
-                <div style={{ color: "red" }}>
-                  <i className="bi bi-x-lg"> </i>
-                  {errors.unit_price}
-                </div>
-              ) : null}
-              {selectedProduct[0] &&
-                selectedProduct[0].unit_price &&
-                !errors.unit_price && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>Looks good!
-                  </div>
-                )}
-            </div>
-            <div className="col-md-1">
-              <label className="form-label">&nbsp;</label>
-              <Button
-                variant="primary"
-                className="btn btn-primary form-control"
-                onClick={addProduct}
-              >
-                ADD
-              </Button>
-            </div>
-
             <div className="table-responsive" style={{ overflowX: "auto" }}>
               <table className="table table-striped table-sm table-bordered">
                 <thead>
@@ -1339,6 +1142,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     <th>CODE</th>
                     <th>Name</th>
                     <th>Qty</th>
+                    <th>Purchase Unit Price</th>
                     <th>Unit Price</th>
                     <th>Price</th>
                     <th></th>
@@ -1396,6 +1200,15 @@ const QuotationCreate = forwardRef((props, ref) => {
                             Looks good!
                           </div>
                         ) : null}
+                      </td>
+                      <td>
+                        <NumberFormat
+                          value={(product.purchase_unit_price).toFixed(2)}
+                          displayType={"text"}
+                          thousandSeparator={true}
+                          suffix={" SAR"}
+                          renderText={(value, props) => value}
+                        />
                       </td>
                       <td style={{ width: "150px" }}>
 
