@@ -666,39 +666,6 @@ const ProductCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Item CODE(Optional)</label>
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.item_code ? formData.item_code : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["item_code"] = "";
-                                        setErrors({ ...errors });
-                                        formData.item_code = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="item_code"
-                                    placeholder="Item Code"
-                                />
-                                {errors.item_code && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.item_code}
-                                    </div>
-                                )}
-                                {formData.item_code && !errors.item_code && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
                         <div className="col-md-6">
                             <label className="form-label">Part Number(Optional)</label>
 
