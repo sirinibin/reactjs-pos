@@ -149,8 +149,8 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 fonSize: "3mm", height: "35px", marginBottom: "0px"
                                             }}
                                         >
-                                            <li>رمز الصنف</li>
-                                            <li>Item Code</li>
+                                            <li>رقم القطعة</li>
+                                            <li>Part Number</li>
                                         </ul>
                                     </th>
                                     <th className="per68 text-center" style={{ padding: "0px" }}>
@@ -197,7 +197,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                 {props.model.products && props.model.products.map((product, index) => (
                                     <tr key={product.item_code} className="text-center">
                                         <td>{index + 1}</td>
-                                        <td>{product.code ? product.code : product.item_code ? product.item_code : null}</td>
+                                        <td>{product.part_number ? product.part_number : ""}</td>
                                         <td>
                                             <ul
                                                 className="list-unstyled"

@@ -390,7 +390,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,item_code,name,unit_prices,stock,unit,part_number,name_in_arabic";
+        let Select = "select=id,item_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString,
@@ -740,6 +740,7 @@ const OrderCreate = forwardRef((props, ref) => {
             selectedProducts.push({
                 product_id: selectedProduct[0].id,
                 code: selectedProduct[0].item_code,
+                part_number: selectedProduct[0].part_number,
                 name: selectedProduct[0].name,
                 quantity: selectedProduct[0].quantity,
                 stock: selectedProduct[0].stock,
@@ -1236,7 +1237,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 <thead>
                                     <tr className="text-center">
                                         <th>SI No.</th>
-                                        <th>CODE</th>
+                                        <th>Part No.</th>
                                         <th>Name</th>
                                         <th>Qty</th>
                                         <th>Unit Price</th>
@@ -1248,7 +1249,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     {selectedProducts.map((product, index) => (
                                         <tr className="text-center">
                                             <td>{index + 1}</td>
-                                            <td>{product.code}</td>
+                                            <td>{product.part_number}</td>
                                             <td style={{
                                                 textDecoration: "underline",
                                                 color: "blue",

@@ -181,7 +181,7 @@ const OrderView = forwardRef((props, ref) => {
                         <thead>
                             <tr className="text-center">
                                 <th>SI No.</th>
-                                <th>CODE</th>
+                                <th>Part No.</th>
                                 <th>Name</th>
                                 <th>Qty</th>
                                 <th>Unit Price</th>
@@ -197,7 +197,7 @@ const OrderView = forwardRef((props, ref) => {
                             {model.products && model.products.map((product, index) => (
                                 <tr key={product.item_code} className="text-center">
                                     <td>{index + 1}</td>
-                                    <td>{product.item_code}</td>
+                                    <td>{product.part_number}</td>
                                     <td>{product.name}</td>
                                     <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
                                     <td>

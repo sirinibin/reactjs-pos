@@ -605,7 +605,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     <tr className="text-center">
                                         <th>Select</th>
                                         <th>SI No.</th>
-                                        <th>CODE</th>
+                                        <th>Part No.</th>
                                         <th>Name</th>
                                         <th>Qty</th>
                                         <th>Unit Price</th>
@@ -624,7 +624,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 }} />
                                             </td>
                                             <td>{index + 1}</td>
-                                            <td>{product.item_code}</td>
+                                            <td>{product.part_number}</td>
                                             <td style={{
                                                 textDecoration: "underline",
                                                 color: "blue",

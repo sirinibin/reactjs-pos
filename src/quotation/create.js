@@ -736,6 +736,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     selectedProduct[0].name = "";
     selectedProduct[0].search_label = "";
     selectedProduct[0].item_code = "";
+    selectedProduct[0].part_number = "";
     selectedProduct[0].id = "";
     selectedProduct[0].quantity = "";
     selectedProduct[0].unit_price = "";

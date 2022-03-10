@@ -156,7 +156,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                             }}
                                         >
                                             <li>رمز الصنف</li>
-                                            <li>Item Code</li>
+                                            <li>Part No.</li>
                                         </ul>
                                     </th>
                                     <th className="per68 text-center" style={{ padding: "0px" }}>
@@ -203,7 +203,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                 {props.model.products && props.model.products.map((product, index) => (
                                     <tr key={index} className="text-center">
                                         <td>{index + 1}</td>
-                                        <td>{product.code ? product.code : product.item_code ? product.item_code : null}</td>
+                                        <td>{product.part_number ? product.part_number : ""}</td>
                                         <td>
                                             <ul
                                                 className="list-unstyled"
