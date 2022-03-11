@@ -458,7 +458,7 @@ const OrderCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
         }
 
-        formData.bar_code = "";
+        formData.barcode = "";
         setFormData({ ...formData });
 
     }
