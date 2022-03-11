@@ -709,7 +709,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
         clearSelectedProduct();
-        selectedProducts.reverse();
 
         setSelectedProduct([...selectedProduct]);
         setSelectedProducts([...selectedProducts]);
@@ -1333,7 +1332,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             </div>
                                         </td>
                                     </tr>
-                                ))}
+                                )).reverse()}
                                 <tr>
                                     <td colSpan="4"></td>
                                     <td colSpan="2"></td>

@@ -417,7 +417,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         if (data.result && data.result.length > 0) {
             for (let i = 0; i < data.result.length; i++) {
-                if (products[i].bar_code === searchTerm) {
+                if (products[i].bar_code === searchTerm || products[i].part_number === searchTerm) {
                     selectProduct(products[i]);
                     productFound = true;
                 }
@@ -468,15 +468,6 @@ const OrderCreate = forwardRef((props, ref) => {
                 product.unit_prices
             );
             product.unit_price = unitPrice.retail_unit_price;
-
-            let stock = 0;
-            if (product.stock) {
-                stock = GetProductStockInStore(store_id, product.stock);
-            }
-            if (stock === 0) {
-                errors["product_id"] = "This product is not available in store: " + formData.store_name;
-                setErrors({ ...errors });
-            }
 
             selectedProduct[0].unit_price = product.unit_price;
             selectedProduct[0].stock = product.stock;
@@ -755,8 +746,6 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit: selectedProduct[0].unit,
             });
         }
-
-        selectedProducts.reverse();
 
         clearSelectedProduct();
 
@@ -1390,7 +1379,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))}
+                                    )).reverse()}
                                     <tr>
                                         <td colSpan="4"></td>
 

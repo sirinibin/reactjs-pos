@@ -720,8 +720,6 @@ const QuotationCreate = forwardRef((props, ref) => {
       selectedProducts.push(item);
     }
 
-    selectedProducts.reverse();
-
     clearSelectedProduct();
 
     setSelectedProduct([...selectedProduct]);
@@ -1275,7 +1273,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )).reverse()}
                   <tr>
                     <td colSpan="4"></td>
                     <th className="text-end">Total</th>
