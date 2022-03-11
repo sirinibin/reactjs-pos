@@ -35,6 +35,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
             if (cookies.get('store_id')) {
                 formData.store_id = cookies.get('store_id');
+                console.log("formData.store_id:", formData.store_id);
             }
 
             setFormData({ ...formData });
@@ -435,10 +436,8 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     function selectProduct(product) {
-        let store_id = undefined;
-        if (selectedStores[0]) {
-            store_id = selectedStores[0].id;
-        }
+        console.log("inside select product:", formData.store_id);
+        let store_id = formData.store_id;
         if (!store_id) {
             setOpenProductSearchResult(false);
             errors.product_id = "Please Select a Store and try again";
@@ -451,6 +450,8 @@ const OrderCreate = forwardRef((props, ref) => {
             {
                 id: product.id,
                 item_code: product.item_code,
+                bar_code: product.bar_code,
+                part_number: product.part_number,
                 name: product.name,
                 search_label: product.search_label,
                 quantity: 1,
@@ -1252,7 +1253,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 </thead>
                                 <tbody>
                                     {selectedProducts.map((product, index) => (
-                                        <tr className="text-center">
+                                        <tr className="text-center" key={index}>
                                             <td>{index + 1}</td>
                                             <td>{product.part_number}</td>
                                             <td style={{

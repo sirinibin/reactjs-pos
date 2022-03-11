@@ -410,10 +410,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     function selectProduct(product) {
-        let store_id = undefined;
-        if (selectedStores[0]) {
-            store_id = selectedStores[0].id;
-        }
+        let store_id = formData.store_id;
+
         if (!store_id) {
             setOpenProductSearchResult(false);
             errors.product_id = "Please Select a Store and try again";
