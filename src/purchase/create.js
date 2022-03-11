@@ -394,18 +394,18 @@ const PurchaseCreate = forwardRef((props, ref) => {
         let productFound = false;
 
         for (let i = 0; i < data.result.length; i++) {
-            if (products[i].bar_code === searchTerm) {
+            if (products[i].bar_code === searchTerm || products[i].part_number === searchTerm) {
                 selectProduct(products[i]);
                 productFound = true;
+                openProductSearchResult = false;
+                setOpenProductSearchResult(false);
+                break;
             }
         }
 
         if (!productFound) {
             setOpenProductSearchResult(true);
             setProductOptions(products);
-        } else {
-            openProductSearchResult = false;
-            setOpenProductSearchResult(false);
         }
         setIsProductsLoading(false);
     }
@@ -425,6 +425,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
             {
                 id: product.id,
                 item_code: product.item_code,
+                bar_code: product.bar_code,
+                part_number: product.part_number,
                 name: product.name,
                 search_label: product.search_label,
                 quantity: 1,
