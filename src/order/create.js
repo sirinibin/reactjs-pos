@@ -1145,24 +1145,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                     className="form-control"
                                     value={formData.barcode}
                                     onChange={event => getProductByBarCode(event.target.value)} />
-
-                                {/*
-                                <input
-                                    value={formData.bar_code ? formData.bar_code : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["bar_code"] = "";
-                                        setErrors({ ...errors });
-                                        formData.bar_code = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                        getProductByBarCode(formData.bar_code);
-                                    }}
-                                    className="form-control"
-                                    id="bar_code"
-                                    placeholder="Scan Barcode"
-                                />
-                                */}
                                 {errors.bar_code && (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>

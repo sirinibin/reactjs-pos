@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import PurchaseView from "./view.js";
 import ProductView from "./../product/view.js";
+import { DebounceInput } from 'react-debounce-input';
 
 
 const PurchaseCreate = forwardRef((props, ref) => {
@@ -391,23 +392,54 @@ const PurchaseCreate = forwardRef((props, ref) => {
             return;
         }
 
-        let productFound = false;
 
-        for (let i = 0; i < data.result.length; i++) {
-            if (products[i].bar_code === searchTerm || products[i].part_number === searchTerm) {
-                selectProduct(products[i]);
-                productFound = true;
-                openProductSearchResult = false;
-                setOpenProductSearchResult(false);
-                break;
-            }
-        }
 
-        if (!productFound) {
-            setOpenProductSearchResult(true);
-            setProductOptions(products);
-        }
+        openProductSearchResult = true;
+        setOpenProductSearchResult(true);
+        setProductOptions(products);
         setIsProductsLoading(false);
+    }
+
+    async function getProductByBarCode(barcode) {
+        formData.barcode = barcode;
+        setFormData({ ...formData });
+        console.log("Inside getProductByBarCode");
+        errors["bar_code"] = "";
+        setErrors({ ...errors });
+
+        console.log("barcode:" + formData.barcode);
+        if (!formData.barcode) {
+            return;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+
+        let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
+        let result = await fetch(
+            "/v1/product/barcode/" + formData.barcode + "?" + Select,
+            requestOptions
+        );
+        let data = await result.json();
+
+
+        let product = data.result;
+        if (product) {
+            selectProduct(product);
+        } else {
+            errors["bar_code"] = "Invalid Barcode:" + formData.barcode
+            setErrors({ ...errors });
+        }
+
+        formData.barcode = "";
+        setFormData({ ...formData });
+
     }
 
     function selectProduct(product) {
@@ -436,13 +468,17 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
         if (store_id) {
-            product.unit_price = GetProductUnitPriceInStore(
-                store_id,
+            let unitPrice = GetProductUnitPriceInStore(
+                formData.store_id,
                 product.unit_prices
             );
 
+            selectedProduct[0].purchase_unit_price = unitPrice.purchase_unit_price;
+            selectedProduct[0].retail_unit_price = unitPrice.retail_unit_price;
+            selectedProduct[0].wholesale_unit_price = unitPrice.wholesale_unit_price;
 
-            selectedProduct[0].unit_price = product.unit_price;
+
+            // selectedProduct[0].unit_price = product.unit_price;
             console.log("selectedProduct[0].stock:", selectedProduct[0].stock);
         }
         setSelectedProduct([...selectedProduct]);
@@ -1014,6 +1050,32 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+                        <div className="col-md-6">
+                            <label className="form-label">Product Barcode Scan</label>
+
+                            <div className="input-group mb-3">
+                                <DebounceInput
+                                    minLength={3}
+                                    debounceTimeout={500}
+                                    placeholder="Scan Barcode"
+                                    className="form-control"
+                                    value={formData.barcode}
+                                    onChange={event => getProductByBarCode(event.target.value)} />
+                                {errors.bar_code && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.bar_code}
+                                    </div>
+                                )}
+                                {formData.bar_code && !errors.bar_code && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <div className="col-md-12">
                             <label className="form-label">Product*</label>
 
@@ -1078,7 +1140,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     addProduct();
                                 }}
                                 options={productOptions}
-                                placeholder="Type / Scan Item Code or Name"
+                                placeholder="Search By Part No. / Name / Name in Arabic"
                                 selected={selectedProduct}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
