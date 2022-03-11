@@ -420,6 +420,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 if (products[i].bar_code === searchTerm || products[i].part_number === searchTerm) {
                     selectProduct(products[i]);
                     productFound = true;
+                    openProductSearchResult = false;
+                    setOpenProductSearchResult(false);
+                    break;
                 }
             }
         }
@@ -428,9 +431,6 @@ const OrderCreate = forwardRef((props, ref) => {
             openProductSearchResult = true;
             setOpenProductSearchResult(true);
             setProductOptions(products);
-        } else {
-            openProductSearchResult = false;
-            setOpenProductSearchResult(false);
         }
         setIsProductsLoading(false);
 
