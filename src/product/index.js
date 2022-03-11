@@ -60,7 +60,7 @@ function ProductIndex(props) {
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
             .map(function (key) {
-                return `search[${key}]=${object[key]}`;
+                return `search[${key}]=` + encodeURIComponent(object[key]);
             })
             .join("&");
     }
@@ -208,6 +208,8 @@ function ProductIndex(props) {
         if (queryParams !== "") {
             queryParams = "&" + queryParams;
         }
+
+        //queryParams = encodeURIComponent(queryParams);
 
         setIsListLoading(true);
         fetch(
