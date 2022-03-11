@@ -976,7 +976,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                    <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
                         {!cookies.get('store_name') ? <div className="col-md-6">
                             <label className="form-label">Store*</label>
 
@@ -1893,7 +1893,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
-                            <Button variant="primary" type="submit">
+                            <Button variant="primary" onClick={handleCreate}>
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
