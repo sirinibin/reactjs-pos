@@ -413,27 +413,9 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        let productFound = false;
-
-        /*
-        if (data.result && data.result.length > 0) {
-            for (let i = 0; i < data.result.length; i++) {
-                if (products[i].bar_code === searchTerm || products[i].part_number === searchTerm) {
-                    selectProduct(products[i]);
-                    productFound = true;
-                    openProductSearchResult = false;
-                    setOpenProductSearchResult(false);
-                    break;
-                }
-            }
-        }
-        */
-
-        if (!productFound) {
-            openProductSearchResult = true;
-            setOpenProductSearchResult(true);
-            setProductOptions(products);
-        }
+        openProductSearchResult = true;
+        setOpenProductSearchResult(true);
+        setProductOptions(products);
         setIsProductsLoading(false);
 
     }
@@ -452,9 +434,10 @@ const OrderCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
             },
-            Authorization: cookies.get("access_token"),
         };
+
 
         let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
         let result = await fetch(
