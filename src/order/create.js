@@ -438,14 +438,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
     }
 
-    async function getProductByBarCode(barcode) {
+    async function getProductByBarCode() {
         console.log("Inside getProductByBarCode");
-        setProductOptions([]);
         errors["bar_code"] = "";
         setErrors({ ...errors });
 
-        console.log("barcode:" + barcode);
-        if (!barcode) {
+        console.log("barcode:" + formData.bar_code);
+        if (!formData.bar_code) {
             return;
         }
 
@@ -453,14 +452,13 @@ const OrderCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
             },
+            Authorization: cookies.get("access_token"),
         };
 
         let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
-        setIsProductsLoading(true);
         let result = await fetch(
-            "/v1/product/barcode/" + barcode + "?" + Select,
+            "/v1/product/barcode/" + formData.bar_code + "?" + Select,
             requestOptions
         );
         let data = await result.json();
@@ -470,7 +468,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (product) {
             selectProduct(product);
         } else {
-            errors["bar_code"] = "Invalid Barcode:" + barcode;
+            errors["bar_code"] = "Invalid Barcode:" + formData.bar_code;
             setErrors({ ...errors });
         }
 
