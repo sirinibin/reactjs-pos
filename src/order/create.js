@@ -1290,7 +1290,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         }
 
                                                         if (stock < parseFloat(e.target.value)) {
-                                                            errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + selectedStores[0].name + " for this product";
+                                                            errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + formData.name + " for this product";
                                                             setErrors({ ...errors });
                                                             return;
                                                         }
