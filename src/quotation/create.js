@@ -401,7 +401,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,item_code,name,unit_prices,stock,unit,part_number,name_in_arabic";
+    let Select = "select=id,item_code,bar_code,name,unit_prices,stock,unit,part_number,name_in_arabic";
     setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString,
