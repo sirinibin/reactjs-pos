@@ -46,143 +46,6 @@ const OrderCreate = forwardRef((props, ref) => {
         },
     }));
 
-
-
-    /*
-     let [barcode, setBarcode] = useState("");
-    let [barcodeEnded, setBarcodeEnded] = useState(false);
-        function keyPress(e) {
-            console.log("e.key:", e.key);
-    
-    
-            if (!barcodeEnded && e.key !== "Enter" && e.key !== "Backsspace") {
-                console.log()
-                barcode += e.key;
-                setBarcode(barcode);
-            }
-    
-            if (e.key === "Enter") {
-                console.log("barcode:", barcode);
-                barcodeEnded = true;
-                setBarcodeEnded(true);
-                getProductByItemCode(barcode);
-            }
-    
-        }
-    
- 
- 
-    function getProductByItemCode(itemCode) {
-        if (itemCode.includes("Backspace")) {
-            errors.product_id = "Please try again";
-            barcode = "";
-            setBarcode(barcode);
-            barcodeEnded = false;
-            setBarcodeEnded(false);
-            setErrors({ ...errors });
-            return;
-        }
- 
- 
-        console.log("inside get getProductByItemCode");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
-            },
-        };
- 
-        errors["product_id"] = "";
-        setErrors({ ...errors });
- 
- 
-        console.log("selectedStores[0]:", selectedStores[0]);
- 
-        let store_id = undefined;
-        if (selectedStores[0]) {
-            store_id = selectedStores[0].id;
-        }
- 
-        console.log("store_id:", store_id);
- 
-        if (!store_id) {
-            errors.product_id = "Please Select a Store and try again";
-            setErrors({ ...errors });
-            return;
-        }
- 
- 
-        setProcessing(true);
-        fetch('/v1/product/code/' + itemCode, requestOptions)
-            .then(async response => {
-                setProcessing(false);
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
- 
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
- 
-                let product = data.result;
- 
-                selectedProduct = [
-                    {
-                        id: product.id,
-                        item_code: product.item_code,
-                        name: product.name,
-                        search_label: product.search_label,
-                        quantity: 1,
-                        unit: product.unit,
-                    }
-                ];
- 
-                if (store_id) {
-                    product.unit_price = GetProductUnitPriceInStore(
-                        store_id,
-                        product.unit_prices
-                    );
- 
-                    let stock = 0;
-                    if (product.stock) {
-                        stock = GetProductStockInStore(store_id, product.stock);
-                    }
-                    if (stock === 0) {
-                        errors["product_id"] = "This product is not available in store: " + selectedStores[0].name;
-                        setErrors({ ...errors });
-                    }
- 
-                    selectedProduct[0].unit_price = product.unit_price;
-                    selectedProduct[0].stock = product.stock;
-                    console.log("selectedProduct[0].stock:", selectedProduct[0].stock);
-                }
-                setSelectedProduct([...selectedProduct]);
-                addProduct();
- 
-                barcode = "";
-                setBarcode(barcode);
-                barcodeEnded = false;
-                setBarcodeEnded(false);
- 
-            })
-            .catch(error => {
-                setProcessing(false);
-                selectedProduct = [];
-                setSelectedProduct([...selectedProduct]);
-                errors["product_id"] = "Product not found";
-                setErrors({ ...errors });
-                barcode = "";
-                setBarcode(barcode);
-                barcodeEnded = false;
-                setBarcodeEnded(false);
-                // setErrors(error);
-            });
-    }
-    */
-
-
     const selectedDate = new Date();
 
     //const history = useHistory();
@@ -452,7 +315,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let product = data.result;
         if (product) {
-            selectProduct(product);
+            addProduct(product);
         } else {
             errors["bar_code"] = "Invalid Barcode:" + formData.barcode
             setErrors({ ...errors });
@@ -460,49 +323,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
         formData.barcode = "";
         setFormData({ ...formData });
-
-    }
-
-
-    function selectProduct(product) {
-        console.log("inside select product:", formData.store_id);
-        let store_id = formData.store_id;
-        if (!store_id) {
-            setOpenProductSearchResult(false);
-            errors.product_id = "Please Select a Store and try again";
-            setErrors({ ...errors });
-            return;
-        }
-
-        setOpenProductSearchResult(false);
-        selectedProduct = [
-            {
-                id: product.id,
-                item_code: product.item_code,
-                bar_code: product.bar_code,
-                part_number: product.part_number,
-                name: product.name,
-                search_label: product.search_label,
-                quantity: 1,
-                unit: product.unit,
-            }
-        ];
-
-
-        if (store_id) {
-
-            let unitPrice = GetProductUnitPriceInStore(
-                store_id,
-                product.unit_prices
-            );
-            product.unit_price = unitPrice.retail_unit_price;
-
-            selectedProduct[0].unit_price = product.unit_price;
-            selectedProduct[0].stock = product.stock;
-            console.log("selectedProduct[0].stock:", selectedProduct[0].stock);
-            addProduct();
-        }
-        setSelectedProduct([...selectedProduct]);
 
     }
 
@@ -699,35 +519,31 @@ const OrderCreate = forwardRef((props, ref) => {
         return 0.0;
     }
 
-    function addProduct() {
+    function addProduct(product) {
         console.log("Inside Add product");
-
-        errors.product_id = "";
-        if (!selectedProduct[0] || !selectedProduct[0].id) {
-            errors.product_id = "No product selected";
-            setErrors({ ...errors });
-            return;
-        }
-
-
-        if (!selectedProduct[0].quantity || isNaN(selectedProduct[0].quantity)) {
-            errors.quantity = "Invalid Quantity";
-            setErrors({ ...errors });
-            return;
-        }
-
-        errors.unit_price = "";
-        if (
-            !selectedProduct[0].unit_price ||
-            isNaN(selectedProduct[0].unit_price)
-        ) {
-            errors.unit_price = "Invalid Unit Price";
-            setErrors({ ...errors });
-            return;
-        }
-
         if (!formData.store_id) {
             errors.product_id = "Please Select a Store and try again";
+            setErrors({ ...errors });
+            return;
+        }
+
+
+        errors.product_id = "";
+        if (!product) {
+            errors.product_id = "Invalid Product";
+            setErrors({ ...errors });
+            return;
+        }
+
+        let unitPrice = GetProductUnitPriceInStore(
+            formData.store_id,
+            product.unit_prices
+        );
+        product.unit_price = unitPrice.retail_unit_price;
+
+        errors.unit_price = "";
+        if (!product.unit_price) {
+            errors.unit_price = "Invalid Unit Price";
             setErrors({ ...errors });
             return;
         }
@@ -735,25 +551,24 @@ const OrderCreate = forwardRef((props, ref) => {
         let alreadyAdded = false;
         let index = -1;
         let quantity = 0.00;
+        product.quantity = 1.00;
 
-
-        if (isProductAdded(selectedProduct[0].id)) {
+        if (isProductAdded(product.id)) {
             alreadyAdded = true;
-            index = getProductIndex(selectedProduct[0].id);
-            quantity = parseFloat(selectedProducts[index].quantity + selectedProduct[0].quantity);
+            index = getProductIndex(product.id);
+            quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
         } else {
-            quantity = parseFloat(selectedProduct[0].quantity);
+            quantity = parseFloat(product.quantity);
         }
 
         console.log("quantity:", quantity);
 
         errors.quantity = "";
 
-        let stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stock);
+        let stock = GetProductStockInStore(formData.store_id, product.stock);
         if (stock < quantity) {
-            errors.product_id = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + selectedProduct[0].name;
+            errors.product_id = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
             setErrors({ ...errors });
-            clearSelectedProduct();
             return;
         }
 
@@ -764,34 +579,18 @@ const OrderCreate = forwardRef((props, ref) => {
 
         if (!alreadyAdded) {
             selectedProducts.push({
-                product_id: selectedProduct[0].id,
-                code: selectedProduct[0].item_code,
-                part_number: selectedProduct[0].part_number,
-                name: selectedProduct[0].name,
-                quantity: selectedProduct[0].quantity,
-                stock: selectedProduct[0].stock,
-                unit_price: parseFloat(selectedProduct[0].unit_price).toFixed(2),
-                unit: selectedProduct[0].unit,
+                product_id: product.id,
+                code: product.item_code,
+                part_number: product.part_number,
+                name: product.name,
+                quantity: product.quantity,
+                stock: product.stock,
+                unit_price: parseFloat(product.unit_price).toFixed(2),
+                unit: product.unit,
             });
         }
-
-        clearSelectedProduct();
-
-        setSelectedProduct([...selectedProduct]);
         setSelectedProducts([...selectedProducts]);
-        console.log("selectedProduct:", selectedProduct);
-        console.log("selectedProducts:", selectedProducts);
-
         reCalculate();
-    }
-    function clearSelectedProduct() {
-        selectedProduct[0].name = "";
-        selectedProduct[0].search_label = "";
-        selectedProduct[0].id = "";
-        selectedProduct[0].quantity = "";
-        selectedProduct[0].unit_price = "";
-        selectedProduct[0].unit = "";
-        setSelectedProduct([...selectedProduct]);
     }
 
     function removeProduct(product) {
@@ -1201,64 +1000,21 @@ const OrderCreate = forwardRef((props, ref) => {
                                 onChange={(selectedItems) => {
                                     if (selectedItems.length === 0) {
                                         errors["product_id"] = "Invalid Product selected";
-                                        console.log(errors);
                                         setErrors(errors);
-                                        setSelectedProduct([]);
-                                        console.log(errors);
                                         return;
                                     }
-
                                     errors["product_id"] = "";
                                     setErrors({ ...errors });
 
-                                    if (cookies.get('store_id')) {
-                                        formData.store_id = cookies.get('store_id');
-                                        selectedStores = [
-                                            {
-                                                id: cookies.get('store_id'),
-                                                name: cookies.get('store_name'),
-                                            },
-                                        ];
-                                        setSelectedStores([...selectedStores]);
-                                    }
-
-
-                                    if (!formData.store_id) {
-                                        errors.product_id = "Please Select a Store and try again";
-                                        setErrors({ ...errors });
-                                        return;
-                                    }
-
                                     if (formData.store_id) {
-                                        let unit_price = GetProductUnitPriceInStore(
-                                            formData.store_id,
-                                            selectedItems[0].unit_prices
-                                        );
+                                        addProduct(selectedItems[0]);
 
-                                        selectedItems[0].unit_price = unit_price.retail_unit_price;
-
-                                        let stock = 0;
-                                        if (selectedItems[0].stock) {
-                                            stock = GetProductStockInStore(formData.store_id, selectedItems[0].stock);
-                                        }
-                                        if (stock === 0) {
-                                            errors["product_id"] = "This product is not available in store: " + formData.store_name;
-                                            setErrors({ ...errors });
-                                        }
                                     }
-
-                                    selectedProduct = selectedItems;
-                                    selectedProduct[0].quantity = 1;
-                                    addProduct();
-
-                                    console.log("selectedItems:", selectedItems);
-                                    setSelectedProduct([...selectedItems]);
-                                    console.log("selectedProduct:", selectedProduct);
                                     setOpenProductSearchResult(false);
                                 }}
                                 options={productOptions}
-                                placeholder="Search By Part No. / Name / Name in Arabic"
                                 selected={selectedProduct}
+                                placeholder="Search By Part No. / Name / Name in Arabic"
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
                                     suggestProducts(searchTerm);
@@ -1271,14 +1027,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                     {errors.product_id}
                                 </div>
                             ) : ""}
-                            {selectedProduct[0] &&
-                                selectedProduct[0].id &&
-                                !errors.product_id && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                         </div>
 
 

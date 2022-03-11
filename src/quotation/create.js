@@ -339,19 +339,9 @@ const QuotationCreate = forwardRef((props, ref) => {
           unitPriceListArray[i].retail_unit_price
         );
         return unitPriceListArray[i];
-        /*
-        if (formData.price_type === "retail") {
-          return unitPriceListArray[i].retail_unit_price;
-        } else if (formData.price_type === "wholesale") {
-          return unitPriceListArray[i].wholesale_unit_price;
-        } else if (formData.price_type === "purchase") {
-          return unitPriceListArray[i].purchase_unit_price;
-        }
-        */
-      } else {
-        console.log("not matched");
       }
     }
+    console.log("not matched");
     return "";
   }
 
@@ -459,7 +449,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     let product = data.result;
     if (product) {
-      selectProduct(product);
+      addProduct(product);
     } else {
       errors["bar_code"] = "Invalid Barcode:" + formData.barcode
       setErrors({ ...errors });
@@ -469,45 +459,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     setFormData({ ...formData });
 
   }
-
-  function selectProduct(product) {
-    let store_id = formData.store_id;
-    if (!store_id) {
-      setOpenProductSearchResult(false);
-      errors.product_id = "Please Select a Store and try again";
-      setErrors({ ...errors });
-      return;
-    }
-
-    setOpenProductSearchResult(false);
-    selectedProduct = [
-      {
-        id: product.id,
-        item_code: product.item_code,
-        bar_code: product.bar_code,
-        part_number: product.part_number,
-        name: product.name,
-        search_label: product.search_label,
-        quantity: 1,
-        unit: product.unit,
-      }
-    ];
-
-
-    if (store_id) {
-      let unitPrice = GetProductUnitPriceInStore(
-        store_id,
-        product.unit_prices
-      );
-
-      selectedProduct[0].unit_price = unitPrice.retail_unit_price;
-      selectedProduct[0].purchase_unit_price = unitPrice.purchase_unit_price;
-
-    }
-    setSelectedProduct([...selectedProduct]);
-    addProduct();
-  }
-
 
   async function suggestUsers(searchTerm) {
     console.log("Inside handle suggestUsers");
@@ -679,96 +630,77 @@ const QuotationCreate = forwardRef((props, ref) => {
     return false;
   }
 
-  function addProduct() {
+  function addProduct(product) {
     console.log("Inside Add product");
-
-    errors.product_id = "";
-    if (!selectedProduct[0] || !selectedProduct[0].id) {
-      errors.product_id = "No product selected";
+    if (!formData.store_id) {
+      errors.product_id = "Please Select a Store and try again";
       setErrors({ ...errors });
       return;
     }
 
-    let alreadyAdded = isProductAdded(selectedProduct[0].id);
 
-    if (!alreadyAdded) {
-      errors.quantity = "";
-      console.log("selectedProduct[0].quantity:", selectedProduct[0].quantity);
-
-      if (!selectedProduct[0].quantity || isNaN(selectedProduct[0].quantity)) {
-        errors.quantity = "Invalid Quantity";
-        setErrors({ ...errors });
-        return;
-      }
-
-      errors.unit_price = "";
-      if (
-        !selectedProduct[0].unit_price ||
-        isNaN(selectedProduct[0].unit_price)
-      ) {
-        errors.unit_price = "Invalid Unit Price";
-        setErrors({ ...errors });
-        return;
-      }
-
-      errors.purchase_unit_price = "";
-      if (
-        !selectedProduct[0].purchase_unit_price ||
-        isNaN(selectedProduct[0].purchase_unit_price)
-      ) {
-        errors.purchase_unit_price = "Invalid Purchase Unit Price";
-        setErrors({ ...errors });
-        return;
-      }
+    errors.product_id = "";
+    if (!product) {
+      errors.product_id = "Invalid Product";
+      setErrors({ ...errors });
+      return;
     }
 
+    let unitPrice = GetProductUnitPriceInStore(
+      formData.store_id,
+      product.unit_prices
+    );
+    product.unit_price = unitPrice.retail_unit_price;
+    product.purchase_unit_price = unitPrice.purchase_unit_price;
+
+    let alreadyAdded = false;
+    let index = -1;
+    let quantity = 0.00;
+    product.quantity = 1.00;
+
+    if (isProductAdded(product.id)) {
+      alreadyAdded = true;
+      index = getProductIndex(product.id);
+      quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+    } else {
+      quantity = parseFloat(product.quantity);
+    }
+
+    console.log("quantity:", quantity);
+
+    errors.quantity = "";
 
     if (alreadyAdded) {
-      let index = getProductIndex(selectedProduct[0].id);
-      selectedProducts[index].quantity = parseFloat(selectedProducts[index].quantity + selectedProduct[0].quantity);
+      selectedProducts[index].quantity = parseFloat(quantity);
     }
-    else {
+
+    if (!alreadyAdded) {
       let item = {
-        product_id: selectedProduct[0].id,
-        code: selectedProduct[0].item_code,
-        part_number: selectedProduct[0].part_number,
-        name: selectedProduct[0].name,
-        name_in_arabic: selectedProduct[0].name_in_arabic,
-        quantity: selectedProduct[0].quantity,
-        unit: selectedProduct[0].unit,
+        product_id: product.id,
+        code: product.item_code,
+        part_number: product.part_number,
+        name: product.name,
+        quantity: product.quantity,
+        stock: product.stock,
+        unit: product.unit,
       };
 
-      if (selectedProduct[0].unit_price) {
-        item.unit_price = selectedProduct[0].unit_price;
+      if (product.unit_price) {
+        item.unit_price = parseFloat(product.unit_price);
+        console.log("item.unit_price:", item.unit_price);
       }
-      if (selectedProduct[0].purchase_unit_price) {
-        item.purchase_unit_price = selectedProduct[0].purchase_unit_price;
+
+      if (product.purchase_unit_price) {
+        item.purchase_unit_price = parseFloat(product.purchase_unit_price);
+        console.log("item.purchase_unit_price", item.purchase_unit_price);
       }
 
       selectedProducts.push(item);
+
     }
-
-    clearSelectedProduct();
-
-    setSelectedProduct([...selectedProduct]);
-    setSelectedProducts([...selectedProducts]);
-    console.log("selectedProduct:", selectedProduct);
     console.log("selectedProducts:", selectedProducts);
-
+    setSelectedProducts([...selectedProducts]);
     reCalculate();
-  }
-
-  function clearSelectedProduct() {
-    selectedProduct[0].name = "";
-    selectedProduct[0].search_label = "";
-    selectedProduct[0].item_code = "";
-    selectedProduct[0].part_number = "";
-    selectedProduct[0].id = "";
-    selectedProduct[0].quantity = "";
-    selectedProduct[0].unit_price = "";
-    selectedProduct[0].purchase_unit_price = "";
-    selectedProduct[0].unit = "";
-    setSelectedProduct([...selectedProduct]);
   }
 
   function getProductIndex(productID) {
@@ -1109,64 +1041,35 @@ const QuotationCreate = forwardRef((props, ref) => {
 
             <div className="col-md-12">
               <label className="form-label">Product*</label>
-
-
               <Typeahead
                 id="product_id"
                 size="lg"
                 labelKey="search_label"
+                emptyLabel=""
+                clearButton={true}
                 open={openProductSearchResult}
                 isLoading={isProductsLoading}
                 isInvalid={errors.product_id ? true : false}
                 onChange={(selectedItems) => {
                   if (selectedItems.length === 0) {
-                    console.log("Inside Invalid");
                     errors["product_id"] = "Invalid Product selected";
-                    console.log(errors);
                     setErrors(errors);
-                    setSelectedProduct([]);
-                    console.log(errors);
                     return;
                   }
-
                   errors["product_id"] = "";
                   setErrors({ ...errors });
 
-                  if (cookies.get('store_id')) {
-                    formData.store_id = cookies.get('store_id');
-                    selectedStores = [
-                      {
-                        id: cookies.get('store_id'),
-                        name: cookies.get('store_name'),
-                      },
-                    ];
-                    setSelectedStores([...selectedStores]);
-                  }
-
                   if (formData.store_id) {
-                    let unitPrice = GetProductUnitPriceInStore(
-                      formData.store_id,
-                      selectedItems[0].unit_prices
-                    );
+                    addProduct(selectedItems[0]);
 
-                    selectedItems[0].unit_price = unitPrice.retail_unit_price;
-                    selectedItems[0].purchase_unit_price = unitPrice.purchase_unit_price;
                   }
-
-                  selectedProduct = selectedItems;
-                  selectedProduct[0].quantity = 1;
-                  addProduct();
-                  console.log("selectedItems:", selectedItems);
-                  setSelectedProduct([...selectedProduct]);
                   setOpenProductSearchResult(false);
-                  console.log("selectedProduct:", selectedProduct);
                 }}
                 options={productOptions}
-                placeholder="Search By Part No. / Name / Name in Arabic"
                 selected={selectedProduct}
+                placeholder="Search By Part No. / Name / Name in Arabic"
                 highlightOnlyResult={true}
                 onInputChange={(searchTerm, e) => {
-                  console.log("Inside input change");
                   suggestProducts(searchTerm);
                 }}
               />

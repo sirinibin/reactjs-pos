@@ -339,10 +339,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     purchaseUnitPriceListArray[i].purchase_unit_price
                 );
                 return purchaseUnitPriceListArray[i];
-            } else {
-                console.log("not matched");
             }
         }
+        console.log("not matched");
         return "";
     }
 
@@ -431,7 +430,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         let product = data.result;
         if (product) {
-            selectProduct(product);
+            addProduct(product);
         } else {
             errors["bar_code"] = "Invalid Barcode:" + formData.barcode
             setErrors({ ...errors });
@@ -440,49 +439,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
         formData.barcode = "";
         setFormData({ ...formData });
 
-    }
-
-    function selectProduct(product) {
-        let store_id = formData.store_id;
-
-        if (!store_id) {
-            setOpenProductSearchResult(false);
-            errors.product_id = "Please Select a Store and try again";
-            setErrors({ ...errors });
-            return;
-        }
-
-        setOpenProductSearchResult(false);
-        selectedProduct = [
-            {
-                id: product.id,
-                item_code: product.item_code,
-                bar_code: product.bar_code,
-                part_number: product.part_number,
-                name: product.name,
-                search_label: product.search_label,
-                quantity: 1,
-                unit: product.unit,
-            }
-        ];
-
-
-        if (store_id) {
-            let unitPrice = GetProductUnitPriceInStore(
-                formData.store_id,
-                product.unit_prices
-            );
-
-            selectedProduct[0].purchase_unit_price = unitPrice.purchase_unit_price;
-            selectedProduct[0].retail_unit_price = unitPrice.retail_unit_price;
-            selectedProduct[0].wholesale_unit_price = unitPrice.wholesale_unit_price;
-
-
-            // selectedProduct[0].unit_price = product.unit_price;
-            console.log("selectedProduct[0].stock:", selectedProduct[0].stock);
-        }
-        setSelectedProduct([...selectedProduct]);
-        addProduct();
     }
 
     async function suggestUsers(searchTerm) {
@@ -653,119 +609,80 @@ const PurchaseCreate = forwardRef((props, ref) => {
         return false;
     }
 
-    function addProduct() {
+    function addProduct(product) {
         console.log("Inside Add product");
+        if (!formData.store_id) {
+            errors.product_id = "Please Select a Store and try again";
+            setErrors({ ...errors });
+            return;
+        }
+
 
         errors.product_id = "";
-        if (!selectedProduct[0] || !selectedProduct[0].id) {
-            errors.product_id = "No product selected";
+        if (!product) {
+            errors.product_id = "Invalid Product";
             setErrors({ ...errors });
             return;
         }
 
-        /*
-        if (isProductAdded(selectedProduct[0].id)) {
-            errors.product_id = "Product Already Added";
-            setErrors({ ...errors });
-            return;
-        }
-        */
+        let unitPrice = GetProductUnitPriceInStore(
+            formData.store_id,
+            product.unit_prices
+        );
+        product.retail_unit_price = unitPrice.retail_unit_price;
+        product.purchase_unit_price = unitPrice.retail_unit_price;
+        product.wholesale_unit_price = unitPrice.wholesale_unit_price;
 
-        let alreadyAdded = isProductAdded(selectedProduct[0].id);
+        let alreadyAdded = false;
+        let index = -1;
+        let quantity = 0.00;
+        product.quantity = 1.00;
+
+        if (isProductAdded(product.id)) {
+            alreadyAdded = true;
+            index = getProductIndex(product.id);
+            quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+        } else {
+            quantity = parseFloat(product.quantity);
+        }
+
+        console.log("quantity:", quantity);
 
         errors.quantity = "";
-        console.log("selectedProduct[0].quantity:", selectedProduct[0].quantity);
-        if (!alreadyAdded) {
-            if (!selectedProduct[0].quantity || isNaN(selectedProduct[0].quantity)) {
-                errors.quantity = "Invalid Quantity";
-                setErrors({ ...errors });
-                return;
-            }
-
-            /*
-            errors.purchase_unit_price = "";
-            if (
-                !selectedProduct[0].purchase_unit_price ||
-                isNaN(selectedProduct[0].purchase_unit_price)
-            ) {
-                errors.purchase_unit_price = "Invalid Purchase Unit Price";
-                setErrors({ ...errors });
-                return;
-            }
-
-
-            errors.wholesale_unit_price = "";
-            if (
-                !selectedProduct[0].wholesale_unit_price ||
-                isNaN(selectedProduct[0].wholesale_unit_price)
-            ) {
-                errors.wholesale_unit_price = "Invalid Wholesale Unit Price";
-                setErrors({ ...errors });
-                return;
-            }
-            errors.retail_unit_price = "";
-            if (
-                !selectedProduct[0].retail_unit_price ||
-                isNaN(selectedProduct[0].retail_unit_price)
-            ) {
-                errors.retail_unit_price = "Invalid Retail Unit Price";
-                setErrors({ ...errors });
-                return;
-            }
-            */
-
-
-        }
-
 
         if (alreadyAdded) {
-            let index = getProductIndex(selectedProduct[0].id);
-            selectedProducts[index].quantity = parseFloat(selectedProducts[index].quantity + selectedProduct[0].quantity);
-        } else {
+            selectedProducts[index].quantity = parseFloat(quantity);
+            // setSelectedProducts([...selectedProducts]);
+        }
+
+        if (!alreadyAdded) {
             let item = {
-                product_id: selectedProduct[0].id,
-                code: selectedProduct[0].item_code,
-                part_number: selectedProduct[0].part_number,
-                name: selectedProduct[0].name,
-                quantity: selectedProduct[0].quantity,
-                unit: selectedProduct[0].unit,
+                product_id: product.id,
+                code: product.item_code,
+                part_number: product.part_number,
+                name: product.name,
+                quantity: product.quantity,
+                stock: product.stock,
+                unit: product.unit,
             };
 
-            if (selectedProduct[0].purchase_unit_price) {
-                item.purchase_unit_price = parseFloat(selectedProduct[0].purchase_unit_price).toFixed(2);
+            if (product.purchase_unit_price) {
+                item.purchase_unit_price = parseFloat(product.purchase_unit_price).toFixed(2);
             }
 
-            if (selectedProduct[0].retail_unit_price) {
-                item.retail_unit_price = parseFloat(selectedProduct[0].retail_unit_price).toFixed(2);
+            if (product.retail_unit_price) {
+                item.retail_unit_price = parseFloat(product.retail_unit_price).toFixed(2);
             }
 
-            if (selectedProduct[0].wholesale_unit_price) {
-                item.wholesale_unit_price = parseFloat(selectedProduct[0].wholesale_unit_price).toFixed(2);
+            if (product.wholesale_unit_price) {
+                item.wholesale_unit_price = parseFloat(product.wholesale_unit_price).toFixed(2);
             }
 
             selectedProducts.push(item);
+
         }
-
-
-        clearSelectedProduct();
-
-        setSelectedProduct([...selectedProduct]);
         setSelectedProducts([...selectedProducts]);
-        console.log("selectedProduct:", selectedProduct);
-        console.log("selectedProducts:", selectedProducts);
         reCalculate();
-    }
-
-    function clearSelectedProduct() {
-        selectedProduct[0].name = "";
-        selectedProduct[0].id = "";
-        selectedProduct[0].search_label = "";
-        selectedProduct[0].quantity = "";
-        selectedProduct[0].purchase_unit_price = "";
-        selectedProduct[0].retail_unit_price = "";
-        selectedProduct[0].wholesale_unit_price = "";
-        selectedProduct[0].unit = "";
-        setSelectedProduct([...selectedProduct]);
     }
 
     function getProductIndex(productID) {
@@ -1084,6 +1001,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 id="product_id"
                                 size="lg"
                                 labelKey="search_label"
+                                emptyLabel=""
                                 clearButton={true}
                                 open={openProductSearchResult}
                                 isLoading={isProductsLoading}
@@ -1091,62 +1009,25 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 onChange={(selectedItems) => {
                                     if (selectedItems.length === 0) {
                                         errors["product_id"] = "Invalid Product selected";
-                                        console.log(errors);
                                         setErrors(errors);
-                                        setSelectedProduct([]);
-                                        console.log(errors);
                                         return;
                                     }
-
                                     errors["product_id"] = "";
                                     setErrors({ ...errors });
 
-                                    if (cookies.get('store_id')) {
-                                        formData.store_id = cookies.get('store_id');
-                                        selectedStores = [
-                                            {
-                                                id: cookies.get('store_id'),
-                                                name: cookies.get('store_name'),
-                                            },
-                                        ];
-                                        setSelectedStores([...selectedStores]);
-                                    }
-
-
-
-                                    selectedProduct = selectedItems;
-                                    selectedProduct[0].quantity = 1;
-
                                     if (formData.store_id) {
-                                        let unitPrice = GetProductUnitPriceInStore(
-                                            formData.store_id,
-                                            selectedItems[0].unit_prices
-                                        );
-
-                                        selectedItems[0].purchase_unit_price = unitPrice.purchase_unit_price;
-
-                                        selectedProduct[0].purchase_unit_price = unitPrice.purchase_unit_price;
-                                        selectedProduct[0].wholesale_unit_price = unitPrice.wholesale_unit_price;
-                                        selectedProduct[0].retail_unit_price = unitPrice.retail_unit_price;
-
-                                        console.log("selectedProduct[0]:", selectedProduct[0]);
+                                        addProduct(selectedItems[0]);
 
                                     }
-
-                                    console.log("selectedItems:", selectedItems);
-                                    setSelectedProduct([...selectedProduct]);
                                     setOpenProductSearchResult(false);
-                                    console.log("selectedProduct:", selectedProduct);
-                                    addProduct();
                                 }}
                                 options={productOptions}
-                                placeholder="Search By Part No. / Name / Name in Arabic"
                                 selected={selectedProduct}
+                                placeholder="Search By Part No. / Name / Name in Arabic"
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
                                     suggestProducts(searchTerm);
                                 }}
-
                             />
                             <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                             {errors.product_id ? (
