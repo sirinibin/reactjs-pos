@@ -415,6 +415,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let productFound = false;
 
+        /*
         if (data.result && data.result.length > 0) {
             for (let i = 0; i < data.result.length; i++) {
                 if (products[i].bar_code === searchTerm || products[i].part_number === searchTerm) {
@@ -426,6 +427,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
             }
         }
+        */
 
         if (!productFound) {
             openProductSearchResult = true;
@@ -435,6 +437,48 @@ const OrderCreate = forwardRef((props, ref) => {
         setIsProductsLoading(false);
 
     }
+
+    async function getProductByBarCode(barcode) {
+        console.log("Inside getProductByBarCode");
+        setProductOptions([]);
+        errors["bar_code"] = "";
+        setErrors({ ...errors });
+
+        console.log("barcode:" + barcode);
+        if (!barcode) {
+            return;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
+        setIsProductsLoading(true);
+        let result = await fetch(
+            "/v1/product/barcode/" + barcode + "?" + Select,
+            requestOptions
+        );
+        let data = await result.json();
+
+
+        let product = data.result;
+        if (product) {
+            selectProduct(product);
+        } else {
+            errors["bar_code"] = "Invalid Barcode:" + barcode;
+            setErrors({ ...errors });
+        }
+
+        formData.bar_code = "";
+        setFormData({ ...formData });
+
+    }
+
 
     function selectProduct(product) {
         console.log("inside select product:", formData.store_id);
@@ -1106,8 +1150,43 @@ const OrderCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+                        <div className="col-md-6">
+                            <label className="form-label">Product Barcode Scan</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.bar_code ? formData.bar_code : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["bar_code"] = "";
+                                        setErrors({ ...errors });
+                                        formData.bar_code = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                        getProductByBarCode(formData.bar_code);
+                                    }}
+                                    className="form-control"
+                                    id="bar_code"
+                                    placeholder="Scan Barcode"
+                                />
+                                {errors.bar_code && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.bar_code}
+                                    </div>
+                                )}
+                                {formData.bar_code && !errors.bar_code && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
                         <div className="col-md-12">
-                            <label className="form-label">Product*</label>
+                            <label className="form-label">Product Search*</label>
                             {/*  
                             <Form.Check
                                 type="switch"
@@ -1202,7 +1281,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     setOpenProductSearchResult(false);
                                 }}
                                 options={productOptions}
-                                placeholder="Type / Scan Item Code or Name"
+                                placeholder="Search By Part No. / Name / Name in Arabic"
                                 selected={selectedProduct}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
