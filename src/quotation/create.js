@@ -59,6 +59,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       }
       if (cookies.get('store_id')) {
         formData.store_id = cookies.get('store_id');
+        formData.store_name = cookies.get('store_name');
       }
 
       setFormData({ ...formData });
