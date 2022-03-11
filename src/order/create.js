@@ -422,12 +422,14 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     async function getProductByBarCode(barcode) {
+        formData.barcode = barcode;
+        setFormData({ ...formData });
         console.log("Inside getProductByBarCode");
         errors["bar_code"] = "";
         setErrors({ ...errors });
 
-        console.log("barcode:" + barcode);
-        if (!barcode) {
+        console.log("barcode:" + formData.barcode);
+        if (!formData.barcode) {
             return;
         }
 
@@ -442,7 +444,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
         let result = await fetch(
-            "/v1/product/barcode/" + barcode + "?" + Select,
+            "/v1/product/barcode/" + formData.barcode + "?" + Select,
             requestOptions
         );
         let data = await result.json();
@@ -452,7 +454,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (product) {
             selectProduct(product);
         } else {
-            errors["bar_code"] = "Invalid Barcode:" + barcode
+            errors["bar_code"] = "Invalid Barcode:" + formData.barcode
             setErrors({ ...errors });
         }
 
@@ -1141,6 +1143,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     debounceTimeout={500}
                                     placeholder="Scan Barcode"
                                     className="form-control"
+                                    value={formData.barcode}
                                     onChange={event => getProductByBarCode(event.target.value)} />
 
                                 {/*
