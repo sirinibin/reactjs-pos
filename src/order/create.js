@@ -567,14 +567,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let stock = GetProductStockInStore(formData.store_id, product.stock);
         if (stock < quantity) {
-            errors["product_id_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
+            errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
+            console.log("errors:", errors);
             setErrors({ ...errors });
-            return;
         }
 
         if (alreadyAdded) {
             selectedProducts[index].quantity = parseFloat(quantity);
-            // setSelectedProducts([...selectedProducts]);
         }
 
         if (!alreadyAdded) {
