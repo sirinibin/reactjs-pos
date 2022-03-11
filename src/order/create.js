@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import OrderView from "./view.js";
 import "./style.css";
+import { DebounceInput } from 'react-debounce-input';
 //import BarcodeScannerComponent from "react-qr-barcode-scanner";
 //import Quagga from 'quagga';
 import ProductView from "./../product/view.js";
@@ -420,13 +421,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
     }
 
-    async function getProductByBarCode() {
+    async function getProductByBarCode(barcode) {
         console.log("Inside getProductByBarCode");
         errors["bar_code"] = "";
         setErrors({ ...errors });
 
-        console.log("barcode:" + formData.bar_code);
-        if (!formData.bar_code) {
+        console.log("barcode:" + barcode);
+        if (!barcode) {
             return;
         }
 
@@ -441,7 +442,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
         let result = await fetch(
-            "/v1/product/barcode/" + formData.bar_code + "?" + Select,
+            "/v1/product/barcode/" + barcode + "?" + Select,
             requestOptions
         );
         let data = await result.json();
@@ -451,7 +452,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (product) {
             selectProduct(product);
         } else {
-            errors["bar_code"] = "Invalid Barcode:" + formData.bar_code;
+            errors["bar_code"] = "Invalid Barcode:" + barcode
             setErrors({ ...errors });
         }
 
@@ -1135,6 +1136,14 @@ const OrderCreate = forwardRef((props, ref) => {
                             <label className="form-label">Product Barcode Scan</label>
 
                             <div className="input-group mb-3">
+                                <DebounceInput
+                                    minLength={0}
+                                    debounceTimeout={300}
+                                    placeholder="Scan Barcode"
+                                    className="form-control"
+                                    onChange={event => getProductByBarCode(event.target.value)} />
+
+                                {/*
                                 <input
                                     value={formData.bar_code ? formData.bar_code : ""}
                                     type='string'
@@ -1150,6 +1159,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     id="bar_code"
                                     placeholder="Scan Barcode"
                                 />
+                                */}
                                 {errors.bar_code && (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>
