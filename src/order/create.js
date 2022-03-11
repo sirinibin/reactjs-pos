@@ -567,7 +567,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let stock = GetProductStockInStore(formData.store_id, product.stock);
         if (stock < quantity) {
-            errors.product_id = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
+            errors["product_id_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
             setErrors({ ...errors });
             return;
         }
