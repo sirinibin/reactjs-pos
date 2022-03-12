@@ -523,44 +523,7 @@ function ProductIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("item_code");
-                                                        }}
-                                                    >
-                                                        Item Code
-                                                        {sortField === "item_code" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "item_code" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("bar_code");
-                                                        }}
-                                                    >
-                                                        Bar Code
-                                                        {sortField === "bar_code" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "bar_code" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -580,6 +543,27 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("bar_code");
+                                                        }}
+                                                    >
+                                                        Bar Code
+                                                        {sortField === "bar_code" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "bar_code" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -832,9 +816,9 @@ function ProductIndex(props) {
                                             {productList &&
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
-                                                        <td>{product.item_code}</td>
-                                                        <td>{product.bar_code}</td>
                                                         <td>{product.part_number}</td>
+                                                        <td>{product.bar_code}</td>
+
                                                         <td>{product.name}</td>
                                                         <td>{product.rack}</td>
                                                         <td>
