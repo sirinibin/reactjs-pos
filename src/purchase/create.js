@@ -967,12 +967,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Product Barcode Scan</label>
 
                             <div className="input-group mb-3">
                                 <DebounceInput
-                                    minLength={3}
+                                    minLength={12}
                                     debounceTimeout={500}
                                     placeholder="Scan Barcode"
                                     className="form-control"
@@ -985,6 +985,39 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                                 {formData.bar_code && !errors.bar_code && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Vendor Invoice No. (Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["vendor_invoice_no"] = "";
+                                        setErrors({ ...errors });
+                                        formData.vendor_invoice_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="vendor_invoice_no"
+                                    placeholder="Vendor Invoice No."
+                                />
+                                {errors.vendor_invoice_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.vendor_invoice_no}
+                                    </div>
+                                )}
+                                {formData.vendor_invoice_no && !errors.rack && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
                                         Looks good!

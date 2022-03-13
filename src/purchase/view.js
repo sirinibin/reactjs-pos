@@ -154,6 +154,7 @@ const PurchaseView = forwardRef((props, ref) => {
                         <tr>
                             <th>Store:</th><td> {model.store_name}</td>
                             <th>Vendor:</th><td> {model.vendor_name}</td>
+                            <th>Vendor Invoice No.:</th><td> {model.vendor_invoice_no}</td>
                             <th>Order Placed by:</th><td> {model.order_placed_by_name}</td>
                         </tr>
                         <tr>

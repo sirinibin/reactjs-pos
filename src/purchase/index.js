@@ -250,7 +250,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,vendor_name,status,created_at,net_retail_profit,net_wholesale_profit";
+            "select=id,code,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at,net_retail_profit,net_wholesale_profit";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -540,6 +540,8 @@ function PurchaseIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
+
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -555,6 +557,45 @@ function PurchaseIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "code" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vendor_invoice_no");
+                                                        }}
+                                                    >
+                                                        Vendor Invoice No.
+                                                        {sortField === "vendor_invoice_no" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vendor_invoice_no" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vendor_name");
+                                                        }}
+                                                    >
+                                                        Vendor
+                                                        {sortField === "vendor_name" &&
+                                                            sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vendor_name" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -654,26 +695,7 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("vendor_name");
-                                                        }}
-                                                    >
-                                                        Vendor
-                                                        {sortField === "vendor_name" &&
-                                                            sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "vendor_name" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -726,6 +748,36 @@ function PurchaseIndex(props) {
                                                             searchByFieldValue("code", e.target.value)
                                                         }
                                                         className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="vendor_invoice_no"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("vendor_invoice_no", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="vendor_id"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "vendor_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={vendorOptions}
+                                                        placeholder="Select Vendor"
+                                                        selected={selectedVendors}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestVendors(searchTerm);
+                                                        }}
+                                                        multiple
                                                     />
                                                 </th>
                                                 <th>
@@ -828,26 +880,7 @@ function PurchaseIndex(props) {
                                                         multiple
                                                     />
                                                 </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="vendor_id"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "vendor_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={vendorOptions}
-                                                        placeholder="Select Vendor"
-                                                        selected={selectedVendors}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestVendors(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <Typeahead
                                                         id="status"
@@ -926,6 +959,8 @@ function PurchaseIndex(props) {
                                                 purchaseList.map((purchase) => (
                                                     <tr key={purchase.code}>
                                                         <td>{purchase.code}</td>
+                                                        <td>{purchase.vendor_invoice_no}</td>
+                                                        <td>{purchase.vendor_name}</td>
                                                         <td>
                                                             {format(new Date(purchase.date), "MMM dd yyyy")}
                                                         </td>
@@ -958,7 +993,7 @@ function PurchaseIndex(props) {
                                                         </td>
 
                                                         <td>{purchase.created_by_name}</td>
-                                                        <td>{purchase.vendor_name}</td>
+
                                                         <td>
                                                             <span className="badge bg-success">
                                                                 {purchase.status}
