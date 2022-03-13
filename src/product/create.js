@@ -636,6 +636,41 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-6">
+                            <label className="form-label">ean_12</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.ean_12 ? formData.ean_12 : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["name"] = "";
+                                        setErrors({ ...errors });
+                                        formData.ean_12 = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="ean_12"
+                                    placeholder="ean_12"
+                                />
+                                {errors.ean_12 && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.ean_12}
+                                    </div>
+                                )}
+                                {formData.ean_12 && !errors.ean_12 && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+
+                        <div className="col-md-6">
                             <label className="form-label">Name In Arabic (Optional)</label>
 
                             <div className="input-group mb-3">
