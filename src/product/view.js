@@ -236,6 +236,7 @@ const ProductView = forwardRef((props, ref) => {
                         <tr>
                             <th>Item Code:</th><td> {model.item_code}</td>
                             <th>Bar Code:</th><td> {model.bar_code}</td>
+                            <th>EAN 12:</th><td> {model.ean_12}</td>
                             <th>Part Number:</th><td> {model.part_number}</td>
                             <th>Rack / Location:</th><td> {model.rack}</td>
                             <th>Categories:</th><td>
