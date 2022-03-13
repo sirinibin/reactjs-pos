@@ -634,7 +634,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-
+                        {/*
                         <div className="col-md-6">
                             <label className="form-label">ean_12</label>
 
@@ -667,6 +667,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+                                */}
 
 
 
