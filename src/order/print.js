@@ -104,7 +104,7 @@ const OrderPrint = forwardRef((props, ref) => {
         qrContent = "";
 
         if (model.code) {
-            qrContent += "Quotation #: " + model.code + "<br />";
+            qrContent += "Sales Invoice #: " + model.code + "<br />";
         }
 
         if (model.store) {
@@ -291,7 +291,7 @@ const OrderPrint = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Quotation";
+        let filename = "Sales_Invoice";
 
         if (model.id) {
             filename += "_#" + model.code;

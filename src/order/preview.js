@@ -61,7 +61,7 @@ const OrderPreview = forwardRef((props, ref) => {
         qrContent = "";
 
         if (model.code) {
-            qrContent += "Quotation #: " + model.code + "<br />";
+            qrContent += "Invoice #: " + model.code + "<br />";
         }
 
         if (model.store) {
@@ -257,7 +257,7 @@ const OrderPreview = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Quotation Preview</Modal.Title>
+                <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
                         <i className="bi bi-printer"></i> Print
