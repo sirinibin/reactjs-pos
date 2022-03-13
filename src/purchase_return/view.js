@@ -155,6 +155,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                         <tr>
                             <th>Store:</th><td> {model.store_name}</td>
                             <th>Vendor:</th><td> {model.vendor_name}</td>
+                            <th>Vendor Invoice No.:</th><td> {model.vendor_invoice_no}</td>
                             <th>Purchase Returned by:</th><td> {model.purchase_returned_by_name}</td>
                         </tr>
                         <tr>

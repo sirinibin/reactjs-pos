@@ -146,6 +146,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     signature_date_str: format(new Date(), "MMM dd yyyy"),
                     purchase_id: purchase.id,
                     purchase_code: purchase.code,
+                    vendor_invoice_no: purchase.vendor_invoice_no,
                     store_id: purchase.store_id,
                     vendor_id: purchase.vendor_id,
                     vat_percent: purchase.vat_percent,
