@@ -202,7 +202,7 @@ function ProductIndex(props) {
             },
         };
         let Select =
-            "select=id,item_code,ean_12,part_number,name,category_name,created_by_name,created_at,rack,unit_prices";
+            "select=id,item_code,ean_12,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,unit_prices";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -821,7 +821,7 @@ function ProductIndex(props) {
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
                                                         <td>{product.part_number}</td>
-                                                        <td>{product.name}</td>
+                                                        <td>{product.name + " / " + product.name_in_arabic}</td>
                                                         <td>{product.ean_12}</td>
 
 

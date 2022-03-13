@@ -699,43 +699,6 @@ const ProductCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-                        {/*
-                        <div className="col-md-6">
-                            <label className="form-label">Barcode(12 Digits-Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.bar_code ? formData.bar_code : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["bar_code"] = "";
-                                        setErrors({ ...errors });
-                                        if (e.target.value.length !== 12) {
-                                            errors["bar_code"] = "Barcode should be 12 digits";
-                                            setErrors({ ...errors });
-                                        }
-                                        formData.bar_code = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="name"
-                                    placeholder="12 Digit barcode"
-                                />
-                                {errors.bar_code && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.bar_code}
-                                    </div>
-                                )}
-                                {formData.bar_code && !errors.bar_code && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                                </div> */}
 
                         <div className="col-md-6">
                             <label className="form-label">Rack / Location (Optional)</label>

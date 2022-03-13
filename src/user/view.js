@@ -89,6 +89,7 @@ const UserView = forwardRef((props, ref) => {
                     <tbody>
                         <tr>
                             <th>Name:</th><td> {model.name}</td>
+                            <th>Admin:</th><td> {model.admin}</td>
                             <th>E-mail:</th><td> {model.email}</td>
                         </tr>
                         <tr>

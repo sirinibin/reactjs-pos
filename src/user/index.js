@@ -160,7 +160,7 @@ function UserIndex(props) {
             },
         };
         let Select =
-            "select=id,name,email,mob,created_by_name,created_at";
+            "select=id,name,admin,email,mob,created_by_name,created_at";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {

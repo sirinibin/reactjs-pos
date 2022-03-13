@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button } from "react-bootstrap";
+import { Modal, Button, Form } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import UserView from "./view.js";
@@ -26,7 +26,9 @@ const UserCreate = forwardRef((props, ref) => {
     const cookies = new Cookies();
 
     //fields
-    let [formData, setFormData] = useState({});
+    let [formData, setFormData] = useState({
+        admin: false,
+    });
 
     const [show, SetShow] = useState(false);
 
@@ -43,7 +45,7 @@ const UserCreate = forwardRef((props, ref) => {
 
 
     function getUser(id) {
-        console.log("inside get Order");
+        console.log("inside get User");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -65,11 +67,27 @@ const UserCreate = forwardRef((props, ref) => {
 
                 setErrors({});
 
-                console.log("Response:");
-                console.log(data);
+
                 let userData = data.result;
-                userData.logo = "";
-                setFormData({ ...userData });
+                console.log("Response:");
+                console.log(userData);
+
+
+                formData = {
+                    id: userData.id,
+                    name: userData.name,
+                    email: userData.email,
+                    mob: userData.mob,
+                    log: "",
+                };
+
+                if (userData.admin === true) {
+                    formData.admin = true;
+                } else {
+                    formData.admin = false;
+                }
+                console.log("From Server:", formData);
+                setFormData({ ...formData });
             })
             .catch(error => {
                 setProcessing(false);
@@ -100,7 +118,7 @@ const UserCreate = forwardRef((props, ref) => {
             body: JSON.stringify(formData),
         };
 
-        console.log("formData:", formData);
+        console.log("sending formData:", formData);
 
         setProcessing(true);
         fetch(endPoint, requestOptions)
@@ -205,6 +223,22 @@ const UserCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
+
+
+                            <Form.Check
+                                type="switch"
+                                as="input"
+                                id="admin"
+                                label="Admin"
+                                value={formData.admin}
+                                checked={formData.admin === true ? "checked" : ""}
+                                onChange={(e) => {
+                                    formData.admin = !formData.admin;
+                                    console.log("formData.admin:", formData.admin);
+                                    setFormData({ ...formData });
+                                }}
+                            />
+
                         </div>
 
                         <div className="col-md-6">
@@ -307,6 +341,7 @@ const UserCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
