@@ -370,28 +370,30 @@ function QuotationIndex(props) {
                 />
               </Badge>
             </h1>
-            <h1 className="text-end">
-              Expected Profit: <Badge bg="secondary">
-                <NumberFormat
-                  value={profit}
-                  displayType={"text"}
-                  thousandSeparator={true}
-                  suffix={" SAR"}
-                  renderText={(value, props) => value}
-                />
-              </Badge>
-            </h1>
-            <h1 className="text-end">
-              Expected Loss: <Badge bg="secondary">
-                <NumberFormat
-                  value={loss}
-                  displayType={"text"}
-                  thousandSeparator={true}
-                  suffix={" SAR"}
-                  renderText={(value, props) => value}
-                />
-              </Badge>
-            </h1>
+            {cookies.get('admin') === "true" ?
+              <h1 className="text-end">
+                Expected Profit: <Badge bg="secondary">
+                  <NumberFormat
+                    value={profit}
+                    displayType={"text"}
+                    thousandSeparator={true}
+                    suffix={" SAR"}
+                    renderText={(value, props) => value}
+                  />
+                </Badge>
+              </h1> : ""}
+            {cookies.get('admin') === "true" ?
+              <h1 className="text-end">
+                Expected Loss: <Badge bg="secondary">
+                  <NumberFormat
+                    value={loss}
+                    displayType={"text"}
+                    thousandSeparator={true}
+                    suffix={" SAR"}
+                    renderText={(value, props) => value}
+                  />
+                </Badge>
+              </h1> : ""}
           </div>
 
         </div>
@@ -594,44 +596,46 @@ function QuotationIndex(props) {
                             ) : null}
                           </b>
                         </th>
-                        <th>
-                          <b
-                            style={{
-                              textDecoration: "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("profit");
-                            }}
-                          >
-                            Expected Profit
-                            {sortField === "profit" && sortOrder === "-" ? (
-                              <i className="bi bi-sort-numeric-down"></i>
-                            ) : null}
-                            {sortField === "profit" && sortOrder === "" ? (
-                              <i className="bi bi-sort-numeric-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
-                        <th>
-                          <b
-                            style={{
-                              textDecoration: "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("loss");
-                            }}
-                          >
-                            Expected Loss
-                            {sortField === "loss" && sortOrder === "-" ? (
-                              <i className="bi bi-sort-numeric-down"></i>
-                            ) : null}
-                            {sortField === "loss" && sortOrder === "" ? (
-                              <i className="bi bi-sort-numeric-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
+                        {cookies.get('admin') === "true" ?
+                          <th>
+                            <b
+                              style={{
+                                textDecoration: "underline",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                sort("profit");
+                              }}
+                            >
+                              Expected Profit
+                              {sortField === "profit" && sortOrder === "-" ? (
+                                <i className="bi bi-sort-numeric-down"></i>
+                              ) : null}
+                              {sortField === "profit" && sortOrder === "" ? (
+                                <i className="bi bi-sort-numeric-up"></i>
+                              ) : null}
+                            </b>
+                          </th> : ""}
+                        {cookies.get('admin') === "true" ?
+                          <th>
+                            <b
+                              style={{
+                                textDecoration: "underline",
+                                cursor: "pointer",
+                              }}
+                              onClick={() => {
+                                sort("loss");
+                              }}
+                            >
+                              Expected Loss
+                              {sortField === "loss" && sortOrder === "-" ? (
+                                <i className="bi bi-sort-numeric-down"></i>
+                              ) : null}
+                              {sortField === "loss" && sortOrder === "" ? (
+                                <i className="bi bi-sort-numeric-up"></i>
+                              ) : null}
+                            </b>
+                          </th> : ""}
                         <th>
                           <b
                             style={{
@@ -790,26 +794,28 @@ function QuotationIndex(props) {
                             className="form-control"
                           />
                         </th>
-                        <th>
-                          <input
-                            type="text"
-                            id="profit"
-                            onChange={(e) =>
-                              searchByFieldValue("profit", e.target.value)
-                            }
-                            className="form-control"
-                          />
-                        </th>
-                        <th>
-                          <input
-                            type="text"
-                            id="loss"
-                            onChange={(e) =>
-                              searchByFieldValue("loss", e.target.value)
-                            }
-                            className="form-control"
-                          />
-                        </th>
+                        {cookies.get('admin') === "true" ?
+                          <th>
+                            <input
+                              type="text"
+                              id="profit"
+                              onChange={(e) =>
+                                searchByFieldValue("profit", e.target.value)
+                              }
+                              className="form-control"
+                            />
+                          </th> : ""}
+                        {cookies.get('admin') === "true" ?
+                          <th>
+                            <input
+                              type="text"
+                              id="loss"
+                              onChange={(e) =>
+                                searchByFieldValue("loss", e.target.value)
+                              }
+                              className="form-control"
+                            />
+                          </th> : ""}
                         <th>
                           <Typeahead
                             id="created_by"
@@ -932,8 +938,12 @@ function QuotationIndex(props) {
                               {format(new Date(quotation.date), "MMM dd yyyy")}
                             </td>
                             <td>{quotation.net_total} SAR</td>
-                            <td>{quotation.profit ? quotation.profit : 0.00} SAR</td>
-                            <td>{quotation.loss ? quotation.loss : 0.00} SAR</td>
+                            {cookies.get('admin') === "true" ?
+                              <td>{quotation.profit ? quotation.profit : 0.00} SAR</td>
+                              : ""}
+                            {cookies.get('admin') === "true" ?
+                              <td>{quotation.loss ? quotation.loss : 0.00} SAR</td>
+                              : ""}
                             <td>{quotation.created_by_name}</td>
                             <td>{quotation.customer_name}</td>
                             <td>

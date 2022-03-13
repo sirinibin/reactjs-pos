@@ -380,7 +380,7 @@ function OrderIndex(props) {
                                 />
                             </Badge>
                         </h1>
-                        <h1 className="text-end">
+                        {cookies.get('admin') === "true" ? <h1 className="text-end">
                             Net Profit: <Badge bg="secondary">
                                 <NumberFormat
                                     value={netProfit}
@@ -390,8 +390,8 @@ function OrderIndex(props) {
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
-                        </h1>
-                        <h1 className="text-end">
+                        </h1> : ""}
+                        {cookies.get('admin') === "true" ? <h1 className="text-end">
                             Loss: <Badge bg="secondary">
                                 <NumberFormat
                                     value={loss}
@@ -401,7 +401,7 @@ function OrderIndex(props) {
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
-                        </h1>
+                        </h1> : ""}
                         <h1 className="text-end">
                             VAT Collected: <Badge bg="secondary">
                                 <NumberFormat
@@ -614,7 +614,7 @@ function OrderIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
+                                                {cookies.get('admin') === "true" ? <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -632,8 +632,8 @@ function OrderIndex(props) {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
-                                                <th>
+                                                </th> : ""}
+                                                {cookies.get('admin') === "true" ? <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -651,7 +651,7 @@ function OrderIndex(props) {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
+                                                </th> : ""}
                                                 <th>
                                                     <b
                                                         style={{
@@ -805,7 +805,7 @@ function OrderIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
+                                                {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
                                                         id="net_profit"
@@ -814,8 +814,8 @@ function OrderIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th>
-                                                <th>
+                                                </th> : ""}
+                                                {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
                                                         id="loss"
@@ -824,7 +824,7 @@ function OrderIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th>
+                                                </th> : ""}
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -947,8 +947,8 @@ function OrderIndex(props) {
                                                             {format(new Date(order.date), "MMM dd yyyy")}
                                                         </td>
                                                         <td>{order.net_total.toFixed(2)} SAR</td>
-                                                        <td>{order.net_profit.toFixed(2)} SAR</td>
-                                                        <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td>
+                                                        {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td> : ""}
                                                         <td>{order.created_by_name}</td>
                                                         <td>{order.customer_name}</td>
                                                         <td>

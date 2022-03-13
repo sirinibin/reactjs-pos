@@ -139,14 +139,14 @@ function Sidebar(props) {
                         <span className="align-middle">Product Category</span>
                     </Link>
                 </li>
-                <li onClick={() => {
+                {cookies.get('admin') === "true" ? <li onClick={() => {
                     toggleActive(appState.tabs[10]);
                 }} className={toggleActiveStyles(appState.tabs[10])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>
                     </Link>
-                </li>
+                </li> : ""}
                 <li onClick={() => {
                     toggleActive(appState.tabs[11]);
                 }} className={toggleActiveStyles(appState.tabs[11])}>

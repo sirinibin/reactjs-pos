@@ -374,28 +374,30 @@ function PurchaseIndex(props) {
                                 />
                             </Badge>
                         </h1>
-                        <h1 className="text-end">
-                            Expected Net Retail Profit: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={netRetailProfit}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Expected Net Wholesale Profit: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={netWholesaleProfit}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
+                        {cookies.get('admin') === "true" ?
+                            <h1 className="text-end">
+                                Expected Net Retail Profit: <Badge bg="secondary">
+                                    <NumberFormat
+                                        value={netRetailProfit}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </Badge>
+                            </h1> : ""}
+                        {cookies.get('admin') === "true" ?
+                            <h1 className="text-end">
+                                Expected Net Wholesale Profit: <Badge bg="secondary">
+                                    <NumberFormat
+                                        value={netWholesaleProfit}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </Badge>
+                            </h1> : ""}
                     </div>
 
                 </div>
@@ -638,44 +640,47 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("retail_profit");
-                                                        }}
-                                                    >
-                                                        Expected Net Retail Profit
-                                                        {sortField === "net_retail_profit" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_retail_profit" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("wholesale_profit");
-                                                        }}
-                                                    >
-                                                        Expected Net Wholesale Profit
-                                                        {sortField === "net_wholesale_profit" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_wholesale_profit" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+                                                {cookies.get('admin') === "true" ?
+                                                    <th>
+                                                        <b
+                                                            style={{
+                                                                textDecoration: "underline",
+                                                                cursor: "pointer",
+                                                            }}
+                                                            onClick={() => {
+                                                                sort("retail_profit");
+                                                            }}
+                                                        >
+                                                            Expected Net Retail Profit
+                                                            {sortField === "net_retail_profit" && sortOrder === "-" ? (
+                                                                <i className="bi bi-sort-numeric-down"></i>
+                                                            ) : null}
+                                                            {sortField === "net_retail_profit" && sortOrder === "" ? (
+                                                                <i className="bi bi-sort-numeric-up"></i>
+                                                            ) : null}
+                                                        </b>
+                                                    </th>
+                                                    : ""}
+                                                {cookies.get('admin') === "true" ?
+                                                    <th>
+                                                        <b
+                                                            style={{
+                                                                textDecoration: "underline",
+                                                                cursor: "pointer",
+                                                            }}
+                                                            onClick={() => {
+                                                                sort("wholesale_profit");
+                                                            }}
+                                                        >
+                                                            Expected Net Wholesale Profit
+                                                            {sortField === "net_wholesale_profit" && sortOrder === "-" ? (
+                                                                <i className="bi bi-sort-numeric-down"></i>
+                                                            ) : null}
+                                                            {sortField === "net_wholesale_profit" && sortOrder === "" ? (
+                                                                <i className="bi bi-sort-numeric-up"></i>
+                                                            ) : null}
+                                                        </b>
+                                                    </th> : ""}
                                                 <th>
                                                     <b
                                                         style={{
@@ -840,26 +845,29 @@ function PurchaseIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="net_retail_profit"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_retail_profit", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="net_wholesale_profit"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_wholesale_profit", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
+                                                {cookies.get('admin') === "true" ?
+                                                    <th>
+                                                        <input
+                                                            type="text"
+                                                            id="net_retail_profit"
+                                                            onChange={(e) =>
+                                                                searchByFieldValue("net_retail_profit", e.target.value)
+                                                            }
+                                                            className="form-control"
+                                                        />
+                                                    </th>
+                                                    : ""}
+                                                {cookies.get('admin') === "true" ?
+                                                    <th>
+                                                        <input
+                                                            type="text"
+                                                            id="net_wholesale_profit"
+                                                            onChange={(e) =>
+                                                                searchByFieldValue("net_wholesale_profit", e.target.value)
+                                                            }
+                                                            className="form-control"
+                                                        />
+                                                    </th> : ""}
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -973,24 +981,28 @@ function PurchaseIndex(props) {
                                                                 renderText={(value, props) => value}
                                                             />
                                                         </td>
-                                                        <td>
-                                                            <NumberFormat
-                                                                value={purchase.net_retail_profit}
-                                                                displayType={"text"}
-                                                                thousandSeparator={true}
-                                                                suffix={" SAR"}
-                                                                renderText={(value, props) => value}
-                                                            />
-                                                        </td>
-                                                        <td>
-                                                            <NumberFormat
-                                                                value={purchase.net_wholesale_profit}
-                                                                displayType={"text"}
-                                                                thousandSeparator={true}
-                                                                suffix={" SAR"}
-                                                                renderText={(value, props) => value}
-                                                            />
-                                                        </td>
+                                                        {cookies.get('admin') === "true" ?
+                                                            <td>
+                                                                <NumberFormat
+                                                                    value={purchase.net_retail_profit}
+                                                                    displayType={"text"}
+                                                                    thousandSeparator={true}
+                                                                    suffix={" SAR"}
+                                                                    renderText={(value, props) => value}
+                                                                />
+                                                            </td>
+                                                            : ""}
+                                                        {cookies.get('admin') === "true" ?
+                                                            <td>
+                                                                <NumberFormat
+                                                                    value={purchase.net_wholesale_profit}
+                                                                    displayType={"text"}
+                                                                    thousandSeparator={true}
+                                                                    suffix={" SAR"}
+                                                                    renderText={(value, props) => value}
+                                                                />
+                                                            </td>
+                                                            : ""}
 
                                                         <td>{purchase.created_by_name}</td>
 

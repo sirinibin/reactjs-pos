@@ -363,7 +363,7 @@ function SalesReturnIndex(props) {
                         <h1 className="text-end">
                             VAT Returned: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={vatPrice}
+                                    value={vatPrice.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}

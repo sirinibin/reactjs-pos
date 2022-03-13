@@ -18,6 +18,7 @@ function Topbar(props) {
         cookies.remove("user_name", { path: '/' });
         cookies.remove("store_name", { path: '/' });
         cookies.remove("store_id", { path: '/' });
+        cookies.remove("admin", { path: '/' });
         window.location = "/";
     }
 

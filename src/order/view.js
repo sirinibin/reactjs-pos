@@ -170,8 +170,8 @@ const OrderView = forwardRef((props, ref) => {
                         <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
-                            <th>Profit :</th><td> {model.profit} SAR</td>
-                            <th>Loss:</th><td> {model.loss} SAR</td>
+                            {cookies.get('admin') === "true" ? <th>Profit:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.profit} SAR</td> : ""}
+                            {cookies.get('admin') === "true" ? <th>Loss:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.loss} SAR</td> : ""}
                         </tr>
                     </tbody>
                 </Table>
@@ -187,10 +187,10 @@ const OrderView = forwardRef((props, ref) => {
                                 <th>Unit Price</th>
                                 <th>Price</th>
                                 <th>Qty Returned</th>
-                                <th>Purchase Unit Price</th>
-                                <th>Purchase Price</th>
-                                <th>Profit</th>
-                                <th>Loss</th>
+                                {cookies.get('admin') === "true" ? <th>Purchase Unit Price</th> : ""}
+                                {cookies.get('admin') === "true" ? <th>Purchase Price</th> : ""}
+                                {cookies.get('admin') === "true" ? <th>Profit</th> : ""}
+                                {cookies.get('admin') === "true" ? <th>Loss</th> : ""}
                             </tr>
                         </thead>
                         <tbody>
@@ -219,7 +219,7 @@ const OrderView = forwardRef((props, ref) => {
                                         />
                                     </td>
                                     <td>{product.quantity_returned}  {product.unit ? product.unit : ""} </td>
-                                    <td>
+                                    {cookies.get('admin') === "true" ? <td>
                                         <NumberFormat
                                             value={product.purchase_unit_price}
                                             displayType={"text"}
@@ -227,8 +227,8 @@ const OrderView = forwardRef((props, ref) => {
                                             suffix={" SAR"}
                                             renderText={(value, props) => value}
                                         />
-                                    </td>
-                                    <td>
+                                    </td> : ""}
+                                    {cookies.get('admin') === "true" ? <td>
                                         <NumberFormat
                                             value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                             displayType={"text"}
@@ -236,8 +236,8 @@ const OrderView = forwardRef((props, ref) => {
                                             suffix={" SAR"}
                                             renderText={(value, props) => value}
                                         />
-                                    </td>
-                                    <td>
+                                    </td> : ""}
+                                    {cookies.get('admin') === "true" ? <td>
                                         <NumberFormat
                                             value={product.profit}
                                             displayType={"text"}
@@ -245,8 +245,8 @@ const OrderView = forwardRef((props, ref) => {
                                             suffix={" SAR"}
                                             renderText={(value, props) => value}
                                         />
-                                    </td>
-                                    <td>
+                                    </td> : ""}
+                                    {cookies.get('admin') === "true" ? <td>
                                         <NumberFormat
                                             value={product.loss}
                                             displayType={"text"}
@@ -254,7 +254,7 @@ const OrderView = forwardRef((props, ref) => {
                                             suffix={" SAR"}
                                             renderText={(value, props) => value}
                                         />
-                                    </td>
+                                    </td> : ""}
                                 </tr>
                             ))}
                             <tr>
@@ -271,7 +271,7 @@ const OrderView = forwardRef((props, ref) => {
                                     />
                                 </td>
                                 <td colSpan="3" ></td>
-                                <td className="text-center">
+                                {cookies.get('admin') === "true" ? <td className="text-center">
                                     <NumberFormat
                                         value={model.profit}
                                         displayType={"text"}
@@ -279,8 +279,8 @@ const OrderView = forwardRef((props, ref) => {
                                         suffix={" SAR"}
                                         renderText={(value, props) => value}
                                     />
-                                </td>
-                                <td className="text-center">
+                                </td> : ""}
+                                {cookies.get('admin') === "true" ? <td className="text-center">
                                     <NumberFormat
                                         value={model.loss}
                                         displayType={"text"}
@@ -288,7 +288,7 @@ const OrderView = forwardRef((props, ref) => {
                                         suffix={" SAR"}
                                         renderText={(value, props) => value}
                                     />
-                                </td>
+                                </td> : ""}
                             </tr>
                             <tr>
                                 <th colSpan="4" className="text-end">
@@ -305,8 +305,12 @@ const OrderView = forwardRef((props, ref) => {
                                     />
                                 </td>
                                 <td colSpan="3"></td>
-                                <td className="text-center">0.00 SAR</td>
-                                <td className="text-center">0.00 SAR</td>
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">0.00 SAR</td>
+                                    : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">0.00 SAR</td>
+                                    : ""}
                             </tr>
                             <tr>
                                 <th colSpan="5" className="text-end">
@@ -322,24 +326,26 @@ const OrderView = forwardRef((props, ref) => {
                                     />
                                 </td>
                                 <td colSpan="3"></td>
-                                <td className="text-center">
-                                    <NumberFormat
-                                        value={(model.discount - model.return_discount).toFixed(2)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td className="text-center">
-                                    <NumberFormat
-                                        value={0}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">
+                                        <NumberFormat
+                                            value={(model.discount - model.return_discount).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">
+                                        <NumberFormat
+                                            value={0}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
                             </tr>
                             <tr>
                                 <td colSpan="4"></td>
@@ -353,25 +359,30 @@ const OrderView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </th>
-                                <th colSpan="3" className="text-end">Net Profit / Loss</th>
-                                <th className="text-center">
-                                    <NumberFormat
-                                        value={model.net_profit}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </th>
-                                <th className="text-center">
-                                    <NumberFormat
-                                        value={model.loss}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </th>
+                                {cookies.get('admin') === "true" ?
+                                    <th colSpan="3" className="text-end">Net Profit / Loss</th>
+                                    : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <th className="text-center">
+                                        <NumberFormat
+                                            value={model.net_profit}
+                                            displayType={"text"}
+                                            suffix={" SAR"}
+                                            thousandSeparator={true}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </th>
+                                    : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <th className="text-center">
+                                        <NumberFormat
+                                            value={model.loss}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </th> : ""}
                             </tr>
                         </tbody>
                     </table>
