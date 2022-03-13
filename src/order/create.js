@@ -305,7 +305,7 @@ const OrderCreate = forwardRef((props, ref) => {
         };
 
 
-        let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
+        let Select = "select=id,item_code,bar_code,ean_12,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
         let result = await fetch(
             "/v1/product/barcode/" + formData.barcode + "?" + Select,
             requestOptions
