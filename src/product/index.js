@@ -202,7 +202,7 @@ function ProductIndex(props) {
             },
         };
         let Select =
-            "select=id,item_code,bar_code,part_number,name,category_name,created_by_name,created_at,rack,unit_prices";
+            "select=id,item_code,ean_12,part_number,name,category_name,created_by_name,created_at,rack,unit_prices";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -307,7 +307,7 @@ function ProductIndex(props) {
             jsonContent.push({
                 storename: cookies.get("store_name"),
                 productname: productList[i].name,
-                barcode: productList[i].bar_code,
+                ean_12: productList[i].ean_12,
                 rack: productList[i].rack,
                 price: price.retail_unit_price,
                 purchase_unit_price_secret: price.purchase_unit_price_secret,
@@ -572,14 +572,14 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("bar_code");
+                                                            sort("ean_12");
                                                         }}
                                                     >
                                                         Bar Code
-                                                        {sortField === "bar_code" && sortProduct === "-" ? (
+                                                        {sortField === "ean_12" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "bar_code" && sortProduct === "" ? (
+                                                        {sortField === "ean_12" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -693,9 +693,9 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="bar_code"
+                                                        id="ean_12"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("bar_code", e.target.value)
+                                                            searchByFieldValue("ean_12", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -822,7 +822,7 @@ function ProductIndex(props) {
                                                     <tr key={product.id}>
                                                         <td>{product.part_number}</td>
                                                         <td>{product.name}</td>
-                                                        <td>{product.bar_code}</td>
+                                                        <td>{product.ean_12}</td>
 
 
                                                         <td>{product.rack}</td>
