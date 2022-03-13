@@ -49,6 +49,12 @@ function Login() {
 
                 cookies.set('user_name', data.result.name);
                 cookies.set('user_id', data.result.id);
+                if (data.result.admin === true) {
+                    cookies.set('admin', true);
+                } else {
+                    cookies.set('admin', false);
+                }
+
                 if (data.result.photo) {
                     cookies.set('user_photo', data.result.photo);
                 }
