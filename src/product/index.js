@@ -60,7 +60,7 @@ function ProductIndex(props) {
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
             .map(function (key) {
-                return `search[${key}]=` + encodeURIComponent(object[key]);
+                return `search[${key}]=` + object[key];
             })
             .join("&");
     }
@@ -209,6 +209,7 @@ function ProductIndex(props) {
             queryParams = "&" + queryParams;
         }
 
+        // console.log("queryParams:", queryParams);
         //queryParams = encodeURIComponent(queryParams);
 
         setIsListLoading(true);
@@ -551,6 +552,26 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("name");
+                                                        }}
+                                                    >
+                                                        Name
+                                                        {sortField === "name" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "name" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("bar_code");
                                                         }}
                                                     >
@@ -564,25 +585,7 @@ function ProductIndex(props) {
                                                     </b>
                                                 </th>
 
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("name");
-                                                        }}
-                                                    >
-                                                        Name
-                                                        {sortField === "name" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "name" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -669,9 +672,20 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="item_code"
+                                                        id="part_number"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("item_code", e.target.value)
+                                                            searchByFieldValue("part_number", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="name"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("name", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -682,16 +696,6 @@ function ProductIndex(props) {
                                                         id="bar_code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("bar_code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="part_number"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("part_number", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -817,9 +821,10 @@ function ProductIndex(props) {
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
                                                         <td>{product.part_number}</td>
+                                                        <td>{product.name}</td>
                                                         <td>{product.bar_code}</td>
 
-                                                        <td>{product.name}</td>
+
                                                         <td>{product.rack}</td>
                                                         <td>
                                                             <ul>
