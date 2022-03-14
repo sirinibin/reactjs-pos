@@ -46,6 +46,7 @@ const OrderCreate = forwardRef((props, ref) => {
         },
     }));
 
+    /*
     useEffect(() => {
         const listener = event => {
             if (event.code === "Enter" || event.code === "NumpadEnter") {
@@ -67,6 +68,7 @@ const OrderCreate = forwardRef((props, ref) => {
             document.removeEventListener("keydown", listener);
         };
     }, []);
+    */
 
     const selectedDate = new Date();
 
@@ -959,7 +961,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     minLength={3}
                                     debounceTimeout={500}
                                     placeholder="Scan Barcode"
-                                    className="form-control"
+                                    className="form-control barcode"
                                     value={formData.barcode}
                                     onChange={event => getProductByBarCode(event.target.value)} />
                                 {errors.bar_code && (
