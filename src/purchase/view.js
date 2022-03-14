@@ -34,40 +34,6 @@ const PurchaseView = forwardRef((props, ref) => {
     let [totalQuantity, setTotalQuantity] = useState(0);
     let [vatPrice, setVatPrice] = useState(0.00);
 
-    function findTotalPrice() {
-        totalPrice = 0.00;
-        console.log("model.products:", model.products);
-        for (var i = 0; i < model.products.length; i++) {
-            totalPrice +=
-                parseFloat(model.products[i].purchase_unit_price) *
-                parseFloat(model.products[i].quantity);
-        }
-        totalPrice = totalPrice.toFixed(2);
-        console.log("totalPrice:", totalPrice);
-        setTotalPrice(totalPrice);
-    }
-
-    function findTotalQuantity() {
-        totalQuantity = 0;
-        for (var i = 0; i < model.products.length; i++) {
-            totalQuantity += parseFloat(model.products[i].quantity);
-        }
-        console.log("totalQuantity:", totalQuantity);
-        setTotalQuantity(totalQuantity);
-    }
-
-
-    function findVatPrice() {
-        vatPrice = ((parseFloat(model.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
-        console.log("vatPrice:", vatPrice);
-        setVatPrice(vatPrice);
-    }
-
-    function findNetTotal() {
-        netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(model.discount)).toFixed(2);
-        setNetTotal(netTotal);
-    }
-
     function getPurchase(id) {
         console.log("inside get Purchase");
         const requestOptions = {
@@ -98,11 +64,6 @@ const PurchaseView = forwardRef((props, ref) => {
                 model = data.result;
 
                 setModel({ ...model });
-
-                findTotalPrice();
-                findTotalQuantity();
-                findVatPrice();
-                findNetTotal();
             })
             .catch(error => {
                 // setErrors(error);
@@ -305,7 +266,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                 <th colSpan="5" className="text-end">Total</th>
                                 <td className="text-center">
                                     <NumberFormat
-                                        value={totalPrice}
+                                        value={model.total}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
@@ -349,65 +310,6 @@ const PurchaseView = forwardRef((props, ref) => {
                                     <td className="text-center">
                                         <NumberFormat
                                             value={model.retail_loss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                            </tr>
-                            <tr>
-                                <th colSpan="4" className="text-end">
-                                    VAT
-                                </th>
-                                <td className="text-center">{model.vat_percent + "%"}</td>
-                                <td className="text-center">
-                                    <NumberFormat
-                                        value={vatPrice}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <th colSpan="3" className="text-end">
-
-                                </th>
-                                {cookies.get('admin') === "true" ?
-                                    <td className="text-center">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    : ""}
-                                {cookies.get('admin') === "true" ?
-                                    <td className="text-center">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {cookies.get('admin') === "true" ?
-                                    <td className="text-center">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {cookies.get('admin') === "true" ?
-                                    <td className="text-center">
-                                        <NumberFormat
-                                            value={0}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
@@ -474,11 +376,71 @@ const PurchaseView = forwardRef((props, ref) => {
                                     </td> : ""}
                             </tr>
                             <tr>
+                                <th colSpan="4" className="text-end">
+                                    VAT
+                                </th>
+                                <td className="text-center">{model.vat_percent + "%"}</td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={model.vat_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <th colSpan="3" className="text-end">
+
+                                </th>
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">
+                                        <NumberFormat
+                                            value={0}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">
+                                        <NumberFormat
+                                            value={0}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">
+                                        <NumberFormat
+                                            value={0}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">
+                                        <NumberFormat
+                                            value={0}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                            </tr>
+
+                            <tr>
                                 <td colSpan="4"></td>
                                 <th className="text-end">Net Total</th>
                                 <th className="text-center">
                                     <NumberFormat
-                                        value={netTotal}
+                                        value={model.net_total}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}

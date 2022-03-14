@@ -479,7 +479,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     let [vatPrice, setVatPrice] = useState(0.00);
 
     function findVatPrice() {
-        vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
+        vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice - formData.discount)).toFixed(2);;
         console.log("vatPrice:", vatPrice);
         setVatPrice(vatPrice);
     }
@@ -490,7 +490,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     function findNetTotal() {
         if (totalPrice > 0) {
-            netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(formData.discount)).toFixed(2);
+            netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice)).toFixed(2);
             setNetTotal(netTotal);
         }
 
@@ -536,12 +536,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     function reCalculate() {
         findTotalPrice();
-        findVatPrice();
         if (formData.is_discount_percent) {
             findDiscount();
         } else {
             findDiscountPercent();
         }
+        findVatPrice();
         findNetTotal();
     }
 
@@ -780,14 +780,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             />
                                         </td>
                                     </tr>
+
                                     <tr>
-                                        <th colSpan="5" className="text-end">
-                                            VAT
+                                        <th colSpan="6" className="text-end">
+                                            Discount(  {formData.discount_percent + "%"})
                                         </th>
-                                        <td className="text-center">{formData.vat_percent + "%"}</td>
                                         <td className="text-center">
                                             <NumberFormat
-                                                value={vatPrice}
+                                                value={formData.discount}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" SAR"}
@@ -796,12 +796,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th colSpan="6" className="text-end">
-                                            Discount(  {formData.discount_percent + "%"})
+                                        <th colSpan="5" className="text-end">
+                                            VAT
                                         </th>
+                                        <td className="text-center">{formData.vat_percent + "%"}</td>
                                         <td className="text-center">
                                             <NumberFormat
-                                                value={formData.discount}
+                                                value={vatPrice}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" SAR"}

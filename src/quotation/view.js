@@ -29,40 +29,6 @@ const QuotationView = forwardRef((props, ref) => {
     let [totalQuantity, setTotalQuantity] = useState(0);
     let [vatPrice, setVatPrice] = useState(0.00);
 
-    function findTotalPrice() {
-        totalPrice = 0.00;
-        console.log("model.products:", model.products);
-        for (var i = 0; i < model.products.length; i++) {
-            totalPrice +=
-                parseFloat(model.products[i].unit_price) *
-                parseFloat(model.products[i].quantity);
-        }
-        totalPrice = totalPrice.toFixed(2);
-        console.log("totalPrice:", totalPrice);
-        setTotalPrice(totalPrice);
-    }
-
-    function findTotalQuantity() {
-        totalQuantity = 0;
-        for (var i = 0; i < model.products.length; i++) {
-            totalQuantity += parseFloat(model.products[i].quantity);
-        }
-        console.log("totalQuantity:", totalQuantity);
-        setTotalQuantity(totalQuantity);
-    }
-
-
-    function findVatPrice() {
-        vatPrice = ((parseFloat(model.vat_percent) / 100) * parseFloat(totalPrice)).toFixed(2);;
-        console.log("vatPrice:", vatPrice);
-        setVatPrice(vatPrice);
-    }
-
-    function findNetTotal() {
-        netTotal = (parseFloat(totalPrice) + parseFloat(vatPrice) - parseFloat(model.discount)).toFixed(2);
-        setNetTotal(netTotal);
-    }
-
     function getQuotation(id) {
         console.log("inside get Quotation");
         const requestOptions = {
@@ -94,11 +60,6 @@ const QuotationView = forwardRef((props, ref) => {
                 model = data.result;
 
                 setModel({ ...model });
-
-                findTotalPrice();
-                findTotalQuantity();
-                findVatPrice();
-                findNetTotal();
             })
             .catch(error => {
                 // setErrors(error);
@@ -273,7 +234,7 @@ const QuotationView = forwardRef((props, ref) => {
                                 <th className="text-end">Total</th>
                                 <td className="text-center">
                                     <NumberFormat
-                                        value={totalPrice}
+                                        value={model.total}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
@@ -300,24 +261,7 @@ const QuotationView = forwardRef((props, ref) => {
                                     />
                                 </td>
                             </tr>
-                            <tr>
-                                <th colSpan="4" className="text-end">
-                                    VAT
-                                </th>
-                                <td className="text-center">{model.vat_percent + "%"}</td>
-                                <td className="text-center">
-                                    <NumberFormat
-                                        value={vatPrice}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td colSpan="2"></td>
-                                <td className="text-center">0 SAR</td>
-                                <td className="text-center">0 SAR</td>
-                            </tr>
+
                             <tr>
                                 <th colSpan="5" className="text-end">
                                     Discount
@@ -352,11 +296,29 @@ const QuotationView = forwardRef((props, ref) => {
                                 </td>
                             </tr>
                             <tr>
+                                <th colSpan="4" className="text-end">
+                                    VAT
+                                </th>
+                                <td className="text-center">{model.vat_percent + "%"}</td>
+                                <td className="text-center">
+                                    <NumberFormat
+                                        value={model.vat_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td colSpan="2"></td>
+                                <td className="text-center">0 SAR</td>
+                                <td className="text-center">0 SAR</td>
+                            </tr>
+                            <tr>
                                 <td colSpan="4"></td>
                                 <th className="text-end">Net Total</th>
                                 <th className="text-center">
                                     <NumberFormat
-                                        value={netTotal}
+                                        value={model.net_total}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}

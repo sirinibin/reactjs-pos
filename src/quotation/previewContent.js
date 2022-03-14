@@ -262,6 +262,28 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     </th>
                                 </tr>
                                 <tr>
+                                    <th className="text-end" colSpan="5" style={{ padding: "0px" }}>
+                                        <ul
+                                            className="list-unstyled"
+                                            style={{
+                                                fontSize: "3mm", marginBottom: "0px"
+                                            }}
+                                        >
+                                            <li>خصم:</li>
+                                            <li>Discount:</li>
+                                        </ul>
+                                    </th>
+                                    <th className="text-center" colSpan="2">
+                                        <NumberFormat
+                                            value={props.model.discount}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </th>
+                                </tr>
+                                <tr>
                                     <th className="text-end" colSpan="4" style={{ padding: "0px" }}>
                                         <ul
                                             className="list-unstyled"
@@ -284,28 +306,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                         />
                                     </th>
                                 </tr>
-                                <tr>
-                                    <th className="text-end" colSpan="5" style={{ padding: "0px" }}>
-                                        <ul
-                                            className="list-unstyled"
-                                            style={{
-                                                fontSize: "3mm", marginBottom: "0px"
-                                            }}
-                                        >
-                                            <li>خصم:</li>
-                                            <li>Discount:</li>
-                                        </ul>
-                                    </th>
-                                    <th className="text-center" colSpan="2">
-                                        <NumberFormat
-                                            value={props.model.discount}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th>
-                                </tr>
+
                                 <tr>
                                     <th className="text-end" colSpan="5" style={{ padding: "0px" }}>
                                         <ul
