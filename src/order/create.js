@@ -1045,7 +1045,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-                        <div className="table-responsive" style={{ overflowX: "auto" }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", height: "500px", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
