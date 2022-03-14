@@ -651,9 +651,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
             formData.store_id,
             product.unit_prices
         );
-        product.retail_unit_price = unitPrice.retail_unit_price;
-        product.purchase_unit_price = unitPrice.purchase_unit_price;
-        product.wholesale_unit_price = unitPrice.wholesale_unit_price;
+        if (unitPrice && unitPrice.retail_unit_price) {
+            product.retail_unit_price = unitPrice.retail_unit_price;
+        }
+
+        if (unitPrice && unitPrice.purchase_unit_price) {
+            product.purchase_unit_price = unitPrice.purchase_unit_price;
+        }
+
+        if (unitPrice && unitPrice.wholesale_unit_price) {
+            product.wholesale_unit_price = unitPrice.wholesale_unit_price;
+        }
+
+
 
         let alreadyAdded = false;
         let index = -1;
