@@ -166,7 +166,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <tr key={product.item_code} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>{product.part_number}</td>
-                                    <td>{product.name}</td>
+                                    <td>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
                                     <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
                                     <td>
                                         <NumberFormat
