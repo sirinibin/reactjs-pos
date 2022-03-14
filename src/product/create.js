@@ -41,6 +41,29 @@ const ProductCreate = forwardRef((props, ref) => {
 
     }));
 
+    useEffect(() => {
+        const listener = event => {
+            if (event.code === "Enter" || event.code === "NumpadEnter") {
+                console.log("Enter key was pressed. Run your function.");
+                // event.preventDefault();
+
+                var form = event.target.form;
+                if (form && event.target) {
+                    var index = Array.prototype.indexOf.call(form, event.target);
+                    if (form && form.elements[index + 1]) {
+                        form.elements[index + 1].focus();
+                        event.preventDefault();
+                    }
+                }
+            }
+        };
+        document.addEventListener("keydown", listener);
+        return () => {
+            document.removeEventListener("keydown", listener);
+        };
+    }, []);
+
+
     function resizeFIle(file, w, h, cb) {
         Resizer.imageFileResizer(
             file,
@@ -563,15 +586,26 @@ const ProductCreate = forwardRef((props, ref) => {
                         {formData.id ? "Update Product #" + formData.name : "Create New Product"}
                     </Modal.Title>
 
+
+
+
+
                     <div className="col align-self-end text-end">
-                        {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewProductModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
+                        <Button variant="primary" onClick={handleCreate} >
+                            {isProcessing ?
+                                <Spinner
+                                    as="span"
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                    aria-hidden={true}
+                                /> + " Creating..."
+
+                                : ""
+                            }
+                            {formData.id ? "Update" : "Create"}
+
+                        </Button>
                         <button
                             type="button"
                             className="btn-close"
@@ -582,25 +616,6 @@ const ProductCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-
-                        <div className="col-md-12 align-self-end text-end">
-                            <Button variant="primary" type="submit" >
-                                {isProcessing ?
-                                    <Spinner
-                                        as="span"
-                                        animation="border"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden={true}
-                                    /> + " Creating..."
-
-                                    : ""
-                                }
-                                {formData.id ? "Update" : "Create"}
-
-                            </Button>
-                        </div>
-
                         <div className="col-md-6">
                             <label className="form-label">Name*</label>
 
@@ -800,7 +815,6 @@ const ProductCreate = forwardRef((props, ref) => {
                                     onInputChange={(searchTerm, e) => {
                                         suggestCategories(searchTerm);
                                     }}
-                                    multiple
                                 />
                                 <Button hide={true.toString()} onClick={openProductCategoryCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.category_id && (
@@ -1412,7 +1426,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
-                            <Button variant="primary" type="submit" >
+                            <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
                                     <Spinner
                                         as="span"

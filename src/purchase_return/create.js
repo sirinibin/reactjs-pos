@@ -64,6 +64,28 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }));
 
 
+    useEffect(() => {
+        const listener = event => {
+            if (event.code === "Enter" || event.code === "NumpadEnter") {
+                console.log("Enter key was pressed. Run your function.");
+                // event.preventDefault();
+
+                var form = event.target.form;
+                if (form && event.target) {
+                    var index = Array.prototype.indexOf.call(form, event.target);
+                    if (form && form.elements[index + 1]) {
+                        form.elements[index + 1].focus();
+                        event.preventDefault();
+                    }
+                }
+            }
+        };
+        document.addEventListener("keydown", listener);
+        return () => {
+            document.removeEventListener("keydown", listener);
+        };
+    }, []);
+
     const selectedDate = new Date();
 
     //const history = useHistory();
@@ -510,14 +532,21 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                     <div className="col align-self-end text-end">
                         <PurchaseReturnedPreview />
-                        {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewPurchaseReturnedModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
+                        <Button variant="primary" className="mb-3" onClick={handleCreate} >
+                            {isProcessing ?
+                                <Spinner
+                                    as="span"
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                    aria-hidden={true}
+                                /> + " Creating..."
+
+                                : ""
+                            }
+                            {formData.id ? "Update" : "Create"}
+
+                        </Button>
                         <button
                             type="button"
                             className="btn-close"
@@ -530,24 +559,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     {selectedProducts.length === 0 && "Already Returned All purchased products"}
 
                     {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-
-                        <div className="col-md-12 align-self-end text-end">
-                            <Button variant="primary" type="submit" >
-                                {isProcessing ?
-                                    <Spinner
-                                        as="span"
-                                        animation="border"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden={true}
-                                    /> + " Creating..."
-
-                                    : ""
-                                }
-                                {formData.id ? "Update" : "Create"}
-
-                            </Button>
-                        </div>
 
                         <h2>Select Products</h2>
                         {errors["product_id"] && (
@@ -1068,7 +1079,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
-                            <Button variant="primary" type="submit" >
+                            <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
                                     <Spinner
                                         as="span"

@@ -46,6 +46,28 @@ const OrderCreate = forwardRef((props, ref) => {
         },
     }));
 
+    useEffect(() => {
+        const listener = event => {
+            if (event.code === "Enter" || event.code === "NumpadEnter") {
+                console.log("Enter key was pressed. Run your function.");
+                // event.preventDefault();
+
+                var form = event.target.form;
+                if (form && event.target) {
+                    var index = Array.prototype.indexOf.call(form, event.target);
+                    if (form && form.elements[index + 1]) {
+                        form.elements[index + 1].focus();
+                        event.preventDefault();
+                    }
+                }
+            }
+        };
+        document.addEventListener("keydown", listener);
+        return () => {
+            document.removeEventListener("keydown", listener);
+        };
+    }, []);
+
     const selectedDate = new Date();
 
     //const history = useHistory();
@@ -774,14 +796,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             {formData.id ? "Update" : "Create"}
 
                         </Button>
-                        {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewOrderModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
+
                         <button
                             type="button"
                             className="btn-close"

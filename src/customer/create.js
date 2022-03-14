@@ -20,6 +20,29 @@ const CustomerCreate = forwardRef((props, ref) => {
 
     }));
 
+    useEffect(() => {
+        const listener = event => {
+            if (event.code === "Enter" || event.code === "NumpadEnter") {
+                console.log("Enter key was pressed. Run your function.");
+                // event.preventDefault();
+
+                var form = event.target.form;
+                if (form && event.target) {
+                    var index = Array.prototype.indexOf.call(form, event.target);
+                    if (form && form.elements[index + 1]) {
+                        form.elements[index + 1].focus();
+                        event.preventDefault();
+                    }
+                }
+            }
+        };
+        document.addEventListener("keydown", listener);
+        return () => {
+            document.removeEventListener("keydown", listener);
+        };
+    }, []);
+
+
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
     const cookies = new Cookies();
@@ -178,14 +201,21 @@ const CustomerCreate = forwardRef((props, ref) => {
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
-                        {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewCustomerModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
+                        <Button variant="primary" onClick={handleCreate} >
+                            {isProcessing ?
+                                <Spinner
+                                    as="span"
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                    aria-hidden={true}
+                                /> + " Creating..."
+
+                                : ""
+                            }
+                            {formData.id ? "Update" : "Create"}
+
+                        </Button>
                         <button
                             type="button"
                             className="btn-close"
@@ -432,7 +462,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
-                            <Button variant="primary" type="submit" >
+                            <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
