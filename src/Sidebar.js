@@ -151,7 +151,7 @@ function Sidebar(props) {
                     toggleActive(appState.tabs[11]);
                 }} className={toggleActiveStyles(appState.tabs[11])}>
                     <Link to="/dashboard/signatures" className="sidebar-link">
-                        <i className="bi bi-vector-pen" />
+                        <i className="bi bi-fingerprint" />
                         <span className="align-middle">Signatures</span>
                     </Link>
                 </li>

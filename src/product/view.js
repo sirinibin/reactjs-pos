@@ -202,6 +202,29 @@ const ProductView = forwardRef((props, ref) => {
                         handleClose();
                         props.openCreateForm();
                     }}>
+                        <i className="bi bi-clock-history"></i> Sales History
+                    </Button>
+                    &nbsp;&nbsp;
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openCreateForm();
+                    }}>
+                        <i className="bi bi-clock-history"></i> Purchase History
+                    </Button>
+                    &nbsp;&nbsp;
+
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openCreateForm();
+                    }}>
+                        <i className="bi bi-clock-history"></i> Quotation History
+                    </Button>
+                    &nbsp;&nbsp;
+
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openCreateForm();
+                    }}>
                         <i className="bi bi-plus"></i> Create
                     </Button>
                     &nbsp;&nbsp;
@@ -236,7 +259,7 @@ const ProductView = forwardRef((props, ref) => {
                             </td>
                             <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode} style={{
                                 cursor: "pointer",
-                            }} > {model.item_code ? <QRCode value={model.item_code} size={128} /> : ""}</div> </td>
+                            }} > {model.ean_12 ? <QRCode value={model.ean_12} size={128} /> : ""}</div> </td>
                         </tr>
                         <tr>
                             <th>Name:</th><td> {model.name}</td>

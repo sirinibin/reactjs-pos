@@ -358,7 +358,7 @@ function ProductIndex(props) {
 
     return (
         <>
-            <ProductCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <ProductCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
             <ProductJson ref={ProductJsonDialogRef} />
 
@@ -856,23 +856,40 @@ function ProductIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
+                                                            &nbsp;  &nbsp;
 
-                                                            {/*
-                                                        <button
-                                                            className="btn btn-outline-secondary dropdown-toggle"
-                                                            type="button"
-                                                            data-bs-toggle="dropdown"
-                                                            aria-expanded="false"
-                                                        ></button>
-                                                        <ul className="dropdown-menu">
-                                                            <li>
-                                                                <a href="/" className="dropdown-item">
-                                                                    <i className="bi bi-download"></i>
-                                                                    Download
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                       */}
+                                                            <button
+                                                                className="btn btn-outline-secondary dropdown-toggle"
+                                                                type="button"
+                                                                data-bs-toggle="dropdown"
+                                                                aria-expanded="false"
+                                                            ></button>
+                                                            <ul className="dropdown-menu">
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        // openSalesHistory(product.id);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Sales History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item">
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Purchase History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item">
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Quotation History
+                                                                    </button>
+                                                                </li>
+                                                            </ul>
+
                                                         </td>
                                                     </tr>
                                                 ))}

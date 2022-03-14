@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef } from "react";
 import ProductCreate from "./create.js";
 import ProductJson from "./json.js";
 import ProductView from "./view.js";
@@ -10,14 +10,24 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 
-function ProductIndex(props) {
+//function ProductIndex(props) {
+
+const SalesHistory = forwardRef((props, ref) => {
+
+    useImperativeHandle(ref, () => ({
+        open(id) {
+            console.log("OKkk")
+
+        },
+
+    }));
 
     const cookies = new Cookies();
 
     const selectedDate = new Date();
 
     //list
-    const [productList, setProductList] = useState([]);
+    const [historyList, setHistoryList] = useState([]);
 
     //pagination
     let [pageSize, setPageSize] = useState(5);
@@ -38,14 +48,6 @@ function ProductIndex(props) {
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
-    //Created By Product Auto Suggestion
-    const [productOptions, setProductOptions] = useState([]);
-    const [selectedCreatedByProducts, setSelectedCreatedByProducts] = useState([]);
-
-    //Created By Product Auto Suggestion
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [selectedProductCategories, setSelectedProductCategories] = useState([]);
-
 
     useEffect(() => {
         list();
@@ -63,75 +65,6 @@ function ProductIndex(props) {
                 return `search[${key}]=` + object[key];
             })
             .join("&");
-    }
-
-    async function suggestCategories(searchTerm) {
-        console.log("Inside handle suggest Categories");
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(
-            "/v1/product-category?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setCategoryOptions(data.result);
-    }
-
-
-    async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggest Users");
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(
-            "/v1/user?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setProductOptions(data.result);
     }
 
     function searchByFieldValue(field, value) {
@@ -201,8 +134,11 @@ function ProductIndex(props) {
                 Authorization: cookies.get("access_token"),
             },
         };
+        let Select = "";
+        /*
         let Select =
-            "select=id,item_code,ean_12,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,unit_prices";
+            "select=id,store_id,store_name,customer_id,customer_name,order_id,order_code,quantity,";
+            */
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -240,7 +176,7 @@ function ProductIndex(props) {
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
-                setProductList(data.result);
+                setHistoryList(data.result);
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
@@ -276,123 +212,17 @@ function ProductIndex(props) {
         list();
     }
 
-    function openUpdateForm(id) {
-        CreateFormRef.current.open(id);
-    }
-
-    const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
-    }
-
-    const CreateFormRef = useRef();
-    function openCreateForm() {
-        CreateFormRef.current.open();
-    }
-
-
-    const ProductJsonDialogRef = useRef();
-    function openJsonDialog() {
-        let jsonContent = getProductsJson();
-        ProductJsonDialogRef.current.open(jsonContent);
-    }
-
-
-    function getProductsJson() {
-        let jsonContent = [];
-        for (let i = 0; i < productList.length; i++) {
-
-            let price = getProductPrice(productList[i]);
-
-            jsonContent.push({
-                storename: cookies.get("store_name"),
-                productname: productList[i].name,
-                ean_12: productList[i].ean_12,
-                rack: productList[i].rack,
-                price: price.retail_unit_price,
-                purchase_unit_price_secret: price.purchase_unit_price_secret,
-            });
-        }
-        console.log("jsonContent:", jsonContent);
-        return jsonContent;
-    }
-
-    function getProductPrice(product) {
-        let store_id = cookies.get("store_id");
-        let vat_percent = 0.15;
-        if (cookies.get("vat_percent")) {
-            vat_percent = parseFloat(cookies.get("vat_percent") / 100).toFixed(2);
-        }
-
-        if (!store_id || !product.unit_prices) {
-            return {
-                retail_unit_price: "0.00",
-                purchase_unit_price_secret: "",
-            };
-        }
-
-        for (let i = 0; i < product.unit_prices.length; i++) {
-            if (product.unit_prices[i].store_id === store_id) {
-                // product.unit_prices[i].retail_unit_price = product.unit_prices[i].retail_unit_price; /* $2,500.00 */
-                let res = {
-                    retail_unit_price: "0.00",
-                    purchase_unit_price_secret: "",
-                };
-
-                if (product.unit_prices[i].retail_unit_price) {
-                    res.retail_unit_price = parseFloat(product.unit_prices[i].retail_unit_price + parseFloat(product.unit_prices[i].retail_unit_price * vat_percent)).toFixed(2);
-                }
-
-                if (product.unit_prices[i].purchase_unit_price_secret) {
-                    res.purchase_unit_price_secret = product.unit_prices[i].purchase_unit_price_secret;
-                }
-                return res;
-            }
-        }
-        return {
-            retail_unit_price: "0.00",
-            purchase_unit_price_secret: "",
-        };
-    }
-
     return (
         <>
-            <ProductCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <ProductView ref={DetailsViewRef} />
-            <ProductJson ref={ProductJsonDialogRef} />
-
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Products</h1>
-                    </div>
-
-
-
-                    <div className="col text-end">
-                        <Button
-                            hide={true.toString()}
-                            variant="primary"
-                            className="btn btn-primary mb-3"
-                            onClick={openCreateForm}
-                        >
-                            <i className="bi bi-plus-lg"></i> Create
-                        </Button>
+                        <h1 className="h3">Sales History</h1>
                     </div>
                 </div>
 
                 <div className="row">
-
-
                     <div className="col text-end">
-                        <Button
-                            hide={true.toString()}
-                            variant="primary"
-                            className="btn btn-primary mb-3"
-                            onClick={openJsonDialog}
-                        >
-                            Get JSON for Bar Tender
-                        </Button>
                     </div>
                 </div>
 
@@ -409,12 +239,12 @@ function ProductIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Product Categories to display</p>
+                                            <p className="text-start">No Sales History to display</p>
                                         </div>
                                     )}
                                 </div>
                                 <div className="row" style={{ bproduct: "solid 0px" }}>
-                                    <div className="col text-start" style={{ bproduct: "solid 0px" }}>
+                                    <div className="col text-start" style={{ border: "solid 0px" }}>
                                         <Button
                                             onClick={() => {
                                                 setIsRefreshInProcess(true);
@@ -534,125 +364,6 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("part_number");
-                                                        }}
-                                                    >
-                                                        Part Number
-                                                        {sortField === "part_number" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "part_number" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("name");
-                                                        }}
-                                                    >
-                                                        Name
-                                                        {sortField === "name" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "name" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("ean_12");
-                                                        }}
-                                                    >
-                                                        Bar Code
-                                                        {sortField === "ean_12" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "ean_12" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("rack");
-                                                        }}
-                                                    >
-                                                        Rack
-                                                        {sortField === "rack" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "rack" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("category_name");
-                                                        }}
-                                                    >
-                                                        Categories
-                                                        {sortField === "category_name" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "category_name" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_by_name");
-                                                        }}
-                                                    >
-                                                        Created By
-                                                        {sortField === "created_by_name" && sortProduct === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "created_by_name" && sortProduct === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
                                                             sort("created_at");
                                                         }}
                                                     >
@@ -665,103 +376,157 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("unit_price");
+                                                        }}
+                                                    >
+                                                        Unit Price
+                                                        {sortField === "unit_price" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "unit_price" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("quantity");
+                                                        }}
+                                                    >
+                                                        Quantity
+                                                        {sortField === "quantity" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "quantity" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("price");
+                                                        }}
+                                                    >
+                                                        Price
+                                                        {sortField === "price" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "price" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("net_price");
+                                                        }}
+                                                    >
+                                                        Net Price
+                                                        {sortField === "net_price" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "net_price" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("customer_name");
+                                                        }}
+                                                    >
+                                                        Customer
+                                                        {sortField === "customer_name" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "customer_name" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+
+
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("profit");
+                                                        }}
+                                                    >
+                                                        Profit
+                                                        {sortField === "profit" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "profit" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+
+
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("loss");
+                                                        }}
+                                                    >
+                                                        Loss
+                                                        {sortField === "loss" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "loss" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+
+
+                                                </th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
 
                                         <thead>
                                             <tr className="text-center">
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="part_number"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("part_number", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="name"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("name", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="ean_12"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("ean_12", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="name"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("name", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="rack"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("rack", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="category_id"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "category_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={categoryOptions}
-                                                        placeholder="Select Categories"
-                                                        selected={selectedProductCategories}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestCategories(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="created_by"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "created_by",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={productOptions}
-                                                        placeholder="Select Users"
-                                                        selected={selectedCreatedByProducts}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestUsers(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
                                                 <th>
                                                     <DatePicker
                                                         id="created_at"
@@ -814,14 +579,91 @@ function ProductIndex(props) {
                                                         </span>
                                                     ) : null}
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="unit_price"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("unit_price", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="quantity"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("quantity", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="price"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("price", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="net_price"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("net_price", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="customer_name"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("customer_name", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="profit"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="loss"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("loss", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 <th></th>
                                             </tr>
                                         </thead>
 
                                         <tbody className="text-center">
-                                            {productList &&
-                                                productList.map((product) => (
-                                                    <tr key={product.id}>
+                                            {historyList &&
+                                                historyList.map((history) => (
+                                                    <tr key={history.id}>
+                                                        <td>
+                                                            {format(
+                                                                new Date(history.created_at),
+                                                                "MMM dd yyyy h:mma"
+                                                            )}
+                                                        </td>
                                                         <td>{product.part_number}</td>
                                                         <td>{product.name + " / " + product.name_in_arabic}</td>
                                                         <td>{product.ean_12}</td>
@@ -837,12 +679,7 @@ function ProductIndex(props) {
                                                             </ul>
                                                         </td>
                                                         <td>{product.created_by_name}</td>
-                                                        <td>
-                                                            {format(
-                                                                new Date(product.created_at),
-                                                                "MMM dd yyyy h:mma"
-                                                            )}
-                                                        </td>
+
                                                         <td>
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(product.id);
@@ -904,8 +741,10 @@ function ProductIndex(props) {
                     </div>
                 </div>
             </div>
-        </>
-    );
-}
+        </>);
 
-export default ProductIndex;
+
+});
+
+export default SalesHistory;
+
