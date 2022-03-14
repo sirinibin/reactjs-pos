@@ -848,8 +848,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
     return (
         <>
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
-            <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
+
+            <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
+
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />

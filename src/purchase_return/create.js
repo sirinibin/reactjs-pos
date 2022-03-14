@@ -481,6 +481,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     const StoreCreateFormRef = useRef();
 
     const ProductCreateFormRef = useRef();
+    function openProductCreateForm() {
+        ProductCreateFormRef.current.open();
+    }
+
+    function openProductUpdateForm(id) {
+        ProductCreateFormRef.current.open(id);
+    }
 
     const VendorCreateFormRef = useRef();
 
@@ -508,10 +515,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <ProductView ref={ProductDetailsViewRef} />
+            <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
+            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
+
+
+
             <PurchaseReturnedView ref={DetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
-            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />

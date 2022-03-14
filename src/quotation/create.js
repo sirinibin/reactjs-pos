@@ -843,6 +843,9 @@ const QuotationCreate = forwardRef((props, ref) => {
     ProductCreateFormRef.current.open();
   }
 
+  function openProductUpdateForm(id) {
+    ProductCreateFormRef.current.open(id);
+  }
 
   const UserCreateFormRef = useRef();
   function openUserCreateForm() {
@@ -876,11 +879,13 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   return (
     <>
+      <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
+      <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
+
       <QuotationPreview ref={PreviewRef} />
-      <ProductView ref={ProductDetailsViewRef} />
+
       <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
       <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
-      <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
       <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
@@ -1108,7 +1113,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 <thead>
                   <tr className="text-center">
                     <th>SI No.</th>
-                    <th>CODE</th>
+                    <th>Part No.</th>
                     <th>Name</th>
                     <th>Qty</th>
                     <th>Purchase Unit Price</th>
@@ -1121,7 +1126,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   {selectedProducts.map((product, index) => (
                     <tr key={index} className="text-center">
                       <td>{index + 1}</td>
-                      <td>{product.code}</td>
+                      <td>{product.part_number}</td>
                       <td style={{
                         textDecoration: "underline",
                         color: "blue",
