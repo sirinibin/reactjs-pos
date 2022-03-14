@@ -397,7 +397,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
+        let Select = "select=id,item_code,bar_code,name,unit_prices,stock,unit,part_number,name_in_arabic";
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString,
@@ -646,22 +646,26 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
+        let unitPrice = {};
 
-        let unitPrice = GetProductUnitPriceInStore(
-            formData.store_id,
-            product.unit_prices
-        );
-        if (unitPrice && unitPrice.retail_unit_price) {
-            product.retail_unit_price = unitPrice.retail_unit_price;
+        if (product.unit_prices) {
+            unitPrice = GetProductUnitPriceInStore(
+                formData.store_id,
+                product.unit_prices
+            );
+            if (unitPrice && unitPrice.retail_unit_price) {
+                product.retail_unit_price = unitPrice.retail_unit_price;
+            }
+
+            if (unitPrice && unitPrice.purchase_unit_price) {
+                product.purchase_unit_price = unitPrice.purchase_unit_price;
+            }
+
+            if (unitPrice && unitPrice.wholesale_unit_price) {
+                product.wholesale_unit_price = unitPrice.wholesale_unit_price;
+            }
         }
 
-        if (unitPrice && unitPrice.purchase_unit_price) {
-            product.purchase_unit_price = unitPrice.purchase_unit_price;
-        }
-
-        if (unitPrice && unitPrice.wholesale_unit_price) {
-            product.wholesale_unit_price = unitPrice.wholesale_unit_price;
-        }
 
 
 
