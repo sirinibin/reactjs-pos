@@ -31,6 +31,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 item_code: "",
             };
             setFormData({ formData });
+            clearUnitPrice();
 
             if (id) {
                 getProduct(id);
@@ -536,6 +537,10 @@ const ProductCreate = forwardRef((props, ref) => {
 
         setSelectedUnitPrices([...selectedUnitPrices]);
 
+        clearUnitPrice();
+    }
+
+    function clearUnitPrice() {
         selectedUnitPrice[0].id = "";
         selectedUnitPrice[0].name = "";
         selectedUnitPrice[0].purchase_unit_price = "";
