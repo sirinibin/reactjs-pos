@@ -318,6 +318,10 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
+        if (formData.barcode.length === 13) {
+            formData.barcode = formData.barcode.slice(0, -1);
+        }
+
         const requestOptions = {
             method: "GET",
             headers: {
@@ -1045,7 +1049,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-                        <div className="table-responsive" style={{ overflowX: "auto", height: "500px", overflowY: "scroll" }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", height: "300px", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
@@ -1197,6 +1201,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                     )).reverse()}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div>
+                            <table className="table table-striped table-sm table-bordered">
+                                <tbody>
                                     <tr>
                                         <td colSpan="4"></td>
 
@@ -1716,7 +1726,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     </form>
                 </Modal.Body>
 
-            </Modal>
+            </Modal >
 
 
         </>

@@ -433,6 +433,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
             return;
         }
 
+        if (formData.barcode.length === 13) {
+            formData.barcode = formData.barcode.slice(0, -1);
+        }
+
         const requestOptions = {
             method: "GET",
             headers: {
