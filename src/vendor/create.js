@@ -10,13 +10,13 @@ const VendorCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
-            /*
+
             formData = {
                 national_address: {},
                 vat_percent: 15.00,
             };
-            setFormData({ national_address: {}, vat_percent: 15.00, });
-            */
+            setFormData({ ...formData });
+
             if (id) {
                 getVendor(id);
             }
