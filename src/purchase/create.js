@@ -857,6 +857,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                     <div className="col align-self-end text-end">
                         <PurchasePreview />
+                        {formData.id ? <Button variant="primary" onClick={() => {
+                            handleClose();
+                            props.openDetailsView(formData.id);
+                        }}>
+                            <i className="bi bi-eye"></i> View Detail
+                        </Button> : ""}
+                        &nbsp;&nbsp;
                         <Button variant="primary" onClick={handleCreate} >
                             {isProcessing ?
                                 <Spinner

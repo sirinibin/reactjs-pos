@@ -358,7 +358,7 @@ function ProductIndex(props) {
 
     return (
         <>
-            <ProductCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <ProductCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <ProductView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
             <ProductJson ref={ProductJsonDialogRef} />
 

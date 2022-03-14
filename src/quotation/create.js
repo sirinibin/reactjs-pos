@@ -891,24 +891,22 @@ const QuotationCreate = forwardRef((props, ref) => {
 
 
           <div className="col align-self-end text-end">
-            <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
+            <Button variant="primary" onClick={openPreview}>
               <i className="bi bi-display"></i> Preview
             </Button>
-
-
-
-            {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewQuotationModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
-
-          </div>
-          <div className="col align-self-end text-end">
-            <Button variant="primary" className="mb-3" onClick={handleCreate} >
+            &nbsp;&nbsp;
+            <Button variant="primary" onClick={openPreview}>
+              <i className="bi bi-display"></i> Preview
+            </Button>
+            &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
+            {formData.id ? <Button variant="primary" onClick={() => {
+              handleClose();
+              props.openDetailsView(formData.id);
+            }}>
+              <i className="bi bi-eye"></i> View Detail
+            </Button> : ""}
+            &nbsp;&nbsp;
+            <Button variant="primary" onClick={handleCreate} >
               {isProcessing ?
                 <Spinner
                   as="span"
