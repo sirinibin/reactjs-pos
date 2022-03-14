@@ -168,7 +168,7 @@ const UserCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
                 handleClose();
-                openDetailsView(data.result.id);
+                props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -180,14 +180,9 @@ const UserCreate = forwardRef((props, ref) => {
             });
     }
 
-    const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        console.log("id:", id);
-        DetailsViewRef.current.open(id);
-    }
+
     return (
         <>
-            <UserView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
@@ -195,14 +190,21 @@ const UserCreate = forwardRef((props, ref) => {
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
-                        {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewUserModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
+                        <Button variant="primary" onClick={handleCreate} >
+                            {isProcessing ?
+                                <Spinner
+                                    as="span"
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                    aria-hidden={true}
+                                /> + " Creating..."
+
+                                : ""
+                            }
+                            {formData.id ? "Update" : "Create"}
+
+                        </Button>
                         <button
                             type="button"
                             className="btn-close"

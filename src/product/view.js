@@ -7,6 +7,9 @@ import QRCode from "react-qr-code";
 import html2canvas from 'html2canvas';
 //let ThermalPrinterEncoder = require('thermal-printer-encoder');
 import ThermalPrinterEncoder from 'thermal-printer-encoder';
+import ProductCreate from "./create.js";
+
+import { Button } from "react-bootstrap";
 const ProductView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
@@ -188,21 +191,27 @@ const ProductView = forwardRef((props, ref) => {
 
     }
 
-
     return (<>
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Product #{model.name} </Modal.Title>
 
                 <div className="col align-self-end text-end">
-                    {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewProductModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
+
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openCreateForm();
+                    }}>
+                        <i className="bi bi-plus"></i> Create
+                    </Button>
+                    &nbsp;&nbsp;
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openUpdateForm(model.id);
+                    }}>
+                        <i className="bi bi-pencil"></i> Edit
+                    </Button>
+
                     <button
                         type="button"
                         className="btn-close"

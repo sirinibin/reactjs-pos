@@ -176,7 +176,7 @@ const SignatureCreate = forwardRef((props, ref) => {
                 }
 
                 handleClose();
-                openDetailsView(data.result.id);
+                props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -186,12 +186,6 @@ const SignatureCreate = forwardRef((props, ref) => {
                 console.error("There was an error!", error);
                 props.showToastMessage("Error Creating Signature!", "danger");
             });
-    }
-
-    const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        console.log("id:", id);
-        DetailsViewRef.current.open(id);
     }
 
     function getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight) {
@@ -207,7 +201,6 @@ const SignatureCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <SignatureView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>

@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
+import { Button } from "react-bootstrap";
 
 const SignatureView = forwardRef((props, ref) => {
 
@@ -66,14 +67,19 @@ const SignatureView = forwardRef((props, ref) => {
                 <Modal.Title>Details of Signature #{model.name} </Modal.Title>
 
                 <div className="col align-self-end text-end">
-                    {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewSignatureModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openCreateForm();
+                    }}>
+                        <i className="bi bi-plus"></i> Create
+                    </Button>
+                    &nbsp;&nbsp;
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openUpdateForm(model.id);
+                    }}>
+                        <i className="bi bi-pencil"></i> Edit
+                    </Button>
                     <button
                         type="button"
                         className="btn-close"

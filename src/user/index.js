@@ -249,8 +249,8 @@ function UserIndex(props) {
 
     return (
         <>
-            <UserCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <UserView ref={DetailsViewRef} />
+            <UserCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <UserView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
                 <div className="row">

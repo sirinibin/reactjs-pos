@@ -353,8 +353,8 @@ function QuotationIndex(props) {
 
   return (
     <>
-      <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-      <QuotationView ref={DetailsViewRef} />
+      <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+      <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
       <div className="container-fluid p-0">
         <div className="row">
 

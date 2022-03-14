@@ -248,8 +248,8 @@ function ProductCategoryIndex(props) {
 
     return (
         <>
-            <ProductCategoryCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <ProductCategoryView ref={DetailsViewRef} />
+            <ProductCategoryCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <ProductCategoryView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
                 <div className="row">

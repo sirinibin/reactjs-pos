@@ -248,8 +248,8 @@ function VendorIndex(props) {
 
     return (
         <>
-            <VendorCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <VendorView ref={DetailsViewRef} />
+            <VendorCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <VendorView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
 
             <div className="container-fluid p-0">

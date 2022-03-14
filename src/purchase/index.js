@@ -355,8 +355,8 @@ function PurchaseIndex(props) {
 
     return (
         <>
-            <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <PurchaseView ref={DetailsViewRef} />
+            <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
             <PurchaseReturnCreate ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />
 
             <div className="container-fluid p-0">

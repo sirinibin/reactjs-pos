@@ -610,7 +610,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
                 handleClose();
-                openDetailsView(data.result.id);
+                props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -809,11 +809,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
         findNetTotal();
     }
 
-    const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
-    }
-
 
     const StoreCreateFormRef = useRef();
     function openStoreCreateForm() {
@@ -849,7 +844,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
     return (
         <>
             <ProductView ref={ProductDetailsViewRef} />
-            <PurchaseView ref={DetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />

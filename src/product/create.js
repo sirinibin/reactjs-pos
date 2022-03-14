@@ -340,7 +340,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 }
 
                 handleClose();
-                openDetailsView(data.result.id);
+                props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -556,11 +556,13 @@ const ProductCreate = forwardRef((props, ref) => {
         return { targetWidth: targetWidth, targetHeight: targetHeight };
     }
 
+    /*
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
         console.log("id:", id);
         DetailsViewRef.current.open(id);
     }
+    */
 
     const StoreCreateFormRef = useRef();
     function openStoreCreateForm() {
@@ -577,7 +579,9 @@ const ProductCreate = forwardRef((props, ref) => {
         <>
 
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
+            {/*
             <ProductView ref={DetailsViewRef} />
+            */}
             <ProductCategoryCreate ref={ProductCategoryCreateFormRef} showToastMessage={props.showToastMessage} />
 
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>

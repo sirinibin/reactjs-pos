@@ -189,7 +189,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
                 handleClose();
-                openDetailsView(data.result.id);
+                props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -240,14 +240,9 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
     }
 
 
-    const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        console.log("id:", id);
-        DetailsViewRef.current.open(id);
-    }
+
     return (
         <>
-            <ProductCategoryView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>

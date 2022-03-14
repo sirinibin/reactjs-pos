@@ -248,8 +248,8 @@ function SignatureIndex(props) {
 
     return (
         <>
-            <SignatureCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <SignatureView ref={DetailsViewRef} />
+            <SignatureCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <SignatureView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
                 <div className="row">

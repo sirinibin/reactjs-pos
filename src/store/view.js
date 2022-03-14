@@ -1,5 +1,5 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Table } from 'react-bootstrap';
+import { Modal, Table, Button } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 
 const StoreView = forwardRef((props, ref) => {
@@ -66,14 +66,19 @@ const StoreView = forwardRef((props, ref) => {
                 <Modal.Title>Details of Store #{model.name} </Modal.Title>
 
                 <div className="col align-self-end text-end">
-                    {/*
-                        <button
-                            className="btn btn-primary mb-3"
-                            data-bs-toggle="modal"
-                            data-bs-target="#previewStoreModal"
-                        >
-                            <i className="bi bi-display"></i> Preview
-                        </button> */}
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openCreateForm();
+                    }}>
+                        <i className="bi bi-plus"></i> Create
+                    </Button>
+                    &nbsp;&nbsp;
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openUpdateForm(model.id);
+                    }}>
+                        <i className="bi bi-pencil"></i> Edit
+                    </Button>
                     <button
                         type="button"
                         className="btn-close"

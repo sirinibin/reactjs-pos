@@ -129,17 +129,28 @@ const QuotationView = forwardRef((props, ref) => {
                 <Modal.Title>Details of Sales Quotation #{model.code}</Modal.Title>
 
                 <div className="col align-self-end text-end">
-                    <Button variant="primary" className="btn btn-primary mb-3" onClick={openPrint}>
+                    <Button variant="primary" onClick={openPrint}>
                         <i className="bi bi-printer"></i> Print
                     </Button>
-
-
-                </div>
-
-                <div className="col align-self-end text-end">
-                    <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
+                    &nbsp;  &nbsp;
+                    <Button variant="primary" onClick={openPreview}>
                         <i className="bi bi-display"></i> E-Invoice
                     </Button>
+                    &nbsp;  &nbsp;&nbsp; &nbsp;&nbsp;
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openCreateForm();
+                    }}>
+                        <i className="bi bi-plus"></i> Create
+                    </Button>
+                    &nbsp;&nbsp;
+                    <Button variant="primary" onClick={() => {
+                        handleClose();
+                        props.openUpdateForm(model.id);
+                    }}>
+                        <i className="bi bi-pencil"></i> Edit
+                    </Button>
+
                     <button
                         type="button"
                         className="btn-close"

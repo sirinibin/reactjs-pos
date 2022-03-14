@@ -262,8 +262,8 @@ function StoreIndex(props) {
 
     return (
         <>
-            <StoreCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <StoreView ref={DetailsViewRef} />
+            <StoreCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <StoreView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
                 <div className="row">

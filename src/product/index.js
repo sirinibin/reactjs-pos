@@ -276,6 +276,7 @@ function ProductIndex(props) {
         list();
     }
 
+    const CreateFormRef = useRef();
     function openUpdateForm(id) {
         CreateFormRef.current.open(id);
     }
@@ -285,7 +286,7 @@ function ProductIndex(props) {
         DetailsViewRef.current.open(id);
     }
 
-    const CreateFormRef = useRef();
+
     function openCreateForm() {
         CreateFormRef.current.open();
     }
@@ -357,8 +358,8 @@ function ProductIndex(props) {
 
     return (
         <>
-            <ProductCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <ProductView ref={DetailsViewRef} />
+            <ProductCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <ProductView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
             <ProductJson ref={ProductJsonDialogRef} />
 
             <div className="container-fluid p-0">

@@ -228,7 +228,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 }
 
                 handleClose();
-                openDetailsView(data.result.id);
+                props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -262,14 +262,8 @@ const StoreCreate = forwardRef((props, ref) => {
         });
     }
 
-    const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        console.log("id:", id);
-        DetailsViewRef.current.open(id);
-    }
     return (
         <>
-            <StoreView ref={DetailsViewRef} />
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>

@@ -631,7 +631,7 @@ const QuotationCreate = forwardRef((props, ref) => {
           props.refreshList();
         }
         handleClose();
-        openDetailsView(data.result.id);
+        props.openDetailsView(data.result.id);
       })
       .catch((error) => {
         setProcessing(false);
@@ -827,12 +827,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     findNetTotal();
   }
 
-
-  const DetailsViewRef = useRef();
-  function openDetailsView(id) {
-    DetailsViewRef.current.open(id);
-  }
-
   const StoreCreateFormRef = useRef();
   function openStoreCreateForm() {
     StoreCreateFormRef.current.open();
@@ -883,7 +877,6 @@ const QuotationCreate = forwardRef((props, ref) => {
   return (
     <>
       <QuotationPreview ref={PreviewRef} />
-      <QuotationView ref={DetailsViewRef} />
       <ProductView ref={ProductDetailsViewRef} />
       <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
       <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
