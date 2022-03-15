@@ -31,7 +31,11 @@ const SignatureCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        form.elements[index + 1].focus();
+                        if (event.target.getAttribute("class").includes("barcode")) {
+                            form.elements[index].focus();
+                        } else {
+                            form.elements[index + 1].focus();
+                        }
                         event.preventDefault();
                     }
                 }

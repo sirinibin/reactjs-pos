@@ -46,18 +46,24 @@ const OrderCreate = forwardRef((props, ref) => {
         },
     }));
 
-    /*
+
     useEffect(() => {
         const listener = event => {
             if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function.");
+                console.log("Enter key was pressed. Run your function-order.123");
                 // event.preventDefault();
+
+
 
                 var form = event.target.form;
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        form.elements[index + 1].focus();
+                        if (event.target.getAttribute("class").includes("barcode")) {
+                            form.elements[index].focus();
+                        } else {
+                            form.elements[index + 1].focus();
+                        }
                         event.preventDefault();
                     }
                 }
@@ -68,7 +74,7 @@ const OrderCreate = forwardRef((props, ref) => {
             document.removeEventListener("keydown", listener);
         };
     }, []);
-    */
+
 
     const selectedDate = new Date();
 
@@ -1051,7 +1057,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-                        <div className="table-responsive" style={{ overflowX: "auto", height: "300px", overflowY: "scroll" }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", height: "400px", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">

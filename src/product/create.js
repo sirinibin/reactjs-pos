@@ -45,14 +45,18 @@ const ProductCreate = forwardRef((props, ref) => {
     useEffect(() => {
         const listener = event => {
             if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function.");
+                console.log("Enter key was pressed. Run your function-product.");
                 // event.preventDefault();
 
                 var form = event.target.form;
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        form.elements[index + 1].focus();
+                        if (event.target.getAttribute("class").includes("barcode")) {
+                            form.elements[index].focus();
+                        } else {
+                            form.elements[index + 1].focus();
+                        }
                         event.preventDefault();
                     }
                 }

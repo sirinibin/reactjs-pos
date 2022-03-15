@@ -64,7 +64,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        form.elements[index + 1].focus();
+                        if (event.target.getAttribute("class").includes("barcode")) {
+                            form.elements[index].focus();
+                        } else {
+                            form.elements[index + 1].focus();
+                        }
                         event.preventDefault();
                     }
                 }
@@ -628,7 +632,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 {errors["product_id"]}
                             </div>
                         )}
-                        <div className="table-responsive" style={{ overflowX: "auto", height: "500px", overflowY: "scroll" }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", height: "400px", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
@@ -764,6 +768,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                     ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="table-responsive" style={{ overflowX: "auto" }}>
+                            <table className="table table-striped table-sm table-bordered">
+                                <tbody>
                                     <tr>
                                         <td colSpan="4"></td>
                                         <td className="text-center">

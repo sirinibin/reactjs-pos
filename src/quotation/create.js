@@ -83,7 +83,11 @@ const QuotationCreate = forwardRef((props, ref) => {
         if (form && event.target) {
           var index = Array.prototype.indexOf.call(form, event.target);
           if (form && form.elements[index + 1]) {
-            form.elements[index + 1].focus();
+            if (event.target.getAttribute("class").includes("barcode")) {
+              form.elements[index].focus();
+            } else {
+              form.elements[index + 1].focus();
+            }
             event.preventDefault();
           }
         }
@@ -1108,7 +1112,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 )}
             </div>
 
-            <div className="table-responsive" style={{ overflowX: "auto", height: "500px", overflowY: "scroll" }}>
+            <div className="table-responsive" style={{ overflowX: "auto", height: "400px", overflowY: "scroll" }}>
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
@@ -1176,13 +1180,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                         ) : null}
                       </td>
                       <td style={{ width: "100px" }}>
-                        <NumberFormat
+                        {product.purchase_unit_price ? <NumberFormat
                           value={(product.purchase_unit_price).toFixed(2)}
                           displayType={"text"}
                           thousandSeparator={true}
                           suffix={" SAR"}
                           renderText={(value, props) => value}
-                        />
+                        /> : ""}
                       </td>
                       <td style={{ width: "150px" }}>
 
@@ -1249,6 +1253,12 @@ const QuotationCreate = forwardRef((props, ref) => {
                       </td>
                     </tr>
                   )).reverse()}
+                </tbody>
+              </table>
+            </div>
+            <div className="table-responsive" style={{ overflowX: "auto" }}>
+              <table className="table table-striped table-sm table-bordered">
+                <tbody>
                   <tr>
                     <td colSpan="4"></td>
                     <th className="text-end">Total</th>

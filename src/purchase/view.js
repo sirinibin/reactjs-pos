@@ -468,8 +468,9 @@ const PurchaseView = forwardRef((props, ref) => {
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
+                                            renderText={(value, props) => value}
                                         />
-                                        renderText={(value, props) => value}
+
                                     </th> : ""}
                                 {cookies.get('admin') === "true" ?
                                     <th className="text-center">
