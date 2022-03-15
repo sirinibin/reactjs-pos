@@ -1143,7 +1143,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                       </td>
                       <td style={{ width: "155px" }}>
 
-                        <div class="input-group mb-3">
+                        <div className="input-group mb-3">
                           <input type="number" value={product.quantity} className="form-control"
 
                             placeholder="Quantity" onChange={(e) => {
@@ -1176,7 +1176,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                               reCalculate();
 
                             }} />
-                          <span class="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
+                          <span className="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
                         </div>
                         {errors["quantity_" + index] && (
                           <div style={{ color: "red" }}>
@@ -1197,7 +1197,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                       </td>
                       <td style={{ width: "180px" }}>
 
-                        <div class="input-group mb-3">
+                        <div className="input-group mb-3">
                           <input type="number" value={product.unit_price} className="form-control"
 
                             placeholder="Unit Price" onChange={(e) => {
@@ -1227,7 +1227,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                               reCalculate();
 
                             }} />
-                          <span class="input-group-text" id="basic-addon2">SAR</span>
+                          <span className="input-group-text" id="basic-addon2">SAR</span>
                         </div>
                         {errors["unit_price_" + index] && (
                           <div style={{ color: "red" }}>

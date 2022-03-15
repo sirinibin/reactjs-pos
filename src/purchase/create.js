@@ -1159,7 +1159,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td style={{ width: "155px" }}>
 
-                                                <div class="input-group mb-3">
+                                                <div className="input-group mb-3">
                                                     <input type="number" value={product.quantity} className="form-control"
 
                                                         placeholder="Quantity" onChange={(e) => {
@@ -1193,7 +1193,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                    <span class="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
+                                                    <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
                                                 </div>
                                                 {errors["quantity_" + index] && (
                                                     <div style={{ color: "red" }}>
@@ -1203,7 +1203,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 )}
                                             </td>
                                             <td style={{ width: "180px" }}>
-                                                <div class="input-group mb-3">
+                                                <div className="input-group mb-3">
                                                     <input type="number" value={product.purchase_unit_price} className="form-control"
 
                                                         placeholder="Purchase Unit Price" onChange={(e) => {
@@ -1235,7 +1235,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                                                         }} />
 
-                                                    <span class="input-group-text" id="basic-addon2">SAR</span>
+                                                    <span className="input-group-text" id="basic-addon2">SAR</span>
                                                 </div>
 
                                                 {errors["purchase_unit_price_" + index] && (
@@ -1247,7 +1247,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                                             </td>
                                             <td style={{ width: "180px" }}>
-                                                <div class="input-group mb-3">
+                                                <div className="input-group mb-3">
                                                     <input type="number" value={product.wholesale_unit_price} className="form-control"
 
                                                         placeholder="Wholesale Unit Price" onChange={(e) => {
@@ -1277,7 +1277,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                    <span class="input-group-text" id="basic-addon2">SAR</span>
+                                                    <span className="input-group-text" id="basic-addon2">SAR</span>
                                                 </div>
 
                                                 {errors["wholesale_unit_price_" + index] && (
@@ -1289,7 +1289,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                                             </td>
                                             <td style={{ width: "180px" }}>
-                                                <div class="input-group mb-3">
+                                                <div className="input-group mb-3">
                                                     <input type="number" value={product.retail_unit_price} className="form-control"
 
                                                         placeholder="Retail Unit Price" onChange={(e) => {
@@ -1320,7 +1320,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                    <span class="input-group-text" id="basic-addon2">SAR</span>
+                                                    <span className="input-group-text" id="basic-addon2">SAR</span>
                                                 </div>
 
                                                 {errors["retail_unit_price_" + index] && (
