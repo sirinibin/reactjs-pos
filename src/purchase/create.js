@@ -1157,187 +1157,179 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     console.log("okk,id:", product.product_id);
                                                 }}>{product.name}
                                             </td>
-                                            <td style={{ width: "125px" }}>
+                                            <td style={{ width: "155px" }}>
 
-                                                <input type="number" value={product.quantity} className="form-control"
+                                                <div class="input-group mb-3">
+                                                    <input type="number" value={product.quantity} className="form-control"
 
-                                                    placeholder="Quantity" onChange={(e) => {
-                                                        errors["quantity_" + index] = "";
-                                                        setErrors({ ...errors });
-                                                        if (!e.target.value) {
-                                                            errors["quantity_" + index] = "Invalid Quantity";
-                                                            selectedProducts[index].quantity = e.target.value;
-                                                            setSelectedProducts([...selectedProducts]);
+                                                        placeholder="Quantity" onChange={(e) => {
+                                                            errors["quantity_" + index] = "";
                                                             setErrors({ ...errors });
-                                                            console.log("errors:", errors);
-                                                            return;
-                                                        }
+                                                            if (!e.target.value) {
+                                                                errors["quantity_" + index] = "Invalid Quantity";
+                                                                selectedProducts[index].quantity = e.target.value;
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
 
-                                                        if (e.target.value === 0) {
-                                                            errors["quantity_" + index] = "Invalid Quantity should be > 0";
+                                                            if (e.target.value === 0) {
+                                                                errors["quantity_" + index] = "Invalid Quantity should be > 0";
+                                                                selectedProducts[index].quantity = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
+
+
+                                                            product.quantity = parseFloat(e.target.value);
+                                                            reCalculate();
+
                                                             selectedProducts[index].quantity = parseFloat(e.target.value);
+                                                            console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
                                                             setSelectedProducts([...selectedProducts]);
-                                                            setErrors({ ...errors });
-                                                            console.log("errors:", errors);
-                                                            return;
-                                                        }
+                                                            reCalculate();
 
-
-                                                        product.quantity = parseFloat(e.target.value);
-                                                        reCalculate();
-
-                                                        selectedProducts[index].quantity = parseFloat(e.target.value);
-                                                        console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
-                                                        setSelectedProducts([...selectedProducts]);
-                                                        reCalculate();
-
-                                                    }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
+                                                        }} />
+                                                    <span class="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
+                                                </div>
                                                 {errors["quantity_" + index] && (
                                                     <div style={{ color: "red" }}>
                                                         <i className="bi bi-x-lg"> </i>
                                                         {errors["quantity_" + index]}
                                                     </div>
                                                 )}
-                                                {((selectedProducts[index].quantity) && !errors["quantity_" + index]) ? (
-                                                    <div style={{ color: "green" }}>
-                                                        <i className="bi bi-check-lg"> </i>
-                                                        Looks good!
-                                                    </div>
-                                                ) : ""}
                                             </td>
-                                            <td style={{ width: "150px" }}>
+                                            <td style={{ width: "180px" }}>
+                                                <div class="input-group mb-3">
+                                                    <input type="number" value={product.purchase_unit_price} className="form-control"
 
-                                                <input type="number" value={product.purchase_unit_price} className="form-control"
-
-                                                    placeholder="Purchase Unit Price" onChange={(e) => {
-                                                        errors["purchase_unit_price_" + index] = "";
-                                                        setErrors({ ...errors });
-
-                                                        if (!e.target.value) {
-                                                            errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
-                                                            selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
-                                                            setSelectedProducts([...selectedProducts]);
+                                                        placeholder="Purchase Unit Price" onChange={(e) => {
+                                                            errors["purchase_unit_price_" + index] = "";
                                                             setErrors({ ...errors });
-                                                            console.log("errors:", errors);
-                                                            return;
-                                                        }
 
-                                                        if (e.target.value === 0) {
-                                                            errors["purchase_unit_price_" + index] = "Purchase Unit Price should be > 0";
+                                                            if (!e.target.value) {
+                                                                errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
+                                                                selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
+
+                                                            if (e.target.value === 0) {
+                                                                errors["purchase_unit_price_" + index] = "Purchase Unit Price should be > 0";
+                                                                selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
+
                                                             selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                            console.log("selectedProducts[index].purchase_unit_price:", selectedProducts[index].purchase_unit_price);
                                                             setSelectedProducts([...selectedProducts]);
-                                                            setErrors({ ...errors });
-                                                            console.log("errors:", errors);
-                                                            return;
-                                                        }
+                                                            reCalculate();
 
-                                                        selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
-                                                        console.log("selectedProducts[index].purchase_unit_price:", selectedProducts[index].purchase_unit_price);
-                                                        setSelectedProducts([...selectedProducts]);
-                                                        reCalculate();
+                                                        }} />
 
-                                                    }} /> SAR
+                                                    <span class="input-group-text" id="basic-addon2">SAR</span>
+                                                </div>
+
                                                 {errors["purchase_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
                                                         <i className="bi bi-x-lg"> </i>
                                                         {errors["purchase_unit_price_" + index]}
                                                     </div>
                                                 )}
-                                                {(selectedProducts[index].purchase_unit_price && !errors["purchase_unit_price_" + index]) ? (
-                                                    <div style={{ color: "green" }}>
-                                                        <i className="bi bi-check-lg"> </i>
-                                                        Looks good!
-                                                    </div>
-                                                ) : ""}
+
                                             </td>
-                                            <td style={{ width: "150px" }}>
+                                            <td style={{ width: "180px" }}>
+                                                <div class="input-group mb-3">
+                                                    <input type="number" value={product.wholesale_unit_price} className="form-control"
 
-                                                <input type="number" value={product.wholesale_unit_price} className="form-control"
-
-                                                    placeholder="Wholesale Unit Price" onChange={(e) => {
-                                                        errors["wholesale_unit_price_" + index] = "";
-                                                        setErrors({ ...errors });
-                                                        if (!e.target.value) {
-                                                            errors["wholesale_unit_price_" + index] = "Invalid Wholesale Unit Price";
-                                                            selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
-                                                            setSelectedProducts([...selectedProducts]);
+                                                        placeholder="Wholesale Unit Price" onChange={(e) => {
+                                                            errors["wholesale_unit_price_" + index] = "";
                                                             setErrors({ ...errors });
-                                                            console.log("errors:", errors);
-                                                            return;
-                                                        }
+                                                            if (!e.target.value) {
+                                                                errors["wholesale_unit_price_" + index] = "Invalid Wholesale Unit Price";
+                                                                selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
 
-                                                        if (e.target.value === 0) {
-                                                            errors["wholesale_unit_price_" + index] = "Wholesale Unit Price should be > 0";
+                                                            if (e.target.value === 0) {
+                                                                errors["wholesale_unit_price_" + index] = "Wholesale Unit Price should be > 0";
+                                                                selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
+
                                                             selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                            console.log("selectedProducts[index].wholesale_unit_price:", selectedProducts[index].wholesale_unit_price);
                                                             setSelectedProducts([...selectedProducts]);
-                                                            setErrors({ ...errors });
-                                                            console.log("errors:", errors);
-                                                            return;
-                                                        }
+                                                            reCalculate();
 
-                                                        selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
-                                                        console.log("selectedProducts[index].wholesale_unit_price:", selectedProducts[index].wholesale_unit_price);
-                                                        setSelectedProducts([...selectedProducts]);
-                                                        reCalculate();
+                                                        }} />
+                                                    <span class="input-group-text" id="basic-addon2">SAR</span>
+                                                </div>
 
-                                                    }} /> SAR
                                                 {errors["wholesale_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
                                                         <i className="bi bi-x-lg"> </i>
                                                         {errors["wholesale_unit_price_" + index]}
                                                     </div>
                                                 )}
-                                                {(selectedProducts[index].wholesale_unit_price && !errors["wholesale_unit_price_" + index]) ? (
-                                                    <div style={{ color: "green" }}>
-                                                        <i className="bi bi-check-lg"> </i>
-                                                        Looks good!
-                                                    </div>
-                                                ) : ""}
+
                                             </td>
-                                            <td style={{ width: "150px" }}>
+                                            <td style={{ width: "180px" }}>
+                                                <div class="input-group mb-3">
+                                                    <input type="number" value={product.retail_unit_price} className="form-control"
 
-                                                <input type="number" value={product.retail_unit_price} className="form-control"
-
-                                                    placeholder="Retail Unit Price" onChange={(e) => {
-                                                        errors["retail_unit_price_" + index] = "";
-                                                        setErrors({ ...errors });
-                                                        if (!e.target.value) {
-                                                            errors["retail_unit_price_" + index] = "Invalid Retail Unit Price";
-                                                            selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
-                                                            setSelectedProducts([...selectedProducts]);
+                                                        placeholder="Retail Unit Price" onChange={(e) => {
+                                                            errors["retail_unit_price_" + index] = "";
                                                             setErrors({ ...errors });
-                                                            console.log("errors:", errors);
-                                                            return;
-                                                        }
+                                                            if (!e.target.value) {
+                                                                errors["retail_unit_price_" + index] = "Invalid Retail Unit Price";
+                                                                selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
 
-                                                        if (e.target.value === 0) {
-                                                            errors["retail_unit_price_" + index] = "Retail Unit Price should be > 0";
+                                                            if (e.target.value === 0) {
+                                                                errors["retail_unit_price_" + index] = "Retail Unit Price should be > 0";
+                                                                selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
+
+
                                                             selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
+                                                            console.log("selectedProducts[index].retail_unit_price:", selectedProducts[index].retail_unit_price);
                                                             setSelectedProducts([...selectedProducts]);
-                                                            setErrors({ ...errors });
-                                                            console.log("errors:", errors);
-                                                            return;
-                                                        }
+                                                            reCalculate();
 
+                                                        }} />
+                                                    <span class="input-group-text" id="basic-addon2">SAR</span>
+                                                </div>
 
-                                                        selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
-                                                        console.log("selectedProducts[index].retail_unit_price:", selectedProducts[index].retail_unit_price);
-                                                        setSelectedProducts([...selectedProducts]);
-                                                        reCalculate();
-
-                                                    }} /> SAR
                                                 {errors["retail_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
                                                         <i className="bi bi-x-lg"> </i>
                                                         {errors["retail_unit_price_" + index]}
                                                     </div>
                                                 )}
-                                                {(selectedProducts[index].retail_unit_price && !errors["retail_unit_price_" + index]) ? (
-                                                    <div style={{ color: "green" }}>
-                                                        <i className="bi bi-check-lg"> </i>
-                                                        Looks good!
-                                                    </div>
-                                                ) : ""}
+
                                             </td>
                                             <td>
                                                 <NumberFormat

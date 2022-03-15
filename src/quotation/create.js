@@ -1141,45 +1141,52 @@ const QuotationCreate = forwardRef((props, ref) => {
                           console.log("okk,id:", product.product_id);
                         }}>{product.name}
                       </td>
-                      <td style={{ width: "125px" }}>
+                      <td style={{ width: "155px" }}>
 
-                        <input type="number" value={product.quantity} className="form-control"
+                        <div class="input-group mb-3">
+                          <input type="number" value={product.quantity} className="form-control"
 
-                          placeholder="Quantity" onChange={(e) => {
-                            errors["quantity_" + index] = "";
-                            setErrors({ ...errors });
-                            if (!e.target.value || e.target.value === 0) {
-                              errors["quantity_" + index] = "Invalid Quantity";
-                              selectedProducts[index].quantity = e.target.value;
-                              setSelectedProducts([...selectedProducts]);
+                            placeholder="Quantity" onChange={(e) => {
+                              errors["quantity_" + index] = "";
                               setErrors({ ...errors });
-                              console.log("errors:", errors);
-                              return;
-                            }
+                              if (!e.target.value) {
+                                errors["quantity_" + index] = "Invalid Quantity";
+                                selectedProducts[index].quantity = e.target.value;
+                                setSelectedProducts([...selectedProducts]);
+                                setErrors({ ...errors });
+                                console.log("errors:", errors);
+                                return;
+                              }
 
-                            product.quantity = parseFloat(e.target.value);
-                            reCalculate();
+                              if (parseFloat(e.target.value) === 0) {
+                                errors["quantity_" + index] = "Quantity should be > 0";
+                                selectedProducts[index].quantity = e.target.value;
+                                setSelectedProducts([...selectedProducts]);
+                                setErrors({ ...errors });
+                                console.log("errors:", errors);
+                                return;
+                              }
 
-                            selectedProducts[index].quantity = parseFloat(e.target.value);
-                            console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
-                            setSelectedProducts([...selectedProducts]);
-                            reCalculate();
+                              product.quantity = parseFloat(e.target.value);
+                              reCalculate();
 
-                          }} /> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}
+                              selectedProducts[index].quantity = parseFloat(e.target.value);
+                              console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
+                              setSelectedProducts([...selectedProducts]);
+                              reCalculate();
+
+                            }} />
+                          <span class="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
+                        </div>
                         {errors["quantity_" + index] && (
                           <div style={{ color: "red" }}>
                             <i className="bi bi-x-lg"> </i>
                             {errors["quantity_" + index]}
                           </div>
                         )}
-                        {((selectedProducts[index].quantity) && !errors["quantity_" + index]) ? (
-                          <div style={{ color: "green" }}>
-                            <i className="bi bi-check-lg"> </i>
-                            Looks good!
-                          </div>
-                        ) : null}
+
                       </td>
-                      <td style={{ width: "100px" }}>
+                      <td style={{ width: "150px" }}>
                         {product.purchase_unit_price ? <NumberFormat
                           value={(product.purchase_unit_price).toFixed(2)}
                           displayType={"text"}
@@ -1188,49 +1195,47 @@ const QuotationCreate = forwardRef((props, ref) => {
                           renderText={(value, props) => value}
                         /> : ""}
                       </td>
-                      <td style={{ width: "150px" }}>
+                      <td style={{ width: "180px" }}>
 
-                        <input type="number" value={product.unit_price} className="form-control"
+                        <div class="input-group mb-3">
+                          <input type="number" value={product.unit_price} className="form-control"
 
-                          placeholder="Unit Price" onChange={(e) => {
-                            errors["unit_price_" + index] = "";
-                            setErrors({ ...errors });
-                            if (!e.target.value) {
-                              errors["unit_price_" + index] = "Invalid Unit Price";
-                              selectedProducts[index].unit_price = parseFloat(e.target.value);
-                              setSelectedProducts([...selectedProducts]);
+                            placeholder="Unit Price" onChange={(e) => {
+                              errors["unit_price_" + index] = "";
                               setErrors({ ...errors });
-                              console.log("errors:", errors);
-                              return;
-                            }
+                              if (!e.target.value) {
+                                errors["unit_price_" + index] = "Invalid Unit Price";
+                                selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                setSelectedProducts([...selectedProducts]);
+                                setErrors({ ...errors });
+                                console.log("errors:", errors);
+                                return;
+                              }
 
-                            if (e.target.value === 0) {
-                              errors["unit_price_" + index] = "Unit Price shoudl be >0";
+                              if (parseFloat(e.target.value) === 0) {
+                                errors["unit_price_" + index] = "Unit Price shoudl be > 0";
+                                selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                setSelectedProducts([...selectedProducts]);
+                                setErrors({ ...errors });
+                                console.log("errors:", errors);
+                                return;
+                              }
+
                               selectedProducts[index].unit_price = parseFloat(e.target.value);
+                              console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
                               setSelectedProducts([...selectedProducts]);
-                              setErrors({ ...errors });
-                              console.log("errors:", errors);
-                              return;
-                            }
+                              reCalculate();
 
-                            selectedProducts[index].unit_price = parseFloat(e.target.value);
-                            console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
-                            setSelectedProducts([...selectedProducts]);
-                            reCalculate();
-
-                          }} /> SAR
+                            }} />
+                          <span class="input-group-text" id="basic-addon2">SAR</span>
+                        </div>
                         {errors["unit_price_" + index] && (
                           <div style={{ color: "red" }}>
                             <i className="bi bi-x-lg"> </i>
                             {errors["unit_price_" + index]}
                           </div>
                         )}
-                        {(selectedProducts[index].unit_price && !errors["unit_price_" + index]) ? (
-                          <div style={{ color: "green" }}>
-                            <i className="bi bi-check-lg"> </i>
-                            Looks good!
-                          </div>
-                        ) : null}
+
                       </td>
                       <td>
                         <NumberFormat
