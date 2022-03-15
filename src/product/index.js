@@ -706,16 +706,7 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="name"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("name", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
