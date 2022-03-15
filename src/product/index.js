@@ -135,6 +135,9 @@ function ProductIndex(props) {
     }
 
     function searchByFieldValue(field, value) {
+        if (field === "ean_13" && value.length === 13) {
+            value = value.slice(0, -1);
+        }
         searchParams[field] = value;
 
         page = 1;
