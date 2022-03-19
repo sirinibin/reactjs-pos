@@ -183,13 +183,16 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     discount_percent: purchase.discount_percent,
                 };
 
-                formData.discount = (purchase.discount - purchase.return_discount);
+                //formData.discount = (purchase.discount - purchase.return_discount);
+                formData.discount = 0;
 
                 if (formData.is_discount_percent) {
                     formData.discountValue = formData.discount_percent;
                 } else {
                     formData.discountValue = formData.discount;
                 }
+
+                formData.discountValue = 0;
 
                 formData.status = "purchase_returned";
 
