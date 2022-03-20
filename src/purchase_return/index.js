@@ -331,6 +331,9 @@ function PurchaseReturnIndex(props) {
     }
 
     const CreateFormRef = useRef();
+    function openUpdateForm(id) {
+        CreateFormRef.current.open(id);
+    }
 
     return (
         <>
@@ -908,13 +911,13 @@ function PurchaseReturnIndex(props) {
                                                             )}
                                                         </td>
                                                         <td>
-                                                            {/*
+
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(purchasereturn.purchase_id);
+                                                                openUpdateForm(purchasereturn.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>
-                                                        */}
+
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                 openDetailsView(purchasereturn.id);

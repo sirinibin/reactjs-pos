@@ -135,9 +135,6 @@ function ProductIndex(props) {
     }
 
     function searchByFieldValue(field, value) {
-        if (field === "ean_13" && value.length === 13) {
-            value = value.slice(0, -1);
-        }
         searchParams[field] = value;
 
         page = 1;
@@ -205,7 +202,7 @@ function ProductIndex(props) {
             },
         };
         let Select =
-            "select=id,item_code,ean_12,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,unit_prices";
+            "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,unit_prices";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -700,9 +697,12 @@ function ProductIndex(props) {
                                                     <input
                                                         type="text"
                                                         id="ean_12"
-                                                        onChange={(e) =>
+                                                        onChange={(e) => {
+                                                            if (e.target.value.length === 13) {
+                                                                e.target.value = e.target.value.slice(0, -1);
+                                                            }
                                                             searchByFieldValue("ean_12", e.target.value)
-                                                        }
+                                                        }}
                                                         className="form-control"
                                                     />
                                                 </th>

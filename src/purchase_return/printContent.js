@@ -84,7 +84,7 @@ const PurchaseReturnPrintContent = forwardRef((props, ref) => {
                 <table style={{ fontSize: "3mm", position: "absolute", left: "18px", top: (119 + page.top) + "px", border: "solid 0px", }}>
                     <tbody>
                         {page.products && page.products.map((product, index) => (
-                            <tr key={product.item_code} style={{ paddingTop: "1px", height: "8px", borderBottom: "solid 1px" }}>
+                            product.quantity > 0 ? <tr key={product.item_code} style={{ paddingTop: "1px", height: "8px", borderBottom: "solid 1px" }}>
                                 <td className="text-center" style={{ border: "solid 0px", width: "48px", }}>
                                     <h4 style={{ fontSize: "3mm" }}>{index + 1 + (pageIndex * props.model.pageSize)}
                                     </h4>
@@ -134,7 +134,7 @@ const PurchaseReturnPrintContent = forwardRef((props, ref) => {
                                         />
                                     </h4>
                                 </td>
-                            </tr>
+                            </tr> : ""
 
                         ))}
                     </tbody>

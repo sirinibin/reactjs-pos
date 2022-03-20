@@ -114,6 +114,13 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="xl">
                     <tbody>
                         <tr>
+                            <th>Purchase Code:</th><td> {model.purchase_code}</td>
+                            <th>Purchase ID:</th><td> {model.purchase_id}</td>
+                            <th>Vendor:</th><td> {model.vendor_name}</td>
+                            <th>Vendor Invoice No.:</th><td> {model.vendor_invoice_no}</td>
+                            <th>Purchase Returned by:</th><td> {model.purchase_returned_by_name}</td>
+                        </tr>
+                        <tr>
                             <th>Store:</th><td> {model.store_name}</td>
                             <th>Vendor:</th><td> {model.vendor_name}</td>
                             <th>Vendor Invoice No.:</th><td> {model.vendor_invoice_no}</td>

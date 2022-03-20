@@ -953,7 +953,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <DebounceInput
                                     minLength={3}
-                                    debounceTimeout={500}
+                                    debounceTimeout={100}
                                     placeholder="Scan Barcode"
                                     className="form-control barcode"
                                     value={formData.barcode}

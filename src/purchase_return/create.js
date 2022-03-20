@@ -20,7 +20,7 @@ import PurchaseView from "./../purchase/view.js";
 const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open(id) {
+        open(id, purchaseId) {
 
             selectedProducts = [];
             setSelectedProducts([]);
@@ -56,7 +56,11 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
 
             if (id) {
-                getPurchase(id);
+                getPurchaseReturn(id);
+            }
+
+            if (purchaseId) {
+                getPurchase(purchaseId);
             }
             setShow(true);
         },
@@ -140,8 +144,103 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     });
 
 
+
+    function getPurchaseReturn(id) {
+        console.log("inside get PurchaseReturned id:", id);
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/purchase-return/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                let purchaseReturn = data.result;
+                formData = purchaseReturn;
+
+                /*
+                formData = {
+                    date_str: format(new Date(), "MMM dd yyyy"),
+                    signature_date_str: format(new Date(), "MMM dd yyyy"),
+                    purchase_id: purchase.id,
+                    purchase_code: purchase.code,
+                    vendor_invoice_no: purchase.vendor_invoice_no,
+                    store_id: purchase.store_id,
+                    vendor_id: purchase.vendor_id,
+                    vat_percent: purchase.vat_percent,
+                    status: purchase.status,
+                    purchase_returned_by: purchase.order_placed_by,
+                    purchase_returned_by_signature_id: purchase.order_placed_by_signature_id,
+                    is_discount_percent: purchase.is_discount_percent,
+                    discount_percent: purchase.discount_percent,
+                };
+                */
+
+                //formData.discount = (purchase.discount - purchase.return_discount);
+                // formData.discount = 0;
+
+                if (formData.is_discount_percent) {
+                    formData.discountValue = formData.discount_percent;
+                } else {
+                    formData.discountValue = formData.discount;
+                }
+
+                formData.status = "purchase_returned";
+
+                setFormData({ ...formData });
+                console.log("formData1.status:", formData.status);
+
+
+                console.log("purchaseReturn.products:", purchaseReturn.products);
+
+                let selectedProductsTemp = purchaseReturn.products;
+
+                selectedProducts = [];
+                for (let i = 0; i < selectedProductsTemp.length; i++) {
+                    if (selectedProductsTemp[i].quantity > 0) {
+                        selectedProductsTemp[i].selected = true;
+                    } else {
+                        selectedProductsTemp[i].selected = false;
+                    }
+                    selectedProducts.push(selectedProductsTemp[i]);
+
+                    selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
+                }
+
+
+                setSelectedProducts([...selectedProducts]);
+
+                setFormData({ ...formData });
+                reCalculate();
+                setFormData({ ...formData });
+
+
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
+
+
     function getPurchase(id) {
-        console.log("inside get PurchaseReturned");
+        console.log("inside get Purchase");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -319,7 +418,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
             if (!selectedProducts[i].selected) {
-                continue
+                selectedProducts[i].quantity = 0;
             }
 
             formData.products.push({
@@ -536,15 +635,17 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.purchase_code ? "Create Purchase Return for Purchase " : ""}
-                        <span style={{
+                        {formData.id ? "Update Purchase Return #" + formData.code + " for purchase #" + formData.purchase_code : "Create Purchase Return" + " for purchase #" + formData.purchase_code}
+                        {/*
+                        {formData.purchase_id ? " for Purchase #" + <span style={{
                             textDecoration: "underline",
                             color: "blue",
                             cursor: "pointer",
                         }}
                             onClick={() => {
                                 openPurchaseDetailsView(formData.purchase_id);
-                            }}> {formData.purchase_code ? "#" + formData.purchase_code : ""} </span>
+                            }}> formData.purchase_code : ""} </span> : ""}
+                        */}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -604,6 +705,11 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" checked={selectedProducts[index].selected} onChange={(e) => {
                                                     console.log("e.target.value:", e.target.value)
                                                     selectedProducts[index].selected = !selectedProducts[index].selected;
+                                                    if (selectedProducts[index].selected === true) {
+                                                        selectedProducts[index].quantity = 1;
+                                                    } else {
+                                                        selectedProducts[index].quantity = 0;
+                                                    }
                                                     setSelectedProducts([...selectedProducts]);
                                                     reCalculate();
                                                 }} />

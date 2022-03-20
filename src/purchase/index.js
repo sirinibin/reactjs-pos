@@ -350,7 +350,7 @@ function PurchaseIndex(props) {
 
     const PurchaseReturnCreateRef = useRef();
     function openPurchaseReturnForm(id) {
-        PurchaseReturnCreateRef.current.open(id);
+        PurchaseReturnCreateRef.current.open(undefined, id);
     }
 
     return (

@@ -198,7 +198,8 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             </thead>
                             <tbody>
                                 {props.model.products && props.model.products.map((product, index) => (
-                                    <tr key={index} className="text-center">
+
+                                    product.quantity > 0 ? <tr key={index} className="text-center">
                                         <td>{index + 1}</td>
                                         <td>{product.part_number ? product.part_number : ""}</td>
                                         <td>
@@ -229,8 +230,11 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
-                                    </tr>
-                                ))}
+                                    </tr> : ""
+
+                                )).filter(function (product, index) {
+                                    return product;
+                                })}
                             </tbody>
 
                             <tfoot>
