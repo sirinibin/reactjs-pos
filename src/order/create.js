@@ -446,7 +446,10 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit: selectedProducts[i].unit,
             });
         }
-        if (!formData.discount && formData.discount !== 0) {
+
+        if (!formData.discountValue && formData.discountValue !== 0) {
+            errors["discount"] = "Invalid Discount";
+            setErrors({ ...errors });
             return;
         }
 
@@ -1336,16 +1339,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                     type='number'
                                     onChange={(e) => {
 
-                                        if (!e.target.value) {
-                                            formData.discountValue = "";
-                                            errors["discount"] = "Invalid Discount";
-                                            setFormData({ ...formData });
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        if (e.target.value === 0) {
-                                            formData.discountValue = e.target.value;
+                                        if (parseFloat(e.target.value) === 0) {
+                                            formData.discountValue = parseFloat(e.target.value);
                                             setFormData({ ...formData });
                                             errors["discount"] = "";
                                             setErrors({ ...errors });
@@ -1353,7 +1348,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                             return;
                                         }
 
-
+                                        if (!e.target.value) {
+                                            formData.discountValue = "";
+                                            errors["discount"] = "Invalid Discount";
+                                            setFormData({ ...formData });
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
 
                                         errors["discount"] = "";
                                         setErrors({ ...errors });

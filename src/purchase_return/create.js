@@ -435,6 +435,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         formData.vat_percent = parseFloat(formData.vat_percent);
         console.log("formData.discount:", formData.discount);
 
+        if (!formData.discountValue && formData.discountValue !== 0) {
+            errors["discount"] = "Invalid Discount";
+            setErrors({ ...errors });
+            return;
+        }
+
+
         let endPoint = "/v1/purchase-return";
         let method = "POST";
         if (formData.id) {
@@ -983,8 +990,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     value={formData.discountValue}
                                     type='number'
                                     onChange={(e) => {
-                                        if (e.target.value === 0) {
-                                            formData.discountValue = e.target.value;
+                                        if (parseFloat(e.target.value) === 0) {
+                                            formData.discountValue = parseFloat(e.target.value);
                                             reCalculate();
                                             setFormData({ ...formData });
                                             errors["discount"] = "";
