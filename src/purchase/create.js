@@ -568,6 +568,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
         console.log("formData.discount:", formData.discount);
         console.log("formData.discount_percent:", formData.discount_percent);
 
+        if (!formData.discountValue) {
+            errors["discount"] = "Invalid Discount";
+            setErrors({ ...errors });
+            return;
+        }
+
         if (cookies.get('store_id')) {
             formData.store_id = cookies.get('store_id');
         }
@@ -810,6 +816,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setFormData({ ...formData });
             return;
         }
+        console.log("After IF");
 
         formData.discount_percent = formData.discountValue;
 
@@ -1523,12 +1530,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             return;
                                         }
 
-                                        if (e.target.value === 0) {
-                                            formData.discountValue = e.target.value;
+                                        if (parseFloat(e.target.value) === 0) {
+                                            formData.discountValue = parseFloat(e.target.value);
+                                            reCalculate();
                                             setFormData({ ...formData });
                                             errors["discount"] = "";
                                             setErrors({ ...errors });
-                                            reCalculate();
+
                                             return;
                                         }
 
