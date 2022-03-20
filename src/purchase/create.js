@@ -568,7 +568,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         console.log("formData.discount:", formData.discount);
         console.log("formData.discount_percent:", formData.discount_percent);
 
-        if (!formData.discountValue) {
+        if (!formData.discountValue && formData.discountValue !== 0) {
             errors["discount"] = "Invalid Discount";
             setErrors({ ...errors });
             return;
