@@ -250,7 +250,6 @@ const SalesReturnHistory = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>Sales Return History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
-
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
