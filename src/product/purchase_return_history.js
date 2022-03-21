@@ -7,12 +7,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
-import OrderView from "./../order/view.js";
-import CustomerView from "./../customer/view.js";
+import PurchaseReturnView from "../purchase_return/view.js";
+import VendorView from "../vendor/view.js";
 
 //function ProductIndex(props) {
 
-const SalesHistory = forwardRef((props, ref) => {
+const PurchaseReturnHistory = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(model) {
@@ -152,7 +152,7 @@ const SalesHistory = forwardRef((props, ref) => {
 
         setIsListLoading(true);
         fetch(
-            "/v1/sales/history?" +
+            "/v1/purchase-return/history?" +
             Select +
             queryParams +
             "&sort=" +
@@ -187,17 +187,11 @@ const SalesHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalSales = data.meta.total_sales;
-                setTotalSales(totalSales);
+                totalPurchaseReturn = data.meta.total_purchase_return;
+                setTotalPurchaseReturn(totalPurchaseReturn);
 
-                totalProfit = data.meta.total_profit;
-                setTotalProfit(totalProfit);
-
-                totalLoss = data.meta.total_loss;
-                setTotalLoss(totalLoss);
-
-                totalVat = data.meta.total_vat;
-                setTotalVat(totalVat);
+                totalVatReturn = data.meta.total_vat_return;
+                setTotalVatReturn(totalVatReturn);
 
             })
             .catch((error) => {
@@ -233,31 +227,29 @@ const SalesHistory = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    let [totalSales, setTotalSales] = useState(0.00);
-    let [totalProfit, setTotalProfit] = useState(0.00);
-    let [totalVat, setTotalVat] = useState(0.00);
-    let [totalLoss, setTotalLoss] = useState(0.00);
+    let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
+    let [totalVatReturn, setTotalVatReturn] = useState(0.00);
 
-    const OrderDetailsViewRef = useRef();
-    function openOrderDetailsView(id) {
-        OrderDetailsViewRef.current.open(id);
+    const PurchaseReturnDetailsViewRef = useRef();
+    function openPurchaseReturnDetailsView(id) {
+        PurchaseReturnDetailsViewRef.current.open(id);
     }
 
 
-    const CustomerDetailsViewRef = useRef();
-    function openCustomerDetailsView(id) {
-        CustomerDetailsViewRef.current.open(id);
+    const VendorDetailsViewRef = useRef();
+    function openVendorDetailsView(id) {
+        VendorDetailsViewRef.current.open(id);
     }
 
 
 
     return (
         <>
-            <OrderView ref={OrderDetailsViewRef} />
-            <CustomerView ref={CustomerDetailsViewRef} />
+            <PurchaseReturnView ref={PurchaseReturnDetailsViewRef} />
+            <VendorView ref={VendorDetailsViewRef} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Sales History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
+                    <Modal.Title>Purchase Return History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -275,9 +267,9 @@ const SalesHistory = forwardRef((props, ref) => {
 
                             <div className="col">
                                 <h1 className="text-end">
-                                    Sales: <Badge bg="secondary">
+                                    Purchase Return: <Badge bg="secondary">
                                         <NumberFormat
-                                            value={totalSales}
+                                            value={totalPurchaseReturn}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
@@ -285,32 +277,10 @@ const SalesHistory = forwardRef((props, ref) => {
                                         />
                                     </Badge>
                                 </h1>
-                                {cookies.get('admin') === "true" ? <h1 className="text-end">
-                                    Net Profit: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalProfit}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1> : ""}
-                                {cookies.get('admin') === "true" ? <h1 className="text-end">
-                                    Loss: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalLoss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1> : ""}
                                 <h1 className="text-end">
-                                    VAT Collected: <Badge bg="secondary">
+                                    VAT Returned: <Badge bg="secondary">
                                         <NumberFormat
-                                            value={totalVat.toFixed(2)}
+                                            value={totalVatReturn.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
@@ -334,7 +304,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                         <div className="row">
                                             {totalItems === 0 && (
                                                 <div className="col">
-                                                    <p className="text-start">No Sales History to display</p>
+                                                    <p className="text-start">No PurchaseReturn History to display</p>
                                                 </div>
                                             )}
                                         </div>
@@ -498,14 +468,14 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
-                                                                    sort("order_code");
+                                                                    sort("purchase_return_code");
                                                                 }}
                                                             >
-                                                                Order ID
-                                                                {sortField === "order_code" && sortProduct === "-" ? (
+                                                                Purchase Return ID
+                                                                {sortField === "purchase_return_code" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
-                                                                {sortField === "order_code" && sortProduct === "" ? (
+                                                                {sortField === "purchase_return_code" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -518,14 +488,14 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
-                                                                    sort("customer_name");
+                                                                    sort("vendor_name");
                                                                 }}
                                                             >
-                                                                Customer
-                                                                {sortField === "customer_name" && sortProduct === "-" ? (
+                                                                Vendor
+                                                                {sortField === "vendor_name" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
-                                                                {sortField === "customer_name" && sortProduct === "" ? (
+                                                                {sortField === "vendor_name" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -631,49 +601,6 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-
-                                                        {cookies.get('admin') === "true" ?
-                                                            <th>
-                                                                <b
-                                                                    style={{
-                                                                        textDecoration: "underline",
-                                                                        cursor: "pointer",
-                                                                    }}
-                                                                    onClick={() => {
-                                                                        sort("profit");
-                                                                    }}
-                                                                >
-                                                                    Profit
-                                                                    {sortField === "profit" && sortProduct === "-" ? (
-                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                    ) : null}
-                                                                    {sortField === "profit" && sortProduct === "" ? (
-                                                                        <i className="bi bi-sort-alpha-up"></i>
-                                                                    ) : null}
-                                                                </b>
-
-
-                                                            </th> : ""}
-                                                        {cookies.get('admin') === "true" ? <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("loss");
-                                                                }}
-                                                            >
-                                                                Loss
-                                                                {sortField === "loss" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "loss" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th> : ""}
-
                                                     </tr>
                                                 </thead>
 
@@ -747,9 +674,9 @@ const SalesHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
-                                                                id="order_code"
+                                                                id="purchase_return_code"
                                                                 onChange={(e) =>
-                                                                    searchByFieldValue("order_code", e.target.value)
+                                                                    searchByFieldValue("purchase_return_code", e.target.value)
                                                                 }
                                                                 className="form-control"
                                                             />
@@ -757,9 +684,9 @@ const SalesHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
-                                                                id="customer_name"
+                                                                id="vendor_name"
                                                                 onChange={(e) =>
-                                                                    searchByFieldValue("customer_name", e.target.value)
+                                                                    searchByFieldValue("vendor_name", e.target.value)
                                                                 }
                                                                 className="form-control"
                                                             />
@@ -815,28 +742,6 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                 className="form-control"
                                                             />
                                                         </th>
-                                                        {cookies.get('admin') === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="profit"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("profit", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
-                                                        {cookies.get('admin') === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="loss"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("loss", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
                                                     </tr>
                                                 </thead>
 
@@ -857,8 +762,8 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openOrderDetailsView(history.order_id);
-                                                                    }}>{history.order_code}
+                                                                        openPurchaseReturnDetailsView(history.purchase_return_id);
+                                                                    }}>{history.purchase_return_code}
                                                                 </td>
                                                                 <td style={{
                                                                     textDecoration: "underline",
@@ -866,17 +771,14 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openCustomerDetailsView(history.customer_id);
-                                                                    }}>{history.customer_name}
+                                                                        openVendorDetailsView(history.vendor_id);
+                                                                    }}>{history.vendor_name}
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price.toFixed(2)}</td>
                                                                 <td>{history.price.toFixed(2) + " SAR"}</td>
                                                                 <td>{history.vat_price.toFixed(2) + " SAR  (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " SAR"}</td>
-                                                                {cookies.get('admin') === "true" ? <td>{history.profit.toFixed(2) + " SAR"}</td> : ""}
-                                                                {cookies.get('admin') === "true" ? <td>{history.loss.toFixed(2) + " SAR"}</td> : ""}
-
                                                                 {/* <td>   
                                                         <button
                                                             className="btn btn-outline-secondary dropdown-toggle"
@@ -933,5 +835,5 @@ const SalesHistory = forwardRef((props, ref) => {
 
 });
 
-export default SalesHistory;
+export default PurchaseReturnHistory;
 

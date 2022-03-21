@@ -362,7 +362,7 @@ function OrderIndex(props) {
 
     return (
         <>
-            <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+            <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
             <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />
             <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} />
             <div className="container-fluid p-0">

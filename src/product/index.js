@@ -9,6 +9,13 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import SalesHistory from "./sales_history.js";
+import SalesReturnHistory from "./sales_return_history.js";
+
+import PurchaseHistory from "./purchase_history.js";
+import PurchaseReturnHistory from "./purchase_return_history.js";
+
+import QuotationHistory from "./quotation_history.js";
 
 function ProductIndex(props) {
 
@@ -356,8 +363,44 @@ function ProductIndex(props) {
         };
     }
 
+    const SalesHistoryRef = useRef();
+    function openSalesHistory(model) {
+        SalesHistoryRef.current.open(model);
+    }
+
+    const SalesReturnHistoryRef = useRef();
+    function openSalesReturnHistory(model) {
+        SalesReturnHistoryRef.current.open(model);
+    }
+
+
+    const PurchaseHistoryRef = useRef();
+    function openPurchaseHistory(model) {
+        PurchaseHistoryRef.current.open(model);
+    }
+
+    const PurchaseReturnHistoryRef = useRef();
+    function openPurchaseReturnHistory(model) {
+        PurchaseReturnHistoryRef.current.open(model);
+    }
+
+
+    const QuotationHistoryRef = useRef();
+    function openQuotationHistory(model) {
+        QuotationHistoryRef.current.open(model);
+    }
+
+
     return (
         <>
+            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
+            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
+
+            <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
+            <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
+
+            <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
+
             <ProductCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
             <ProductJson ref={ProductJsonDialogRef} />
@@ -861,7 +904,7 @@ function ProductIndex(props) {
                                                             <ul className="dropdown-menu">
                                                                 <li>
                                                                     <button className="dropdown-item" onClick={() => {
-                                                                        // openSalesHistory(product.id);
+                                                                        openSalesHistory(product);
                                                                     }}>
                                                                         <i className="bi bi-clock-history"></i>
                                                                         &nbsp;
@@ -869,14 +912,36 @@ function ProductIndex(props) {
                                                                     </button>
                                                                 </li>
                                                                 <li>
-                                                                    <button className="dropdown-item">
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openPurchaseHistory(product);
+                                                                    }}>
                                                                         <i className="bi bi-clock-history"></i>
                                                                         &nbsp;
                                                                         Purchase History
                                                                     </button>
                                                                 </li>
                                                                 <li>
-                                                                    <button className="dropdown-item">
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openSalesReturnHistory(product);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Sales Return History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openPurchaseReturnHistory(product);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Purchase Return History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openQuotationHistory(product);
+                                                                    }}>
                                                                         <i className="bi bi-clock-history"></i>
                                                                         &nbsp;
                                                                         Quotation History

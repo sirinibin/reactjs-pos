@@ -778,7 +778,7 @@ const OrderCreate = forwardRef((props, ref) => {
             />
             */}
 
-            <OrderView ref={DetailsViewRef} />
+            <OrderView ref={DetailsViewRef} openCreateForm={props.openCreateForm} />
             <ProductView ref={ProductDetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />

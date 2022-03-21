@@ -101,6 +101,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }, []);
 
 
+    useEffect(() => {
+        console.log("inside change on formData:", formData);
+        // localStorage
+
+    });
+
+
     const selectedDate = new Date();
 
     //const history = useHistory();
@@ -733,6 +740,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }
         setSelectedProducts([...selectedProducts]);
         reCalculate();
+
+        formData.products = [];
+        for (var i = 0; i < selectedProducts.length; i++) {
+            formData.products.push({
+                product_id: selectedProducts[i].product_id,
+                quantity: parseFloat(selectedProducts[i].quantity),
+                unit: selectedProducts[i].unit,
+                purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
+                retail_unit_price: parseFloat(selectedProducts[i].retail_unit_price),
+                wholesale_unit_price: parseFloat(selectedProducts[i].wholesale_unit_price),
+            });
+        }
+        setFormData({ ...formData });
     }
 
     function getProductIndex(productID) {

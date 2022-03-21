@@ -7,12 +7,12 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
-import OrderView from "./../order/view.js";
-import CustomerView from "./../customer/view.js";
+import QuotationView from "../quotation/view.js";
+import CustomerView from "../customer/view.js";
 
 //function ProductIndex(props) {
 
-const SalesHistory = forwardRef((props, ref) => {
+const QuotationHistory = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(model) {
@@ -152,7 +152,7 @@ const SalesHistory = forwardRef((props, ref) => {
 
         setIsListLoading(true);
         fetch(
-            "/v1/sales/history?" +
+            "/v1/quotation/history?" +
             Select +
             queryParams +
             "&sort=" +
@@ -187,8 +187,8 @@ const SalesHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalSales = data.meta.total_sales;
-                setTotalSales(totalSales);
+                totalQuotation = data.meta.total_quotation;
+                setTotalQuotation(totalQuotation);
 
                 totalProfit = data.meta.total_profit;
                 setTotalProfit(totalProfit);
@@ -233,14 +233,14 @@ const SalesHistory = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    let [totalSales, setTotalSales] = useState(0.00);
+    let [totalQuotation, setTotalQuotation] = useState(0.00);
     let [totalProfit, setTotalProfit] = useState(0.00);
     let [totalVat, setTotalVat] = useState(0.00);
     let [totalLoss, setTotalLoss] = useState(0.00);
 
-    const OrderDetailsViewRef = useRef();
-    function openOrderDetailsView(id) {
-        OrderDetailsViewRef.current.open(id);
+    const QuotationDetailsViewRef = useRef();
+    function openQuotationDetailsView(id) {
+        QuotationDetailsViewRef.current.open(id);
     }
 
 
@@ -253,11 +253,11 @@ const SalesHistory = forwardRef((props, ref) => {
 
     return (
         <>
-            <OrderView ref={OrderDetailsViewRef} />
+            <QuotationView ref={QuotationDetailsViewRef} />
             <CustomerView ref={CustomerDetailsViewRef} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Sales History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
+                    <Modal.Title>Quotation History of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -275,9 +275,9 @@ const SalesHistory = forwardRef((props, ref) => {
 
                             <div className="col">
                                 <h1 className="text-end">
-                                    Sales: <Badge bg="secondary">
+                                    Quotation: <Badge bg="secondary">
                                         <NumberFormat
-                                            value={totalSales}
+                                            value={totalQuotation}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
@@ -308,7 +308,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                     </Badge>
                                 </h1> : ""}
                                 <h1 className="text-end">
-                                    VAT Collected: <Badge bg="secondary">
+                                    VAT: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalVat.toFixed(2)}
                                             displayType={"text"}
@@ -334,7 +334,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                         <div className="row">
                                             {totalItems === 0 && (
                                                 <div className="col">
-                                                    <p className="text-start">No Sales History to display</p>
+                                                    <p className="text-start">No Quotation History to display</p>
                                                 </div>
                                             )}
                                         </div>
@@ -498,14 +498,14 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
-                                                                    sort("order_code");
+                                                                    sort("quotation_code");
                                                                 }}
                                                             >
-                                                                Order ID
-                                                                {sortField === "order_code" && sortProduct === "-" ? (
+                                                                Quotation ID
+                                                                {sortField === "quotation_code" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
-                                                                {sortField === "order_code" && sortProduct === "" ? (
+                                                                {sortField === "quotation_code" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -747,9 +747,9 @@ const SalesHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
-                                                                id="order_code"
+                                                                id="quotation_code"
                                                                 onChange={(e) =>
-                                                                    searchByFieldValue("order_code", e.target.value)
+                                                                    searchByFieldValue("quotation_code", e.target.value)
                                                                 }
                                                                 className="form-control"
                                                             />
@@ -857,8 +857,8 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openOrderDetailsView(history.order_id);
-                                                                    }}>{history.order_code}
+                                                                        openQuotationDetailsView(history.quotation_id);
+                                                                    }}>{history.quotation_code}
                                                                 </td>
                                                                 <td style={{
                                                                     textDecoration: "underline",
@@ -933,5 +933,5 @@ const SalesHistory = forwardRef((props, ref) => {
 
 });
 
-export default SalesHistory;
+export default QuotationHistory;
 

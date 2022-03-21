@@ -10,6 +10,14 @@ import ThermalPrinterEncoder from 'thermal-printer-encoder';
 import ProductCreate from "./create.js";
 
 import { Button } from "react-bootstrap";
+import SalesHistory from "./sales_history.js";
+import SalesReturnHistory from "./sales_return_history.js";
+
+import PurchaseHistory from "./purchase_history.js";
+import PurchaseReturnHistory from "./purchase_return_history.js";
+
+import QuotationHistory from "./quotation_history.js";
+
 const ProductView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
@@ -191,34 +199,94 @@ const ProductView = forwardRef((props, ref) => {
 
     }
 
+    const SalesHistoryRef = useRef();
+    function openSalesHistory(model) {
+        SalesHistoryRef.current.open(model);
+    }
+
+    const SalesReturnHistoryRef = useRef();
+    function openSalesReturnHistory(model) {
+        SalesReturnHistoryRef.current.open(model);
+    }
+
+
+    const PurchaseHistoryRef = useRef();
+    function openPurchaseHistory(model) {
+        PurchaseHistoryRef.current.open(model);
+    }
+
+    const PurchaseReturnHistoryRef = useRef();
+    function openPurchaseReturnHistory(model) {
+        PurchaseReturnHistoryRef.current.open(model);
+    }
+
+
+    const QuotationHistoryRef = useRef();
+    function openQuotationHistory(model) {
+        QuotationHistoryRef.current.open(model);
+    }
+
     return (<>
+        <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
+        <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
+
+        <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
+        <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
+
+        <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
+
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of Product #{model.name} </Modal.Title>
+                <Modal.Title>Details of Product #{model.name} {model.name_in_arabic ? " / " + model.name_in_arabic : ""} </Modal.Title>
 
                 <div className="col align-self-end text-end">
 
-                    <Button variant="primary" onClick={() => {
-                        handleClose();
-                        props.openCreateForm();
-                    }}>
-                        <i className="bi bi-clock-history"></i> Sales History
-                    </Button>
-                    &nbsp;&nbsp;
-                    <Button variant="primary" onClick={() => {
-                        handleClose();
-                        props.openCreateForm();
-                    }}>
-                        <i className="bi bi-clock-history"></i> Purchase History
-                    </Button>
-                    &nbsp;&nbsp;
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                            History
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a class="dropdown-item" onClick={() => {
+                                    openSalesHistory(model);
+                                }}>
+                                    <i className="bi bi-clock-history"></i> Sales History
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" onClick={() => {
+                                    openPurchaseHistory(model);
+                                }}>
+                                    <i className="bi bi-clock-history"></i> Purchase History
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" onClick={() => {
+                                    openSalesReturnHistory(model);
+                                }}>
+                                    <i className="bi bi-clock-history"></i> Sales Return History
+                                </a>
+                            </li>
 
-                    <Button variant="primary" onClick={() => {
-                        handleClose();
-                        props.openCreateForm();
-                    }}>
-                        <i className="bi bi-clock-history"></i> Quotation History
-                    </Button>
+                            <li>
+                                <a class="dropdown-item" onClick={() => {
+                                    openPurchaseReturnHistory(model);
+                                }}>
+                                    <i className="bi bi-clock-history"></i> Purchase Return History
+                                </a>
+                            </li>
+                            <li> <a class="dropdown-item" onClick={() => {
+                                openQuotationHistory(model);
+                            }}>
+                                <i className="bi bi-clock-history"></i> Quotation History
+                            </a>
+                            </li>
+                        </ul>
+                    </div>
+
+
+
+
                     &nbsp;&nbsp;
 
                     <Button variant="primary" onClick={() => {

@@ -82,7 +82,6 @@ const OrderView = forwardRef((props, ref) => {
         PrintRef.current.open(model);
     }
 
-
     return (<>
         <OrderPreview ref={PreviewRef} />
         <OrderPrint ref={PrintRef} />
@@ -91,12 +90,12 @@ const OrderView = forwardRef((props, ref) => {
                 <Modal.Title>Details of Sales Order #{model.code}</Modal.Title>
 
                 <div className="col align-self-end text-end">
-                    <Button variant="primary" onClick={() => {
+                    {props.openCreateForm ? <Button variant="primary" onClick={() => {
                         handleClose();
                         props.openCreateForm();
                     }}>
                         <i className="bi bi-plus"></i> Create
-                    </Button>
+                    </Button> : ""}
                     &nbsp;&nbsp;
 
                     <Button variant="primary" onClick={openPrint}>
