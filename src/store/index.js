@@ -13,9 +13,9 @@ function StoreIndex(props) {
     const cookies = new Cookies();
 
     function selectStore(store) {
-        cookies.set('store_name', store.name, { path: '/' });
-        cookies.set('store_id', store.id, { path: '/' });
-        cookies.set('vat_percent', store.vat_percent, { path: '/' });
+        cookies.set('store_name', store.name, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+        cookies.set('store_id', store.id, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+        cookies.set('vat_percent', store.vat_percent, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
         window.location = "/dashboard/stores";
     }
 

@@ -227,7 +227,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 }
                 if (cookies.get("store_id")) {
                     if (cookies.get("store_id") === data.result.id) {
-                        cookies.set('vat_percent', data.result.vat_percent, { path: '/' });
+                        cookies.set('vat_percent', data.result.vat_percent, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
                     }
                 }
 

@@ -47,16 +47,18 @@ function Login() {
                 console.log("Response:");
                 console.log(data);
 
-                cookies.set('user_name', data.result.name);
-                cookies.set('user_id', data.result.id);
+
+                cookies.set('user_name', data.result.name, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                cookies.set('user_id', data.result.id, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+
                 if (data.result.admin === true) {
-                    cookies.set('admin', true);
+                    cookies.set('admin', true, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
                 } else {
-                    cookies.set('admin', false);
+                    cookies.set('admin', false, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
                 }
 
                 if (data.result.photo) {
-                    cookies.set('user_photo', data.result.photo);
+                    cookies.set('user_photo', data.result.photo, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
                 }
 
                 history.push("/dashboard/sales");
