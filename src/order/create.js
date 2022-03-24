@@ -470,6 +470,12 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
+        if (parseFloat(formData.discount_percent) > 100) {
+            errors["discount_percent"] = "Discount percent cannot be > 100";
+            setErrors({ ...errors });
+            return;
+        }
+
         if (!formData.vat_percent && formData.vat_percent !== 0) {
             errors["vat_percent"] = "Invalid vat percent";
             setErrors({ ...errors });
