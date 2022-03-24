@@ -1246,6 +1246,15 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     return;
                                                 }
 
+                                                if (parseFloat(e.target.value) < 0) {
+                                                    formData.shipping_handling_fees = parseFloat(e.target.value);
+                                                    setFormData({ ...formData });
+                                                    errors["shipping_handling_fees"] = "Shipping / Handling Fees should be > 0";
+                                                    setErrors({ ...errors });
+                                                    reCalculate();
+                                                    return;
+                                                }
+
                                                 if (!e.target.value) {
                                                     formData.shipping_handling_fees = "";
                                                     errors["shipping_handling_fees"] = "Invalid Shipping / Handling Fees";
@@ -1282,6 +1291,16 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     return;
                                                 }
 
+                                                if (parseFloat(e.target.value) < 0) {
+                                                    formData.discount_percent = parseFloat(e.target.value);
+                                                    formData.discount = 0.00;
+                                                    setFormData({ ...formData });
+                                                    errors["discount_percent"] = "Discount percent should be >= 0";
+                                                    setErrors({ ...errors });
+                                                    reCalculate();
+                                                    return;
+                                                }
+
                                                 if (!e.target.value) {
                                                     formData.discount_percent = "";
                                                     formData.discount = 0.00;
@@ -1301,7 +1320,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                             }} />{"%"}
                                             {errors.discount_percent && (
                                                 <div style={{ color: "red" }}>
-                                                    <i className="bi bi-x-lg"> </i>
                                                     {errors.discount_percent}
                                                 </div>
                                             )}
@@ -1318,11 +1336,22 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     return;
                                                 }
 
+                                                if (parseFloat(e.target.value) < 0) {
+                                                    formData.discount = parseFloat(e.target.value);
+                                                    formData.discount_percent = 0.00;
+                                                    setFormData({ ...formData });
+                                                    errors["discount"] = "Discount should be >= 0";
+                                                    setErrors({ ...errors });
+                                                    reCalculate();
+                                                    return;
+                                                }
+
                                                 if (!e.target.value) {
                                                     formData.discount = "";
                                                     formData.discount_percent = 0.00;
                                                     errors["discount"] = "Invalid Discount";
                                                     setFormData({ ...formData });
+                                                    reCalculate();
                                                     setErrors({ ...errors });
                                                     return;
                                                 }
@@ -1338,7 +1367,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                             {" SAR"}
                                             {errors.discount && (
                                                 <div style={{ color: "red" }}>
-                                                    <i className="bi bi-x-lg"> </i>
                                                     {errors.discount}
                                                 </div>
                                             )}
@@ -1356,6 +1384,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 reCalculate();
                                                 return;
                                             }
+                                            if (parseFloat(e.target.value) < 0) {
+                                                formData.vat_percent = parseFloat(e.target.value);
+                                                vatPrice = 0.00;
+                                                setVatPrice(vatPrice);
+                                                setFormData({ ...formData });
+                                                errors["vat_percent"] = "Vat percent should be >= 0";
+                                                setErrors({ ...errors });
+                                                reCalculate();
+                                                return;
+                                            }
+
 
                                             if (!e.target.value) {
                                                 formData.vat_percent = "";
@@ -1377,7 +1416,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }} />{"%"}
                                             {errors.vat_percent && (
                                                 <div style={{ color: "red" }}>
-                                                    <i className="bi bi-x-lg"> </i>
                                                     {errors.vat_percent}
                                                 </div>
                                             )}
