@@ -176,7 +176,7 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td>
-                                    <td>
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={(product.unit_price * product.quantity).toFixed(2)}
                                             displayType={"text"}
@@ -228,25 +228,26 @@ const OrderView = forwardRef((props, ref) => {
                                 <td colSpan="4"></td>
 
                                 <th className="text-end">Total</th>
-                                <td className="text-center">
-                                    <NumberFormat
-                                        value={model.total}
+                                <td className="text-end">
+                                    {model.total ? <NumberFormat
+                                        value={model.total.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
                                         renderText={(value, props) => value}
-                                    />
+                                    /> : "0.00 SAR"}
                                 </td>
                                 <td colSpan="3" ></td>
-                                {cookies.get('admin') === "true" ? <td className="text-center">
-                                    <NumberFormat
-                                        value={model.profit}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td> : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">
+                                        <NumberFormat
+                                            value={model.profit}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
                                 {cookies.get('admin') === "true" ? <td className="text-center">
                                     <NumberFormat
                                         value={model.loss}
@@ -259,16 +260,31 @@ const OrderView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <th colSpan="5" className="text-end">
-                                    Discount
+                                    Shipping / Handling Fees
                                 </th>
-                                <td className="text-center">
-                                    <NumberFormat
-                                        value={model.discount}
+                                <td className="text-end">
+                                    {model.shipping_handling_fees ? <NumberFormat
+                                        value={model.shipping_handling_fees.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
                                         renderText={(value, props) => value}
-                                    />
+                                    /> : "0.00 SAR"}
+                                </td>
+                                <td colSpan="3"></td>
+                            </tr>
+                            <tr>
+                                <th colSpan="5" className="text-end">
+                                    Discount
+                                </th>
+                                <td className="text-end">
+                                    {model.discount ? <NumberFormat
+                                        value={model.discount.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    /> : "0.00 SAR"}
                                 </td>
                                 <td colSpan="3"></td>
                                 {cookies.get('admin') === "true" ?
@@ -296,8 +312,8 @@ const OrderView = forwardRef((props, ref) => {
                                 <th colSpan="4" className="text-end">
 
                                 </th>
-                                <td className="text-center">{model.vat_percent + "%"}</td>
-                                <td className="text-center">
+                                <th className="text-end">VAT {model.vat_percent + "%"}</th>
+                                <td className="text-end">
                                     <NumberFormat
                                         value={model.vat_price}
                                         displayType={"text"}
@@ -317,7 +333,7 @@ const OrderView = forwardRef((props, ref) => {
                             <tr>
                                 <td colSpan="4"></td>
                                 <th className="text-end">Net Total</th>
-                                <th className="text-center">
+                                <th className="text-end">
                                     <NumberFormat
                                         value={model.net_total}
                                         displayType={"text"}

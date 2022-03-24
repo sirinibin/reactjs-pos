@@ -325,7 +325,7 @@ const OrderPrint = forwardRef((props, ref) => {
 
             </Modal.Header>
             <Modal.Body>
-                <div ref={printAreaRef}>
+                <div ref={printAreaRef} >
                     <OrderPrintContent model={model} />
                 </div>
             </Modal.Body>

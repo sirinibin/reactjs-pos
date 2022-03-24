@@ -37,9 +37,13 @@ const OrderCreate = forwardRef((props, ref) => {
             if (cookies.get('store_id')) {
                 formData.store_id = cookies.get('store_id');
                 formData.store_name = cookies.get('store_name');
+                formData.vat_percent = parseFloat(cookies.get('vat_percent'));
                 console.log("formData.store_id:", formData.store_id);
             }
 
+            formData.discount = 0.00;
+            formData.discount_percent = 0.00;
+            formData.shipping_handling_fees = 0.00;
             setFormData({ ...formData });
             setShow(true);
 
@@ -86,8 +90,8 @@ const OrderCreate = forwardRef((props, ref) => {
     //fields
     let [formData, setFormData] = useState({
         vat_percent: 15.0,
-        discountValue: 0.0,
-        discount: 0.0,
+        discountValue: 0.00,
+        discount: 0.00,
         discount_percent: 0.0,
         is_discount_percent: false,
         date_str: format(new Date(), "MMM dd yyyy"),
@@ -447,11 +451,32 @@ const OrderCreate = forwardRef((props, ref) => {
             });
         }
 
-        if (!formData.discountValue && formData.discountValue !== 0) {
-            errors["discount"] = "Invalid Discount";
+
+        if (!formData.shipping_handling_fees && formData.shipping_handling_fees !== 0) {
+            errors["shipping_handling_fees"] = "Invalid shipping / handling fees";
             setErrors({ ...errors });
             return;
         }
+
+        if (!formData.discount && formData.discount !== 0) {
+            errors["discount"] = "Invalid discount";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (!formData.discount_percent && formData.discount_percent !== 0) {
+            errors["discount_percent"] = "Invalid discount percent";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (!formData.vat_percent && formData.vat_percent !== 0) {
+            errors["vat_percent"] = "Invalid vat percent";
+            setErrors({ ...errors });
+            return;
+        }
+
+
 
         formData.discount = parseFloat(formData.discount);
         formData.discount_percent = parseFloat(formData.discount_percent);
@@ -586,9 +611,10 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         let alreadyAdded = false;
-        let index = -1;
+        let index = false;
         let quantity = 0.00;
         product.quantity = 1.00;
+
 
         if (isProductAdded(product.id)) {
             alreadyAdded = true;
@@ -604,7 +630,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let stock = GetProductStockInStore(formData.store_id, product.stock);
         if (stock < quantity) {
-            errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
+            if (index === false) {
+                index = selectedProducts.length;
+            }
+            // errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
+            errors["quantity_" + index] = "Warning: Available stock is " + stock
             console.log("errors:", errors);
             setErrors({ ...errors });
         }
@@ -657,7 +687,7 @@ const OrderCreate = forwardRef((props, ref) => {
     function findVatPrice() {
         vatPrice = 0.00;
         if (totalPrice > 0) {
-            vatPrice = (parseFloat((parseFloat(formData.vat_percent) / 100)) * (parseFloat(totalPrice) - parseFloat(formData.discount))).toFixed(2);;
+            vatPrice = (parseFloat((parseFloat(formData.vat_percent) / 100)) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount))).toFixed(2);;
             console.log("vatPrice:", vatPrice);
         }
         setVatPrice(vatPrice);
@@ -668,7 +698,7 @@ const OrderCreate = forwardRef((props, ref) => {
     function findNetTotal() {
         netTotal = 0.00;
         if (totalPrice > 0) {
-            netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice)).toFixed(2);
+            netTotal = (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice)).toFixed(2);
         }
         setNetTotal(netTotal);
 
@@ -677,38 +707,19 @@ const OrderCreate = forwardRef((props, ref) => {
     let [discountPercent, setDiscountPercent] = useState(0.00);
 
     function findDiscountPercent() {
-        if (!formData.discountValue) {
-            formData.discount = 0.00;
-            formData.discount_percent = 0.00;
-            setFormData({ ...formData });
-            return;
-        }
-
-        formData.discount = formData.discountValue;
-
-        if (formData.discount > 0 && totalPrice > 0) {
+        if (formData.discount >= 0 && totalPrice > 0) {
             discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
             setDiscountPercent(discountPercent);
             formData.discount_percent = discountPercent;
             setFormData({ ...formData });
         }
-
     }
 
     function findDiscount() {
-        if (!formData.discountValue) {
-            formData.discount = 0.00;
-            formData.discount_percent = 0.00;
-            setFormData({ ...formData });
-            return;
-        }
-
-        formData.discount_percent = formData.discountValue;
-
-        if (formData.discount_percent > 0 && totalPrice > 0) {
+        if (formData.discount_percent >= 0 && totalPrice > 0) {
             formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100)).toFixed(2);
+            setFormData({ ...formData });
         }
-        setFormData({ ...formData });
     }
 
 
@@ -1042,37 +1053,50 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-                        <div className="table-responsive" style={{ overflowX: "auto", height: "400px", overflowY: "scroll" }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
-                                        <th>SI No.</th>
-                                        <th>Part No.</th>
-                                        <th>Name</th>
-                                        <th>Qty</th>
-                                        <th>Unit Price</th>
-                                        <th>Price</th>
-                                        <th></th>
+                                        <th style={{ width: "3%" }}>Remove</th>
+                                        <th style={{ width: "5%" }}>SI No.</th>
+                                        <th style={{ width: "10%" }}>Part No.</th>
+                                        <th style={{ width: "30%" }} className="text-start">Name</th>
+                                        <th style={{ width: "15%" }} >Qty</th>
+                                        <th style={{ width: "18%" }}>Unit Price</th>
+                                        <th style={{ width: "32%" }}>Price</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {selectedProducts.map((product, index) => (
                                         <tr className="text-center" key={index}>
-                                            <td>{index + 1}</td>
-                                            <td>{product.part_number}</td>
+                                            <td>
+                                                <div
+                                                    style={{ color: "red", cursor: "pointer" }}
+                                                    onClick={() => {
+                                                        removeProduct(product);
+                                                    }}
+                                                >
+                                                    <i className="bi bi-x-lg"> </i>
+                                                </div>
+                                            </td>
+                                            <td >{index + 1}</td>
+                                            <td  >{product.part_number}</td>
                                             <td style={{
                                                 textDecoration: "underline",
                                                 color: "blue",
                                                 cursor: "pointer",
+
                                             }}
+                                                className="text-start"
                                                 onClick={() => {
                                                     openProductDetailsView(product.product_id);
                                                 }}>{product.name}
                                             </td>
-                                            <td style={{ width: "155px" }}>
+                                            <td >
 
                                                 <div className="input-group mb-3">
-                                                    <input type="number" value={product.quantity} className="form-control"
+                                                    <input type="number" value={product.quantity} className="form-control text-end"
 
                                                         placeholder="Quantity" onChange={(e) => {
                                                             errors["quantity_" + index] = "";
@@ -1105,7 +1129,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             }
 
                                                             if (stock < parseFloat(e.target.value)) {
-                                                                errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for this product";
+                                                                // errors["quantity_" + index] = " Warning: Stock is only " + stock + " in Store: " + formData.store_name + " for this product";
+                                                                errors["quantity_" + index] = " Warning: Available stock is " + stock;
                                                                 setErrors({ ...errors });
                                                                 return;
                                                             }
@@ -1120,16 +1145,15 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 </div>
                                                 {errors["quantity_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["quantity_" + index]}
                                                     </div>
                                                 )}
 
                                             </td>
-                                            <td style={{ width: "180px" }}>
+                                            <td>
 
                                                 <div className="input-group mb-3">
-                                                    <input type="number" value={product.unit_price} className="form-control"
+                                                    <input type="number" value={product.unit_price} className="form-control text-end"
 
                                                         placeholder="Unit Price" onChange={(e) => {
                                                             errors["unit_price_" + index] = "";
@@ -1169,7 +1193,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 )}
 
                                             </td>
-                                            <td>
+                                            <td className="text-end" >
                                                 <NumberFormat
                                                     value={(product.unit_price * product.quantity).toFixed(2)}
                                                     displayType={"text"}
@@ -1178,29 +1202,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td>
-                                                <div
-                                                    style={{ color: "red", cursor: "pointer" }}
-                                                    onClick={() => {
-                                                        removeProduct(product);
-                                                    }}
-                                                >
-                                                    <i className="bi bi-x-lg"> </i>
-                                                </div>
-                                            </td>
                                         </tr>
                                     )).reverse()}
                                 </tbody>
                             </table>
                         </div>
-                        <div>
+                        <div className="table-responsive">
                             <table className="table table-striped table-sm table-bordered">
                                 <tbody>
                                     <tr>
-                                        <td colSpan="4"></td>
 
-                                        <th className="text-end">Total</th>
-                                        <td className="text-center">
+
+                                        <th colSpan="8" className="text-end">Total</th>
+                                        <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
                                                 value={totalPrice}
                                                 displayType={"text"}
@@ -1211,25 +1225,158 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th colSpan="5" className="text-end">
-                                            Discount(  {formData.discount_percent + "%"})
+                                        <th colSpan="8" className="text-end">
+                                            Shipping & Handling Fees
                                         </th>
-                                        <td className="text-center">
-                                            <NumberFormat
-                                                value={formData.discount}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={" SAR"}
-                                                renderText={(value, props) => value}
-                                            />
+                                        <td className="text-end">
+                                            <input type="number" style={{ width: "150px" }} className="text-start" value={formData.shipping_handling_fees} onChange={(e) => {
+
+                                                if (parseFloat(e.target.value) === 0) {
+                                                    formData.shipping_handling_fees = parseFloat(e.target.value);
+                                                    setFormData({ ...formData });
+                                                    errors["shipping_handling_fees"] = "";
+                                                    setErrors({ ...errors });
+                                                    reCalculate();
+                                                    return;
+                                                }
+
+                                                if (!e.target.value) {
+                                                    formData.shipping_handling_fees = "";
+                                                    errors["shipping_handling_fees"] = "Invalid Shipping / Handling Fees";
+                                                    setFormData({ ...formData });
+                                                    setErrors({ ...errors });
+                                                    return;
+                                                }
+
+                                                errors["shipping_handling_fees"] = "";
+                                                setErrors({ ...errors });
+
+                                                formData.shipping_handling_fees = parseFloat(e.target.value);
+                                                setFormData({ ...formData });
+                                                reCalculate();
+                                            }} />
+                                            {" SAR"}
+                                            {errors.shipping_handling_fees && (
+                                                <div style={{ color: "red" }}>
+                                                    {errors.shipping_handling_fees}
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th colSpan="4" className="text-end">
-                                            VAT
+                                        <th colSpan="8" className="text-end">
+                                            Discount  <input type="number" style={{ width: "50px" }} className="text-start" value={formData.discount_percent} onChange={(e) => {
+                                                formData.is_discount_percent = true;
+                                                if (parseFloat(e.target.value) === 0) {
+                                                    formData.discount_percent = parseFloat(e.target.value);
+                                                    setFormData({ ...formData });
+                                                    errors["discount_percent"] = "";
+                                                    setErrors({ ...errors });
+                                                    reCalculate();
+                                                    return;
+                                                }
+
+                                                if (!e.target.value) {
+                                                    formData.discount_percent = "";
+                                                    formData.discount = 0.00;
+                                                    errors["discount_percent"] = "Invalid Discount Percent";
+                                                    setFormData({ ...formData });
+                                                    setErrors({ ...errors });
+                                                    return;
+                                                }
+
+                                                errors["discount_percent"] = "";
+                                                errors["discount"] = "";
+                                                setErrors({ ...errors });
+
+                                                formData.discount_percent = parseFloat(e.target.value);
+                                                setFormData({ ...formData });
+                                                reCalculate();
+                                            }} />{"%"}
+                                            {errors.discount_percent && (
+                                                <div style={{ color: "red" }}>
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.discount_percent}
+                                                </div>
+                                            )}
                                         </th>
-                                        <td className="text-center">{formData.vat_percent + "%"}</td>
-                                        <td className="text-center">
+                                        <td className="text-end">
+                                            <input type="number" style={{ width: "150px" }} className="text-start" value={formData.discount} onChange={(e) => {
+                                                formData.is_discount_percent = false;
+                                                if (parseFloat(e.target.value) === 0) {
+                                                    formData.discount = parseFloat(e.target.value);
+                                                    setFormData({ ...formData });
+                                                    errors["discount"] = "";
+                                                    setErrors({ ...errors });
+                                                    reCalculate();
+                                                    return;
+                                                }
+
+                                                if (!e.target.value) {
+                                                    formData.discount = "";
+                                                    formData.discount_percent = 0.00;
+                                                    errors["discount"] = "Invalid Discount";
+                                                    setFormData({ ...formData });
+                                                    setErrors({ ...errors });
+                                                    return;
+                                                }
+
+                                                errors["discount"] = "";
+                                                errors["discount_percent"] = "";
+                                                setErrors({ ...errors });
+
+                                                formData.discount = parseFloat(e.target.value);
+                                                setFormData({ ...formData });
+                                                reCalculate();
+                                            }} />
+                                            {" SAR"}
+                                            {errors.discount && (
+                                                <div style={{ color: "red" }}>
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.discount}
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                    <tr>
+
+                                        <th colSpan="8" className="text-end"> VAT  <input type="number" className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
+                                            console.log("Inside onchange vat percent");
+                                            if (parseFloat(e.target.value) === 0) {
+                                                formData.vat_percent = parseFloat(e.target.value);
+                                                setFormData({ ...formData });
+                                                errors["vat_percent"] = "";
+                                                setErrors({ ...errors });
+                                                reCalculate();
+                                                return;
+                                            }
+
+                                            if (!e.target.value) {
+                                                formData.vat_percent = "";
+                                                vatPrice = 0.00;
+                                                setVatPrice(vatPrice);
+                                                //formData.discount_percent = 0.00;
+                                                errors["vat_percent"] = "Invalid vat percent";
+                                                setFormData({ ...formData });
+                                                setErrors({ ...errors });
+                                                return;
+                                            }
+                                            errors["vat_percent"] = "";
+                                            setErrors({ ...errors });
+
+                                            formData.vat_percent = e.target.value;
+                                            reCalculate();
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }} />{"%"}
+                                            {errors.vat_percent && (
+                                                <div style={{ color: "red" }}>
+                                                    <i className="bi bi-x-lg"> </i>
+                                                    {errors.vat_percent}
+                                                </div>
+                                            )}
+                                        </th>
+                                        <td className="text-end">
                                             <NumberFormat
                                                 value={vatPrice}
                                                 displayType={"text"}
@@ -1240,9 +1387,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td colSpan="4"></td>
-                                        <th className="text-end">Net Total</th>
-                                        <th className="text-center">
+
+                                        <th colSpan="8" className="text-end">Net Total</th>
+                                        <th className="text-end">
                                             <NumberFormat
                                                 value={netTotal}
                                                 displayType={"text"}
@@ -1256,6 +1403,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </table>
                         </div>
 
+                        {/*  
                         <div className="col-md-6">
                             <label className="form-label">Date*</label>
 
@@ -1280,7 +1428,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-
+                                */}
+                        {/*
                         <div className="col-md-6">
                             <label className="form-label">VAT %*</label>
 
@@ -1319,6 +1468,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+                                */}
+                        {/*
                         <div className="col-md-6">
                             <label className="form-label">Discount*</label>
                             <Form.Check
@@ -1376,9 +1527,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-
                         </div>
-                        <div className="col-md-6">
+                                */}
+                        <div className="col-md-2">
                             <label className="form-label">Status*</label>
 
                             <div className="input-group mb-3">
@@ -1416,6 +1567,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+                        {/*  
                         <div className="col-md-6">
                             <label className="form-label">Delivered By*</label>
 
@@ -1456,7 +1608,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                 ) : ""}
                             </div>
                         </div>
-
+                                */}
+                        {/*
                         <div className="col-md-6">
                             <label className="form-label">
                                 Delivered By Signature(Optional)
@@ -1526,8 +1679,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+                                */}
 
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <label className="form-label">Payment method*</label>
 
                             <div className="input-group mb-3">
@@ -1550,8 +1704,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     className="form-control"
                                 >
                                     <option value="cash">Cash</option>
-                                    <option vaue="account_transfer">Account Transfer</option>
-                                    <option value="card_payment">Credit/Debit Card</option>
+                                    <option vaue="bank_account">Bank Account</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
@@ -1562,7 +1715,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <label className="form-label">Payment Status*</label>
 
                             <div className="input-group mb-3">
@@ -1586,7 +1739,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     className="form-control"
                                 >
                                     <option value="paid">Paid</option>
-                                    <option value="pending">Pending</option>
+                                    <option value="not_paid">Not Paid</option>
                                     <option value="paid_partially">Paid Partially</option>
                                 </select>
                                 {errors.payment_status && (
@@ -1599,7 +1752,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Patial Payment Amount(Optional)</label>
 
                             <div className="input-group mb-3">

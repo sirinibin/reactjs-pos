@@ -258,21 +258,20 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                     </th>
                                 </tr>
                                 <tr>
-                                    <th className="text-end" colSpan="4" style={{ padding: "0px" }}>
+                                    <th className="text-end" colSpan="5" style={{ padding: "0px" }}>
                                         <ul
                                             className="list-unstyled"
                                             style={{
                                                 fontSize: "3mm", marginBottom: "0px"
                                             }}
                                         >
-                                            <li>ضريبة:</li>
-                                            <li>VAT:</li>
+                                            <li>رسوم الشحن / المناولة:</li>
+                                            <li>Shipping / Handling Fees:</li>
                                         </ul>
                                     </th>
-                                    <th className="text-center" colSpan="1">{props.model.vat_percent}%</th>
                                     <th className="text-center" colSpan="2">
                                         <NumberFormat
-                                            value={props.model.vat_price}
+                                            value={props.model.shipping_handling_fees}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
@@ -302,6 +301,30 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         />
                                     </th>
                                 </tr>
+                                <tr>
+                                    <th className="text-end" colSpan="4" style={{ padding: "0px" }}>
+                                        <ul
+                                            className="list-unstyled"
+                                            style={{
+                                                fontSize: "3mm", marginBottom: "0px"
+                                            }}
+                                        >
+                                            <li>ضريبة:</li>
+                                            <li>VAT:</li>
+                                        </ul>
+                                    </th>
+                                    <th className="text-center" colSpan="1">{props.model.vat_percent}%</th>
+                                    <th className="text-center" colSpan="2">
+                                        <NumberFormat
+                                            value={props.model.vat_price}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </th>
+                                </tr>
+
                                 <tr>
                                     <th className="text-end" colSpan="5" style={{ padding: "0px" }}>
                                         <ul
