@@ -1823,7 +1823,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                         {formData.payment_status === "paid_partially" ? <div className="col-md-3">
-                            <label className="form-label">Patial Payment Amount(Optional)</label>
+                            <label className="form-label">Patial Payment Amount*</label>
 
                             <div className="input-group mb-3">
                                 <input
