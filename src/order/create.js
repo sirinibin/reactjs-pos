@@ -1806,7 +1806,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-2">
+                        <div className="col-md-3">
                             <label className="form-label">Patial Payment Amount(Optional)</label>
 
                             <div className="input-group mb-3">
