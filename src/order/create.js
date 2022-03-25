@@ -44,6 +44,7 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.discount = 0.00;
             formData.discount_percent = 0.00;
             formData.shipping_handling_fees = 0.00;
+            formData.partial_payment_amount = 0.00;
             formData.status = "delivered";
             formData.payment_method = "cash";
             formData.payment_status = "paid";
@@ -461,8 +462,20 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        if (!formData.partial_payment_amount && formData.partial_payment_amount !== 0) {
+        if (formData.payment_status === "paid_partially" && !formData.partial_payment_amount && formData.partial_payment_amount !== 0) {
             errors["partial_payment_amount"] = "Invalid partial payment amount";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (formData.payment_status === "paid_partially" && formData.partial_payment_amount <= 0) {
+            errors["partial_payment_amount"] = "Partial payment should be > 0 ";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (formData.payment_status === "paid_partially" && formData.partial_payment_amount >= netTotal) {
+            errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
             setErrors({ ...errors });
             return;
         }
@@ -1787,6 +1800,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setErrors({ ...errors });
 
                                         formData.payment_status = e.target.value;
+                                        if (formData.payment_status !== "paid_partially") {
+                                            formData.partial_payment_amount = 0.00;
+                                        }
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -1806,7 +1822,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-3">
+                        {formData.payment_status === "paid_partially" ? <div className="col-md-3">
                             <label className="form-label">Patial Payment Amount(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -1823,6 +1839,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                         }
                                         formData.partial_payment_amount = parseFloat(e.target.value);
                                         errors["partial_payment_amount"] = "";
+
+                                        if (formData.partial_payment_amount >= netTotal) {
+                                            errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
                                         setErrors({ ...errors });
                                         setFormData({ ...formData });
                                         console.log(formData);
@@ -1838,7 +1860,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
