@@ -99,12 +99,20 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
             <div className="row table-active" style={{ fontSize: "3mm" }}>
                 <div className="col">
                     <ul className="list-unstyled mb0 text-start">
+                        {/*
                         <li><strong>Quotation: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
                         <li><strong>Quotation Date: </strong>{props.model.created_at ? format(
                             new Date(props.model.created_at),
                             "MMM dd yyyy h:mma"
                         ) : "<DATE_TIME>"}</li>
+                         */}
+                        <li><strong>Delivery Note: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
+                        <li><strong>Delivert Note Date: </strong>{props.model.created_at ? format(
+                            new Date(props.model.created_at),
+                            "MMM dd yyyy h:mma"
+                        ) : "<DATE_TIME>"}</li>
                         <li>
+
                             <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "<CUSTOMER_NAME>"}
                         </li>
                         <li><strong>VAT Number: </strong>{props.model.customer ? props.model.customer.vat_no : "<CUSTOMER_VAT_NO>"}
@@ -487,6 +495,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
             <div className="row" style={{ fontSize: "3mm" }}>
                 <div className="col-md-2 text-start">
                     {props.model.store && props.model.customer ? <QRCode value={"Quotation #: " + props.model.code + "<br/> Store: " + props.model.store.name + "<br/> Net Total: " + props.model.net_total + "<br/> Customer: " + props.model.customer.name} size={128} /> : null}
+
                 </div>
                 <div className="col-md-8 text-center">
                     <ul className="list-unstyled mb0 text-center">
