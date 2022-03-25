@@ -121,8 +121,12 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                 </div>
                 <div className="col">
                     <ul className="list-unstyled mb0 text-end">
+                        <li><strong> رقم مذكرة التسليم: </strong>#{props.model.code ? convertToPersianNumber(props.model.code) : "<ID_NUMBER_ARABIC>"}</li>
+                        <li><strong>تاريخ مذكرة التسليم: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
+                        {/*
                         <li><strong> اقتباس: </strong>#{props.model.code ? convertToPersianNumber(props.model.code) : "<ID_NUMBER_ARABIC>"}</li>
                         <li><strong>تاريخ الاقتباس: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
+                        */}
                         <li>
                             <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
                         </li>
