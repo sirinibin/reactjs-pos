@@ -83,9 +83,16 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
             <div className="row">
                 <div className="col">
                     <u
-                    ><h1 className="text-center" style={{ fontSize: "4mm" }}>
+                    >
+                        {/*
+                        <h1 className="text-center" style={{ fontSize: "4mm" }}>
                             QUOTATION / اقتباس
                         </h1>
+                        */}
+                        <h1 className="text-center" style={{ fontSize: "4mm" }}>
+                            DELIVERY NOTE / مذكرة تسليم
+                        </h1>
+
                     </u>
                 </div>
             </div>
@@ -177,6 +184,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             <li>Qty</li>
                                         </ul>
                                     </th>
+                                    {/*
                                     <th className="per10 text-center" style={{ padding: "0px" }}>
                                         <ul
                                             className="list-unstyled"
@@ -195,6 +203,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             <li>Total Amount</li>
                                         </ul>
                                     </th>
+                                    */}
                                 </tr>
                             </thead>
                             <tbody>
@@ -212,6 +221,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             </ul>
                                         </td>
                                         <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
+                                        {/*
                                         <td>
                                             <NumberFormat
                                                 value={product.unit_price}
@@ -230,10 +240,12 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
+                                        */}
                                     </tr>
                                 ))}
                             </tbody>
 
+                            {/*
                             <tfoot>
                                 <tr>
                                     <th colSpan="3" className="text-end"></th>
@@ -382,6 +394,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     </th>
                                 </tr>
                             </tfoot>
+                                    */}
                         </table>
 
                         <table className="table table-bordered" style={{ fontSize: "3mm" }}>
