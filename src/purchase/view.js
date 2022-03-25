@@ -137,6 +137,11 @@ const PurchaseView = forwardRef((props, ref) => {
                             <th>Discount %:</th><td> {model.discount_percent} SAR</td>
                         </tr>
                         <tr>
+                            <th>Payment Status:</th><td> {model.payment_status}</td>
+                            <th>Payment Method:</th><td> {model.payment_method}</td>
+                            <th>Partial Payment Amount:</th><td> {model.partial_payment_amount}</td>
+                        </tr>
+                        <tr>
                             <th>Status:</th><td> {model.status}</td>
                             <th>Signature Date:</th><td> {model.signature_date_str}</td>
                             <th>Created At:</th><td> {model.created_at}</td>
@@ -316,6 +321,21 @@ const PurchaseView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
+                            </tr>
+                            <tr>
+                                <th colSpan="5" className="text-end">
+                                    Shipping / Handling Fees
+                                </th>
+                                <td className="text-end">
+                                    {model.shipping_handling_fees ? <NumberFormat
+                                        value={model.shipping_handling_fees.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" SAR"}
+                                        renderText={(value, props) => value}
+                                    /> : "0.00 SAR"}
+                                </td>
+                                <td colSpan="3"></td>
                             </tr>
                             <tr>
                                 <th colSpan="5" className="text-end">

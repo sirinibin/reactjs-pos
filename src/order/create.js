@@ -44,6 +44,9 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.discount = 0.00;
             formData.discount_percent = 0.00;
             formData.shipping_handling_fees = 0.00;
+            formData.status = "delivered";
+            formData.payment_method = "cash";
+            formData.payment_status = "paid";
             setFormData({ ...formData });
             setShow(true);
 
@@ -454,6 +457,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
         if (!formData.shipping_handling_fees && formData.shipping_handling_fees !== 0) {
             errors["shipping_handling_fees"] = "Invalid shipping / handling fees";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (!formData.partial_payment_amount && formData.partial_payment_amount !== 0) {
+            errors["partial_payment_amount"] = "Invalid partial payment amount";
             setErrors({ ...errors });
             return;
         }
@@ -1730,6 +1739,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <select
+                                    value={formData.payment_method}
                                     onChange={(e) => {
                                         console.log("Inside onchange payment method");
                                         if (!e.target.value) {
@@ -1748,7 +1758,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     className="form-control"
                                 >
                                     <option value="cash">Cash</option>
-                                    <option vaue="bank_account">Bank Account</option>
+                                    <option value="bank_account">Bank Account</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
@@ -1764,7 +1774,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <select
-                                    value={formData.payment_method}
+                                    value={formData.payment_status}
                                     onChange={(e) => {
                                         console.log("Inside onchange payment Status");
                                         if (!e.target.value) {
@@ -1776,7 +1786,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         errors["payment_status"] = "";
                                         setErrors({ ...errors });
 
-                                        formData.payment_method = e.target.value;
+                                        formData.payment_status = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -1802,18 +1812,18 @@ const OrderCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <input
                                     type='number'
+                                    value={formData.partial_payment_amount}
                                     onChange={(e) => {
                                         console.log("Inside onchange vat discount");
-                                        if (isNaN(e.target.value)) {
-                                            errors["partial_payment_amount"] = "Invalid Amount";
+                                        if (!e.target.value) {
+                                            formData.partial_payment_amount = e.target.value;
+                                            errors["partial_payment_amount"] = "Invalid partial payment amount";
                                             setErrors({ ...errors });
                                             return;
                                         }
-
+                                        formData.partial_payment_amount = parseFloat(e.target.value);
                                         errors["partial_payment_amount"] = "";
                                         setErrors({ ...errors });
-
-                                        formData.partial_payment_amount = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -1824,12 +1834,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                 {errors.partial_payment_amount && (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>
-                                        {errors.v}
+                                        {errors.partial_payment_amount}
                                     </div>
                                 )}
                             </div>
                         </div>
-
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close

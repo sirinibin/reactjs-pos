@@ -135,6 +135,11 @@ const OrderView = forwardRef((props, ref) => {
                             <th>Updated At:</th><td> {model.updated_at}</td>
                         </tr>
                         <tr>
+                            <th>Payment Status:</th><td> {model.payment_status}</td>
+                            <th>Payment Method:</th><td> {model.payment_method}</td>
+                            <th>Partial Payment Amount:</th><td> {model.partial_payment_amount}</td>
+                        </tr>
+                        <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
                             {cookies.get('admin') === "true" ? <th>Profit:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.profit} SAR</td> : ""}

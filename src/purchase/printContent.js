@@ -43,7 +43,8 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                     border: "solid 0px",
                     borderColor: "silver",
                     borderRadius: "3mm",
-                    padding: "10px"
+                    padding: "10px",
+                    height: "700px"
                 }}
 
 
@@ -199,6 +200,13 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                 </table> : ""}
 
 
+                {page.lastPage && props.model.shipping_handling_fees && props.model.shipping_handling_fees > 0 ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "480px", top: (533 + page.top) + "px" }}>
+                    {"Shipping / Handling Fees: "}
+                </h4> : ""}
+
+                {page.lastPage && props.model.shipping_handling_fees ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "686px", top: (533 + page.top) + "px" }}>
+                    {props.model.shipping_handling_fees.toFixed(2) + " SAR"}
+                </h4> : ""}
 
                 {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: (555 + page.top) + "px" }}>
                     {n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}

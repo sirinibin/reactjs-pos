@@ -269,6 +269,28 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 fontSize: "3mm", marginBottom: "0px"
                                             }}
                                         >
+                                            <li>رسوم الشحن / المناولة:</li>
+                                            <li>Shipping / Handling Fees:</li>
+                                        </ul>
+                                    </th>
+                                    <th className="text-center" colSpan="2">
+                                        <NumberFormat
+                                            value={props.model.shipping_handling_fees}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th className="text-end" colSpan="5" style={{ padding: "0px" }}>
+                                        <ul
+                                            className="list-unstyled"
+                                            style={{
+                                                fontSize: "3mm", marginBottom: "0px"
+                                            }}
+                                        >
                                             <li>خصم:</li>
                                             <li>Discount:</li>
                                         </ul>
