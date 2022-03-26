@@ -5,6 +5,7 @@ import {
     Route,
 } from "react-router-dom";
 import QuotationIndex from './quotation/index.js';
+import DeliveryNoteIndex from './delivery_note/index.js';
 import OrderIndex from './order/index.js';
 import SalesReturnIndex from './sales_return/index.js';
 import PurchaseIndex from './purchase/index.js';
@@ -156,6 +157,20 @@ function Dashboard() {
                     </div>
                 </div>
             </Route>
+
+            <Route path="/dashboard/delivery-notes">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <DeliveryNoteIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
 
             <Route path="/dashboard/quotations">
                 <div className="wrapper">

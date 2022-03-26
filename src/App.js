@@ -37,6 +37,10 @@ function App() {
         </Route>
 
 
+        <Route path="/dashboard/delivery-notes">
+          <Dashboard />
+        </Route>
+
         <Route path="/dashboard/quotations">
           <Dashboard />
         </Route>

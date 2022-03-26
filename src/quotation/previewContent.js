@@ -82,15 +82,9 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
             </div>
             <div className="row">
                 <div className="col">
-                    <u
-                    >
-                        {/*
+                    <u>
                         <h1 className="text-center" style={{ fontSize: "4mm" }}>
                             QUOTATION / اقتباس
-                        </h1>
-                        */}
-                        <h1 className="text-center" style={{ fontSize: "4mm" }}>
-                            DELIVERY NOTE / مذكرة تسليم
                         </h1>
 
                     </u>
@@ -99,20 +93,12 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
             <div className="row table-active" style={{ fontSize: "3mm" }}>
                 <div className="col">
                     <ul className="list-unstyled mb0 text-start">
-                        {/*
                         <li><strong>Quotation: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
                         <li><strong>Quotation Date: </strong>{props.model.created_at ? format(
                             new Date(props.model.created_at),
                             "MMM dd yyyy h:mma"
                         ) : "<DATE_TIME>"}</li>
-                         */}
-                        <li><strong>Delivery Note: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                        <li><strong>Delivert Note Date: </strong>{props.model.created_at ? format(
-                            new Date(props.model.created_at),
-                            "MMM dd yyyy h:mma"
-                        ) : "<DATE_TIME>"}</li>
                         <li>
-
                             <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "<CUSTOMER_NAME>"}
                         </li>
                         <li><strong>VAT Number: </strong>{props.model.customer ? props.model.customer.vat_no : "<CUSTOMER_VAT_NO>"}
@@ -121,12 +107,8 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                 </div>
                 <div className="col">
                     <ul className="list-unstyled mb0 text-end">
-                        <li>{props.model.code ? convertToPersianNumber(props.model.code) + "#" : "<ID_NUMBER_ARABIC>"}<strong> :رقم مذكرة التسليم </strong></li>
-                        <li><strong> تاريخ مذكرة التسليم: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
-                        {/*
                         <li><strong> اقتباس: </strong>#{props.model.code ? convertToPersianNumber(props.model.code) : "<ID_NUMBER_ARABIC>"}</li>
                         <li><strong>تاريخ الاقتباس: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
-                        */}
                         <li>
                             <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
                         </li>
@@ -196,7 +178,6 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             <li>Qty</li>
                                         </ul>
                                     </th>
-                                    {/*
                                     <th className="per10 text-center" style={{ padding: "0px" }}>
                                         <ul
                                             className="list-unstyled"
@@ -215,7 +196,6 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             <li>Total Amount</li>
                                         </ul>
                                     </th>
-                                    */}
                                 </tr>
                             </thead>
                             <tbody>
@@ -233,7 +213,6 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             </ul>
                                         </td>
                                         <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
-                                        {/*
                                         <td>
                                             <NumberFormat
                                                 value={product.unit_price}
@@ -252,12 +231,10 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
-                                        */}
                                     </tr>
                                 ))}
                             </tbody>
 
-                            {/*
                             <tfoot>
                                 <tr>
                                     <th colSpan="3" className="text-end"></th>
@@ -406,7 +383,6 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     </th>
                                 </tr>
                             </tfoot>
-                                    */}
                         </table>
 
                         <table className="table table-bordered" style={{ fontSize: "3mm" }}>
@@ -499,7 +475,6 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
             <div className="row" style={{ fontSize: "3mm" }}>
                 <div className="col-md-2 text-start">
                     {props.model.store && props.model.customer ? <QRCode value={"Quotation #: " + props.model.code + "<br/> Store: " + props.model.store.name + "<br/> Net Total: " + props.model.net_total + "<br/> Customer: " + props.model.customer.name} size={128} /> : null}
-
                 </div>
                 <div className="col-md-8 text-center">
                     <ul className="list-unstyled mb0 text-center">

@@ -18,6 +18,8 @@ import PurchaseReturnHistory from "./purchase_return_history.js";
 
 import QuotationHistory from "./quotation_history.js";
 
+import DeliveryNoteHistory from "./delivery_note_history.js";
+
 const ProductView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
@@ -226,6 +228,11 @@ const ProductView = forwardRef((props, ref) => {
         QuotationHistoryRef.current.open(model);
     }
 
+    const DeliveryNoteHistoryRef = useRef();
+    function openDeliveryNoteHistory(model) {
+        DeliveryNoteHistoryRef.current.open(model);
+    }
+
     return (<>
         <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
         <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
@@ -234,6 +241,8 @@ const ProductView = forwardRef((props, ref) => {
         <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
         <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
+
+        <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
@@ -279,6 +288,12 @@ const ProductView = forwardRef((props, ref) => {
                                 openQuotationHistory(model);
                             }}>
                                 <i className="bi bi-clock-history"></i> Quotation History
+                            </a>
+                            </li>
+                            <li> <a class="dropdown-item" onClick={() => {
+                                openDeliveryNoteHistory(model);
+                            }}>
+                                <i className="bi bi-clock-history"></i> Delivery Note History
                             </a>
                             </li>
                         </ul>

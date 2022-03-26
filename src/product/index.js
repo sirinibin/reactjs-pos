@@ -16,6 +16,7 @@ import PurchaseHistory from "./purchase_history.js";
 import PurchaseReturnHistory from "./purchase_return_history.js";
 
 import QuotationHistory from "./quotation_history.js";
+import DeliveryNoteHistory from "./delivery_note_history.js";
 
 function ProductIndex(props) {
 
@@ -391,6 +392,12 @@ function ProductIndex(props) {
     }
 
 
+    const DeliveryNoteHistoryRef = useRef();
+    function openDeliveryNoteHistory(model) {
+        DeliveryNoteHistoryRef.current.open(model);
+    }
+
+
     return (
         <>
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
@@ -400,6 +407,8 @@ function ProductIndex(props) {
             <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
+
+            <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
             <ProductCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <ProductView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
@@ -945,6 +954,15 @@ function ProductIndex(props) {
                                                                         <i className="bi bi-clock-history"></i>
                                                                         &nbsp;
                                                                         Quotation History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openDeliveryNoteHistory(product);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Delivert Note History
                                                                     </button>
                                                                 </li>
                                                             </ul>
