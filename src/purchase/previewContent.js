@@ -188,7 +188,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
                                             >
                                                 <li>سعر الوحدة</li>
-                                                <li>Purchase Unit Price</li>
+                                                <li>Unit Price</li>
                                             </ul>
                                         </th>
                                         <th className="per20 text-center" style={{ padding: "0px" }}>
@@ -197,7 +197,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
                                             >
                                                 <li>المبلغ الإجمالي</li>
-                                                <li>Total Amount</li>
+                                                <li>Price</li>
                                             </ul>
                                         </th>
                                     </tr>
