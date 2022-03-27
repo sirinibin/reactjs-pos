@@ -528,14 +528,15 @@ function DeliveryNoteIndex(props) {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              sort("created_by");
+                              sort("customer_name");
                             }}
                           >
-                            Created By
-                            {sortField === "created_by" && sortOrder === "-" ? (
+                            Customer
+                            {sortField === "customer_name" &&
+                              sortOrder === "-" ? (
                               <i className="bi bi-sort-alpha-up-alt"></i>
                             ) : null}
-                            {sortField === "created_by" && sortOrder === "" ? (
+                            {sortField === "customer_name" && sortOrder === "" ? (
                               <i className="bi bi-sort-alpha-up"></i>
                             ) : null}
                           </b>
@@ -547,15 +548,14 @@ function DeliveryNoteIndex(props) {
                               cursor: "pointer",
                             }}
                             onClick={() => {
-                              sort("customer_name");
+                              sort("created_by");
                             }}
                           >
-                            Customer
-                            {sortField === "customer_name" &&
-                              sortOrder === "-" ? (
+                            Created By
+                            {sortField === "created_by" && sortOrder === "-" ? (
                               <i className="bi bi-sort-alpha-up-alt"></i>
                             ) : null}
-                            {sortField === "customer_name" && sortOrder === "" ? (
+                            {sortField === "created_by" && sortOrder === "" ? (
                               <i className="bi bi-sort-alpha-up"></i>
                             ) : null}
                           </b>
@@ -597,26 +597,6 @@ function DeliveryNoteIndex(props) {
                         </th>
                         <th>
                           <Typeahead
-                            id="created_by"
-                            labelKey="name"
-                            onChange={(selectedItems) => {
-                              searchByMultipleValuesField(
-                                "created_by",
-                                selectedItems
-                              );
-                            }}
-                            options={userOptions}
-                            placeholder="Select Users"
-                            selected={selectedCreatedByUsers}
-                            highlightOnlyResult={true}
-                            onInputChange={(searchTerm, e) => {
-                              suggestUsers(searchTerm);
-                            }}
-                            multiple
-                          />
-                        </th>
-                        <th>
-                          <Typeahead
                             id="customer_id"
                             labelKey="name"
                             onChange={(selectedItems) => {
@@ -631,6 +611,26 @@ function DeliveryNoteIndex(props) {
                             highlightOnlyResult={true}
                             onInputChange={(searchTerm, e) => {
                               suggestCustomers(searchTerm);
+                            }}
+                            multiple
+                          />
+                        </th>
+                        <th>
+                          <Typeahead
+                            id="created_by"
+                            labelKey="name"
+                            onChange={(selectedItems) => {
+                              searchByMultipleValuesField(
+                                "created_by",
+                                selectedItems
+                              );
+                            }}
+                            options={userOptions}
+                            placeholder="Select Users"
+                            selected={selectedCreatedByUsers}
+                            highlightOnlyResult={true}
+                            onInputChange={(searchTerm, e) => {
+                              suggestUsers(searchTerm);
                             }}
                             multiple
                           />
@@ -696,9 +696,8 @@ function DeliveryNoteIndex(props) {
                         deliverynoteList.map((deliverynote) => (
                           <tr key={deliverynote.code}>
                             <td>{deliverynote.code}</td>
-
-                            <td>{deliverynote.created_by_name}</td>
                             <td>{deliverynote.customer_name}</td>
+                            <td>{deliverynote.created_by_name}</td>
                             <td>
                               {format(
                                 new Date(deliverynote.created_at),

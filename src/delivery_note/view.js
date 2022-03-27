@@ -95,7 +95,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                     </Button>
                     &nbsp;  &nbsp;
                     <Button variant="primary" onClick={openPreview}>
-                        <i className="bi bi-display"></i> E-Invoice
+                        <i className="bi bi-display"></i> Print A4
                     </Button>
                     &nbsp;  &nbsp;&nbsp; &nbsp;&nbsp;
                     <Button variant="primary" onClick={() => {
