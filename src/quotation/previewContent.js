@@ -100,9 +100,9 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                 "MMM dd yyyy h:mma"
                             ) : "<DATE_TIME>"}</li>
                             <li>
-                                <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "<CUSTOMER_NAME>"}
+                                <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "N/A"}
                             </li>
-                            <li><strong>VAT Number: </strong>{props.model.customer ? props.model.customer.vat_no : "<CUSTOMER_VAT_NO>"}
+                            <li><strong>VAT Number: </strong>{props.model.customer ? props.model.customer.vat_no : "N/A"}
                             </li>
                         </ul>
                     </div>
@@ -111,9 +111,9 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}#<strong> :رقم الإقتباس</strong></li>
                             <li><strong>تاريخ الاقتباس: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
                             <li>
-                                <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
+                                <strong>عميل: </strong>{props.model.customer.name_in_arabic ? props.model.customer.name_in_arabic : "N/A"}
                             </li>
-                            <li><strong>ظريبه الشراء: </strong>{props.model.customer ? props.model.customer.vat_no_in_arabic : "<CUSTOMER_VAT_NO_ARABIC>"}</li>
+                            <li><strong>ظريبه الشراء: </strong>{props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : "N/A"}</li>
                         </ul>
                     </div>
                 </div>
