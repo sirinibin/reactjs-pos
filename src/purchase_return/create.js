@@ -713,7 +713,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                     console.log("e.target.value:", e.target.value)
                                                     selectedProducts[index].selected = !selectedProducts[index].selected;
                                                     if (selectedProducts[index].selected === true) {
-                                                        selectedProducts[index].quantity = 1;
+                                                        if (selectedProducts[index].quantity === 0) {
+                                                            selectedProducts[index].quantity = 1;
+                                                        }
                                                     } else {
                                                         selectedProducts[index].quantity = 0;
                                                     }
