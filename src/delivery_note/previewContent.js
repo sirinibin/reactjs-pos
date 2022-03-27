@@ -35,7 +35,6 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
 
 
     return (<>
-
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
                 className="container"
@@ -126,10 +125,6 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                         <ul className="list-unstyled mb0 text-end">
                             <li>{props.model.code ? convertToPersianNumber(props.model.code) + "#" : "<ID_NUMBER_ARABIC>"}<strong> :رقم مذكرة التسليم </strong></li>
                             <li><strong> تاريخ مذكرة التسليم: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
-                            {/*
-                        <li><strong> اقتباس: </strong>#{props.model.code ? convertToPersianNumber(props.model.code) : "<ID_NUMBER_ARABIC>"}</li>
-                        <li><strong>تاريخ الاقتباس: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
-                        */}
                             <li>
                                 <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
                             </li>
@@ -209,7 +204,7 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
 
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={index} className="text-center" style={{ height: "20px" }}  >
-                                            <td>{index + 1}</td>
+                                            <td>{index + 1 + (pageIndex * props.model.pageSize)}</td>
                                             <td>{product.part_number ? product.part_number : ""}</td>
                                             <td>
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
