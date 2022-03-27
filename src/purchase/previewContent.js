@@ -42,7 +42,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                     border: "solid 2px",
                     borderColor: "silver",
                     borderRadius: "2mm",
-                    padding: "28px"
+                    padding: "20px"
                 }}
 
             >
@@ -408,18 +408,18 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th className="text-end" style={{ padding: "0px" }}>
-                                            <ul className="list-unstyled" style={{ fontSize: "3mm" }}>
+                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "20px" }}>
                                                 <li>إمضاء:</li>
                                                 <li>Signature:</li>
                                             </ul>
                                         </th>
-                                        <th style={{ width: "37%", height: "80px" }}>
-                                            {props.model.order_placed_by_signature ?
-                                                <img alt="Signature" src={process.env.REACT_APP_API_URL + props.model.order_placed_by_signature.signature + "?" + (Date.now())} key={props.model.order_placed_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
+                                        <th style={{ width: "37%", height: "40px" }}>
+                                            {props.model.delivered_by_signature ?
+                                                <img alt="Signature" src={process.env.REACT_APP_API_URL + props.model.delivered_by_signature.signature + "?" + (Date.now())} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
                                                 : null}
                                         </th>
-                                        <th className="text-end" style={{ padding: "0px" }}>
-                                            <ul className="list-unstyled" style={{ fontSize: "3mm" }}>
+                                        <th className="text-end" style={{ padding: "0px" }} >
+                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "20px" }}>
                                                 <li>إمضاء:</li>
                                                 <li>Signature:</li>
                                             </ul>
@@ -431,14 +431,15 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    fontSize: "3mm", marginBottom: "0px"
+                                                    fontSize: "3mm",
+                                                    height: "20px"
                                                 }}
                                             >
                                                 <li>تاريخ:</li>
                                                 <li>Date:</li>
                                             </ul>
                                         </th>
-                                        <th>
+                                        <th style={{ padding: "0px" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -446,7 +447,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 }}
                                             >
                                                 <li>{props.model.signature_date_str ? getArabicDate(props.model.signature_date_str) : ""}</li>
-                                                <li> {props.model.signature_date_str ? props.model.signature_date_str : ""}</li>
+                                                <li>{props.model.signature_date_str ? props.model.signature_date_str : ""}</li>
                                             </ul>
                                         </th>
                                         <th className="text-end" style={{ padding: "0px" }}>
