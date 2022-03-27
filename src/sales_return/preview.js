@@ -29,6 +29,56 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                     getSignature(model.received_by_signature_id);
                 }
 
+                let pageSize = 12;
+                model.pageSize = pageSize;
+                let totalProducts = model.products.length;
+                let top = 0;
+                let totalPagesInt = parseInt(totalProducts / pageSize);
+                let totalPagesFloat = parseFloat(totalProducts / pageSize);
+
+                let totalPages = totalPagesInt;
+                if ((totalPagesFloat - totalPagesInt) > 0) {
+                    totalPages++;
+                }
+
+                model.total_pages = totalPages;
+
+
+                model.pages = [];
+
+
+                let offset = 0;
+
+                for (let i = 0; i < totalPages; i++) {
+                    model.pages.push({
+                        top: top,
+                        products: [],
+                        lastPage: false,
+                        firstPage: false,
+                    });
+
+                    for (let j = offset; j < totalProducts; j++) {
+                        model.pages[i].products.push(model.products[j]);
+
+                        if (model.pages[i].products.length === pageSize) {
+                            break;
+                        }
+                    }
+
+                    top += 1057;
+                    offset += pageSize;
+
+                    if (i === 0) {
+                        model.pages[i].firstPage = true;
+                    }
+
+                    if ((i + 1) === totalPages) {
+                        model.pages[i].lastPage = true;
+                    }
+                }
+
+                console.log("model.pages:", model.pages);
+
                 console.log("model.products:", model.products);
                 getQRCodeContents();
                 //model.qr_content = getQRCodeContents();
