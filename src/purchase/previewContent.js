@@ -42,7 +42,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                     border: "solid 2px",
                     borderColor: "silver",
                     borderRadius: "2mm",
-                    padding: "25px"
+                    padding: "28px"
                 }}
 
             >
@@ -468,9 +468,9 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "3mm" }}>
+                <div className="row" style={{ fontSize: "3mm", height: "55px" }}>
                     <div className="col-md-2 text-start">
-                        {props.model.store && props.model.customer ? <QRCode value={"Quotation #: " + props.model.code + "<br/> Store: " + props.model.store.name + "<br/> Net Total: " + props.model.net_total + "<br/> Customer: " + props.model.customer.name} size={128} /> : null}
+                        {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                     </div>
                     <div className="col-md-8 text-center">
                         <ul className="list-unstyled mb0 text-center">
