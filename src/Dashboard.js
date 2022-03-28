@@ -7,6 +7,7 @@ import {
 import QuotationIndex from './quotation/index.js';
 import DeliveryNoteIndex from './delivery_note/index.js';
 import OrderIndex from './order/index.js';
+import SalesCashDiscountIndex from './sales_cash_discount/index.js';
 import SalesReturnIndex from './sales_return/index.js';
 import PurchaseIndex from './purchase/index.js';
 import PurchaseReturnIndex from './purchase_return/index.js';
@@ -115,6 +116,18 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <OrderIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/sales-cash-discounts">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <SalesCashDiscountIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
