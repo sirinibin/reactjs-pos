@@ -388,7 +388,7 @@ function DeliveryNoteIndex(props) {
                     */}
               <div className="card-body">
                 <div className="row">
-                  {totalItems === 0 && (
+                  {totalPages === 0 && (
                     <div className="col">
                       <p className="text-start">No DeliveryNotes to display</p>
                     </div>

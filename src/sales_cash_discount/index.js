@@ -6,8 +6,9 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import NumberFormat from "react-number-format";
 
 function SalesCashDiscountIndex(props) {
 
@@ -202,6 +203,11 @@ function SalesCashDiscountIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                totalCashDiscounts = data.meta.total_cash_discount;
+                setTotalCashDiscounts(totalCashDiscounts);
+
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -244,7 +250,7 @@ function SalesCashDiscountIndex(props) {
         CreateFormRef.current.open();
     }
 
-
+    let [totalCashDiscounts, setTotalCashDiscounts] = useState(0.00);
 
     return (
         <>
@@ -253,6 +259,23 @@ function SalesCashDiscountIndex(props) {
 
             <div className="container-fluid p-0">
                 <div className="row">
+
+                    <div className="col">
+                        <h1 className="text-end">
+                            Total: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalCashDiscounts}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                    </div>
+                </div>
+                <div className="row">
+
                     <div className="col">
                         <h1 className="h3">Sales Cash Discounts</h1>
                     </div>
