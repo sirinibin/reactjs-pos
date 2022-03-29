@@ -24,7 +24,7 @@ function DeliveryNoteIndex(props) {
   let [pageSize, setPageSize] = useState(5);
   let [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalItems, setTotalItems] = useState(0);
+  let [totalItems, setTotalItems] = useState(0);
   const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
   const [offset, setOffset] = useState(0);
 
