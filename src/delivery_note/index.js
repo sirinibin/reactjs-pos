@@ -24,7 +24,7 @@ function DeliveryNoteIndex(props) {
   let [pageSize, setPageSize] = useState(5);
   let [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
-  const [totalItems, setTotalItems] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
   const [offset, setOffset] = useState(0);
 
@@ -296,6 +296,7 @@ function DeliveryNoteIndex(props) {
         let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
         setTotalPages(pageCount);
+        totalItems = data.total_count;
         setTotalItems(data.total_count);
         setOffset((page - 1) * pageSize);
         setCurrentPageItemsCount(data.result.length);
@@ -388,7 +389,7 @@ function DeliveryNoteIndex(props) {
                     */}
               <div className="card-body">
                 <div className="row">
-                  {totalPages === 0 && (
+                  {totalItems === 0 && (
                     <div className="col">
                       <p className="text-start">No DeliveryNotes to display</p>
                     </div>
