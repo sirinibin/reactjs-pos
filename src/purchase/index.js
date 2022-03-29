@@ -11,6 +11,9 @@ import ReactPaginate from "react-paginate";
 import PurchaseReturnCreate from "./../purchase_return/create.js";
 import NumberFormat from "react-number-format";
 
+import PurchaseCashDiscountCreate from "./../purchase_cash_discount/create.js";
+import PurchaseCashDiscountDetailsView from "./../purchase_cash_discount/view.js";
+
 function PurchaseIndex(props) {
     const cookies = new Cookies();
 
@@ -250,7 +253,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at,net_retail_profit,net_wholesale_profit";
+            "select=id,code,date,net_total,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,net_retail_profit,net_wholesale_profit";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -353,11 +356,28 @@ function PurchaseIndex(props) {
         PurchaseReturnCreateRef.current.open(undefined, id);
     }
 
+    const PurchaseCashDiscountCreateRef = useRef();
+    function openPurchaseCashDiscountCreateForm(order) {
+        PurchaseCashDiscountCreateRef.current.open(undefined, order);
+    }
+
+    const PurchaseCashDiscountDetailsViewRef = useRef();
+    function openPurchaseCashDiscountDetailsView(id) {
+        PurchaseCashDiscountDetailsViewRef.current.open(id);
+    }
+
+    function openPurchaseCashDiscountUpdateForm(id) {
+        PurchaseCashDiscountCreateRef.current.open(id);
+    }
+
     return (
         <>
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
             <PurchaseReturnCreate ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />
+
+            <PurchaseCashDiscountCreate ref={PurchaseCashDiscountCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchaseCashDiscountDetailsView} />
+            <PurchaseCashDiscountDetailsView ref={PurchaseCashDiscountDetailsViewRef} openUpdateForm={openPurchaseCashDiscountUpdateForm} showToastMessage={props.showToastMessage} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -1060,19 +1080,14 @@ function PurchaseIndex(props) {
                                                             ></button>
                                                             <ul className="dropdown-menu">
                                                                 <li>
-                                                                    <a href="/" className="dropdown-item">
-                                                                        <i className="bi bi-download"></i>
-                                                                        Download
-                                                                    </a>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openPurchaseCashDiscountCreateForm(purchase);
+                                                                    }}>
+                                                                        <i className="bi bi-plus"></i>
+                                                                        &nbsp;
+                                                                        Add Cash Discount
+                                                                    </button>
                                                                 </li>
-                                                                {/*
-                              <li>
-                                <a href="/" className="dropdown-item">
-                                  <i className="bi bi-trash"></i>
-                                  Delete
-                                </a>
-                              </li>
-                              */}
                                                             </ul>
                                                         </td>
                                                     </tr>

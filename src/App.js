@@ -24,16 +24,19 @@ function App() {
           <Dashboard />
         </Route>
 
-        <Route path="/dashboard/sales/cash-discounts">
+        <Route path="/dashboard/sales-cash-discounts">
           <Dashboard />
         </Route>
-
 
         <Route path="/dashboard/salesreturn">
           <Dashboard />
         </Route>
 
         <Route path="/dashboard/purchases">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/purchase-cash-discounts">
           <Dashboard />
         </Route>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import SalesCashDiscountCreate from "./create.js";
-import SalesCashDiscountView from "./view.js";
+import PurchaseCashDiscountCreate from "./create.js";
+import PurchaseCashDiscountView from "./view.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -10,20 +10,20 @@ import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
-function SalesCashDiscountIndex(props) {
+function PurchaseCashDiscountIndex(props) {
 
     const cookies = new Cookies();
 
     const selectedDate = new Date();
 
     //list
-    const [salescashdiscountList, setSalesCashDiscountList] = useState([]);
+    const [purchasecashdiscountList, setPurchaseCashDiscountList] = useState([]);
 
     //pagination
     let [pageSize, setPageSize] = useState(5);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
-    const [totalItems, setTotalItems] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
     const [offset, setOffset] = useState(0);
 
@@ -38,9 +38,9 @@ function SalesCashDiscountIndex(props) {
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
-    //Created By SalesCashDiscount Auto Suggestion
-    const [salescashdiscountOptions, setSalesCashDiscountOptions] = useState([]);
-    const [selectedCreatedBySalesCashDiscounts, setSelectedCreatedBySalesCashDiscounts] = useState([]);
+    //Created By PurchaseCashDiscount Auto Suggestion
+    const [purchasecashdiscountOptions, setPurchaseCashDiscountOptions] = useState([]);
+    const [selectedCreatedByPurchaseCashDiscounts, setSelectedCreatedByPurchaseCashDiscounts] = useState([]);
 
 
     useEffect(() => {
@@ -51,7 +51,7 @@ function SalesCashDiscountIndex(props) {
     //Search params
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
-    let [sortSalesCashDiscount, setSortSalesCashDiscount] = useState("-");
+    let [sortPurchaseCashDiscount, setSortPurchaseCashDiscount] = useState("-");
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -92,7 +92,7 @@ function SalesCashDiscountIndex(props) {
         );
         let data = await result.json();
 
-        setSalesCashDiscountOptions(data.result);
+        setPurchaseCashDiscountOptions(data.result);
     }
 
     function searchByFieldValue(field, value) {
@@ -136,7 +136,7 @@ function SalesCashDiscountIndex(props) {
 
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
-            setSelectedCreatedBySalesCashDiscounts(values);
+            setSelectedCreatedByPurchaseCashDiscounts(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -160,7 +160,7 @@ function SalesCashDiscountIndex(props) {
             },
         };
         let Select =
-            "select=id,amount,store_name,order_code,order_id,created_by_name,created_at";
+            "select=id,amount,store_name,purchase_code,purchase_id,created_by_name,created_at";
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -169,11 +169,11 @@ function SalesCashDiscountIndex(props) {
 
         setIsListLoading(true);
         fetch(
-            "/v1/sales/cash-discount?" +
+            "/v1/purchase-cash-discount?" +
             Select +
             queryParams +
             "&sort=" +
-            sortSalesCashDiscount +
+            sortPurchaseCashDiscount +
             sortField +
             "&page=" +
             page +
@@ -195,7 +195,7 @@ function SalesCashDiscountIndex(props) {
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
-                setSalesCashDiscountList(data.result);
+                setPurchaseCashDiscountList(data.result);
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
@@ -219,8 +219,8 @@ function SalesCashDiscountIndex(props) {
     function sort(field) {
         sortField = field;
         setSortField(sortField);
-        sortSalesCashDiscount = sortSalesCashDiscount === "-" ? "" : "-";
-        setSortSalesCashDiscount(sortSalesCashDiscount);
+        sortPurchaseCashDiscount = sortPurchaseCashDiscount === "-" ? "" : "-";
+        setSortPurchaseCashDiscount(sortPurchaseCashDiscount);
         list();
     }
 
@@ -254,8 +254,8 @@ function SalesCashDiscountIndex(props) {
 
     return (
         <>
-            <SalesCashDiscountCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
-            <SalesCashDiscountView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
+            <PurchaseCashDiscountCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <PurchaseCashDiscountView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -277,7 +277,7 @@ function SalesCashDiscountIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <h1 className="h3">Sales Cash Discounts</h1>
+                        <h1 className="h3">Purchase Cash Discounts</h1>
                     </div>
                 </div>
 
@@ -293,12 +293,12 @@ function SalesCashDiscountIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No sales cash discounts to display</p>
+                                            <p className="text-start">No purchase cash discounts to display</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ bsalescashdiscount: "solid 0px" }}>
-                                    <div className="col text-start" style={{ bsalescashdiscount: "solid 0px" }}>
+                                <div className="row" style={{ bpurchasecashdiscount: "solid 0px" }}>
+                                    <div className="col text-start" style={{ bpurchasecashdiscount: "solid 0px" }}>
                                         <Button
                                             onClick={() => {
                                                 setIsRefreshInProcess(true);
@@ -310,7 +310,7 @@ function SalesCashDiscountIndex(props) {
                                             {isRefreshInProcess ? (
                                                 <Spinner
                                                     as="span"
-                                                    animation="bsalescashdiscount"
+                                                    animation="bpurchasecashdiscount"
                                                     size="sm"
                                                     role="status"
                                                     aria-hidden="true"
@@ -337,8 +337,8 @@ function SalesCashDiscountIndex(props) {
                                                     }}
                                                     className="form-control pull-right"
                                                     style={{
-                                                        bsalescashdiscount: "solid 1px",
-                                                        bsalescashdiscountColor: "silver",
+                                                        bpurchasecashdiscount: "solid 1px",
+                                                        bpurchasecashdiscountColor: "silver",
                                                         width: "55px",
                                                     }}
                                                 >
@@ -360,7 +360,7 @@ function SalesCashDiscountIndex(props) {
 
                                 <br />
                                 <div className="row">
-                                    <div className="col" style={{ bsalescashdiscount: "solid 0px" }}>
+                                    <div className="col" style={{ bpurchasecashdiscount: "solid 0px" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
@@ -412,15 +412,15 @@ function SalesCashDiscountIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("order_code");
+                                                            sort("purchase_code");
                                                         }}
                                                     >
 
-                                                        Order ID
-                                                        {sortField === "order_code" && sortSalesCashDiscount === "-" ? (
+                                                        Purchase ID
+                                                        {sortField === "purchase_code" && sortPurchaseCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "order_code" && sortSalesCashDiscount === "" ? (
+                                                        {sortField === "purchase_code" && sortPurchaseCashDiscount === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -436,10 +436,10 @@ function SalesCashDiscountIndex(props) {
                                                         }}
                                                     >
                                                         Amount
-                                                        {sortField === "amount" && sortSalesCashDiscount === "-" ? (
+                                                        {sortField === "amount" && sortPurchaseCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "amount" && sortSalesCashDiscount === "" ? (
+                                                        {sortField === "amount" && sortPurchaseCashDiscount === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -456,10 +456,10 @@ function SalesCashDiscountIndex(props) {
                                                         }}
                                                     >
                                                         Created By
-                                                        {sortField === "created_by_name" && sortSalesCashDiscount === "-" ? (
+                                                        {sortField === "created_by_name" && sortPurchaseCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "created_by_name" && sortSalesCashDiscount === "" ? (
+                                                        {sortField === "created_by_name" && sortPurchaseCashDiscount === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -475,10 +475,10 @@ function SalesCashDiscountIndex(props) {
                                                         }}
                                                     >
                                                         Created At
-                                                        {sortField === "created_at" && sortSalesCashDiscount === "-" ? (
+                                                        {sortField === "created_at" && sortPurchaseCashDiscount === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
-                                                        {sortField === "created_at" && sortSalesCashDiscount === "" ? (
+                                                        {sortField === "created_at" && sortPurchaseCashDiscount === "" ? (
                                                             <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
@@ -492,9 +492,9 @@ function SalesCashDiscountIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="order_code"
+                                                        id="purchase_code"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("order_code", e.target.value)
+                                                            searchByFieldValue("purchase_code", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -519,9 +519,9 @@ function SalesCashDiscountIndex(props) {
                                                                 selectedItems
                                                             );
                                                         }}
-                                                        options={salescashdiscountOptions}
+                                                        options={purchasecashdiscountOptions}
                                                         placeholder="Select Users"
-                                                        selected={selectedCreatedBySalesCashDiscounts}
+                                                        selected={selectedCreatedByPurchaseCashDiscounts}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
@@ -585,27 +585,27 @@ function SalesCashDiscountIndex(props) {
                                             </tr>
                                         </thead>
                                         <tbody className="text-center">
-                                            {salescashdiscountList &&
-                                                salescashdiscountList.map((salescashdiscount) => (
-                                                    <tr key={salescashdiscount.id}>
-                                                        <td>{salescashdiscount.order_code}</td>
-                                                        <td>{salescashdiscount.amount.toFixed(2) + " SAR"}</td>
-                                                        <td>{salescashdiscount.created_by_name}</td>
+                                            {purchasecashdiscountList &&
+                                                purchasecashdiscountList.map((purchasecashdiscount) => (
+                                                    <tr key={purchasecashdiscount.id}>
+                                                        <td>{purchasecashdiscount.purchase_code}</td>
+                                                        <td>{purchasecashdiscount.amount.toFixed(2) + " SAR"}</td>
+                                                        <td>{purchasecashdiscount.created_by_name}</td>
                                                         <td>
                                                             {format(
-                                                                new Date(salescashdiscount.created_at),
+                                                                new Date(purchasecashdiscount.created_at),
                                                                 "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
                                                         <td>
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(salescashdiscount.id);
+                                                                openUpdateForm(purchasecashdiscount.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(salescashdiscount.id);
+                                                                openDetailsView(purchasecashdiscount.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
@@ -662,4 +662,4 @@ function SalesCashDiscountIndex(props) {
     );
 }
 
-export default SalesCashDiscountIndex;
+export default PurchaseCashDiscountIndex;

@@ -4,7 +4,7 @@ import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
 import PurchasePrint from './print.js';
-
+import { format } from "date-fns";
 
 
 const PurchaseView = forwardRef((props, ref) => {
@@ -13,6 +13,7 @@ const PurchaseView = forwardRef((props, ref) => {
         open(id) {
             if (id) {
                 getPurchase(id);
+                getCashDiscounts(id);
                 setShow(true);
             }
 
@@ -29,10 +30,72 @@ const PurchaseView = forwardRef((props, ref) => {
         setShow(false);
     };
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
+
     let [totalPrice, setTotalPrice] = useState(0.0);
     let [netTotal, setNetTotal] = useState(0.00);
     let [totalQuantity, setTotalQuantity] = useState(0);
     let [vatPrice, setVatPrice] = useState(0.00);
+
+    const [searchParams, setSearchParams] = useState({});
+
+    let [purchaseCashDiscountList, setPurchaseCashDiscountList] = useState([]);
+    let [totalCashDiscounts, setTotalCashDiscounts] = useState(0.00);
+
+    function getCashDiscounts(purchase_id) {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+        let Select =
+            "select=id,amount,store_name,purchase_code,purchase_id,created_by_name,created_at";
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        searchParams["purchase_id"] = purchase_id;
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        fetch(
+            "/v1/purchase-cash-discount?" +
+            Select +
+            queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                setPurchaseCashDiscountList(data.result);
+                totalCashDiscounts = data.meta.total_cash_discount;
+                setTotalCashDiscounts(totalCashDiscounts);
+
+
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
 
     function getPurchase(id) {
         console.log("inside get Purchase");
@@ -151,6 +214,44 @@ const PurchaseView = forwardRef((props, ref) => {
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
                         </tr>
+                        {purchaseCashDiscountList.length > 0 ? <tr>
+                            <th>Cash Discounts</th>
+                            <td>
+                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                    <table className="table table-striped table-sm table-bordered">
+                                        <thead>
+                                            <tr className="text-center">
+                                                <th>
+                                                    Amount
+                                                </th>
+
+                                                <th>
+                                                    Created By
+                                                </th>
+                                                <th>
+                                                    Created At
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-center">
+                                            {purchaseCashDiscountList &&
+                                                purchaseCashDiscountList.map((discount) => (
+                                                    <tr key={discount.id}>
+                                                        <td>{discount.amount.toFixed(2) + " SAR"}</td>
+                                                        <td>{discount.created_by_name}</td>
+                                                        <td>
+                                                            {format(
+                                                                new Date(discount.created_at),
+                                                                "MMM dd yyyy H:mma"
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr> : ""}
                     </tbody>
                 </Table>
 
@@ -266,6 +367,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                         </td>
                                         : ""}
                                 </tr>
+
                             ))}
                             <tr>
                                 <th colSpan="5" className="text-end">Total</th>
