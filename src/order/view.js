@@ -4,6 +4,7 @@ import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
 import OrderPreview from './preview.js';
 import OrderPrint from './print.js';
+import { format } from "date-fns";
 
 const OrderView = forwardRef((props, ref) => {
 
@@ -12,6 +13,7 @@ const OrderView = forwardRef((props, ref) => {
         open(id) {
             if (id) {
                 getOrder(id);
+                getCashDiscounts(id);
                 SetShow(true);
             }
 
@@ -28,6 +30,59 @@ const OrderView = forwardRef((props, ref) => {
     let [netTotal, setNetTotal] = useState(0.00);
     let [totalQuantity, setTotalQuantity] = useState(0);
     let [vatPrice, setVatPrice] = useState(0.00);
+    const [searchParams, setSearchParams] = useState({});
+
+    let [salesCashDiscountList, setSalesCashDiscountList] = useState([]);
+    let [totalCashDiscounts, setTotalCashDiscounts] = useState(0.00);
+
+    function getCashDiscounts(order_id) {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+        let Select =
+            "select=id,amount,store_name,order_code,order_id,created_by_name,created_at";
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        searchParams["order_id"] = order_id;
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        fetch(
+            "/v1/sales/cash-discount?" +
+            Select +
+            queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                setSalesCashDiscountList(data.result);
+                totalCashDiscounts = data.meta.total_cash_discount;
+                setTotalCashDiscounts(totalCashDiscounts);
+
+
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
 
 
 
@@ -80,6 +135,14 @@ const OrderView = forwardRef((props, ref) => {
     const PrintRef = useRef();
     function openPrint() {
         PrintRef.current.open(model);
+    }
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
     }
 
     return (<>
@@ -145,6 +208,44 @@ const OrderView = forwardRef((props, ref) => {
                             {cookies.get('admin') === "true" ? <th>Profit:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.profit} SAR</td> : ""}
                             {cookies.get('admin') === "true" ? <th>Loss:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.loss} SAR</td> : ""}
                         </tr>
+                        {salesCashDiscountList.length > 0 ? <tr>
+                            <th>Cash Discounts</th>
+                            <td>
+                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                    <table className="table table-striped table-sm table-bordered">
+                                        <thead>
+                                            <tr className="text-center">
+                                                <th>
+                                                    Amount
+                                                </th>
+
+                                                <th>
+                                                    Created By
+                                                </th>
+                                                <th>
+                                                    Created At
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="text-center">
+                                            {salesCashDiscountList &&
+                                                salesCashDiscountList.map((salescashdiscount) => (
+                                                    <tr key={salescashdiscount.id}>
+                                                        <td>{salescashdiscount.amount.toFixed(2) + " SAR"}</td>
+                                                        <td>{salescashdiscount.created_by_name}</td>
+                                                        <td>
+                                                            {format(
+                                                                new Date(salescashdiscount.created_at),
+                                                                "MMM dd yyyy H:mma"
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr> : ""}
                     </tbody>
                 </Table>
 
