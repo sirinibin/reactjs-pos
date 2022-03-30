@@ -350,7 +350,7 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="name"
-                                    placeholder="Name"
+                                    placeholder="Amount"
                                 />
                             </div>
                             {errors.amount && (

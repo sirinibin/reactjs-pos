@@ -120,18 +120,6 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
                 formData = data.result;
                 console.log("formData:", formData);
 
-
-                if (formData.parent_id) {
-                    selectedParentCategories = [
-                        {
-                            id: formData.parent_id,
-                            name: formData.parent_name,
-                        },
-                    ];
-                    setSelectedParentCategories([...selectedParentCategories]);
-
-                }
-
                 setFormData({ ...formData });
                 console.log("formData:", formData);
 
@@ -350,7 +338,7 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="name"
-                                    placeholder="Name"
+                                    placeholder="Amount"
                                 />
                             </div>
                             {errors.amount && (
