@@ -204,7 +204,7 @@ function PurchasePaymentIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalPayments = data.meta.total_payment_;
+                totalPayments = data.meta.total_payment;
                 setTotalPayments(totalPayments);
 
 
