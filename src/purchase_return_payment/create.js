@@ -279,7 +279,7 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Payment  for purchasereturn purchasereturn#" + formData.purchasereturn_code : "Add Payment to purchase return  #" + formData.purchase_return_code}
+                        {formData.id ? "Update Payment  of purchase return #" + formData.purchase_return_code : "Add Payment of purchase return  #" + formData.purchase_return_code}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">

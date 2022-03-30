@@ -67,7 +67,7 @@ const PurchaseReturnPaymentView = forwardRef((props, ref) => {
                 <div className="col align-self-end text-end">
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {
                         handleClose();
-                        props.openCreateForm(props.purchase_return);
+                        props.openCreateForm(model);
                     }}>
                         <i className="bi bi-plus"></i> Create
                     </Button> : ""}

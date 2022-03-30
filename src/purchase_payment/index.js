@@ -246,16 +246,13 @@ function PurchasePaymentIndex(props) {
     }
 
     const CreateFormRef = useRef();
-    function openCreateForm() {
-        CreateFormRef.current.open();
-    }
 
     let [totalPayments, setTotalPayments] = useState(0.00);
 
     return (
         <>
             <PurchasePaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
-            <PurchasePaymentView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
+            <PurchasePaymentView ref={DetailsViewRef} openUpdateForm={openUpdateForm} />
 
             <div className="container-fluid p-0">
                 <div className="row">

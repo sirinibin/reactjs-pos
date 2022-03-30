@@ -341,8 +341,8 @@ function PurchaseReturnIndex(props) {
 
     //Purchase Return Payments
     const PurchaseReturnPaymentCreateRef = useRef();
-    function openPurchaseReturnPaymentCreateForm(order) {
-        PurchaseReturnPaymentCreateRef.current.open(undefined, order);
+    function openPurchaseReturnPaymentCreateForm(purchaseReturn) {
+        PurchaseReturnPaymentCreateRef.current.open(undefined, purchaseReturn);
     }
 
     const PurchaseReturnPaymentDetailsViewRef = useRef();

@@ -250,16 +250,13 @@ function SalesReturnPaymentIndex(props) {
     }
 
     const CreateFormRef = useRef();
-    function openCreateForm() {
-        CreateFormRef.current.open();
-    }
 
     let [totalPayments, setTotalPayments] = useState(0.00);
 
     return (
         <>
             <SalesReturnPaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
-            <SalesReturnPaymentView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
+            <SalesReturnPaymentView ref={DetailsViewRef} openUpdateForm={openUpdateForm} />
 
             <div className="container-fluid p-0">
                 <div className="row">

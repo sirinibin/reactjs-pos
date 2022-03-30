@@ -124,17 +124,15 @@ const SalesReturnPaymentCreate = forwardRef((props, ref) => {
                 formData = data.result;
                 console.log("formData:", formData);
 
+                /*
+                formData.sales_return_id = salesreturn.id;
+                formData.sales_return_code = salesreturn.code;
 
-                if (formData.parent_id) {
-                    selectedParentCategories = [
-                        {
-                            id: formData.parent_id,
-                            name: formData.parent_name,
-                        },
-                    ];
-                    setSelectedParentCategories([...selectedParentCategories]);
+                formData.order_id = salesreturn.order_id;
+                formData.order_code = salesreturn.order_code;
 
-                }
+                formData.store_id = salesreturn.store_id;
+                 */
 
                 setFormData({ ...formData });
                 console.log("formData:", formData);
@@ -255,8 +253,8 @@ const SalesReturnPaymentCreate = forwardRef((props, ref) => {
         const requestOptions = {
             method: "GET",
             headers: {
-                "Content-Type": "application/json",
                 Authorization: cookies.get("access_token"),
+                "Content-Type": "application/json",
             },
         };
 
@@ -279,7 +277,7 @@ const SalesReturnPaymentCreate = forwardRef((props, ref) => {
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Payment  for salesreturn salesreturn#" + formData.salesreturn_code : "Add Payment to sales return  #" + formData.sales_return_code}
+                        {formData.id ? "Update Payment of sales return #" + formData.sales_return_code : "Add Payment of sales return  #" + formData.sales_return_code}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
