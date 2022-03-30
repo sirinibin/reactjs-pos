@@ -4,6 +4,7 @@ import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
 import SalesReturnPreview from './preview.js';
 import SalesReturnPrint from './print.js';
+import { format } from "date-fns";
 
 const SalesReturnView = forwardRef((props, ref) => {
 
@@ -12,6 +13,7 @@ const SalesReturnView = forwardRef((props, ref) => {
         open(id) {
             if (id) {
                 getSalesReturn(id);
+                getPayments(id);
                 SetShow(true);
             }
 
@@ -29,6 +31,71 @@ const SalesReturnView = forwardRef((props, ref) => {
     let [netTotal, setNetTotal] = useState(0.00);
     let [totalQuantity, setTotalQuantity] = useState(0);
     let [vatPrice, setVatPrice] = useState(0.00);
+
+
+    let [salesReturnPaymentList, setSalesReturnPaymentList] = useState([]);
+    let [totalPayments, setTotalPayments] = useState(0.00);
+
+    const [searchParams, setSearchParams] = useState({});
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
+
+
+    function getPayments(sales_return_id) {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+        let Select =
+            "select=id,amount,method,store_name,sales_return_code,sales_return_id,created_by_name,created_at";
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        searchParams["sales_return_id"] = sales_return_id;
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        fetch(
+            "/v1/sales-return-payment?" +
+            Select +
+            queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                setSalesReturnPaymentList(data.result);
+                totalPayments = data.meta.total_payment;
+                setTotalPayments(totalPayments);
+
+
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
 
 
     function getSalesReturn(id) {
@@ -137,6 +204,50 @@ const SalesReturnView = forwardRef((props, ref) => {
                         <tr>
                             <th>Created By: </th><td> {model.created_by_name}</td>
                             <th>Updated By: </th><td> {model.updated_by_name}</td>
+                        </tr>
+                        <tr>
+                            {salesReturnPaymentList.length > 0 ?
+                                <th>Payments</th> : ""}
+                            {salesReturnPaymentList.length > 0 ?
+                                <td>
+                                    <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                        <table className="table table-striped table-sm table-bordered">
+                                            <thead>
+                                                <tr className="text-center">
+                                                    <th>
+                                                        Amount
+                                                    </th>
+                                                    <th>
+                                                        Payment Method
+                                                    </th>
+
+                                                    <th>
+                                                        Created By
+                                                    </th>
+                                                    <th>
+                                                        Created At
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="text-center">
+                                                {salesReturnPaymentList &&
+                                                    salesReturnPaymentList.map((payment) => (
+                                                        <tr key={payment.id}>
+                                                            <td>{payment.amount.toFixed(2) + " SAR"}</td>
+                                                            <td>{payment.method}</td>
+                                                            <td>{payment.created_by_name}</td>
+                                                            <td>
+                                                                {format(
+                                                                    new Date(payment.created_at),
+                                                                    "MMM dd yyyy H:mma"
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td> : ""}
                         </tr>
                     </tbody>
                 </Table>
