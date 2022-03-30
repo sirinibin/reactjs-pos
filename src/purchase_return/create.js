@@ -41,6 +41,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 date_str: format(new Date(), "MMM dd yyyy"),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "purchase_returned",
+                payment_status: "paid",
+                payment_method: "cash",
             };
             if (cookies.get("user_id")) {
                 selectedPurchaseReturnedByUsers = [{
@@ -1098,51 +1100,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
                                         Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Purchase Returned By*</label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="purchase_returned_by"
-                                    labelKey="name"
-                                    isLoading={isPurchaseReturnedByUsersLoading}
-                                    isInvalid={errors.purchase_returned_by ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.purchase_returned_by = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.purchase_returned_by = "Invalid User Selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedPurchaseReturnedByUsers([]);
-                                            return;
-                                        }
-                                        formData.purchase_returned_by = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        setSelectedPurchaseReturnedByUsers(selectedItems);
-                                    }}
-                                    options={purchaseReturnedByUserOptions}
-                                    placeholder="Select User"
-                                    selected={selectedPurchaseReturnedByUsers}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestUsers(searchTerm);
-                                    }}
-                                />
-                                <Button hide={true.toString()} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.purchase_returned_by ? (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i> {errors.purchase_returned_by}
-                                    </div>
-                                ) : null}
-                                {formData.purchase_returned_by && !errors.purchase_returned_by && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>Looks good!
                                     </div>
                                 )}
                             </div>

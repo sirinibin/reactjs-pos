@@ -141,6 +141,12 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                         <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
+
+                        </tr>
+                        <tr>
+                            <th>Payment Status:</th><td> {model.payment_status}</td>
+                            <th>Payment Method:</th><td> {model.payment_method}</td>
+                            <th>Partial Payment Amount:</th><td> {model.partial_payment_amount}</td>
                         </tr>
                     </tbody>
                 </Table>

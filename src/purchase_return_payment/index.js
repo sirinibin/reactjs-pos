@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import PurchaseReturnCreate from "./create.js";
-import PurchaseReturnView from "./view.js";
+import PurchaseReturnPaymentCreate from "./create.js";
+import PurchaseReturnPaymentView from "./view.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -10,17 +10,14 @@ import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
-import PurchaseReturnPaymentCreate from "./../purchase_return_payment/create.js";
-import PurchaseReturnPaymentDetailsView from "./../purchase_return_payment/view.js";
+function PurchaseReturnPaymentIndex(props) {
 
-
-function PurchaseReturnIndex(props) {
     const cookies = new Cookies();
 
-    let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
+    const selectedDate = new Date();
 
     //list
-    const [purchasereturnList, setPurchaseReturnList] = useState([]);
+    const [purchasereturnpaymentList, setPurchaseReturnPaymentList] = useState([]);
 
     //pagination
     let [pageSize, setPageSize] = useState(5);
@@ -30,12 +27,6 @@ function PurchaseReturnIndex(props) {
     const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
     const [offset, setOffset] = useState(0);
 
-    //Date filter
-    const [showDateRange, setShowDateRange] = useState(false);
-    const selectedDate = new Date();
-    const [dateValue, setDateValue] = useState("");
-    const [fromDateValue, setFromDateValue] = useState("");
-    const [toDateValue, setToDateValue] = useState("");
 
     //Created At filter
     const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
@@ -47,43 +38,10 @@ function PurchaseReturnIndex(props) {
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
-    //Vendor Auto Suggestion
-    const [vendorOptions, setVendorOptions] = useState([]);
-    const [selectedVendors, setSelectedVendors] = useState([]);
+    //Created By PurchaseReturnPayment Auto Suggestion
+    const [purchasereturnpaymentOptions, setPurchaseReturnPaymentOptions] = useState([]);
+    const [selectedCreatedByPurchaseReturnPayments, setSelectedCreatedByPurchaseReturnPayments] = useState([]);
 
-    //Created By User Auto Suggestion
-    const [userOptions, setUserOptions] = useState([]);
-    const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
-
-    //Status Auto Suggestion
-    const statusOptions = [
-        {
-            id: "sent",
-            name: "Sent",
-        },
-        {
-            id: "pending",
-            name: "Pending",
-        },
-        {
-            id: "accepted",
-            name: "Accepted",
-        },
-        {
-            id: "rejected",
-            name: "Rejected",
-        },
-        {
-            id: "cancelled",
-            name: "Cancelled",
-        },
-        {
-            id: "deleted",
-            name: "Deleted",
-        },
-    ];
-
-    const [selectedStatusList, setSelectedStatusList] = useState([]);
 
     useEffect(() => {
         list();
@@ -93,7 +51,7 @@ function PurchaseReturnIndex(props) {
     //Search params
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
-    let [sortOrder, setSortOrder] = useState("-");
+    let [sortPurchaseReturnPayment, setSortPurchaseReturnPayment] = useState("-");
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -103,35 +61,8 @@ function PurchaseReturnIndex(props) {
             .join("&");
     }
 
-    async function suggestVendors(searchTerm) {
-        console.log("Inside handle suggestVendors");
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = `&${queryString}`;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
-        let data = await result.json();
-
-        setVendorOptions(data.result);
-    }
-
     async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggestUsers");
-        setVendorOptions([]);
+        console.log("Inside handle suggest Users");
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -161,7 +92,7 @@ function PurchaseReturnIndex(props) {
         );
         let data = await result.json();
 
-        setUserOptions(data.result);
+        setPurchaseReturnPaymentOptions(data.result);
     }
 
     function searchByFieldValue(field, value) {
@@ -177,24 +108,7 @@ function PurchaseReturnIndex(props) {
         d = new Date(d.toUTCString());
 
         value = format(d, "MMM dd yyyy");
-        if (field === "date_str") {
-            setDateValue(value);
-            setFromDateValue("");
-            setToDateValue("");
-            searchParams["from_date"] = "";
-            searchParams["to_date"] = "";
-            searchParams[field] = value;
-        } else if (field === "from_date") {
-            setFromDateValue(value);
-            setDateValue("");
-            searchParams["date"] = "";
-            searchParams[field] = value;
-        } else if (field === "to_date") {
-            setToDateValue(value);
-            setDateValue("");
-            searchParams["date"] = "";
-            searchParams[field] = value;
-        } else if (field === "created_at") {
+        if (field === "created_at") {
             setCreatedAtValue(value);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
@@ -222,11 +136,7 @@ function PurchaseReturnIndex(props) {
 
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
-            setSelectedCreatedByUsers(values);
-        } else if (field === "vendor_id") {
-            setSelectedVendors(values);
-        } else if (field === "status") {
-            setSelectedStatusList(values);
+            setSelectedCreatedByPurchaseReturnPayments(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -250,10 +160,11 @@ function PurchaseReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,purchase_code,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at";
+            "select=id,amount,method,store_name,purchase_return_code,purchase_return_id,purchase_id,purchase_code,created_by_name,created_at";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -262,11 +173,11 @@ function PurchaseReturnIndex(props) {
 
         setIsListLoading(true);
         fetch(
-            "/v1/purchase-return?" +
+            "/v1/purchase-return-payment?" +
             Select +
             queryParams +
             "&sort=" +
-            sortOrder +
+            sortPurchaseReturnPayment +
             sortField +
             "&page=" +
             page +
@@ -288,7 +199,7 @@ function PurchaseReturnIndex(props) {
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
-                setPurchaseReturnList(data.result);
+                setPurchaseReturnPaymentList(data.result);
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
@@ -297,8 +208,10 @@ function PurchaseReturnIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalPurchaseReturn = data.meta.total_purchase_return;
-                setTotalPurchaseReturn(totalPurchaseReturn);
+                totalPayments = data.meta.total_payment;
+                setTotalPayments(totalPayments);
+
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -310,8 +223,8 @@ function PurchaseReturnIndex(props) {
     function sort(field) {
         sortField = field;
         setSortField(sortField);
-        sortOrder = sortOrder === "-" ? "" : "-";
-        setSortOrder(sortOrder);
+        sortPurchaseReturnPayment = sortPurchaseReturnPayment === "-" ? "" : "-";
+        setSortPurchaseReturnPayment(sortPurchaseReturnPayment);
         list();
     }
 
@@ -327,6 +240,9 @@ function PurchaseReturnIndex(props) {
         list();
     }
 
+    function openUpdateForm(id) {
+        CreateFormRef.current.open(id);
+    }
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
@@ -334,42 +250,25 @@ function PurchaseReturnIndex(props) {
     }
 
     const CreateFormRef = useRef();
-    function openUpdateForm(id) {
-        CreateFormRef.current.open(id);
+    function openCreateForm() {
+        CreateFormRef.current.open();
     }
 
-
-    //Purchase Return Payments
-    const PurchaseReturnPaymentCreateRef = useRef();
-    function openPurchaseReturnPaymentCreateForm(order) {
-        PurchaseReturnPaymentCreateRef.current.open(undefined, order);
-    }
-
-    const PurchaseReturnPaymentDetailsViewRef = useRef();
-    function openPurchaseReturnPaymentDetailsView(id) {
-        PurchaseReturnPaymentDetailsViewRef.current.open(id);
-    }
-
-    function openPurchaseReturnPaymentUpdateForm(id) {
-        PurchaseReturnPaymentCreateRef.current.open(id);
-    }
+    let [totalPayments, setTotalPayments] = useState(0.00);
 
     return (
         <>
-            <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <PurchaseReturnView ref={DetailsViewRef} />
-
-            <PurchaseReturnPaymentCreate ref={PurchaseReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchaseReturnPaymentDetailsView} />
-            <PurchaseReturnPaymentDetailsView ref={PurchaseReturnPaymentDetailsViewRef} openUpdateForm={openPurchaseReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />
+            <PurchaseReturnPaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <PurchaseReturnPaymentView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
                 <div className="row">
 
                     <div className="col">
                         <h1 className="text-end">
-                            Purchase Return: <Badge bg="secondary">
+                            Total: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalPurchaseReturn}
+                                    value={totalPayments}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -378,25 +277,11 @@ function PurchaseReturnIndex(props) {
                             </Badge>
                         </h1>
                     </div>
-
                 </div>
-
                 <div className="row">
-                    <div className="col">
-                        <h1 className="h3">Purchase Returns</h1>
-                    </div>
 
-                    <div className="col text-end">
-                        {/*
-                        <Button
-                            hide={true}
-                            variant="primary"
-                            className="btn btn-primary mb-3"
-                            onClick={openCreateForm}
-                        >
-                            <i className="bi bi-plus-lg"></i> Create
-                        </Button>
-                        */}
+                    <div className="col">
+                        <h1 className="h3">Purchase Return Payments</h1>
                     </div>
                 </div>
 
@@ -412,12 +297,12 @@ function PurchaseReturnIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Purchase Returns to display</p>
+                                            <p className="text-start">No purchase return payments to display</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ border: "solid 0px" }}>
-                                    <div className="col text-start" style={{ border: "solid 0px" }}>
+                                <div className="row" style={{ bpurchasereturnpayment: "solid 0px" }}>
+                                    <div className="col text-start" style={{ bpurchasereturnpayment: "solid 0px" }}>
                                         <Button
                                             onClick={() => {
                                                 setIsRefreshInProcess(true);
@@ -429,10 +314,10 @@ function PurchaseReturnIndex(props) {
                                             {isRefreshInProcess ? (
                                                 <Spinner
                                                     as="span"
-                                                    animation="border"
+                                                    animation="bpurchasereturnpayment"
                                                     size="sm"
                                                     role="status"
-                                                    aria-hidden={true}
+                                                    aria-hidden="true"
                                                 />
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
@@ -456,8 +341,8 @@ function PurchaseReturnIndex(props) {
                                                     }}
                                                     className="form-control pull-right"
                                                     style={{
-                                                        border: "solid 1px",
-                                                        borderColor: "silver",
+                                                        bpurchasereturnpayment: "solid 1px",
+                                                        bpurchasereturnpaymentColor: "silver",
                                                         width: "55px",
                                                     }}
                                                 >
@@ -479,7 +364,7 @@ function PurchaseReturnIndex(props) {
 
                                 <br />
                                 <div className="row">
-                                    <div className="col" style={{ border: "solid 0px" }}>
+                                    <div className="col" style={{ bpurchasereturnpayment: "solid 0px" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
@@ -531,14 +416,15 @@ function PurchaseReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("code");
+                                                            sort("purchase_return_code");
                                                         }}
                                                     >
-                                                        ID
-                                                        {sortField === "code" && sortOrder === "-" ? (
+
+                                                        Purchase Return ID
+                                                        {sortField === "purchase_return_code" && sortPurchaseReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "code" && sortOrder === "" ? (
+                                                        {sortField === "purchase_return_code" && sortPurchaseReturnPayment === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -550,110 +436,14 @@ function PurchaseReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("vendor_invoice_no");
+                                                            sort("amount");
                                                         }}
                                                     >
-                                                        Vendor Invoice No.
-                                                        {sortField === "vendor_invoice_no" && sortOrder === "-" ? (
+                                                        Amount
+                                                        {sortField === "amount" && sortPurchaseReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "vendor_invoice_no" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("vendor_name");
-                                                        }}
-                                                    >
-                                                        Vendor
-                                                        {sortField === "vendor_name" &&
-                                                            sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "vendor_name" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("purchase_code");
-                                                        }}
-                                                    >
-                                                        Purchase ID
-                                                        {sortField === "code" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "code" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("date");
-                                                        }}
-                                                    >
-                                                        Date
-                                                        {sortField === "date" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "date" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("net_total");
-                                                        }}
-                                                    >
-                                                        Net Total
-                                                        {sortField === "net_total" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_total" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_by");
-                                                        }}
-                                                    >
-                                                        Created By
-                                                        {sortField === "created_by" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "created_by" && sortOrder === "" ? (
+                                                        {sortField === "amount" && sortPurchaseReturnPayment === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -666,14 +456,34 @@ function PurchaseReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("status");
+                                                            sort("method");
                                                         }}
                                                     >
-                                                        Status
-                                                        {sortField === "status" && sortOrder === "-" ? (
+                                                        Payment Method
+                                                        {sortField === "method" && sortPurchaseReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "status" && sortOrder === "" ? (
+                                                        {sortField === "method" && sortPurchaseReturnPayment === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("created_by_name");
+                                                        }}
+                                                    >
+                                                        Created By
+                                                        {sortField === "created_by_name" && sortPurchaseReturnPayment === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "created_by_name" && sortPurchaseReturnPayment === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -689,10 +499,10 @@ function PurchaseReturnIndex(props) {
                                                         }}
                                                     >
                                                         Created At
-                                                        {sortField === "created_at" && sortOrder === "-" ? (
+                                                        {sortField === "created_at" && sortPurchaseReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
-                                                        {sortField === "created_at" && sortOrder === "" ? (
+                                                        {sortField === "created_at" && sortPurchaseReturnPayment === "" ? (
                                                             <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
@@ -706,9 +516,9 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="code"
+                                                        id="purchase_return_code"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("code", e.target.value)
+                                                            searchByFieldValue("purchase_return_code", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -716,99 +526,19 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="vendor_invoice_no"
+                                                        id="amount"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("vendor_invoice_no", e.target.value)
+                                                            searchByFieldValue("amount", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
                                                 <th>
-                                                    <Typeahead
-                                                        id="vendor_id"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "vendor_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={vendorOptions}
-                                                        placeholder="Select Vendor"
-                                                        selected={selectedVendors}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestVendors(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
                                                     <input
                                                         type="text"
-                                                        id="purchase_code"
+                                                        id="method"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("purchase_code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <DatePicker
-                                                        id="date_str"
-                                                        value={dateValue}
-                                                        selected={selectedDate}
-                                                        className="form-control"
-                                                        dateFormat="MMM dd yyyy"
-                                                        onChange={(date) => {
-                                                            searchByDateField("date_str", date);
-                                                        }}
-                                                    />
-                                                    <small
-                                                        style={{
-                                                            color: "blue",
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={(e) => setShowDateRange(!showDateRange)}
-                                                    >
-                                                        {showDateRange ? "Less.." : "More.."}
-                                                    </small>
-                                                    <br />
-
-                                                    {showDateRange ? (
-                                                        <span className="text-left">
-                                                            From:{" "}
-                                                            <DatePicker
-                                                                id="from_date"
-                                                                value={fromDateValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    searchByDateField("from_date", date);
-                                                                }}
-                                                            />
-                                                            To:{" "}
-                                                            <DatePicker
-                                                                id="to_date"
-                                                                value={toDateValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    searchByDateField("to_date", date);
-                                                                }}
-                                                            />
-                                                        </span>
-                                                    ) : null}
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="net_total"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("net_total", e.target.value)
+                                                            searchByFieldValue("method", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -823,31 +553,13 @@ function PurchaseReturnIndex(props) {
                                                                 selectedItems
                                                             );
                                                         }}
-                                                        options={userOptions}
+                                                        options={purchasereturnpaymentOptions}
                                                         placeholder="Select Users"
-                                                        selected={selectedCreatedByUsers}
+                                                        selected={selectedCreatedByPurchaseReturnPayments}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
-                                                        multiple
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <Typeahead
-                                                        id="status"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "status",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={statusOptions}
-                                                        placeholder="Select Status"
-                                                        selected={selectedStatusList}
-                                                        highlightOnlyResult={true}
                                                         multiple
                                                     />
                                                 </th>
@@ -906,69 +618,49 @@ function PurchaseReturnIndex(props) {
                                                 <th></th>
                                             </tr>
                                         </thead>
-
                                         <tbody className="text-center">
-                                            {purchasereturnList &&
-                                                purchasereturnList.map((purchasereturn) => (
-                                                    <tr key={purchasereturn.code} >
-                                                        <td>{purchasereturn.code}</td>
-                                                        <td>{purchasereturn.vendor_invoice_no}</td>
-                                                        <td>{purchasereturn.vendor_name}</td>
-                                                        <td>{purchasereturn.purchase_code}</td>
-                                                        <td>
-                                                            {format(new Date(purchasereturn.date), "MMM dd yyyy")}
-                                                        </td>
-                                                        <td>{purchasereturn.net_total} SAR</td>
-                                                        <td>{purchasereturn.created_by_name}</td>
-
-                                                        <td>
-                                                            <span className="badge bg-success">
-                                                                {purchasereturn.status}
-                                                            </span>
-                                                        </td>
+                                            {purchasereturnpaymentList &&
+                                                purchasereturnpaymentList.map((purchasereturnpayment) => (
+                                                    <tr key={purchasereturnpayment.id}>
+                                                        <td>{purchasereturnpayment.purchase_return_code}</td>
+                                                        <td>{purchasereturnpayment.amount.toFixed(2) + " SAR"}</td>
+                                                        <td>{purchasereturnpayment.method}</td>
+                                                        <td>{purchasereturnpayment.created_by_name}</td>
                                                         <td>
                                                             {format(
-                                                                new Date(purchasereturn.created_at),
-                                                                "MMM dd yyyy h:mma"
+                                                                new Date(purchasereturnpayment.created_at),
+                                                                "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
                                                         <td>
-
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(purchasereturn.id);
+                                                                openUpdateForm(purchasereturnpayment.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>
 
-
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(purchasereturn.id);
+                                                                openDetailsView(purchasereturnpayment.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
 
-
-
-
-                                                            <button
-                                                                className="btn btn-outline-secondary dropdown-toggle"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                aria-expanded="false"
-                                                            ></button>
-                                                            <ul className="dropdown-menu">
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openPurchaseReturnPaymentCreateForm(purchasereturn);
-                                                                    }}>
-                                                                        <i className="bi bi-plus"></i>
-                                                                        &nbsp;
-                                                                        Add Payment
-                                                                    </button>
-                                                                </li>
-
-                                                            </ul>
-
+                                                            {/*
+                                                        <button
+                                                            className="btn btn-outline-secondary dropdown-toggle"
+                                                            type="button"
+                                                            data-bs-toggle="dropdown"
+                                                            aria-expanded="false"
+                                                        ></button>
+                                                        <ul className="dropdown-menu">
+                                                            <li>
+                                                                <a href="/" className="dropdown-item">
+                                                                    <i className="bi bi-download"></i>
+                                                                    Download
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                       */}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -1005,4 +697,4 @@ function PurchaseReturnIndex(props) {
     );
 }
 
-export default PurchaseReturnIndex;
+export default PurchaseReturnPaymentIndex;

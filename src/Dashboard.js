@@ -14,6 +14,7 @@ import SalesPaymentIndex from './sales_payment/index.js';
 import PurchasePaymentIndex from './purchase_payment/index.js';
 
 import SalesReturnPaymentIndex from './sales_return_payment/index.js';
+import PurchaseReturnPaymentIndex from './purchase_return_payment/index.js';
 
 import SalesReturnIndex from './sales_return/index.js';
 import PurchaseIndex from './purchase/index.js';
@@ -219,6 +220,19 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <PurchaseReturnIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/purchase-return-payments">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <PurchaseReturnPaymentIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
