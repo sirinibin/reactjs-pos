@@ -2,12 +2,12 @@ import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Table, Button } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 
-const SalesCashDiscountView = forwardRef((props, ref) => {
+const PurchasePaymentView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
-                getSalesCashDiscount(id);
+                getPurchasePayment(id);
                 SetShow(true);
             }
 
@@ -25,8 +25,8 @@ const SalesCashDiscountView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    function getSalesCashDiscount(id) {
-        console.log("inside get SalesCashDiscount");
+    function getPurchasePayment(id) {
+        console.log("inside get PurchasePayment");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -35,7 +35,7 @@ const SalesCashDiscountView = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/sales-cash-discount/' + id, requestOptions)
+        fetch('/v1/purchase-payment/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -62,7 +62,7 @@ const SalesCashDiscountView = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of Sales Cash Discount of Order #{model.order_code} </Modal.Title>
+                <Modal.Title>Details of Purchase Payment  of Order #{model.order_code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {
@@ -93,6 +93,7 @@ const SalesCashDiscountView = forwardRef((props, ref) => {
                         <tr>
                             <th>Order ID:</th><td> {model.order_code}</td>
                             <th>Amount:</th><td> {model.amount}</td>
+                            <th>Payment Method:</th><td> {model.method}</td>
                             <th>Store Name:</th><td> {model.store_name}</td>
                         </tr>
                         <tr>
@@ -145,4 +146,4 @@ const SalesCashDiscountView = forwardRef((props, ref) => {
 
 });
 
-export default SalesCashDiscountView;
+export default PurchasePaymentView;

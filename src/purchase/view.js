@@ -14,6 +14,7 @@ const PurchaseView = forwardRef((props, ref) => {
             if (id) {
                 getPurchase(id);
                 getCashDiscounts(id);
+                getPayments(id);
                 setShow(true);
             }
 
@@ -89,6 +90,59 @@ const PurchaseView = forwardRef((props, ref) => {
                 setPurchaseCashDiscountList(data.result);
                 totalCashDiscounts = data.meta.total_cash_discount;
                 setTotalCashDiscounts(totalCashDiscounts);
+
+
+            })
+            .catch((error) => {
+                console.log(error);
+            });
+    }
+
+
+    let [purchasePaymentList, setPurchasePaymentList] = useState([]);
+    let [totalPayments, setTotalPayments] = useState(0.00);
+
+    function getPayments(purchase_id) {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+        let Select =
+            "select=id,amount,method,store_name,purchase_code,purchase_id,created_by_name,created_at";
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        searchParams["purchase_id"] = purchase_id;
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        fetch(
+            "/v1/purchase-payment?" +
+            Select +
+            queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                setPurchasePaymentList(data.result);
+                totalPayments = data.meta.total_payment;
+                setTotalPayments(totalPayments);
 
 
             })
@@ -214,44 +268,88 @@ const PurchaseView = forwardRef((props, ref) => {
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
                         </tr>
-                        {purchaseCashDiscountList.length > 0 ? <tr>
-                            <th>Cash Discounts</th>
-                            <td>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                    <table className="table table-striped table-sm table-bordered">
-                                        <thead>
-                                            <tr className="text-center">
-                                                <th>
-                                                    Amount
-                                                </th>
+                        <tr>
+                            {purchaseCashDiscountList.length > 0 ?
+                                <th>Cash Discounts</th> : ""}
+                            {purchaseCashDiscountList.length > 0 ?
+                                <td>
+                                    <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                        <table className="table table-striped table-sm table-bordered">
+                                            <thead>
+                                                <tr className="text-center">
+                                                    <th>
+                                                        Amount
+                                                    </th>
 
-                                                <th>
-                                                    Created By
-                                                </th>
-                                                <th>
-                                                    Created At
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="text-center">
-                                            {purchaseCashDiscountList &&
-                                                purchaseCashDiscountList.map((discount) => (
-                                                    <tr key={discount.id}>
-                                                        <td>{discount.amount.toFixed(2) + " SAR"}</td>
-                                                        <td>{discount.created_by_name}</td>
-                                                        <td>
-                                                            {format(
-                                                                new Date(discount.created_at),
-                                                                "MMM dd yyyy H:mma"
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </td>
-                        </tr> : ""}
+                                                    <th>
+                                                        Created By
+                                                    </th>
+                                                    <th>
+                                                        Created At
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="text-center">
+                                                {purchaseCashDiscountList &&
+                                                    purchaseCashDiscountList.map((discount) => (
+                                                        <tr key={discount.id}>
+                                                            <td>{discount.amount.toFixed(2) + " SAR"}</td>
+                                                            <td>{discount.created_by_name}</td>
+                                                            <td>
+                                                                {format(
+                                                                    new Date(discount.created_at),
+                                                                    "MMM dd yyyy H:mma"
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td> : ""}
+                            {purchasePaymentList.length > 0 ?
+                                <th>Payments</th> : ""}
+                            {purchasePaymentList.length > 0 ?
+                                <td>
+                                    <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                        <table className="table table-striped table-sm table-bordered">
+                                            <thead>
+                                                <tr className="text-center">
+                                                    <th>
+                                                        Amount
+                                                    </th>
+                                                    <th>
+                                                        Payment Method
+                                                    </th>
+
+                                                    <th>
+                                                        Created By
+                                                    </th>
+                                                    <th>
+                                                        Created At
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="text-center">
+                                                {purchasePaymentList &&
+                                                    purchasePaymentList.map((payment) => (
+                                                        <tr key={payment.id}>
+                                                            <td>{payment.amount.toFixed(2) + " SAR"}</td>
+                                                            <td>{payment.method}</td>
+                                                            <td>{payment.created_by_name}</td>
+                                                            <td>
+                                                                {format(
+                                                                    new Date(payment.created_at),
+                                                                    "MMM dd yyyy H:mma"
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td> : ""}
+                        </tr>
                     </tbody>
                 </Table>
 

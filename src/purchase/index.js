@@ -14,6 +14,11 @@ import NumberFormat from "react-number-format";
 import PurchaseCashDiscountCreate from "./../purchase_cash_discount/create.js";
 import PurchaseCashDiscountDetailsView from "./../purchase_cash_discount/view.js";
 
+import PurchasePaymentCreate from "./../purchase_payment/create.js";
+import PurchasePaymentDetailsView from "./../purchase_payment/view.js";
+
+
+
 function PurchaseIndex(props) {
     const cookies = new Cookies();
 
@@ -370,6 +375,21 @@ function PurchaseIndex(props) {
         PurchaseCashDiscountCreateRef.current.open(id);
     }
 
+    //Purchase Payments
+    const PurchasePaymentCreateRef = useRef();
+    function openPurchasePaymentCreateForm(purchase) {
+        PurchasePaymentCreateRef.current.open(undefined, purchase);
+    }
+
+    const PurchasePaymentDetailsViewRef = useRef();
+    function openPurchasePaymentDetailsView(id) {
+        PurchasePaymentDetailsViewRef.current.open(id);
+    }
+
+    function openPurchasePaymentUpdateForm(id) {
+        PurchasePaymentCreateRef.current.open(id);
+    }
+
     return (
         <>
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
@@ -378,6 +398,9 @@ function PurchaseIndex(props) {
 
             <PurchaseCashDiscountCreate ref={PurchaseCashDiscountCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchaseCashDiscountDetailsView} />
             <PurchaseCashDiscountDetailsView ref={PurchaseCashDiscountDetailsViewRef} openUpdateForm={openPurchaseCashDiscountUpdateForm} showToastMessage={props.showToastMessage} />
+
+            <PurchasePaymentCreate ref={PurchasePaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchasePaymentDetailsView} />
+            <PurchasePaymentDetailsView ref={PurchasePaymentDetailsViewRef} openUpdateForm={openPurchasePaymentUpdateForm} showToastMessage={props.showToastMessage} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -1086,6 +1109,15 @@ function PurchaseIndex(props) {
                                                                         <i className="bi bi-plus"></i>
                                                                         &nbsp;
                                                                         Add Cash Discount
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openPurchasePaymentCreateForm(purchase);
+                                                                    }}>
+                                                                        <i className="bi bi-plus"></i>
+                                                                        &nbsp;
+                                                                        Add Payment
                                                                     </button>
                                                                 </li>
                                                             </ul>

@@ -1658,7 +1658,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             </table>
                         </div>
 
-                        <div className="col-md-2">
+                        {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment method*</label>
 
                             <div className="input-group mb-3">
@@ -1682,7 +1682,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     className="form-control"
                                 >
                                     <option value="cash">Cash</option>
-                                    <option value="bank_account">Bank Account</option>
+                                    <option value="bank_account">Bank Account  / Debit / Credit Card</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
@@ -1691,9 +1691,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
 
-                        <div className="col-md-2">
+                        {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment Status*</label>
 
                             <div className="input-group mb-3">
@@ -1730,10 +1730,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
 
 
-                        {formData.payment_status === "paid_partially" ? <div className="col-md-3">
+                        {!formData.id && formData.payment_status === "paid_partially" ? <div className="col-md-3">
                             <label className="form-label">Patial Payment Amount*</label>
 
                             <div className="input-group mb-3">

@@ -1771,7 +1771,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     className="form-control"
                                 >
                                     <option value="cash">Cash</option>
-                                    <option value="bank_account">Bank Account</option>
+                                    <option value="bank_account">Bank Account / Debit / Credit Card</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>

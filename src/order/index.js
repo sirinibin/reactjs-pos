@@ -2,8 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
 import SalesReturnCreate from "./../sales_return/create.js";
+
 import SalesCashDiscountCreate from "./../sales_cash_discount/create.js";
 import SalesCashDiscountDetailsView from "./../sales_cash_discount/view.js";
+
+import SalesPaymentCreate from "./../sales_payment/create.js";
+import SalesPaymentDetailsView from "./../sales_payment/view.js";
+
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -361,6 +366,7 @@ function OrderIndex(props) {
         CreateFormRef.current.open();
     }
 
+    //Cash Discounts
     const SalesCashDiscountCreateRef = useRef();
     function openSalesCashDiscountCreateForm(order) {
         SalesCashDiscountCreateRef.current.open(undefined, order);
@@ -371,9 +377,23 @@ function OrderIndex(props) {
         SalesCashDiscountDetailsViewRef.current.open(id);
     }
 
-
     function openSalesCashDiscountUpdateForm(id) {
         SalesCashDiscountCreateRef.current.open(id);
+    }
+
+    //Sales Payments
+    const SalesPaymentCreateRef = useRef();
+    function openSalesPaymentCreateForm(order) {
+        SalesPaymentCreateRef.current.open(undefined, order);
+    }
+
+    const SalesPaymentDetailsViewRef = useRef();
+    function openSalesPaymentDetailsView(id) {
+        SalesPaymentDetailsViewRef.current.open(id);
+    }
+
+    function openSalesPaymentUpdateForm(id) {
+        SalesPaymentCreateRef.current.open(id);
     }
 
     return (
@@ -381,8 +401,14 @@ function OrderIndex(props) {
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
             <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />
             <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} />
+
             <SalesCashDiscountCreate ref={SalesCashDiscountCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesCashDiscountDetailsView} />
             <SalesCashDiscountDetailsView ref={SalesCashDiscountDetailsViewRef} openUpdateForm={openSalesCashDiscountUpdateForm} showToastMessage={props.showToastMessage} />
+
+
+            <SalesPaymentCreate ref={SalesPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesPaymentDetailsView} />
+            <SalesPaymentDetailsView ref={SalesPaymentDetailsViewRef} openUpdateForm={openSalesPaymentUpdateForm} showToastMessage={props.showToastMessage} />
+
             <div className="container-fluid p-0">
                 <div className="row">
 
@@ -1018,6 +1044,15 @@ function OrderIndex(props) {
                                                                         <i className="bi bi-plus"></i>
                                                                         &nbsp;
                                                                         Add Cash Discount
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openSalesPaymentCreateForm(order);
+                                                                    }}>
+                                                                        <i className="bi bi-plus"></i>
+                                                                        &nbsp;
+                                                                        Add Payment
                                                                     </button>
                                                                 </li>
 

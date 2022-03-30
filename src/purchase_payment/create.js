@@ -2,21 +2,23 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
-import SalesCashDiscountView from "./view.js";
+import PurchasePaymentView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 
 
-const SalesCashDiscountCreate = forwardRef((props, ref) => {
+const PurchasePaymentCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open(id, order) {
-            order = order;
-            setOrder({ ...order });
-            formData = {};
-            if (order) {
-                formData.order_id = order.id;
-                formData.order_code = order.code;
-                formData.store_id = order.store_id;
+        open(id, purchase) {
+            purchase = purchase;
+            setPurchase({ ...purchase });
+            formData = {
+                method: "cash",
+            };
+            if (purchase) {
+                formData.purchase_id = purchase.id;
+                formData.purchase_code = purchase.code;
+                formData.store_id = purchase.store_id;
 
             }
             setFormData(formData);
@@ -24,14 +26,16 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
             setSelectedParentCategories(selectedParentCategories);
 
             if (id) {
-                getSalesCashDiscount(id);
+                getPurchasePayment(id);
             }
+            errors = {};
+            setErrors({ ...errors });
             SetShow(true);
         },
 
     }));
 
-    let [order, setOrder] = useState({});
+    let [purchase, setPurchase] = useState({});
 
     useEffect(() => {
         const listener = event => {
@@ -84,7 +88,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
     });
 
 
-    function getSalesCashDiscount(id) {
+    function getPurchasePayment(id) {
         console.log("inside get Product Category");
         const requestOptions = {
             method: 'GET',
@@ -97,7 +101,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
         selectedParentCategories = [];
         setSelectedParentCategories([...selectedParentCategories]);
-        fetch('/v1/sales-cash-discount/' + id, requestOptions)
+        fetch('/v1/purchase-payment/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -155,10 +159,10 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
 
         setIsProductCategoriesLoading(true);
 
-        let endPoint = "/v1/sales-cash-discount";
+        let endPoint = "/v1/purchase-payment";
         let method = "POST";
         if (formData.id) {
-            endPoint = "/v1/sales-cash-discount/" + formData.id;
+            endPoint = "/v1/purchase-payment/" + formData.id;
             method = "PUT";
         }
 
@@ -169,8 +173,8 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
         }
 
 
-        if (formData.amount >= order.total) {
-            errors["amount"] = "Amount should be less than total amount:" + order.total;
+        if (formData.amount > purchase.net_total) {
+            errors["amount"] = "Amount should be less than or equal to net total amount:" + purchase.net_total;
             setErrors({ ...errors });
             return;
         }
@@ -223,7 +227,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating SalesCashDiscount!", "danger");
+                props.showToastMessage("Error Creating PurchasePayment!", "danger");
             });
     }
 
@@ -255,7 +259,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
         let Select = "select=id,name";
         setIsProductCategoriesLoading(true);
         let result = await fetch(
-            "/v1/sales-cash-discount?" + Select + queryString,
+            "/v1/purchase-payment?" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
@@ -271,7 +275,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
             <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Cash Discount for sales order#" + formData.order_code : "Add Cash Discount for sales order #" + formData.order_code}
+                        {formData.id ? "Update Payment  for purchase purchase#" + formData.purchase_code : "Add Payment  for purchase purchase #" + formData.purchase_code}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -286,7 +290,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                             {isProcessing ?
                                 <Spinner
                                     as="span"
-                                    animation="border"
+                                    animation="bpurchase"
                                     size="sm"
                                     role="status"
                                     aria-hidden={true}
@@ -308,7 +312,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Amount*</label>
 
                             <div className="input-group mb-3">
@@ -316,7 +320,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                     value={formData.amount ? formData.amount : ""}
                                     type='number'
                                     onChange={(e) => {
-                                        console.log("Inside onchange vat discount");
+                                        console.log("Inside onchange vat ");
                                         if (!e.target.value) {
                                             formData.amount = e.target.value;
                                             errors["amount"] = "Invalid amount";
@@ -335,9 +339,8 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                         formData.amount = parseFloat(e.target.value);
                                         errors["amount"] = "";
 
-                                        console.log("order.total:", order.total);
-                                        if (formData.amount >= order.total) {
-                                            errors["amount"] = "Amount should be less than total amount:" + order.total;
+                                        if (formData.amount > purchase.net_total) {
+                                            errors["amount"] = "Amount should be less than or equal to net total amount:" + purchase.net_total;
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -362,6 +365,41 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Payment method*</label>
+
+                            <div className="input-group mb-3">
+                                <select
+                                    value={formData.method}
+                                    onChange={(e) => {
+                                        console.log("Inside onchange payment method");
+                                        if (!e.target.value) {
+                                            errors["method"] = "Invalid Payment Method";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        errors["method"] = "";
+                                        setErrors({ ...errors });
+
+                                        formData.method = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                >
+                                    <option value="cash">Cash</option>
+                                    <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                </select>
+                                {errors.method && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.method}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
@@ -370,7 +408,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
-                                        animation="bsalescashdiscount"
+                                        animation="bpurchasepayment"
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
@@ -390,4 +428,4 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
     );
 });
 
-export default SalesCashDiscountCreate;
+export default PurchasePaymentCreate;

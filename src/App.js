@@ -28,6 +28,10 @@ function App() {
           <Dashboard />
         </Route>
 
+        <Route path="/dashboard/sales-payments">
+          <Dashboard />
+        </Route>
+
         <Route path="/dashboard/salesreturn">
           <Dashboard />
         </Route>
@@ -37,6 +41,10 @@ function App() {
         </Route>
 
         <Route path="/dashboard/purchase-cash-discounts">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/purchase-payments">
           <Dashboard />
         </Route>
 
