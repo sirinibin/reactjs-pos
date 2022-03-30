@@ -435,6 +435,26 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         formData.vat_percent = parseFloat(formData.vat_percent);
         console.log("formData.discount:", formData.discount);
 
+        if (formData.payment_status === "paid_partially" && !formData.partial_payment_amount && formData.partial_payment_amount !== 0) {
+            errors["partial_payment_amount"] = "Invalid partial payment amount";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (formData.payment_status === "paid_partially" && formData.partial_payment_amount <= 0) {
+            errors["partial_payment_amount"] = "Partial payment should be > 0 ";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (formData.payment_status === "paid_partially" && formData.partial_payment_amount >= netTotal) {
+            errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
+            setErrors({ ...errors });
+            return;
+        }
+
+
+
         if (!formData.discountValue && formData.discountValue !== 0) {
             errors["discount"] = "Invalid Discount";
             setErrors({ ...errors });
@@ -1128,86 +1148,121 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">
-                                Purchase Returned By Signature(Optional)
-                            </label>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Payment method*</label>
 
                             <div className="input-group mb-3">
-                                <Typeahead
-                                    id="purchase_returned_by_signature_id"
-                                    labelKey="name"
-                                    isLoading={isPurchaseReturnedBySignaturesLoading}
-                                    isInvalid={errors.purchase_returned_by_signature_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.purchase_returned_by_signature_id = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.purchase_returned_by_signature_id =
-                                                "Invalid Signature Selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedPurchaseReturnedBySignatures([]);
+                                <select
+                                    value={formData.payment_method}
+                                    onChange={(e) => {
+                                        console.log("Inside onchange payment method");
+                                        if (!e.target.value) {
+                                            errors["status"] = "Invalid Payment Method";
+                                            setErrors({ ...errors });
                                             return;
                                         }
-                                        formData.purchase_returned_by_signature_id = selectedItems[0].id;
+
+                                        errors["payment_method"] = "";
+                                        setErrors({ ...errors });
+
+                                        formData.payment_method = e.target.value;
                                         setFormData({ ...formData });
-                                        setSelectedPurchaseReturnedBySignatures(selectedItems);
+                                        console.log(formData);
                                     }}
-                                    options={purchaseReturnedBySignatureOptions}
-                                    placeholder="Select Signature"
-                                    selected={selectedPurchaseReturnedBySignatures}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestSignatures(searchTerm);
-                                    }}
-                                />
-
-                                <Button hide={true.toString()} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.purchase_returned_by_signature_id ? (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>{" "}
-                                        {errors.purchase_returned_by_signature_id}
-                                    </div>
-                                ) : null}
-                                {formData.purchase_returned_by_signature_id &&
-                                    !errors.purchase_returned_by_signature_id && (
-                                        <div style={{ color: "green" }}>
-                                            <i className="bi bi-check-lg"> </i> Looks good!
-                                        </div>
-                                    )}
-                            </div>
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label">Signature Date(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="signature_date_str"
-                                    value={formData.signature_date_str}
-                                    selected={selectedDate}
                                     className="form-control"
-                                    dateFormat="MMM dd yyyy"
-                                    onChange={(value) => {
-                                        formData.signature_date_str = format(new Date(value), "MMM dd yyyy");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-
-                                {errors.signature_date_str && (
+                                >
+                                    <option value="cash">Cash</option>
+                                    <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                </select>
+                                {errors.payment_method && (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>
-                                        {errors.signature_date_str}
-                                    </div>
-                                )}
-                                {formData.signature_date_str && !errors.signature_date_str && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {errors.payment_method}
                                     </div>
                                 )}
                             </div>
                         </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Payment Status*</label>
+
+                            <div className="input-group mb-3">
+                                <select
+                                    value={formData.payment_status}
+                                    onChange={(e) => {
+                                        console.log("Inside onchange payment Status");
+                                        if (!e.target.value) {
+                                            errors["status"] = "Invalid Payment Status";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        errors["payment_status"] = "";
+                                        setErrors({ ...errors });
+
+                                        formData.payment_status = e.target.value;
+                                        if (formData.payment_status !== "paid_partially") {
+                                            formData.partial_payment_amount = 0.00;
+                                        }
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                >
+                                    <option value="paid">Paid</option>
+                                    <option value="not_paid">Not Paid</option>
+                                    <option value="paid_partially">Paid Partially</option>
+                                </select>
+                                {errors.payment_status && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.payment_status}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        {formData.payment_status === "paid_partially" ? <div className="col-md-3">
+                            <label className="form-label">Patial Payment Amount*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    type='number'
+                                    value={formData.partial_payment_amount}
+                                    onChange={(e) => {
+                                        console.log("Inside onchange vat discount");
+                                        if (!e.target.value) {
+                                            formData.partial_payment_amount = e.target.value;
+                                            errors["partial_payment_amount"] = "Invalid partial payment amount";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+                                        formData.partial_payment_amount = parseFloat(e.target.value);
+                                        errors["partial_payment_amount"] = "";
+
+                                        if (formData.partial_payment_amount >= netTotal) {
+                                            errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+                                        setErrors({ ...errors });
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="validationCustom02"
+                                    placeholder="Amount"
+                                />
+                                {errors.partial_payment_amount && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.partial_payment_amount}
+                                    </div>
+                                )}
+                            </div>
+                        </div> : ""}
 
 
                         <Modal.Footer>

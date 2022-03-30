@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import SalesReturnCreate from "./create.js";
-import SalesReturnView from "./view.js";
+import SalesReturnPaymentCreate from "./create.js";
+import SalesReturnPaymentView from "./view.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -10,17 +10,14 @@ import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
-import SalesReturnPaymentCreate from "./../sales_return_payment/create.js";
-import SalesReturnPaymentDetailsView from "./../sales_return_payment/view.js";
+function SalesReturnPaymentIndex(props) {
 
-function SalesReturnIndex(props) {
     const cookies = new Cookies();
 
-    let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
-    let [vatPrice, setVatPrice] = useState(0.00);
+    const selectedDate = new Date();
 
     //list
-    const [salesreturnList, setSalesReturnList] = useState([]);
+    const [salesreturnpaymentList, setSalesReturnPaymentList] = useState([]);
 
     //pagination
     let [pageSize, setPageSize] = useState(5);
@@ -30,12 +27,6 @@ function SalesReturnIndex(props) {
     const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
     const [offset, setOffset] = useState(0);
 
-    //Date filter
-    const [showDateRange, setShowDateRange] = useState(false);
-    const selectedDate = new Date();
-    const [dateValue, setDateValue] = useState("");
-    const [fromDateValue, setFromDateValue] = useState("");
-    const [toDateValue, setToDateValue] = useState("");
 
     //Created At filter
     const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
@@ -47,43 +38,10 @@ function SalesReturnIndex(props) {
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
-    //Customer Auto Suggestion
-    const [customerOptions, setCustomerOptions] = useState([]);
-    const [selectedCustomers, setSelectedCustomers] = useState([]);
+    //Created By SalesReturnPayment Auto Suggestion
+    const [salesreturnpaymentOptions, setSalesReturnPaymentOptions] = useState([]);
+    const [selectedCreatedBySalesReturnPayments, setSelectedCreatedBySalesReturnPayments] = useState([]);
 
-    //Created By User Auto Suggestion
-    const [userOptions, setUserOptions] = useState([]);
-    const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
-
-    //Status Auto Suggestion
-    const statusOptions = [
-        {
-            id: "sent",
-            name: "Sent",
-        },
-        {
-            id: "pending",
-            name: "Pending",
-        },
-        {
-            id: "accepted",
-            name: "Accepted",
-        },
-        {
-            id: "rejected",
-            name: "Rejected",
-        },
-        {
-            id: "cancelled",
-            name: "Cancelled",
-        },
-        {
-            id: "deleted",
-            name: "Deleted",
-        },
-    ];
-
-    const [selectedStatusList, setSelectedStatusList] = useState([]);
 
     useEffect(() => {
         list();
@@ -93,7 +51,7 @@ function SalesReturnIndex(props) {
     //Search params
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
-    let [sortSalesReturn, setSortSalesReturn] = useState("-");
+    let [sortSalesReturnPayment, setSortSalesReturnPayment] = useState("-");
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -103,38 +61,8 @@ function SalesReturnIndex(props) {
             .join("&");
     }
 
-    async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = `&${queryString}`;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(
-            `/v1/customer?${Select}${queryString}`,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setCustomerOptions(data.result);
-    }
-
     async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggestUsers");
-        setCustomerOptions([]);
+        console.log("Inside handle suggest Users");
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -164,7 +92,7 @@ function SalesReturnIndex(props) {
         );
         let data = await result.json();
 
-        setUserOptions(data.result);
+        setSalesReturnPaymentOptions(data.result);
     }
 
     function searchByFieldValue(field, value) {
@@ -180,25 +108,7 @@ function SalesReturnIndex(props) {
         d = new Date(d.toUTCString());
 
         value = format(d, "MMM dd yyyy");
-
-        if (field === "date_str") {
-            setDateValue(value);
-            setFromDateValue("");
-            setToDateValue("");
-            searchParams["from_date"] = "";
-            searchParams["to_date"] = "";
-            searchParams[field] = value;
-        } else if (field === "from_date") {
-            setFromDateValue(value);
-            setDateValue("");
-            searchParams["date"] = "";
-            searchParams[field] = value;
-        } else if (field === "to_date") {
-            setToDateValue(value);
-            setDateValue("");
-            searchParams["date"] = "";
-            searchParams[field] = value;
-        } else if (field === "created_at") {
+        if (field === "created_at") {
             setCreatedAtValue(value);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
@@ -226,11 +136,7 @@ function SalesReturnIndex(props) {
 
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
-            setSelectedCreatedByUsers(values);
-        } else if (field === "customer_id") {
-            setSelectedCustomers(values);
-        } else if (field === "status") {
-            setSelectedStatusList(values);
+            setSelectedCreatedBySalesReturnPayments(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -254,10 +160,11 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss,order_code";
+            "select=id,amount,method,store_name,sales_return_code,sales_return_id,order_id,order_code,created_by_name,created_at";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -266,11 +173,11 @@ function SalesReturnIndex(props) {
 
         setIsListLoading(true);
         fetch(
-            "/v1/sales-return?" +
+            "/v1/sales-return-payment?" +
             Select +
             queryParams +
             "&sort=" +
-            sortSalesReturn +
+            sortSalesReturnPayment +
             sortField +
             "&page=" +
             page +
@@ -292,7 +199,7 @@ function SalesReturnIndex(props) {
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
-                setSalesReturnList(data.result);
+                setSalesReturnPaymentList(data.result);
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
@@ -301,11 +208,9 @@ function SalesReturnIndex(props) {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalSalesReturn = data.meta.total_sales_return;
-                setTotalSalesReturn(totalSalesReturn);
+                totalPayments = data.meta.total_payment;
+                setTotalPayments(totalPayments);
 
-                vatPrice = data.meta.vat_price;
-                setVatPrice(vatPrice);
 
             })
             .catch((error) => {
@@ -318,8 +223,8 @@ function SalesReturnIndex(props) {
     function sort(field) {
         sortField = field;
         setSortField(sortField);
-        sortSalesReturn = sortSalesReturn === "-" ? "" : "-";
-        setSortSalesReturn(sortSalesReturn);
+        sortSalesReturnPayment = sortSalesReturnPayment === "-" ? "" : "-";
+        setSortSalesReturnPayment(sortSalesReturnPayment);
         list();
     }
 
@@ -335,6 +240,9 @@ function SalesReturnIndex(props) {
         list();
     }
 
+    function openUpdateForm(id) {
+        CreateFormRef.current.open(id);
+    }
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
@@ -342,50 +250,25 @@ function SalesReturnIndex(props) {
     }
 
     const CreateFormRef = useRef();
-
-    //Sales Return Payments
-    const SalesReturnPaymentCreateRef = useRef();
-    function openSalesReturnPaymentCreateForm(order) {
-        SalesReturnPaymentCreateRef.current.open(undefined, order);
+    function openCreateForm() {
+        CreateFormRef.current.open();
     }
 
-    const SalesReturnPaymentDetailsViewRef = useRef();
-    function openSalesReturnPaymentDetailsView(id) {
-        SalesReturnPaymentDetailsViewRef.current.open(id);
-    }
-
-    function openSalesReturnPaymentUpdateForm(id) {
-        SalesReturnPaymentCreateRef.current.open(id);
-    }
-
+    let [totalPayments, setTotalPayments] = useState(0.00);
 
     return (
         <>
-            <SalesReturnCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
-            <SalesReturnView ref={DetailsViewRef} />
-
-            <SalesReturnPaymentCreate ref={SalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesReturnPaymentDetailsView} />
-            <SalesReturnPaymentDetailsView ref={SalesReturnPaymentDetailsViewRef} openUpdateForm={openSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />
+            <SalesReturnPaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <SalesReturnPaymentView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
                 <div className="row">
 
                     <div className="col">
                         <h1 className="text-end">
-                            Sales Return: <Badge bg="secondary">
+                            Total: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalSalesReturn}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            VAT Returned: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={vatPrice.toFixed(2)}
+                                    value={totalPayments}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -394,25 +277,11 @@ function SalesReturnIndex(props) {
                             </Badge>
                         </h1>
                     </div>
-
                 </div>
-
                 <div className="row">
-                    <div className="col">
-                        <h1 className="h3">Sales Returns</h1>
-                    </div>
 
-                    <div className="col text-end">
-                        {/*
-                        <Button
-                            hide={true}
-                            variant="primary"
-                            className="btn btn-primary mb-3"
-                            onClick={openCreateForm}
-                        >
-                            <i className="bi bi-plus-lg"></i> Create
-                        </Button>
-                        */}
+                    <div className="col">
+                        <h1 className="h3">Sales Return Payments</h1>
                     </div>
                 </div>
 
@@ -428,12 +297,12 @@ function SalesReturnIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No SalesReturns to display</p>
+                                            <p className="text-start">No sales return payments to display</p>
                                         </div>
                                     )}
                                 </div>
-                                <div className="row" style={{ bsalesreturn: "solid 0px" }}>
-                                    <div className="col text-start" style={{ bsalesreturn: "solid 0px" }}>
+                                <div className="row" style={{ bsalesreturnpayment: "solid 0px" }}>
+                                    <div className="col text-start" style={{ bsalesreturnpayment: "solid 0px" }}>
                                         <Button
                                             onClick={() => {
                                                 setIsRefreshInProcess(true);
@@ -445,10 +314,10 @@ function SalesReturnIndex(props) {
                                             {isRefreshInProcess ? (
                                                 <Spinner
                                                     as="span"
-                                                    animation="bsalesreturn"
+                                                    animation="bsalesreturnpayment"
                                                     size="sm"
                                                     role="status"
-                                                    aria-hidden={true}
+                                                    aria-hidden="true"
                                                 />
                                             ) : (
                                                 <i className="fa fa-refresh"></i>
@@ -472,8 +341,8 @@ function SalesReturnIndex(props) {
                                                     }}
                                                     className="form-control pull-right"
                                                     style={{
-                                                        bsalesreturn: "solid 1px",
-                                                        bsalesreturnColor: "silver",
+                                                        bsalesreturnpayment: "solid 1px",
+                                                        bsalesreturnpaymentColor: "silver",
                                                         width: "55px",
                                                     }}
                                                 >
@@ -495,9 +364,8 @@ function SalesReturnIndex(props) {
 
                                 <br />
                                 <div className="row">
-                                    <div className="col" style={{ bsalesreturn: "solid 0px" }}>
-
-                                        {totalPages ? < ReactPaginate
+                                    <div className="col" style={{ bsalesreturnpayment: "solid 0px" }}>
+                                        {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
                                             onPageChange={(event) => {
@@ -548,14 +416,15 @@ function SalesReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("code");
+                                                            sort("sales_return_code");
                                                         }}
                                                     >
-                                                        ID
-                                                        {sortField === "code" && sortSalesReturn === "-" ? (
+
+                                                        Sales Return ID
+                                                        {sortField === "sales_return_code" && sortSalesReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "code" && sortSalesReturn === "" ? (
+                                                        {sortField === "sales_return_code" && sortSalesReturnPayment === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -567,53 +436,15 @@ function SalesReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("order_code");
+                                                            sort("amount");
                                                         }}
                                                     >
-                                                        Order ID
-                                                        {sortField === "order_code" && sortSalesReturn === "-" ? (
+                                                        Amount
+                                                        {sortField === "amount" && sortSalesReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "order_code" && sortSalesReturn === "" ? (
+                                                        {sortField === "amount" && sortSalesReturnPayment === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("date");
-                                                        }}
-                                                    >
-                                                        Date
-                                                        {sortField === "date" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "date" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("net_total");
-                                                        }}
-                                                    >
-                                                        Net Total
-                                                        {sortField === "net_total" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "net_total" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -625,53 +456,34 @@ function SalesReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("created_by");
+                                                            sort("method");
+                                                        }}
+                                                    >
+                                                        Payment Method
+                                                        {sortField === "method" && sortSalesReturnPayment === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "method" && sortSalesReturnPayment === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("created_by_name");
                                                         }}
                                                     >
                                                         Created By
-                                                        {sortField === "created_by" && sortSalesReturn === "-" ? (
+                                                        {sortField === "created_by_name" && sortSalesReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "created_by" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("customer_name");
-                                                        }}
-                                                    >
-                                                        Customer
-                                                        {sortField === "customer_name" &&
-                                                            sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "customer_name" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("status");
-                                                        }}
-                                                    >
-                                                        Status
-                                                        {sortField === "status" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "status" && sortSalesReturn === "" ? (
+                                                        {sortField === "created_by_name" && sortSalesReturnPayment === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -687,10 +499,10 @@ function SalesReturnIndex(props) {
                                                         }}
                                                     >
                                                         Created At
-                                                        {sortField === "created_at" && sortSalesReturn === "-" ? (
+                                                        {sortField === "created_at" && sortSalesReturnPayment === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
-                                                        {sortField === "created_at" && sortSalesReturn === "" ? (
+                                                        {sortField === "created_at" && sortSalesReturnPayment === "" ? (
                                                             <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
@@ -704,9 +516,9 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="code"
+                                                        id="sales_return_code"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("code", e.target.value)
+                                                            searchByFieldValue("sales_return_code", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -714,69 +526,19 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="order_code"
+                                                        id="amount"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("order_code", e.target.value)
+                                                            searchByFieldValue("amount", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
                                                 <th>
-                                                    <DatePicker
-                                                        id="date_str"
-                                                        value={dateValue}
-                                                        selected={selectedDate}
-                                                        className="form-control"
-                                                        dateFormat="MMM dd yyyy"
-                                                        onChange={(date) => {
-                                                            searchByDateField("date_str", date);
-                                                        }}
-                                                    />
-                                                    <small
-                                                        style={{
-                                                            color: "blue",
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={(e) => setShowDateRange(!showDateRange)}
-                                                    >
-                                                        {showDateRange ? "Less.." : "More.."}
-                                                    </small>
-                                                    <br />
-
-                                                    {showDateRange ? (
-                                                        <span className="text-left">
-                                                            From:{" "}
-                                                            <DatePicker
-                                                                id="from_date"
-                                                                value={fromDateValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    searchByDateField("from_date", date);
-                                                                }}
-                                                            />
-                                                            To:{" "}
-                                                            <DatePicker
-                                                                id="to_date"
-                                                                value={toDateValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    searchByDateField("to_date", date);
-                                                                }}
-                                                            />
-                                                        </span>
-                                                    ) : null}
-                                                </th>
-                                                <th>
                                                     <input
                                                         type="text"
-                                                        id="net_total"
+                                                        id="method"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("net_total", e.target.value)
+                                                            searchByFieldValue("method", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -791,50 +553,13 @@ function SalesReturnIndex(props) {
                                                                 selectedItems
                                                             );
                                                         }}
-                                                        options={userOptions}
+                                                        options={salesreturnpaymentOptions}
                                                         placeholder="Select Users"
-                                                        selected={selectedCreatedByUsers}
+                                                        selected={selectedCreatedBySalesReturnPayments}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="customer_id"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "customer_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={customerOptions}
-                                                        placeholder="Select customers"
-                                                        selected={selectedCustomers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestCustomers(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="status"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "status",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={statusOptions}
-                                                        placeholder="Select Status"
-                                                        selected={selectedStatusList}
-                                                        highlightOnlyResult={true}
                                                         multiple
                                                     />
                                                 </th>
@@ -893,59 +618,49 @@ function SalesReturnIndex(props) {
                                                 <th></th>
                                             </tr>
                                         </thead>
-
                                         <tbody className="text-center">
-                                            {salesreturnList &&
-                                                salesreturnList.map((salesreturn) => (
-                                                    <tr key={salesreturn.code}>
-                                                        <td>{salesreturn.code}</td>
-                                                        <td>{salesreturn.order_code}</td>
-                                                        <td>
-                                                            {format(new Date(salesreturn.date), "MMM dd yyyy")}
-                                                        </td>
-                                                        <td>{salesreturn.net_total} SAR</td>
-                                                        <td>{salesreturn.created_by_name}</td>
-                                                        <td>{salesreturn.customer_name}</td>
-                                                        <td>
-                                                            <span className="badge bg-success">
-                                                                {salesreturn.status}
-                                                            </span>
-                                                        </td>
+                                            {salesreturnpaymentList &&
+                                                salesreturnpaymentList.map((salesreturnpayment) => (
+                                                    <tr key={salesreturnpayment.id}>
+                                                        <td>{salesreturnpayment.sales_return_code}</td>
+                                                        <td>{salesreturnpayment.amount.toFixed(2) + " SAR"}</td>
+                                                        <td>{salesreturnpayment.method}</td>
+                                                        <td>{salesreturnpayment.created_by_name}</td>
                                                         <td>
                                                             {format(
-                                                                new Date(salesreturn.created_at),
-                                                                "MMM dd yyyy h:mma"
+                                                                new Date(salesreturnpayment.created_at),
+                                                                "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
                                                         <td>
-                                                            {/*
-                                                        <SalesReturnUpdate id={salesreturn.id} showUpdateButton={{true}} refreshList={list} showToastMessage={props.showToastMessage} />
-                                                          <SalesReturnView id={salesreturn.id} showViewButton={{true}} show={false} />
-                                                        */}
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(salesreturnpayment.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(salesreturn.id);
+                                                                openDetailsView(salesreturnpayment.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
 
-                                                            <button
-                                                                className="btn btn-outline-secondary dropdown-toggle"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                aria-expanded="false"
-                                                            ></button>
-                                                            <ul className="dropdown-menu">
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openSalesReturnPaymentCreateForm(salesreturn);
-                                                                    }}>
-                                                                        <i className="bi bi-plus"></i>
-                                                                        &nbsp;
-                                                                        Add Payment
-                                                                    </button>
-                                                                </li>
-                                                            </ul>
+                                                            {/*
+                                                        <button
+                                                            className="btn btn-outline-secondary dropdown-toggle"
+                                                            type="button"
+                                                            data-bs-toggle="dropdown"
+                                                            aria-expanded="false"
+                                                        ></button>
+                                                        <ul className="dropdown-menu">
+                                                            <li>
+                                                                <a href="/" className="dropdown-item">
+                                                                    <i className="bi bi-download"></i>
+                                                                    Download
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                       */}
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -982,4 +697,4 @@ function SalesReturnIndex(props) {
     );
 }
 
-export default SalesReturnIndex;
+export default SalesReturnPaymentIndex;

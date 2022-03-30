@@ -408,6 +408,25 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         console.log("formData.discount:", formData.discount);
 
 
+        if (formData.payment_status === "paid_partially" && !formData.partial_payment_amount && formData.partial_payment_amount !== 0) {
+            errors["partial_payment_amount"] = "Invalid partial payment amount";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (formData.payment_status === "paid_partially" && formData.partial_payment_amount <= 0) {
+            errors["partial_payment_amount"] = "Partial payment should be > 0 ";
+            setErrors({ ...errors });
+            return;
+        }
+
+        if (formData.payment_status === "paid_partially" && formData.partial_payment_amount >= netTotal) {
+            errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
+            setErrors({ ...errors });
+            return;
+        }
+
+
         if (!formData.discountValue && formData.discountValue !== 0) {
             errors["discount"] = "Invalid Discount";
             setErrors({ ...errors });
@@ -977,139 +996,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Received By*</label>
 
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="received_by"
-                                    labelKey="name"
-                                    isLoading={isReceivedByUsersLoading}
-                                    isInvalid={errors.received_by ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.received_by = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.received_by = "Invalid User Selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedReceivedByUsers([]);
-                                            return;
-                                        }
-                                        formData.received_by = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        setSelectedReceivedByUsers(selectedItems);
-                                    }}
-                                    options={receivedByUserOptions}
-                                    placeholder="Select User"
-                                    selected={selectedReceivedByUsers}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestUsers(searchTerm);
-                                    }}
-                                />
-
-                                <Button hide={true.toString()} onClick={openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.received_by ? (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i> {errors.received_by}
-                                    </div>
-                                ) : null}
-                                {formData.received_by && !errors.received_by && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">
-                                Received By Signature(Optional)
-                            </label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="received_by_signature_id"
-                                    labelKey="name"
-                                    isLoading={isReceivedBySignaturesLoading}
-                                    isInvalid={errors.received_by_signature_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.received_by_signature_id = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.received_by_signature_id =
-                                                "Invalid Signature Selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedReceivedBySignatures([]);
-                                            return;
-                                        }
-                                        formData.received_by_signature_id = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        setSelectedReceivedBySignatures(selectedItems);
-                                    }}
-                                    options={receivedBySignatureOptions}
-                                    placeholder="Select Signature"
-                                    selected={selectedReceivedBySignatures}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestSignatures(searchTerm);
-                                    }}
-                                />
-
-                                <Button hide={true.toString()} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.received_by_signature_id ? (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>{" "}
-                                        {errors.received_by_signature_id}
-                                    </div>
-                                ) : null}
-                                {formData.received_by_signature_id &&
-                                    !errors.received_by_signature_id && (
-                                        <div style={{ color: "green" }}>
-                                            <i className="bi bi-check-lg"> </i> Looks good!
-                                        </div>
-                                    )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-4">
-                            <label className="form-label">Signature Date(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="signature_date_str"
-                                    value={formData.signature_date_str}
-                                    selected={selectedDate}
-                                    className="form-control"
-                                    dateFormat="MMM dd yyyy"
-                                    onChange={(value) => {
-                                        formData.signature_date_str = format(new Date(value), "MMM dd yyyy");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-
-                                {errors.signature_date_str && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.signature_date_str}
-                                    </div>
-                                )}
-                                {formData.signature_date_str && !errors.signature_date_str && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <label className="form-label">Payment method*</label>
 
                             <div className="input-group mb-3">
                                 <select
+                                    value={formData.payment_method}
                                     onChange={(e) => {
                                         console.log("Inside onchange payment method");
                                         if (!e.target.value) {
@@ -1128,8 +1021,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     className="form-control"
                                 >
                                     <option value="cash">Cash</option>
-                                    <option vaue="account_transfer">Account Transfer</option>
-                                    <option value="card_payment">Credit/Debit Card</option>
+                                    <option value="bank_account">Bank Account / Debit / Credit Card</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
@@ -1137,21 +1029,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         {errors.payment_method}
                                     </div>
                                 )}
-                                {formData.payment_method && !errors.payment_method && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
                         </div>
 
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <label className="form-label">Payment Status*</label>
 
                             <div className="input-group mb-3">
                                 <select
-                                    value={formData.payment_method}
+                                    value={formData.payment_status}
                                     onChange={(e) => {
                                         console.log("Inside onchange payment Status");
                                         if (!e.target.value) {
@@ -1163,14 +1049,17 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         errors["payment_status"] = "";
                                         setErrors({ ...errors });
 
-                                        formData.payment_method = e.target.value;
+                                        formData.payment_status = e.target.value;
+                                        if (formData.payment_status !== "paid_partially") {
+                                            formData.partial_payment_amount = 0.00;
+                                        }
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
                                     className="form-control"
                                 >
                                     <option value="paid">Paid</option>
-                                    <option value="pending">Pending</option>
+                                    <option value="not_paid">Not Paid</option>
                                     <option value="paid_partially">Paid Partially</option>
                                 </select>
                                 {errors.payment_status && (
@@ -1179,35 +1068,34 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         {errors.payment_status}
                                     </div>
                                 )}
-                                {formData.payment_status && !errors.payment_status && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
                         </div>
 
 
-                        <div className="col-md-4">
-                            <label className="form-label">Patial Payment Amount(Optional)</label>
+                        {formData.payment_status === "paid_partially" ? <div className="col-md-3">
+                            <label className="form-label">Patial Payment Amount*</label>
 
                             <div className="input-group mb-3">
                                 <input
                                     type='number'
+                                    value={formData.partial_payment_amount}
                                     onChange={(e) => {
                                         console.log("Inside onchange vat discount");
-                                        if (isNaN(e.target.value)) {
-                                            errors["partial_payment_amount"] = "Invalid Amount";
+                                        if (!e.target.value) {
+                                            formData.partial_payment_amount = e.target.value;
+                                            errors["partial_payment_amount"] = "Invalid partial payment amount";
                                             setErrors({ ...errors });
                                             return;
                                         }
-
+                                        formData.partial_payment_amount = parseFloat(e.target.value);
                                         errors["partial_payment_amount"] = "";
-                                        setErrors({ ...errors });
 
-                                        formData.partial_payment_amount = e.target.value;
-                                        //findNetTotal();
+                                        if (formData.partial_payment_amount >= netTotal) {
+                                            errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+                                        setErrors({ ...errors });
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
@@ -1218,17 +1106,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                 {errors.partial_payment_amount && (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>
-                                        {errors.v}
-                                    </div>
-                                )}
-                                {formData.partial_payment_amount && !errors.partial_payment_amount && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                                        {errors.partial_payment_amount}
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
+
+
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>

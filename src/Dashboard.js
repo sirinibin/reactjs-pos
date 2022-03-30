@@ -13,6 +13,8 @@ import PurchaseCashDiscountIndex from './purchase_cash_discount/index.js';
 import SalesPaymentIndex from './sales_payment/index.js';
 import PurchasePaymentIndex from './purchase_payment/index.js';
 
+import SalesReturnPaymentIndex from './sales_return_payment/index.js';
+
 import SalesReturnIndex from './sales_return/index.js';
 import PurchaseIndex from './purchase/index.js';
 import PurchaseReturnIndex from './purchase_return/index.js';
@@ -157,6 +159,18 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <SalesReturnIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/sales-return-payments">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <SalesReturnPaymentIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

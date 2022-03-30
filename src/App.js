@@ -36,6 +36,10 @@ function App() {
           <Dashboard />
         </Route>
 
+        <Route path="/dashboard/sales-return-payments">
+          <Dashboard />
+        </Route>
+
         <Route path="/dashboard/purchases">
           <Dashboard />
         </Route>
