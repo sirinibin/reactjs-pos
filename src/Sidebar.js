@@ -163,7 +163,7 @@ function Sidebar(props) {
 
                 <li onClick={() => {
                     toggleActive(appState.tabs[12]);
-                }} className={toggleActiveStyles(appState.tabs[11])}>
+                }} className={toggleActiveStyles(appState.tabs[12])}>
                     <Link to="/dashboard/vendors" className="sidebar-link">
                         <i className="bi bi-shop" />
                         <span className="align-middle">Vendors/Suppliers</span>
