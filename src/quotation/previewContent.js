@@ -54,8 +54,8 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             <li><h4 style={{ fontSize: "4mm" }}>{props.model.store ? props.model.store.name : "<STORE_NAME>"}</h4></li>
                             <li>{props.model.store ? props.model.store.title : "<STORE_TITLE>"}</li>
                             {/*<!-- <li><hr /></li> --> */}
-                            <li>C.R. / {props.model.store ? props.model.store.registration_number : "<STORE_CR_NO>"}</li>
-                            <li>VAT / {props.model.store ? props.model.store.vat_no : "<STORE_VAT_NO>"}</li>
+                            <li>C.R. / {props.model.store && props.model.store.registration_number ? props.model.store.registration_number : "<STORE_CR_NO>"}</li>
+                            <li>VAT / {props.model.store && props.model.store.vat_no ? props.model.store.vat_no : "<STORE_VAT_NO>"}</li>
                         </ul>
                     </div>
                     <div className="col">
@@ -111,9 +111,9 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}#<strong> :رقم الإقتباس</strong></li>
                             <li><strong>تاريخ الاقتباس: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
                             <li>
-                                <strong>عميل: </strong>{props.model.customer.name_in_arabic ? props.model.customer.name_in_arabic : "N/A"}
+                                <strong>عميل: </strong>{props.model.customer && props.model.customer.name_in_arabic ? props.model.customer.name_in_arabic : "N/A"}
                             </li>
-                            <li><strong>ظريبه الشراء: </strong>{props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : "N/A"}</li>
+                            <li><strong>ظريبه الشراء: </strong>{props.model.customer && props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : "N/A"}</li>
                         </ul>
                     </div>
                 </div>
