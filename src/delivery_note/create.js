@@ -458,6 +458,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       return;
     }
 
+    if (formData.barcode.length === 13) {
+      formData.barcode = formData.barcode.slice(0, -1);
+    }
+
     const requestOptions = {
       method: "GET",
       headers: {
@@ -467,7 +471,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     };
 
 
-    let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
+    let Select = "select=id,item_code,bar_code,ean_12,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
     let result = await fetch(
       "/v1/product/barcode/" + formData.barcode + "?" + Select,
       requestOptions
