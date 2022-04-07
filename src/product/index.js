@@ -211,6 +211,11 @@ function ProductIndex(props) {
         };
         let Select =
             "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,unit_prices";
+
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
