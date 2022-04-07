@@ -161,6 +161,14 @@ function SalesPaymentIndex(props) {
         };
         let Select =
             "select=id,amount,method,store_name,order_code,order_id,created_by_name,created_at";
+
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+
+        console.log("searchParams.store_id:", searchParams.store_id);
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
