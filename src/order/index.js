@@ -627,14 +627,14 @@ function OrderIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("date");
+                                                            sort("created_at");
                                                         }}
                                                     >
-                                                        Date
-                                                        {sortField === "date" && sortOrder === "-" ? (
+                                                        Created At
+                                                        {sortField === "created_at" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
-                                                        {sortField === "date" && sortOrder === "" ? (
+                                                        {sortField === "created_at" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
@@ -754,25 +754,7 @@ function OrderIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_at");
-                                                        }}
-                                                    >
-                                                        Created At
-                                                        {sortField === "created_at" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
-                                                        ) : null}
-                                                        {sortField === "created_at" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -791,13 +773,13 @@ function OrderIndex(props) {
                                                 </th>
                                                 <th>
                                                     <DatePicker
-                                                        id="date_str"
-                                                        value={dateValue}
+                                                        id="created_at"
+                                                        value={createdAtValue}
                                                         selected={selectedDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
-                                                            searchByDateField("date_str", date);
+                                                            searchByDateField("created_at", date);
                                                         }}
                                                     />
                                                     <small
@@ -806,34 +788,36 @@ function OrderIndex(props) {
                                                             textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
-                                                        onClick={(e) => setShowDateRange(!showDateRange)}
+                                                        onClick={(e) =>
+                                                            setShowCreatedAtDateRange(!showCreatedAtDateRange)
+                                                        }
                                                     >
-                                                        {showDateRange ? "Less.." : "More.."}
+                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
                                                     </small>
                                                     <br />
 
-                                                    {showDateRange ? (
+                                                    {showCreatedAtDateRange ? (
                                                         <span className="text-left">
                                                             From:{" "}
                                                             <DatePicker
-                                                                id="from_date"
-                                                                value={fromDateValue}
+                                                                id="created_at_from"
+                                                                value={createdAtFromValue}
                                                                 selected={selectedDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
-                                                                    searchByDateField("from_date", date);
+                                                                    searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
-                                                                id="to_date"
-                                                                value={toDateValue}
+                                                                id="created_at_to"
+                                                                value={createdAtToValue}
                                                                 selected={selectedDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
-                                                                    searchByDateField("to_date", date);
+                                                                    searchByDateField("created_at_to", date);
                                                                 }}
                                                             />
                                                         </span>
@@ -926,58 +910,7 @@ function OrderIndex(props) {
                                                         multiple
                                                     />
                                                 </th>
-                                                <th>
-                                                    <DatePicker
-                                                        id="created_at"
-                                                        value={createdAtValue}
-                                                        selected={selectedDate}
-                                                        className="form-control"
-                                                        dateFormat="MMM dd yyyy"
-                                                        onChange={(date) => {
-                                                            searchByDateField("created_at", date);
-                                                        }}
-                                                    />
-                                                    <small
-                                                        style={{
-                                                            color: "blue",
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={(e) =>
-                                                            setShowCreatedAtDateRange(!showCreatedAtDateRange)
-                                                        }
-                                                    >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
-                                                    </small>
-                                                    <br />
 
-                                                    {showCreatedAtDateRange ? (
-                                                        <span className="text-left">
-                                                            From:{" "}
-                                                            <DatePicker
-                                                                id="created_at_from"
-                                                                value={createdAtFromValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    searchByDateField("created_at_from", date);
-                                                                }}
-                                                            />
-                                                            To:{" "}
-                                                            <DatePicker
-                                                                id="created_at_to"
-                                                                value={createdAtToValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    searchByDateField("created_at_to", date);
-                                                                }}
-                                                            />
-                                                        </span>
-                                                    ) : null}
-                                                </th>
                                                 <th style={{ width: "150px" }}></th>
                                             </tr>
                                         </thead>
@@ -988,7 +921,10 @@ function OrderIndex(props) {
                                                     <tr key={order.code}>
                                                         <td>{order.code}</td>
                                                         <td>
-                                                            {format(new Date(order.date), "MMM dd yyyy")}
+                                                            {format(
+                                                                new Date(order.created_at),
+                                                                "MMM dd yyyy h:mma"
+                                                            )}
                                                         </td>
                                                         <td>{order.net_total.toFixed(2)} SAR</td>
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
@@ -1000,12 +936,7 @@ function OrderIndex(props) {
                                                                 {order.status}
                                                             </span>
                                                         </td>
-                                                        <td>
-                                                            {format(
-                                                                new Date(order.created_at),
-                                                                "MMM dd yyyy h:mma"
-                                                            )}
-                                                        </td>
+
                                                         <td>
                                                             {/*
                                                         <OrderUpdate id={order.id} showUpdateButton={{true}} refreshList={list} showToastMessage={props.showToastMessage} />
