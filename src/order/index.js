@@ -185,18 +185,10 @@ function OrderIndex(props) {
 
     function searchByDateField(field, value) {
         if (value) {
-            //value = "Sun Apr 10 2022 01:16:24 GMT+0300 (Arabian Standard Time)"
-            /*
-            console.log("value:", value);
-            let d = new Date(value);
-            d = new Date(format(d, "yyyy-MM-dd"));
-            console.log("d1:", d);
-            d.setTime(d.getTime() + d.getTimezoneOffset() * 60 * 1000);
-            d = new Date(d.toUTCString());
-            */
             let d = new Date(value);
             value = format(d, "MMM dd yyyy");
             console.log("value2:", value);
+            console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
         } else {
             value = "";
         }
@@ -281,6 +273,11 @@ function OrderIndex(props) {
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        console.log("Timezone:", parseFloat(diff / 60));
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
