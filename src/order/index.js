@@ -942,7 +942,7 @@ function OrderIndex(props) {
                                                                 new Date(order.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
-                                                        </td>``
+                                                        </td>
                                                         <td>{order.net_total.toFixed(2)} SAR</td>
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td> : ""}
