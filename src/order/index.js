@@ -184,10 +184,15 @@ function OrderIndex(props) {
     }
 
     function searchByDateField(field, value) {
-        let d = new Date(value);
-        d = new Date(d.toUTCString());
+        if (value) {
+            let d = new Date(value);
+            d = new Date(d.toUTCString());
 
-        value = format(d, "MMM dd yyyy");
+            value = format(d, "MMM dd yyyy");
+        } else {
+            value = "";
+        }
+
 
         if (field === "date_str") {
             setDateValue(value);
@@ -213,6 +218,7 @@ function OrderIndex(props) {
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
+            console.log("searchParams[field]:", searchParams[field]);
         }
         if (field === "created_at_from") {
             setCreatedAtFromValue(value);
@@ -779,6 +785,12 @@ function OrderIndex(props) {
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
+                                                            if (!date) {
+                                                                //  createdAtValue = "";
+                                                                setCreatedAtValue("");
+                                                                searchByDateField("created_at", "");
+                                                                return;
+                                                            }
                                                             searchByDateField("created_at", date);
                                                         }}
                                                     />
@@ -925,7 +937,7 @@ function OrderIndex(props) {
                                                                 new Date(order.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
-                                                        </td>
+                                                        </td>``
                                                         <td>{order.net_total.toFixed(2)} SAR</td>
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td> : ""}
