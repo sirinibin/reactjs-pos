@@ -91,7 +91,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         {product.part_number ? product.part_number : ""}
                                     </h4>
                                 </td>
-                                <td className="text-left" style={{ border: "solid 1px", width: "299px", paddingLeft: "5px" }} >
+                                <td className="text-left" style={{ border: "solid 0px", width: "299px", paddingLeft: "5px" }} >
                                     <div style={{ height: "23px" }} >
                                         {product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
                                             {product.name_in_arabic}
@@ -104,12 +104,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         </h4> : ""}
                                     </div>
                                 </td>
-                                <td className="text-center" style={{ border: "solid 1px", width: "77px", }}>
+                                <td className="text-center" style={{ border: "solid 0px", width: "77px", }}>
                                     <h4 style={{ fontSize: "3mm" }}>
                                         {product.quantity}  {product.unit ? product.unit : ""}
                                     </h4>
                                 </td>
-                                <td className="text-end" style={{ border: "solid 1px", width: "111px", paddingRight: "5px" }}>
+                                <td className="text-end" style={{ border: "solid 0px", width: "111px", paddingRight: "5px" }}>
                                     <h4 style={{ fontSize: "3mm" }}>
                                         <NumberFormat
                                             value={(product.unit_price).toFixed(2)}
