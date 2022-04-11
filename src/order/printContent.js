@@ -96,10 +96,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         {product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
                                             {product.name_in_arabic}
                                         </h4> : ""}
-                                        {product.name && product.name_in_arabic ? <h4 style={{ fontSize: product.name.length > 44 ? "2.6mm" : "3mm", position: "relative", top: "-11px" }}>
+                                        {product.name && product.name_in_arabic ? <h4 style={{ fontSize: product.name.length > 55 ? "2.2mm" : "2.4mm", position: "relative", top: "-11px" }}>
                                             {product.name}
                                         </h4> : ""}
-                                        {product.name && !product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "2px" }}>
+                                        {product.name && !product.name_in_arabic ? <h4 style={{ fontSize: "2.4mm", position: "relative", top: "2px" }}>
                                             {product.name}
                                         </h4> : ""}
                                     </div>
