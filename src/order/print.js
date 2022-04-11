@@ -30,7 +30,7 @@ const OrderPrint = forwardRef((props, ref) => {
                     getSignature(model.delivered_by_signature_id);
                 }
 
-                let pageSize = 15;
+                let pageSize = 14;
                 model.pageSize = pageSize;
                 let totalProducts = model.products.length;
                 let top = 0;
@@ -65,7 +65,7 @@ const OrderPrint = forwardRef((props, ref) => {
                         }
                     }
 
-                    top += 1057;
+                    top += 1060;
                     offset += pageSize;
                     if ((i + 1) === totalPages) {
                         model.pages[i].lastPage = true;
