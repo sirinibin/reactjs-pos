@@ -108,8 +108,8 @@ const OrderPreviewContent = forwardRef((props, ref) => {
 
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-end">
-                            <li>{props.model.code ? convertToPersianNumber(props.model.code) : "<ID_NUMBER_ARABIC>"}<strong>: طلب </strong></li>
-                            <li><strong>تاريخ الطلب: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATETIME_ARABIC>"}</li>
+                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :طلب </strong></li>
+                            <li><strong>تاريخ الطلب:  </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATETIME_ARABIC>"}</li>
                             <li>
                                 <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
                             </li>
