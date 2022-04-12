@@ -216,6 +216,9 @@ function ProductIndex(props) {
             searchParams.store_id = cookies.get("store_id");
         }
 
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {

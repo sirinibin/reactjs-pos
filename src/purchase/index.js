@@ -262,6 +262,10 @@ function PurchaseIndex(props) {
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
+
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -1013,7 +1017,7 @@ function PurchaseIndex(props) {
                                                         <td>{purchase.vendor_invoice_no}</td>
                                                         <td>{purchase.vendor_name}</td>
                                                         <td>
-                                                            {format(new Date(purchase.date), "MMM dd yyyy")}
+                                                            {format(new Date(purchase.date), "MMM dd yyyy h:mma")}
                                                         </td>
                                                         <td>
                                                             <NumberFormat
