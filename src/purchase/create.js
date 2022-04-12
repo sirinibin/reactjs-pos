@@ -46,7 +46,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 shipping_handling_fees: 0.00,
                 partial_payment_amount: 0.00,
                 is_discount_percent: false,
-                date_str: format(new Date(), "MMM dd yyyy"),
+                date_str: new Date(),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "delivered",
                 payment_method: "cash",
@@ -211,8 +211,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     code: purchase.code,
                     store_id: purchase.store_id,
                     vendor_id: purchase.vendor_id,
-                    date_str: purchase.date_str,
-                    date: purchase.date,
+                    date_str: purchase.date,
+                    // date: purchase.date,
                     vat_percent: purchase.vat_percent,
                     discount: purchase.discount,
                     discount_percent: purchase.discount_percent,
@@ -1777,6 +1777,38 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div> : ""}
+
+                        <div className="col-md-6">
+                            <label className="form-label">Date Time*</label>
+
+                            <div className="input-group mb-3">
+                                <DatePicker
+                                    id="date_str"
+                                    selected={formData.date_str ? new Date(formData.date_str) : null}
+                                    value={formData.date_str ? format(
+                                        new Date(formData.date_str),
+                                        "MMMM d, yyyy h:mm aa"
+                                    ) : null}
+                                    className="form-control"
+                                    dateFormat="MMMM d, yyyy h:mm aa"
+                                    showTimeSelect
+                                    timeIntervals="1"
+                                    onChange={(value) => {
+                                        console.log("Value", value);
+                                        formData.date_str = value;
+                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+
+                                {errors.date_str && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.date_str}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close

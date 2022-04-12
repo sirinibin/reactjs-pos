@@ -248,7 +248,10 @@ const PurchaseView = forwardRef((props, ref) => {
                             <th>Order Placed by:</th><td> {model.order_placed_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Date:</th><td> {model.date_str}</td>
+                            <th>Date:</th><td> {model.date ? format(
+                                new Date(model.date),
+                                "MMMM d, yyyy h:mm aa"
+                            ) : ""}</td>
                             <th>VAT %:</th><td> {model.vat_percent}%</td>
                             <th>Discount :</th><td> {model.discount} SAR</td>
                             <th>Discount %:</th><td> {model.discount_percent} SAR</td>
