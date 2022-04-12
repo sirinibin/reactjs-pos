@@ -39,10 +39,13 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                 id="printableArea"
                 style={{
                     backgroundColor: "white",
-                    bsalesreturn: "solid 2px",
-                    bsalesreturnColor: "silver",
-                    bsalesreturnRadius: "2mm",
-                    padding: "30px"
+                    border: "solid 2px",
+                    borderColor: "silver",
+                    borderRadius: "2mm",
+                    padding: "20px",
+                    marginTop: "10px",
+                    height: "1110px",
+                    width: "770px"
                 }}
 
             >

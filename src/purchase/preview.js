@@ -28,7 +28,7 @@ const QuotationPreview = forwardRef((props, ref) => {
                     getSignature(model.order_placed_by_signature_id);
                 }
 
-                let pageSize = 9;
+                let pageSize = 8;
                 model.pageSize = pageSize;
                 let totalProducts = model.products.length;
                 let top = 0;

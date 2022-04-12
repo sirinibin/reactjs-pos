@@ -42,7 +42,10 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                     border: "solid 2px",
                     borderColor: "silver",
                     borderRadius: "2mm",
-                    padding: "22px"
+                    padding: "20px",
+                    marginTop: "10px",
+                    height: "1110px",
+                    width: "770px"
                 }}
 
             >
