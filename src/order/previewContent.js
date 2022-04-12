@@ -95,9 +95,9 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                 "MMM dd yyyy h:mma"
                             ) : "<DATETIME>"} </li>
                             <li>
-                                <strong>Customer: </strong>{props.model.customer ? props.model.customer.name + " BUIB HIVIU  IUGG UGY UGGY  UFGYG*" : "<CUSTOMER_NAME>"}
+                                <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "N/A"}
                             </li>
-                            <li><strong>VAT Number: </strong>{props.model.customer ? props.model.customer.vat_no : "<CUSTOMER_VAT_NO>"}
+                            <li><strong>VAT Number: </strong>{props.model.customer ? props.model.customer.vat_no : "N/A"}
                             </li>
                         </ul>
                     </div>
