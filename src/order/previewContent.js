@@ -103,7 +103,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     </div>
 
                     <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "20%", padding: "0px" }}>
-                        {page.firstPage && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "100px", height: "92px" }} alt="Invoice QR Code" /> : ""}
+                        {props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "100px", height: "92px" }} alt="Invoice QR Code" /> : ""}
                     </div>
 
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
