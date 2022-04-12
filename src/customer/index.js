@@ -161,6 +161,7 @@ function CustomerIndex(props) {
         };
         let Select =
             "select=id,name,email,phone,created_by_name,created_at";
+        const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
         setSearchParams(searchParams);

@@ -162,6 +162,7 @@ function UserIndex(props) {
         let Select =
             "select=id,name,admin,email,mob,created_by_name,created_at";
 
+        const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
 

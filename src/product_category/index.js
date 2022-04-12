@@ -161,6 +161,7 @@ function ProductCategoryIndex(props) {
         let Select =
             "select=id,name,parent_name,parent_id,created_by_name,created_at";
 
+        const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
 

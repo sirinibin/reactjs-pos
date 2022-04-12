@@ -169,6 +169,7 @@ function SalesPaymentIndex(props) {
 
         console.log("searchParams.store_id:", searchParams.store_id);
 
+        const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
 

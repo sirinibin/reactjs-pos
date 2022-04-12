@@ -254,6 +254,8 @@ function PurchaseReturnIndex(props) {
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
+
+        const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
 
