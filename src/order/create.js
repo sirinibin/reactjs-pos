@@ -47,7 +47,7 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.partial_payment_amount = 0.00;
             formData.status = "delivered";
             formData.payment_method = "cash";
-            formData.payment_status = "paid";
+            formData.payment_status = "";
             setFormData({ ...formData });
             setShow(true);
 
@@ -101,7 +101,7 @@ const OrderCreate = forwardRef((props, ref) => {
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
-        payment_status: "paid",
+        payment_status: "",
         payment_method: "cash",
         price_type: "retail",
         useLaserScanner: false,
@@ -1797,7 +1797,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         console.log("Inside onchange payment Status");
                                         if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Status";
+                                            errors["payment_status"] = "Invalid Payment Status";
+                                            formData.payment_status = "";
+                                            setFormData({ ...formData });
                                             setErrors({ ...errors });
                                             return;
                                         }
@@ -1814,6 +1816,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
+                                    <option value="">Select</option>
                                     <option value="paid">Paid</option>
                                     <option value="not_paid">Not Paid</option>
                                     <option value="paid_partially">Paid Partially</option>
