@@ -23,7 +23,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     useImperativeHandle(ref, () => ({
-        open() {
+        open(id) {
             if (cookies.get("user_id")) {
                 selectedDeliveredByUsers = [{
                     id: cookies.get("user_id"),
@@ -48,12 +48,115 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.status = "delivered";
             formData.payment_method = "cash";
             formData.payment_status = "";
+            if (id) {
+                getOrder(id);
+            }
             setFormData({ ...formData });
             setShow(true);
 
         },
     }));
 
+
+    function getOrder(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/order/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                setErrors({});
+
+                console.log("Response:");
+                console.log(data);
+
+                formData = data.result;
+                /*
+                let order = data.result;
+                formData = {
+                    id: order.id,
+                    code: order.code,
+                    store_id: purchase.store_id,
+                    vendor_id: purchase.vendor_id,
+                    date_str: purchase.date,
+                    // date: purchase.date,
+                    vat_percent: purchase.vat_percent,
+                    discount: purchase.discount,
+                    discount_percent: purchase.discount_percent,
+                    status: purchase.status,
+                    order_placed_by: purchase.order_placed_by,
+                    order_placed_by_signature_id: purchase.order_placed_by_signature_id,
+                    is_discount_percent: purchase.is_discount_percent,
+                    partial_payment_amount: purchase.partial_payment_amount,
+                    payment_method: purchase.payment_method,
+                    payment_status: purchase.payment_status,
+                    shipping_handling_fees: purchase.shipping_handling_fees,
+                };
+                */
+
+                if (formData.is_discount_percent) {
+                    formData.discountValue = formData.discount_percent;
+                } else {
+                    formData.discountValue = formData.discount;
+                }
+
+                selectedProducts = formData.products;
+                setSelectedProducts([...selectedProducts]);
+
+
+                let selectedStores = [
+                    {
+                        id: formData.store_id,
+                        name: formData.store_name,
+                    }
+                ];
+
+                let selectedCustomers = [
+                    {
+                        id: formData.customer_id,
+                        name: formData.customer_name,
+                    }
+                ];
+
+                /*
+                let selectedOrderPlacedByUsers = [
+                    {
+                        id: formData.created_by,
+                        name: formData.created_by_name
+                    }
+                ];
+
+
+                setSelectedOrderPlacedByUsers([...selectedOrderPlacedByUsers]);
+                */
+
+                setSelectedStores([...selectedStores]);
+                setSelectedCustomers([...selectedCustomers]);
+
+                reCalculate();
+                setFormData({ ...formData });
+
+
+            })
+            .catch(error => {
+                setProcessing(false);
+                setErrors(error);
+            });
+    }
 
     useEffect(() => {
         const listener = event => {
@@ -524,6 +627,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
         let endPoint = "/v1/order";
         let method = "POST";
+        if (formData.id) {
+            endPoint = "/v1/order/" + formData.id;
+            method = "PUT";
+        }
+
         const requestOptions = {
             method: method,
             headers: {
@@ -1753,7 +1861,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
                                 */}
 
-                        <div className="col-md-2">
+                        {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment method*</label>
 
                             <div className="input-group mb-3">
@@ -1786,9 +1894,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
 
-                        <div className="col-md-2">
+                        {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment Status*</label>
 
                             <div className="input-group mb-3">
@@ -1828,10 +1936,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
 
 
-                        {formData.payment_status === "paid_partially" ? <div className="col-md-3">
+                        {!formData.id && formData.payment_status === "paid_partially" ? <div className="col-md-3">
                             <label className="form-label">Patial Payment Amount*</label>
 
                             <div className="input-group mb-3">

@@ -377,6 +377,10 @@ function OrderIndex(props) {
         CreateFormRef.current.open();
     }
 
+    function openUpdateForm(id) {
+        CreateFormRef.current.open(id);
+    }
+
     //Cash Discounts
     const SalesCashDiscountCreateRef = useRef();
     function openSalesCashDiscountCreateForm(order) {
@@ -959,6 +963,13 @@ function OrderIndex(props) {
                                                         <OrderUpdate id={order.id} showUpdateButton={{true}} refreshList={list} showToastMessage={props.showToastMessage} />
                                                           <OrderView id={order.id} showViewButton={{true}} show={false} />
                                                         */}
+
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(order.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                 openDetailsView(order.id);
