@@ -340,20 +340,17 @@ const ProductView = forwardRef((props, ref) => {
 
 
                             </td>
-                            <th>QR code (Note:Click on Image to Print):</th><td> <div ref={qrcodeRef} onClick={printQrCode} style={{
-                                cursor: "pointer",
-                            }} > {model.ean_12 ? <QRCode value={model.ean_12} size={128} /> : ""}</div> </td>
-                        </tr>
-                        <tr>
                             <th>Name:</th><td> {model.name}</td>
                             <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
-                            <th>Store:</th><td> {model.store_name}</td>
-                            <th>Store Code:</th><td> {model.store_code}</td>
                         </tr>
                         <tr>
+                            <th>Store:</th><td> {model.store_name}</td>
+                            <th>Store Code:</th><td> {model.store_code}</td>
                             <th>Item Code:</th><td> {model.item_code}</td>
                             <th>Bar Code:</th><td> {model.bar_code}</td>
                             <th>EAN 12:</th><td> {model.ean_12}</td>
+                        </tr>
+                        <tr>
                             <th>Part Number:</th><td> {model.part_number}</td>
                             <th>Rack / Location:</th><td> {model.rack}</td>
                             <th>Categories:</th><td>
