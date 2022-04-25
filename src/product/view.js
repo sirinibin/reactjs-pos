@@ -304,19 +304,19 @@ const ProductView = forwardRef((props, ref) => {
 
                     &nbsp;&nbsp;
 
-                    <Button variant="primary" onClick={() => {
+                    {props.openCreateForm ? <Button variant="primary" onClick={() => {
                         handleClose();
                         props.openCreateForm();
                     }}>
                         <i className="bi bi-plus"></i> Create
-                    </Button>
+                    </Button> : ""}
                     &nbsp;&nbsp;
-                    <Button variant="primary" onClick={() => {
+                    {props.openUpdateForm ? <Button variant="primary" onClick={() => {
                         handleClose();
                         props.openUpdateForm(model.id);
                     }}>
                         <i className="bi bi-pencil"></i> Edit
-                    </Button>
+                    </Button> : ""}
 
                     <button
                         type="button"

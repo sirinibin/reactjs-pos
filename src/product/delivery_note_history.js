@@ -187,18 +187,8 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
 
-                totalDeliveryNote = data.meta.total_deliverynote;
-                setTotalDeliveryNote(totalDeliveryNote);
-
-                totalProfit = data.meta.total_profit;
-                setTotalProfit(totalProfit);
-
-                totalLoss = data.meta.total_loss;
-                setTotalLoss(totalLoss);
-
-                totalVat = data.meta.total_vat;
-                setTotalVat(totalVat);
-
+                totalDeliveryNoteQuantity = data.meta.total_quantity;
+                setTotalDeliveryNoteQuantity(totalDeliveryNoteQuantity);
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -233,7 +223,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    let [totalDeliveryNote, setTotalDeliveryNote] = useState(0.00);
+    let [totalDeliveryNoteQuantity, setTotalDeliveryNoteQuantity] = useState(0.00);
     let [totalProfit, setTotalProfit] = useState(0.00);
     let [totalVat, setTotalVat] = useState(0.00);
     let [totalLoss, setTotalLoss] = useState(0.00);
@@ -275,45 +265,12 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
 
                             <div className="col">
                                 <h1 className="text-end">
-                                    DeliveryNote: <Badge bg="secondary">
+                                    Quantity: <Badge bg="secondary">
                                         <NumberFormat
-                                            value={totalDeliveryNote}
+                                            value={totalDeliveryNoteQuantity}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
-                                {cookies.get('admin') === "true" ? <h1 className="text-end">
-                                    Net Profit: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalProfit}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1> : ""}
-                                {cookies.get('admin') === "true" ? <h1 className="text-end">
-                                    Loss: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalLoss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1> : ""}
-                                <h1 className="text-end">
-                                    VAT: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalVat.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={""}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -498,14 +455,14 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
-                                                                    sort("deliverynote_code");
+                                                                    sort("delivery_note_code");
                                                                 }}
                                                             >
                                                                 DeliveryNote ID
-                                                                {sortField === "deliverynote_code" && sortProduct === "-" ? (
+                                                                {sortField === "delivery_note_code" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
-                                                                {sortField === "deliverynote_code" && sortProduct === "" ? (
+                                                                {sortField === "delivery_note_code" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -550,130 +507,6 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-
-                                                        <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("unit_price");
-                                                                }}
-                                                            >
-                                                                Unit Price
-                                                                {sortField === "unit_price" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "unit_price" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
-
-                                                        <th>
-
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("price");
-                                                                }}
-                                                            >
-                                                                Price
-                                                                {sortField === "price" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "price" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
-
-                                                        <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("vat_price");
-                                                                }}
-                                                            >
-                                                                VAT
-                                                                {sortField === "vat_price" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "vat_price" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
-
-                                                        <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("net_price");
-                                                                }}
-                                                            >
-                                                                Net Price
-                                                                {sortField === "net_price" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "net_price" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th>
-
-                                                        {cookies.get('admin') === "true" ?
-                                                            <th>
-                                                                <b
-                                                                    style={{
-                                                                        textDecoration: "underline",
-                                                                        cursor: "pointer",
-                                                                    }}
-                                                                    onClick={() => {
-                                                                        sort("profit");
-                                                                    }}
-                                                                >
-                                                                    Profit
-                                                                    {sortField === "profit" && sortProduct === "-" ? (
-                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                    ) : null}
-                                                                    {sortField === "profit" && sortProduct === "" ? (
-                                                                        <i className="bi bi-sort-alpha-up"></i>
-                                                                    ) : null}
-                                                                </b>
-
-
-                                                            </th> : ""}
-                                                        {cookies.get('admin') === "true" ? <th>
-                                                            <b
-                                                                style={{
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={() => {
-                                                                    sort("loss");
-                                                                }}
-                                                            >
-                                                                Loss
-                                                                {sortField === "loss" && sortProduct === "-" ? (
-                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                ) : null}
-                                                                {sortField === "loss" && sortProduct === "" ? (
-                                                                    <i className="bi bi-sort-alpha-up"></i>
-                                                                ) : null}
-                                                            </b>
-                                                        </th> : ""}
-
                                                     </tr>
                                                 </thead>
 
@@ -747,9 +580,9 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
-                                                                id="deliverynote_code"
+                                                                id="delivery_note_code"
                                                                 onChange={(e) =>
-                                                                    searchByFieldValue("deliverynote_code", e.target.value)
+                                                                    searchByFieldValue("delivery_note_code", e.target.value)
                                                                 }
                                                                 className="form-control"
                                                             />
@@ -775,68 +608,6 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                                 className="form-control"
                                                             />
                                                         </th>
-                                                        <th>
-                                                            <input
-                                                                type="text"
-                                                                id="unit_price"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("unit_price", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th>
-                                                        <th>
-                                                            <input
-                                                                type="text"
-                                                                id="price"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("price", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th>
-                                                        <th>
-                                                            <input
-                                                                type="text"
-                                                                id="vat_price"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("vat_price", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th>
-                                                        <th>
-                                                            <input
-                                                                type="text"
-                                                                id="net_price"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("net_price", e.target.value)
-                                                                }
-                                                                className="form-control"
-                                                            />
-                                                        </th>
-                                                        {cookies.get('admin') === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="profit"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("profit", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
-                                                        {cookies.get('admin') === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="loss"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("loss", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
                                                     </tr>
                                                 </thead>
 
@@ -857,8 +628,8 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
-                                                                        openDeliveryNoteDetailsView(history.deliverynote_id);
-                                                                    }}>{history.deliverynote_code}
+                                                                        openDeliveryNoteDetailsView(history.delivery_note_id);
+                                                                    }}>{history.delivery_note_code}
                                                                 </td>
                                                                 <td style={{
                                                                     textDecoration: "underline",
@@ -870,12 +641,6 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                                     }}>{history.customer_name}
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
-                                                                <td>{history.unit_price.toFixed(2)}</td>
-                                                                <td>{history.price.toFixed(2) + " SAR"}</td>
-                                                                <td>{history.vat_price.toFixed(2) + " SAR  (" + history.vat_percent.toFixed(2) + "%)"}</td>
-                                                                <td>{history.net_price.toFixed(2) + " SAR"}</td>
-                                                                {cookies.get('admin') === "true" ? <td>{history.profit.toFixed(2) + " SAR"}</td> : ""}
-                                                                {cookies.get('admin') === "true" ? <td>{history.loss.toFixed(2) + " SAR"}</td> : ""}
 
                                                                 {/* <td>   
                                                         <button
