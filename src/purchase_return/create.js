@@ -420,7 +420,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
             if (!selectedProducts[i].selected) {
-                selectedProducts[i].quantity = 0;
+                continue;
+                // selectedProducts[i].quantity = 0;
             }
 
             formData.products.push({

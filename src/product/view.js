@@ -246,7 +246,7 @@ const ProductView = forwardRef((props, ref) => {
 
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>ok..Details of Product #{model.name} {model.name_in_arabic ? " / " + model.name_in_arabic : ""} </Modal.Title>
+                <Modal.Title>Details of Product #{model.name} {model.name_in_arabic ? " / " + model.name_in_arabic : ""} </Modal.Title>
 
                 <div className="col align-self-end text-end">
 
