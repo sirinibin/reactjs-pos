@@ -29,7 +29,7 @@ const OrderPreview = forwardRef((props, ref) => {
                     getSignature(model.delivered_by_signature_id);
                 }
 
-                let pageSize = 8;
+                let pageSize = 40;
                 model.pageSize = pageSize;
                 let totalProducts = model.products.length;
                 let top = 0;
