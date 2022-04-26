@@ -245,7 +245,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                     ))}
                                 </tbody>
 
-                                <tfoot style={{ fontSize: "3.5mm", }}>
+                                <tfoot style={{ fontSize: "3mm", }}>
                                     <tr >
                                         <th colSpan="4" className="text-end" style={{ padding: "2px", }} ></th>
 
@@ -343,7 +343,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                 </tfoot>
                             </table>
 
-                            <table className="table table-bordered" style={{ fontSize: "3.5mm" }}>
+                            <table className="table table-bordered" style={{ fontSize: "3mm" }}>
                                 <thead>
                                     <tr>
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
@@ -388,7 +388,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "3.5mm", height: "55px" }}>
+                <div className="row" style={{ fontSize: "3mm", height: "55px" }}>
                     <div className="col-md-2 text-start">
                         {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                     </div>
