@@ -65,6 +65,12 @@ const OrderPreview = forwardRef((props, ref) => {
                         }
                     }
 
+                    if (model.pages[i].products.length < pageSize) {
+                        for (let s = model.pages[i].products.length; s < pageSize; s++) {
+                            model.pages[i].products.push({});
+                        }
+                    }
+
                     top += 1057; //1057
                     offset += pageSize;
 

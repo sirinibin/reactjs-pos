@@ -217,20 +217,20 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                 <tbody style={{ fontSize: "2.7mm" }} >
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={product.item_code} className="text-center"  >
-                                            <td style={{ padding: "1px" }}>{index + 1 + (pageIndex * props.model.pageSize)}</td>
+                                            <td style={{ padding: "1px", height: "16px" }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                             <td style={{ padding: "1px" }} >{product.part_number ? product.part_number : ""}</td>
                                             <td style={{ padding: "1px" }}>
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }}>{product.quantity.toFixed(2)}  {product.unit ? product.unit : ""}</td>
+                                            <td style={{ padding: "1px" }}>{product.quantity ? product.quantity.toFixed(2) : ""}  {product.unit ? product.unit : ""}</td>
                                             <td className="text-end" style={{ padding: "1px" }} >
-                                                <NumberFormat
+                                                {product.unit_price ? <NumberFormat
                                                     value={product.unit_price.toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={" SAR"}
                                                     renderText={(value, props) => value}
-                                                />
+                                                /> : ""}
                                             </td>
                                             <td style={{ padding: "1px" }} className="text-end">
                                                 <NumberFormat
@@ -388,7 +388,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "3mm", height: "55px" }}>
+                <div className="row" style={{ fontSize: "3mm", height: "55px", }}>
                     <div className="col-md-2 text-start">
                         {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                     </div>
