@@ -144,7 +144,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                 className="table table-bordered"
                                 style={{ borderRadius: "6px" }}
                             >
-                                <thead style={{ fontSize: "3.5mm" }}>
+                                <thead style={{ fontSize: "3mm" }}>
                                     <tr >
                                         <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
@@ -214,7 +214,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody style={{ fontSize: "2.8mm" }} >
+                                <tbody style={{ fontSize: "2.7mm" }} >
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={product.item_code} className="text-center"  >
                                             <td style={{ padding: "1px" }}>{index + 1 + (pageIndex * props.model.pageSize)}</td>
