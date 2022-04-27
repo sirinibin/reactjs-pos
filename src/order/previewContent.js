@@ -168,7 +168,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 <li>Part Number</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "15%" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "20%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -190,7 +190,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 <li>Qty</li>
                                             </ul>
                                         </th>
-                                        <th className="per10 text-center" style={{ padding: "0px", width: "10%" }}>
+                                        <th className="per10 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
