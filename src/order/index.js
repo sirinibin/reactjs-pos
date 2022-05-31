@@ -184,6 +184,14 @@ function OrderIndex(props) {
     }
 
     function searchByDateField(field, value) {
+        if (!value) {
+            searchParams[field] = "";
+            page = 1;
+            setPage(page);
+            list();
+            return;
+        }
+
         if (value) {
             let d = new Date(value);
             value = format(d, "MMM dd yyyy");
@@ -827,6 +835,11 @@ function OrderIndex(props) {
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setCreatedAtFromValue("");
+                                                                        searchByDateField("created_at_from", "");
+                                                                        return;
+                                                                    }
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
@@ -838,6 +851,11 @@ function OrderIndex(props) {
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setCreatedAtToValue("");
+                                                                        searchByDateField("created_at_to", "");
+                                                                        return;
+                                                                    }
                                                                     searchByDateField("created_at_to", date);
                                                                 }}
                                                             />

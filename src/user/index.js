@@ -103,6 +103,14 @@ function UserIndex(props) {
     }
 
     function searchByDateField(field, value) {
+        if (!value) {
+            page = 1;
+            searchParams[field] = "";
+            setPage(page);
+            list();
+            return;
+        }
+
         let d = new Date(value);
         d = new Date(d.toUTCString());
 
@@ -559,6 +567,11 @@ function UserIndex(props) {
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
+                                                            if (!date) {
+                                                                setCreatedAtValue("");
+                                                                searchByDateField("created_at", "");
+                                                                return;
+                                                            }
                                                             searchByDateField("created_at", date);
                                                         }}
                                                     />
@@ -586,6 +599,11 @@ function UserIndex(props) {
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setCreatedAtFromValue("");
+                                                                        searchByDateField("created_at_from", "");
+                                                                        return;
+                                                                    }
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
@@ -597,6 +615,11 @@ function UserIndex(props) {
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setCreatedAtToValue("");
+                                                                        searchByDateField("created_at_to", "");
+                                                                        return;
+                                                                    }
                                                                     searchByDateField("created_at_to", date);
                                                                 }}
                                                             />

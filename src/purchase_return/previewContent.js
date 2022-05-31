@@ -96,8 +96,8 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                     <div className="col">
                         <ul className="list-unstyled mb0 text-start">
                             <li><strong>Purchase Return: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                            <li><strong>Purchase Return Date: </strong>{props.model.created_at ? format(
-                                new Date(props.model.created_at),
+                            <li><strong>Purchase Return Date: </strong>{props.model.date ? format(
+                                new Date(props.model.date),
                                 "MMM dd yyyy h:mma"
                             ) : "<DATE_TIME>"}</li>
                             <li>
@@ -110,7 +110,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                     <div className="col">
                         <ul className="list-unstyled mb0 text-end">
                             <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}#<strong>: رقم إرجاع الشراء </strong></li>
-                            <li><strong>تاريخ الشراء: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATETIME_ARABIC>"}</li>
+                            <li><strong>تاريخ الشراء: </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
                             <li>
                                 <strong>:بائع</strong>{props.model.vendor ? props.model.vendor.name_in_arabic : "<VENDOR_NAME_ARABIC>"}
                             </li>

@@ -95,8 +95,8 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-start">
                             <li><strong>Sales Return: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                            <li><strong>Sales Return Date: </strong>{props.model.created_at ? format(
-                                new Date(props.model.created_at),
+                            <li><strong>Sales Return Date: </strong>{props.model.date ? format(
+                                new Date(props.model.date),
                                 "MMM dd yyyy h:mma"
                             ) : "<DATE_TIME>"}</li>
                             <li><strong>Order: </strong>#{props.model.order_code ? props.model.order_code : "<ORDER_ID_NUMBER>"}</li>
@@ -113,7 +113,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-end">
                             <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :عائد المبيعات</strong></li>
-                            <li><strong>تاريخ عودة المبيعات: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
+                            <li><strong>تاريخ عودة المبيعات: </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATE_ARABIC>"}</li>
                             <li>{props.model.order_code ? props.model.order_code : "<ORDER_ID_NUMBER_ARABIC>"}<strong> :طلب</strong></li>
                             <li>
                                 <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}

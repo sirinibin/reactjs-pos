@@ -174,6 +174,14 @@ function DeliveryNoteIndex(props) {
   }
 
   function searchByDateField(field, value) {
+    if (!value) {
+      page = 1;
+      searchParams[field] = "";
+      setPage(page);
+      list();
+      return;
+    }
+
     let d = new Date(value);
     d = new Date(d.toUTCString());
 

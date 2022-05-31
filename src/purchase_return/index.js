@@ -33,7 +33,7 @@ function PurchaseReturnIndex(props) {
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
     const selectedDate = new Date();
-    const [dateValue, setDateValue] = useState("");
+    let [dateValue, setDateValue] = useState("");
     const [fromDateValue, setFromDateValue] = useState("");
     const [toDateValue, setToDateValue] = useState("");
 
@@ -173,6 +173,14 @@ function PurchaseReturnIndex(props) {
     }
 
     function searchByDateField(field, value) {
+        if (!value) {
+            page = 1;
+            searchParams[field] = "";
+            setPage(page);
+            list();
+            return;
+        }
+
         let d = new Date(value);
         d = new Date(d.toUTCString());
 
@@ -766,6 +774,11 @@ function PurchaseReturnIndex(props) {
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
+                                                            if (!date) {
+                                                                setDateValue("");
+                                                                searchByDateField("date_str", "");
+                                                                return;
+                                                            }
                                                             searchByDateField("date_str", date);
                                                         }}
                                                     />
@@ -791,6 +804,11 @@ function PurchaseReturnIndex(props) {
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setFromDateValue("");
+                                                                        searchByDateField("from_date", "");
+                                                                        return;
+                                                                    }
                                                                     searchByDateField("from_date", date);
                                                                 }}
                                                             />
@@ -802,6 +820,11 @@ function PurchaseReturnIndex(props) {
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setToDateValue("");
+                                                                        searchByDateField("to_date", "");
+                                                                        return;
+                                                                    }
                                                                     searchByDateField("to_date", date);
                                                                 }}
                                                             />
@@ -864,6 +887,11 @@ function PurchaseReturnIndex(props) {
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
+                                                            if (!date) {
+                                                                setCreatedAtValue("");
+                                                                searchByDateField("created_at", "");
+                                                                return;
+                                                            }
                                                             searchByDateField("created_at", date);
                                                         }}
                                                     />
@@ -891,6 +919,11 @@ function PurchaseReturnIndex(props) {
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setCreatedAtFromValue("");
+                                                                        searchByDateField("created_at_from", "");
+                                                                        return;
+                                                                    }
                                                                     searchByDateField("created_at_from", date);
                                                                 }}
                                                             />
@@ -902,6 +935,11 @@ function PurchaseReturnIndex(props) {
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setCreatedAtToValue("");
+                                                                        searchByDateField("created_at_to", "");
+                                                                        return;
+                                                                    }
                                                                     searchByDateField("created_at_to", date);
                                                                 }}
                                                             />
