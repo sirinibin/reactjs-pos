@@ -38,7 +38,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 discountValue: 0.0,
                 discount_percent: 0.0,
                 is_discount_percent: false,
-                date_str: format(new Date(), "MMM dd yyyy"),
+                date_str: new Date(),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "purchase_returned",
                 payment_status: "paid",
@@ -110,7 +110,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         discountValue: 0.0,
         discount_percent: 0.0,
         is_discount_percent: false,
-        date_str: format(new Date(), "MMM dd yyyy"),
+        //   date_str: format(new Date(), "MMM dd yyyy"),
+        date_str: new Date(),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "purchase_returned",
     });
@@ -269,7 +270,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 let purchase = data.result;
                 formData = {
-                    date_str: format(new Date(), "MMM dd yyyy"),
+                    // date_str: format(new Date(), "MMM dd yyyy"),
+                    date_str: new Date(),
                     signature_date_str: format(new Date(), "MMM dd yyyy"),
                     purchase_id: purchase.id,
                     purchase_code: purchase.code,
@@ -927,12 +929,19 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <DatePicker
                                     id="date_str"
-                                    value={formData.date_str}
-                                    selected={selectedDate}
+                                    selected={formData.date_str ? new Date(formData.date_str) : null}
+                                    value={formData.date_str ? format(
+                                        new Date(formData.date_str),
+                                        "MMMM d, yyyy h:mm aa"
+                                    ) : null}
                                     className="form-control"
-                                    dateFormat="MMM dd yyyy"
+                                    dateFormat="MMMM d, yyyy h:mm aa"
+                                    showTimeSelect
+                                    timeIntervals="1"
                                     onChange={(value) => {
-                                        formData.date_str = format(new Date(value), "MMM dd yyyy");
+                                        console.log("Value", value);
+                                        formData.date_str = value;
+                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
                                         setFormData({ ...formData });
                                     }}
                                 />

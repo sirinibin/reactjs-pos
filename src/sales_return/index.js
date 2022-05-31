@@ -906,7 +906,10 @@ function SalesReturnIndex(props) {
                                                         <td>{salesreturn.code}</td>
                                                         <td>{salesreturn.order_code}</td>
                                                         <td>
-                                                            {format(new Date(salesreturn.date), "MMM dd yyyy")}
+                                                            {format(
+                                                                new Date(salesreturn.date),
+                                                                "MMM dd yyyy h:mma"
+                                                            )}
                                                         </td>
                                                         <td>{salesreturn.net_total} SAR</td>
                                                         <td>{salesreturn.created_by_name}</td>

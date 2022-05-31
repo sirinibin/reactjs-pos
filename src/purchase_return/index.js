@@ -921,7 +921,10 @@ function PurchaseReturnIndex(props) {
                                                         <td>{purchasereturn.vendor_name}</td>
                                                         <td>{purchasereturn.purchase_code}</td>
                                                         <td>
-                                                            {format(new Date(purchasereturn.date), "MMM dd yyyy")}
+                                                            {format(
+                                                                new Date(purchasereturn.date),
+                                                                "MMM dd yyyy h:mma"
+                                                            )}
                                                         </td>
                                                         <td>{purchasereturn.net_total} SAR</td>
                                                         <td>{purchasereturn.created_by_name}</td>

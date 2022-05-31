@@ -194,7 +194,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                             <th>Purchase Returned by:</th><td> {model.purchase_returned_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Date:</th><td> {model.date_str}</td>
+                            <th>Date:</th><td> {model.date}</td>
                             <th>VAT %:</th><td> {model.vat_percent}%</td>
                             <th>Discount :</th><td> {model.discount} SAR</td>
                             <th>Discount %:</th><td> {model.discount_percent} SAR</td>
