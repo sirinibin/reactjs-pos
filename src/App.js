@@ -88,6 +88,10 @@ function App() {
           <Dashboard />
         </Route>
 
+        <Route path="/dashboard/expense_category">
+          <Dashboard />
+        </Route>
+
         <Route path="/dashboard/users">
           <Dashboard />
         </Route>
