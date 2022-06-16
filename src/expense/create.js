@@ -6,6 +6,7 @@ import ExpenseView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import ExpenseCategoryCreate from "../expense_category/create.js";
+import ExpenseCategoryView from "../expense_category/view.js";
 import Resizer from "react-image-file-resizer";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
@@ -347,6 +348,15 @@ const ExpenseCreate = forwardRef((props, ref) => {
         ExpenseCategoryCreateFormRef.current.open();
     }
 
+    const ExpenseCategoryDetailsViewRef = useRef();
+    function openExpenseCategoryDetailsView(id) {
+        ExpenseCategoryDetailsViewRef.current.open(id);
+    }
+
+
+    function openExpenseCategoryUpdateForm(id) {
+        ExpenseCategoryCreateFormRef.current.open(id);
+    }
 
     return (
         <>
@@ -355,7 +365,10 @@ const ExpenseCreate = forwardRef((props, ref) => {
             {/*
             <ExpenseView ref={DetailsViewRef} />
             */}
-            <ExpenseCategoryCreate ref={ExpenseCategoryCreateFormRef} showToastMessage={props.showToastMessage} />
+            <ExpenseCategoryCreate ref={ExpenseCategoryCreateFormRef} openDetailsView={openExpenseCategoryDetailsView} showToastMessage={props.showToastMessage} />
+
+            <ExpenseCategoryView ref={ExpenseCategoryDetailsViewRef} openUpdateForm={openExpenseCategoryUpdateForm} openCreateForm={openExpenseCategoryCreateForm} />
+
 
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
