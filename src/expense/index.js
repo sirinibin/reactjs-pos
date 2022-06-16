@@ -6,8 +6,9 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import NumberFormat from "react-number-format";
 
 function ExpenseIndex(props) {
 
@@ -222,6 +223,8 @@ function ExpenseIndex(props) {
         list();
     }
 
+    let [totalExpenses, setTotalExpenses] = useState(0.00);
+
     function list() {
         const requestOptions = {
             method: "GET",
@@ -286,6 +289,10 @@ function ExpenseIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                totalExpenses = data.meta.total;
+                setTotalExpenses(totalExpenses);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -337,6 +344,26 @@ function ExpenseIndex(props) {
 
             <div className="container-fluid p-0">
                 <div className="row">
+
+                    <div className="col">
+                        <h1 className="text-end">
+                            Total: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalExpenses}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                    </div>
+
+                </div>
+            </div>
+
+            <div className="container-fluid p-0">
+                <div className="row">
                     <div className="col">
                         <h1 className="h3">Expenses</h1>
                     </div>
@@ -355,13 +382,7 @@ function ExpenseIndex(props) {
                     </div>
                 </div>
 
-                <div className="row">
 
-
-                    <div className="col text-end">
-
-                    </div>
-                </div>
 
 
                 <div className="row">
