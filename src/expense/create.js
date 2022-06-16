@@ -46,8 +46,9 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
                     if (form && form.elements[index + 1]) {
-                        if (event.target.getAttribute("class").includes("barcode")) {
+                        if (event.target.getAttribute("class").includes("description")) {
                             form.elements[index].focus();
+                            form.elements[index].value += '\r\n';
                         } else {
                             form.elements[index + 1].focus();
                         }
@@ -456,7 +457,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
-                                    className="form-control"
+                                    className="form-control description"
                                     id="description"
                                     placeholder="Description"
                                 />
