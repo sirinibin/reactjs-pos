@@ -56,7 +56,7 @@ function Sidebar(props) {
         }
     }
 
-    return <nav id="sidebar" className={'sidebar ' + props.isSidebarOpen + ' js-sidebar'}>
+    return <nav id="sidebar" className={'sidebar ' + props.isSidebarOpen + ' js-sidebar'} style={{ overflowY: 'scroll' }}>
         <div className="sidebar-content js-simplebar">
             <div className="sidebar-brand">
                 <span className="align-middle">
@@ -221,7 +221,7 @@ function Sidebar(props) {
                 </li>
                 {cookies.get('admin') === "true" ? <li onClick={() => {
                     toggleActive(appState.tabs[19]);
-                }} className={toggleActiveStyles(appState.tabs[18])}>
+                }} className={toggleActiveStyles(appState.tabs[19])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>
