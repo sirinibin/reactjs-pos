@@ -30,6 +30,7 @@ function Sidebar(props) {
             'products',
             'product category',
             'expense category',
+            'expenses',
             'users',
             'signatures'
         ],
@@ -210,8 +211,16 @@ function Sidebar(props) {
                         <span className="align-middle">Expense Category</span>
                     </Link>
                 </li>
-                {cookies.get('admin') === "true" ? <li onClick={() => {
+                <li onClick={() => {
                     toggleActive(appState.tabs[18]);
+                }} className={toggleActiveStyles(appState.tabs[18])}>
+                    <Link to="/dashboard/expenses" className="sidebar-link">
+                        <i className="bi bi-diagram-3" />
+                        <span className="align-middle">Expenses</span>
+                    </Link>
+                </li>
+                {cookies.get('admin') === "true" ? <li onClick={() => {
+                    toggleActive(appState.tabs[19]);
                 }} className={toggleActiveStyles(appState.tabs[18])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
@@ -219,8 +228,8 @@ function Sidebar(props) {
                     </Link>
                 </li> : ""}
                 <li onClick={() => {
-                    toggleActive(appState.tabs[19]);
-                }} className={toggleActiveStyles(appState.tabs[19])}>
+                    toggleActive(appState.tabs[20]);
+                }} className={toggleActiveStyles(appState.tabs[20])}>
                     <Link to="/dashboard/signatures" className="sidebar-link">
                         <i className="bi bi-fingerprint" />
                         <span className="align-middle">Signatures</span>
