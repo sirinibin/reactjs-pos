@@ -30,6 +30,10 @@ import ExpenseIndex from './expense/index.js';
 import CustomerDepositIndex from './customer_deposit/index.js';
 import CustomerWithdrawalIndex from './customer_withdrawal/index.js';
 
+import CapitalIndex from './capital/index.js';
+import CapitalWithdrawalIndex from './capital_withdrawal/index.js';
+import DividentIndex from './divident/index.js';
+
 import UserIndex from './user/index.js';
 import SignatureIndex from './signature/index.js';
 import Footer from './Footer';
@@ -378,6 +382,45 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <CustomerWithdrawalIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/capitals">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <CapitalIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/capital_withdrawals">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <CapitalWithdrawalIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/dividents">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <DividentIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

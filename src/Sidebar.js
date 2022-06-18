@@ -33,6 +33,9 @@ function Sidebar(props) {
             'expenses',
             'customer deposits',
             'customer withdrawals',
+            'capitals',
+            'capital withdrawals',
+            'dividents',
             'users',
             'signatures'
         ],
@@ -237,17 +240,41 @@ function Sidebar(props) {
                         <span className="align-middle">Customer Withdrawals</span>
                     </Link>
                 </li>
-                {cookies.get('admin') === "true" ? <li onClick={() => {
+                <li onClick={() => {
                     toggleActive(appState.tabs[21]);
                 }} className={toggleActiveStyles(appState.tabs[21])}>
+                    <Link to="/dashboard/capitals" className="sidebar-link">
+                        <i className="bi bi-diagram-3" />
+                        <span className="align-middle">Capital Investments</span>
+                    </Link>
+                </li>
+                <li onClick={() => {
+                    toggleActive(appState.tabs[22]);
+                }} className={toggleActiveStyles(appState.tabs[22])}>
+                    <Link to="/dashboard/capital_withdrawals" className="sidebar-link">
+                        <i className="bi bi-diagram-3" />
+                        <span className="align-middle">Capital Withdrawals</span>
+                    </Link>
+                </li>
+                <li onClick={() => {
+                    toggleActive(appState.tabs[23]);
+                }} className={toggleActiveStyles(appState.tabs[23])}>
+                    <Link to="/dashboard/dividents" className="sidebar-link">
+                        <i className="bi bi-diagram-3" />
+                        <span className="align-middle">Divident Withdrawals</span>
+                    </Link>
+                </li>
+                {cookies.get('admin') === "true" ? <li onClick={() => {
+                    toggleActive(appState.tabs[24]);
+                }} className={toggleActiveStyles(appState.tabs[24])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>
                     </Link>
                 </li> : ""}
                 <li onClick={() => {
-                    toggleActive(appState.tabs[22]);
-                }} className={toggleActiveStyles(appState.tabs[22])}>
+                    toggleActive(appState.tabs[25]);
+                }} className={toggleActiveStyles(appState.tabs[25])}>
                     <Link to="/dashboard/signatures" className="sidebar-link">
                         <i className="bi bi-fingerprint" />
                         <span className="align-middle">Signatures</span>

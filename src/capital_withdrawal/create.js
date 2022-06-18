@@ -2,31 +2,30 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
-import CustomerDepositView from "./view.js";
+import CapitalWithdrawalView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import Resizer from "react-image-file-resizer";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
-import CustomerCreate from "./../customer/create.js";
-import CustomerView from "./../customer/view.js";
 
-
-const CustomerDepositCreate = forwardRef((props, ref) => {
+const CapitalWithdrawalCreate = forwardRef((props, ref) => {
 
     //Store Auto Suggestion
     let [selectedStores, setSelectedStores] = useState([]);
     const [isStoresLoading, setIsStoresLoading] = useState(false);
 
+
     useImperativeHandle(ref, () => ({
         open(id) {
+
             formData = {
                 images_content: [],
             };
             setFormData({ formData });
 
             if (id) {
-                getCustomerDeposit(id);
+                getCapitalWithdrawal(id);
             }
 
             SetShow(true);
@@ -37,7 +36,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     useEffect(() => {
         const listener = event => {
             if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function-customerdeposit.");
+                console.log("Enter key was pressed. Run your function-capitalwithdrawal.");
                 // event.preventDefault();
 
                 var form = event.target.form;
@@ -101,8 +100,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     }
 
 
-    function getCustomerDeposit(id) {
-        console.log("inside get CustomerDeposit");
+    function getCapitalWithdrawal(id) {
+        console.log("inside get CapitalWithdrawal");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -111,7 +110,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/customer-deposit/' + id, requestOptions)
+        fetch('/v1/capital-withdrawal/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -129,14 +128,14 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                 formData = data.result;
 
-                let selectedCustomers = [
+                let selectedWithdrawnByUsers = [
                     {
-                        id: formData.customer_id,
-                        name: formData.customer_name,
+                        id: formData.withdrawn_by_user_id,
+                        name: formData.withdrawn_by_user_name,
                     }
                 ];
 
-                setSelectedCustomers([...selectedCustomers]);
+                setSelectedWithdrawnByUsers([...selectedWithdrawnByUsers]);
 
                 let selectedStores = [
                     {
@@ -205,14 +204,14 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             .join("&");
     }
 
-    //Customer Auto Suggestion
-    const [customerOptions, setCustomerOptions] = useState([]);
-    const [selectedCustomers, setSelectedCustomers] = useState([]);
-    const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+    //WithdrawnByUser Auto Suggestion
+    const [withdrawnbyuserOptions, setWithdrawnByUserOptions] = useState([]);
+    const [selectedWithdrawnByUsers, setSelectedWithdrawnByUsers] = useState([]);
+    const [isWithdrawnByUsersLoading, setIsWithdrawnByUsersLoading] = useState(false);
 
-    async function suggestCustomers(searchTerm) {
-        console.log("Inside handle suggestCustomers");
-        setCustomerOptions([]);
+    async function suggestUsers(searchTerm) {
+        console.log("Inside handle suggestWithdrawnByUsers");
+        setWithdrawnByUserOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
@@ -236,41 +235,31 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         };
 
         let Select = "select=id,name";
-        setIsCustomersLoading(true);
+        setIsWithdrawnByUsersLoading(true);
         let result = await fetch(
-            "/v1/customer?" + Select + queryString,
+            "/v1/user?" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
 
-        setCustomerOptions(data.result);
-        setIsCustomersLoading(false);
+        setWithdrawnByUserOptions(data.result);
+        setIsWithdrawnByUsersLoading(false);
     }
 
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
 
-        formData.category_id = [];
-        for (var i = 0; i < selectedCategories.length; i++) {
-            formData.category_id.push(selectedCategories[i].id);
-        }
-
-
-        console.log("category_id:", formData.category_id);
-
         if (cookies.get("store_id")) {
             formData.store_id = cookies.get("store_id");
         }
 
-
-        let endPoint = "/v1/customer-deposit";
+        let endPoint = "/v1/capital-withdrawal";
         let method = "POST";
         if (formData.id) {
-            endPoint = "/v1/customer-deposit/" + formData.id;
+            endPoint = "/v1/capital-withdrawal/" + formData.id;
             method = "PUT";
         }
-
 
         const requestOptions = {
             method: method,
@@ -305,13 +294,16 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("CustomerDeposit Created Successfully!", "success");
+                props.showToastMessage("CapitalWithdrawal Created Successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
 
                 handleClose();
-                props.openDetailsView(data.result.id);
+                if (props.openDetailsView) {
+                    props.openDetailsView(data.result.id);
+                }
+
             })
             .catch((error) => {
                 setProcessing(false);
@@ -319,15 +311,9 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating CustomerDeposit!", "danger");
+                props.showToastMessage("Error Creating CapitalWithdrawal!", "danger");
             });
     }
-
-
-
-
-
-
 
 
     function getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight) {
@@ -354,32 +340,20 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     }
 
 
-    const CustomerDepositCategoryDetailsViewRef = useRef();
-    function openCustomerDepositCategoryDetailsView(id) {
-        CustomerDepositCategoryDetailsViewRef.current.open(id);
+    const CapitalWithdrawalCategoryDetailsViewRef = useRef();
+    function openCapitalWithdrawalCategoryDetailsView(id) {
+        CapitalWithdrawalCategoryDetailsViewRef.current.open(id);
     }
 
-    const CustomerCreateFormRef = useRef();
-    function openCustomerCreateForm() {
-        CustomerCreateFormRef.current.open();
-    }
-
-    const CustomerDetailsViewRef = useRef();
-    function openCustomerDetailsView(id) {
-        CustomerDetailsViewRef.current.open(id);
-    }
 
     return (
         <>
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
-            <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
-            <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
-
 
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Customer Deposit #" + formData.description : "Create New Customer Deposit"}
+                        {formData.id ? "Update WithdrawnByUser CapitalWithdrawal #" + formData.description : "Create New Capital Withdrawal"}
                     </Modal.Title>
 
 
@@ -459,88 +433,43 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 </div>
                             </div>
                         </div> : ""}
-
-                        {!cookies.get('store_name') ? <div className="col-md-6">
-                            <label className="form-label">Store*</label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="store_id"
-                                    labelKey="name"
-                                    isLoading={isStoresLoading}
-                                    isInvalid={errors.store_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.store_id = "";
-                                        errors["product_id"] = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.store_id = "Invalid Store selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedStores([]);
-                                            return;
-                                        }
-                                        formData.store_id = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        console.log("formData.store_id:", formData.store_id);
-                                        selectedStores = selectedItems;
-                                        setSelectedStores([...selectedItems]);
-                                    }
-                                    }
-                                    options={storeOptions}
-                                    placeholder="Select Store"
-                                    selected={selectedStores}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestStores(searchTerm);
-                                    }}
-                                />
-
-                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                <div style={{ color: "red" }}>
-                                    <i className="bi x-lg"> </i>
-                                    {errors.store_id}
-                                </div>
-                            </div>
-                        </div> : ""}
-
                         <div className="col-md-6">
-                            <label className="form-label">Customer*</label>
+                            <label className="form-label">Withdrawn By User*</label>
 
                             <div className="input-group mb-3">
                                 <Typeahead
-                                    id="customer_id"
+                                    id="withdrawn_by_user_id"
                                     labelKey="name"
-                                    isLoading={isCustomersLoading}
-                                    isInvalid={errors.customer_id ? true : false}
+                                    isLoading={isWithdrawnByUsersLoading}
+                                    isInvalid={errors.withdrawn_by_user_id ? true : false}
                                     onChange={(selectedItems) => {
-                                        errors.customer_id = "";
+                                        errors.withdrawn_by_user_id = "";
                                         setErrors(errors);
                                         if (selectedItems.length === 0) {
-                                            errors.customer_id = "Invalid Customer selected";
+                                            errors.withdrawn_by_user_id = "Invalid User selected";
                                             setErrors(errors);
-                                            formData.customer_id = "";
+                                            formData.withdrawn_by_user_id = "";
                                             setFormData({ ...formData });
-                                            setSelectedCustomers([]);
+                                            setSelectedWithdrawnByUsers([]);
                                             return;
                                         }
-                                        formData.customer_id = selectedItems[0].id;
+                                        formData.withdrawn_by_user_id = selectedItems[0].id;
                                         setFormData({ ...formData });
-                                        setSelectedCustomers(selectedItems);
+                                        setSelectedWithdrawnByUsers(selectedItems);
                                     }}
-                                    options={customerOptions}
-                                    placeholder="Select Customer"
-                                    selected={selectedCustomers}
+                                    options={withdrawnbyuserOptions}
+                                    placeholder="Select WithdrawnByUser"
+                                    selected={selectedWithdrawnByUsers}
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
-                                        suggestCustomers(searchTerm);
+                                        suggestUsers(searchTerm);
                                     }}
                                 />
-                                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.customer_id && (
+                                <Button hide={true.toString()} onClick={props.openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                {errors.withdrawn_by_user_id && (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>
-                                        {errors.customer_id}
+                                        {errors.withdrawn_by_user_id}
                                     </div>
                                 )}
                             </div>
@@ -770,7 +699,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
-                                        animation="bcustomerdeposit"
+                                        animation="bcapitalwithdrawal"
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
@@ -790,4 +719,4 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     );
 });
 
-export default CustomerDepositCreate;
+export default CapitalWithdrawalCreate;

@@ -9,9 +9,13 @@ import Resizer from "react-image-file-resizer";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import CustomerCreate from "../customer/create.js";
-
+import CustomerView from "./../customer/view.js";
 
 const CustomerWithdrawalCreate = forwardRef((props, ref) => {
+
+    //Store Auto Suggestion
+    let [selectedStores, setSelectedStores] = useState([]);
+    const [isStoresLoading, setIsStoresLoading] = useState(false);
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -132,6 +136,14 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 ];
 
                 setSelectedCustomers([...selectedCustomers]);
+
+                let selectedStores = [
+                    {
+                        id: formData.store_id,
+                        name: formData.store_name,
+                    }
+                ];
+                setSelectedStores([...selectedStores]);
 
                 formData.images_content = [];
                 setFormData({ ...formData });
@@ -351,11 +363,18 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         CustomerCreateFormRef.current.open();
     }
 
+    const CustomerDetailsViewRef = useRef();
+    function openCustomerDetailsView(id) {
+        CustomerDetailsViewRef.current.open(id);
+    }
+
+
     return (
         <>
 
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
-            <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
+            <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
+            <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
 
 
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
@@ -398,6 +417,50 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                        {!cookies.get('store_name') ? <div className="col-md-6">
+                            <label className="form-label">Store*</label>
+
+                            <div className="input-group mb-3">
+                                <Typeahead
+                                    id="store_id"
+                                    labelKey="name"
+                                    isLoading={isStoresLoading}
+                                    isInvalid={errors.store_id ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.store_id = "";
+                                        errors["product_id"] = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            errors.store_id = "Invalid Store selected";
+                                            setErrors(errors);
+                                            setFormData({ ...formData });
+                                            setSelectedStores([]);
+                                            return;
+                                        }
+                                        formData.store_id = selectedItems[0].id;
+                                        setFormData({ ...formData });
+                                        console.log("formData.store_id:", formData.store_id);
+                                        selectedStores = selectedItems;
+                                        setSelectedStores([...selectedItems]);
+                                    }
+                                    }
+                                    options={storeOptions}
+                                    placeholder="Select Store"
+                                    selected={selectedStores}
+                                    highlightOnlyResult={true}
+                                    onInputChange={(searchTerm, e) => {
+                                        suggestStores(searchTerm);
+                                    }}
+                                />
+
+                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <div style={{ color: "red" }}>
+                                    <i className="bi x-lg"> </i>
+                                    {errors.store_id}
+                                </div>
+                            </div>
+                        </div> : ""}
+
                         <div className="col-md-6">
                             <label className="form-label">Customer*</label>
 
@@ -614,6 +677,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                             targetHeight = targetDimensions.targetHeight;
 
                                             resizeFIle(file, targetWidth, targetHeight, (result) => {
+                                                formData.images_content = [];
                                                 formData.images_content[0] = result;
                                                 setFormData({ ...formData });
 

@@ -1,13 +1,24 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
-import { Modal, Table, Button } from 'react-bootstrap';
+import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
+import { Modal, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
+import NumberFormat from "react-number-format";
+import Barcode from 'react-barcode';
+import QRCode from "react-qr-code";
+import html2canvas from 'html2canvas';
+//let ThermalPrinterEncoder = require('thermal-printer-encoder');
+import ThermalPrinterEncoder from 'thermal-printer-encoder';
+import CapitalWithdrawalCreate from "./create.js";
 
-const UserView = forwardRef((props, ref) => {
+import { Button } from "react-bootstrap";
+
+
+
+const CapitalWithdrawalView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
-                getUser(id);
+                getCapitalWithdrawal(id);
                 SetShow(true);
             }
 
@@ -25,9 +36,8 @@ const UserView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-
-    function getUser(id) {
-        console.log("inside get User");
+    function getCapitalWithdrawal(id) {
+        console.log("inside get CapitalWithdrawal");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -36,9 +46,16 @@ const UserView = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/user/' + id, requestOptions)
-            .then(async response => {
+        let storeParam = "";
 
+        let store_id = cookies.get("store_id");
+        if (store_id) {
+            storeParam = "?store_id=" + store_id;
+        }
+
+
+        fetch('/v1/capital-withdrawal/' + id + storeParam, requestOptions)
+            .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -61,10 +78,14 @@ const UserView = forwardRef((props, ref) => {
     }
 
 
+
+
+
+
     return (<>
-        <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
+        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of User #{model.name} </Modal.Title>
+                <Modal.Title>Details of CapitalWithdrawal #{model.description} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {
@@ -80,6 +101,7 @@ const UserView = forwardRef((props, ref) => {
                     }}>
                         <i className="bi bi-pencil"></i> Edit
                     </Button> : ""}
+
                     <button
                         type="button"
                         className="btn-close"
@@ -93,25 +115,42 @@ const UserView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
-                            <th>Name:</th><td> {model.name}</td>
-                            <th>Admin:</th><td> {model.admin}</td>
-                            <th>E-mail:</th><td> {model.email}</td>
-                        </tr>
-                        <tr>
-                            <th>Mob:</th><td> {model.mob}</td>
-                            <th>Password:</th><td> ***********</td>
+                            <th>Code:</th><td> {model.code}</td>
+                            <th>Date:</th><td> {model.date}</td>
+                            <th>Description:</th><td> {model.description}</td>
+                            <th>Amount</th><td> {model.amount}</td>
+                            <th>WithdrawnByUser</th><td> {model.withdrawn_by_user_name}</td>
+                            <th>Payment Method:</th><td> {model.payment_method}</td>
                         </tr>
                         <tr>
                             <th>Created At:</th><td> {model.created_at}</td>
                             <th>Updated At:</th><td> {model.updated_at}</td>
-                        </tr>
-                        <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
                         </tr>
                     </tbody>
                 </Table>
-
+                <h4>Images</h4>
+                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                    <table className="table table-striped table-sm table-bordered">
+                        <thead>
+                            <tr className="text-center">
+                                <th>SI No.</th>
+                                <th>Image</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {model.images && model.images.map((image, index) => (
+                                <tr key={index} className="text-center">
+                                    <td>{index + 1}</td>
+                                    <td>
+                                        <img alt="CapitalWithdrawal" src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
                 {/*
                     <form className="row g-3 needs-validation" >
                         
@@ -150,4 +189,4 @@ const UserView = forwardRef((props, ref) => {
 
 });
 
-export default UserView;
+export default CapitalWithdrawalView;

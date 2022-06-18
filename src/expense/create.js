@@ -14,6 +14,11 @@ import { format } from "date-fns";
 
 const ExpenseCreate = forwardRef((props, ref) => {
 
+    //Store Auto Suggestion
+    let [selectedStores, setSelectedStores] = useState([]);
+    const [isStoresLoading, setIsStoresLoading] = useState(false);
+
+
     useImperativeHandle(ref, () => ({
         open(id) {
 
@@ -144,6 +149,15 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 setSelectedCategories(selectedCategories);
 
                 formData = data.result;
+
+                let selectedStores = [
+                    {
+                        id: formData.store_id,
+                        name: formData.store_name,
+                    }
+                ];
+                setSelectedStores([...selectedStores]);
+
                 formData.images_content = [];
                 setFormData({ ...formData });
             })
@@ -411,6 +425,51 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+
+                        {!cookies.get('store_name') ? <div className="col-md-6">
+                            <label className="form-label">Store*</label>
+
+                            <div className="input-group mb-3">
+                                <Typeahead
+                                    id="store_id"
+                                    labelKey="name"
+                                    isLoading={isStoresLoading}
+                                    isInvalid={errors.store_id ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.store_id = "";
+                                        errors["product_id"] = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            errors.store_id = "Invalid Store selected";
+                                            setErrors(errors);
+                                            setFormData({ ...formData });
+                                            setSelectedStores([]);
+                                            return;
+                                        }
+                                        formData.store_id = selectedItems[0].id;
+                                        setFormData({ ...formData });
+                                        console.log("formData.store_id:", formData.store_id);
+                                        selectedStores = selectedItems;
+                                        setSelectedStores([...selectedItems]);
+                                    }
+                                    }
+                                    options={storeOptions}
+                                    placeholder="Select Store"
+                                    selected={selectedStores}
+                                    highlightOnlyResult={true}
+                                    onInputChange={(searchTerm, e) => {
+                                        suggestStores(searchTerm);
+                                    }}
+                                />
+
+                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                <div style={{ color: "red" }}>
+                                    <i className="bi x-lg"> </i>
+                                    {errors.store_id}
+                                </div>
+                            </div>
+                        </div> : ""}
+
                         <div className="col-md-6">
                             <label className="form-label">Amount*</label>
 
@@ -632,6 +691,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                             targetHeight = targetDimensions.targetHeight;
 
                                             resizeFIle(file, targetWidth, targetHeight, (result) => {
+                                                formData.images_content = [];
                                                 formData.images_content[0] = result;
                                                 setFormData({ ...formData });
 

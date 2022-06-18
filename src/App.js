@@ -104,6 +104,18 @@ function App() {
           <Dashboard />
         </Route>
 
+        <Route path="/dashboard/capitals">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/capital_withdrawals">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/dividents">
+          <Dashboard />
+        </Route>
+
         <Route path="/dashboard/users">
           <Dashboard />
         </Route>
