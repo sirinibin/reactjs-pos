@@ -219,17 +219,25 @@ function Sidebar(props) {
                         <span className="align-middle">Expenses</span>
                     </Link>
                 </li>
-                {cookies.get('admin') === "true" ? <li onClick={() => {
+                <li onClick={() => {
                     toggleActive(appState.tabs[19]);
                 }} className={toggleActiveStyles(appState.tabs[19])}>
+                    <Link to="/dashboard/customer_deposits" className="sidebar-link">
+                        <i className="bi bi-diagram-3" />
+                        <span className="align-middle">Customer Deposits</span>
+                    </Link>
+                </li>
+                {cookies.get('admin') === "true" ? <li onClick={() => {
+                    toggleActive(appState.tabs[20]);
+                }} className={toggleActiveStyles(appState.tabs[20])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>
                     </Link>
                 </li> : ""}
                 <li onClick={() => {
-                    toggleActive(appState.tabs[20]);
-                }} className={toggleActiveStyles(appState.tabs[20])}>
+                    toggleActive(appState.tabs[21]);
+                }} className={toggleActiveStyles(appState.tabs[21])}>
                     <Link to="/dashboard/signatures" className="sidebar-link">
                         <i className="bi bi-fingerprint" />
                         <span className="align-middle">Signatures</span>

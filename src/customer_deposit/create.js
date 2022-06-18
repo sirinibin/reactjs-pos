@@ -2,33 +2,26 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
-import ExpenseView from "./view.js";
+import CustomerDepositView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
-import ExpenseCategoryCreate from "../expense_category/create.js";
-import ExpenseCategoryView from "../expense_category/view.js";
 import Resizer from "react-image-file-resizer";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
+import CustomerCreate from "./../customer/create.js";
 
 
-const ExpenseCreate = forwardRef((props, ref) => {
+const CustomerDepositCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
-
-
-            selectedCategories = [];
-            setSelectedCategories(selectedCategories);
-
-
             formData = {
                 images_content: [],
             };
             setFormData({ formData });
 
             if (id) {
-                getExpense(id);
+                getCustomerDeposit(id);
             }
 
             SetShow(true);
@@ -39,7 +32,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
     useEffect(() => {
         const listener = event => {
             if (event.code === "Enter" || event.code === "NumpadEnter") {
-                console.log("Enter key was pressed. Run your function-expense.");
+                console.log("Enter key was pressed. Run your function-customerdeposit.");
                 // event.preventDefault();
 
                 var form = event.target.form;
@@ -103,8 +96,8 @@ const ExpenseCreate = forwardRef((props, ref) => {
     }
 
 
-    function getExpense(id) {
-        console.log("inside get Expense");
+    function getCustomerDeposit(id) {
+        console.log("inside get CustomerDeposit");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -113,7 +106,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/expense/' + id, requestOptions)
+        fetch('/v1/customer-deposit/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -128,22 +121,18 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                let categoryIds = data.result.category_id;
-                let categoryNames = data.result.category_name;
-
-                selectedCategories = [];
-                if (categoryIds && categoryNames) {
-                    for (var i = 0; i < categoryIds.length; i++) {
-                        selectedCategories.push({
-                            id: categoryIds[i],
-                            name: categoryNames[i],
-                        });
-                    }
-                }
-
-                setSelectedCategories(selectedCategories);
 
                 formData = data.result;
+
+                let selectedCustomers = [
+                    {
+                        id: formData.customer_id,
+                        name: formData.customer_name,
+                    }
+                ];
+
+                setSelectedCustomers([...selectedCustomers]);
+
                 formData.images_content = [];
                 setFormData({ ...formData });
             })
@@ -151,41 +140,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 setProcessing(false);
                 setErrors(error);
             });
-    }
-
-
-    async function suggestCategories(searchTerm) {
-        console.log("Inside handle suggest Categories");
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(
-            "/v1/expense-category?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setCategoryOptions(data.result);
     }
 
     async function suggestStores(searchTerm) {
@@ -238,6 +192,48 @@ const ExpenseCreate = forwardRef((props, ref) => {
             .join("&");
     }
 
+    //Customer Auto Suggestion
+    const [customerOptions, setCustomerOptions] = useState([]);
+    const [selectedCustomers, setSelectedCustomers] = useState([]);
+    const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+
+    async function suggestCustomers(searchTerm) {
+        console.log("Inside handle suggestCustomers");
+        setCustomerOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            return;
+        }
+
+        var params = {
+            name: searchTerm,
+        };
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = "select=id,name";
+        setIsCustomersLoading(true);
+        let result = await fetch(
+            "/v1/customer?" + Select + queryString,
+            requestOptions
+        );
+        let data = await result.json();
+
+        setCustomerOptions(data.result);
+        setIsCustomersLoading(false);
+    }
+
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -255,10 +251,10 @@ const ExpenseCreate = forwardRef((props, ref) => {
         }
 
 
-        let endPoint = "/v1/expense";
+        let endPoint = "/v1/customer-deposit";
         let method = "POST";
         if (formData.id) {
-            endPoint = "/v1/expense/" + formData.id;
+            endPoint = "/v1/customer-deposit/" + formData.id;
             method = "PUT";
         }
 
@@ -296,7 +292,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Expense Created Successfully!", "success");
+                props.showToastMessage("CustomerDeposit Created Successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -310,7 +306,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating Expense!", "danger");
+                props.showToastMessage("Error Creating CustomerDeposit!", "danger");
             });
     }
 
@@ -344,37 +340,28 @@ const ExpenseCreate = forwardRef((props, ref) => {
         StoreCreateFormRef.current.open();
     }
 
-    const ExpenseCategoryCreateFormRef = useRef();
-    function openExpenseCategoryCreateForm() {
-        ExpenseCategoryCreateFormRef.current.open();
+
+    const CustomerDepositCategoryDetailsViewRef = useRef();
+    function openCustomerDepositCategoryDetailsView(id) {
+        CustomerDepositCategoryDetailsViewRef.current.open(id);
     }
 
-    const ExpenseCategoryDetailsViewRef = useRef();
-    function openExpenseCategoryDetailsView(id) {
-        ExpenseCategoryDetailsViewRef.current.open(id);
-    }
-
-
-    function openExpenseCategoryUpdateForm(id) {
-        ExpenseCategoryCreateFormRef.current.open(id);
+    const CustomerCreateFormRef = useRef();
+    function openCustomerCreateForm() {
+        CustomerCreateFormRef.current.open();
     }
 
     return (
         <>
 
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
-            {/*
-            <ExpenseView ref={DetailsViewRef} />
-            */}
-            <ExpenseCategoryCreate ref={ExpenseCategoryCreateFormRef} openDetailsView={openExpenseCategoryDetailsView} showToastMessage={props.showToastMessage} />
-
-            <ExpenseCategoryView ref={ExpenseCategoryDetailsViewRef} openUpdateForm={openExpenseCategoryUpdateForm} openCreateForm={openExpenseCategoryCreateForm} />
+            <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Expense #" + formData.description : "Create New Expense"}
+                        {formData.id ? "Update Customer Deposit #" + formData.description : "Create New Customer Deposit"}
                     </Modal.Title>
 
 
@@ -412,6 +399,48 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         <div className="col-md-6">
+                            <label className="form-label">Customer*</label>
+
+                            <div className="input-group mb-3">
+                                <Typeahead
+                                    id="customer_id"
+                                    labelKey="name"
+                                    isLoading={isCustomersLoading}
+                                    isInvalid={errors.customer_id ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.customer_id = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            errors.customer_id = "Invalid Customer selected";
+                                            setErrors(errors);
+                                            formData.customer_id = "";
+                                            setFormData({ ...formData });
+                                            setSelectedCustomers([]);
+                                            return;
+                                        }
+                                        formData.customer_id = selectedItems[0].id;
+                                        setFormData({ ...formData });
+                                        setSelectedCustomers(selectedItems);
+                                    }}
+                                    options={customerOptions}
+                                    placeholder="Select Customer"
+                                    selected={selectedCustomers}
+                                    highlightOnlyResult={true}
+                                    onInputChange={(searchTerm, e) => {
+                                        suggestCustomers(searchTerm);
+                                    }}
+                                />
+                                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                {errors.customer_id && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.customer_id}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
                             <label className="form-label">Amount*</label>
 
                             <div className="input-group mb-3">
@@ -444,6 +473,8 @@ const ExpenseCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+
+
                         <div className="col-md-6">
                             <label className="form-label">Description*</label>
                             <div className="input-group mb-3">
@@ -475,54 +506,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Categories*</label>
-
-                            <div className="input-group mb-3">
-
-                                <Typeahead
-                                    id="category_id"
-                                    labelKey="name"
-
-                                    isInvalid={errors.category_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.category_id = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.category_id = "Invalid Category selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedCategories([]);
-                                            return;
-                                        }
-                                        setFormData({ ...formData });
-                                        setSelectedCategories(selectedItems);
-                                    }}
-                                    options={categoryOptions}
-                                    placeholder="Select Categories"
-                                    selected={selectedCategories}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestCategories(searchTerm);
-                                    }}
-                                />
-                                <Button hide={true.toString()} onClick={openExpenseCategoryCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.category_id && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.category_id}
-                                    </div>
-                                )}
-                                {formData.category_id && !errors.category_id && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
                         <div className="col-md-6">
                             <label className="form-label">Date Time*</label>
 
@@ -554,7 +537,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
-
 
                         <div className="col-md-2">
                             <label className="form-label">Payment method*</label>
@@ -681,7 +663,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
-                                        animation="bexpense"
+                                        animation="bcustomerdeposit"
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
@@ -701,4 +683,4 @@ const ExpenseCreate = forwardRef((props, ref) => {
     );
 });
 
-export default ExpenseCreate;
+export default CustomerDepositCreate;

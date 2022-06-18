@@ -96,6 +96,10 @@ function App() {
           <Dashboard />
         </Route>
 
+        <Route path="/dashboard/customer_deposits">
+          <Dashboard />
+        </Route>
+
         <Route path="/dashboard/users">
           <Dashboard />
         </Route>

@@ -7,18 +7,18 @@ import QRCode from "react-qr-code";
 import html2canvas from 'html2canvas';
 //let ThermalPrinterEncoder = require('thermal-printer-encoder');
 import ThermalPrinterEncoder from 'thermal-printer-encoder';
-import ExpenseCreate from "./create.js";
+import CustomerDepositCreate from "./create.js";
 
 import { Button } from "react-bootstrap";
 
 
 
-const ExpenseView = forwardRef((props, ref) => {
+const CustomerDepositView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
-                getExpense(id);
+                getCustomerDeposit(id);
                 SetShow(true);
             }
 
@@ -36,8 +36,8 @@ const ExpenseView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    function getExpense(id) {
-        console.log("inside get Expense");
+    function getCustomerDeposit(id) {
+        console.log("inside get CustomerDeposit");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -54,7 +54,7 @@ const ExpenseView = forwardRef((props, ref) => {
         }
 
 
-        fetch('/v1/expense/' + id + storeParam, requestOptions)
+        fetch('/v1/customer-deposit/' + id + storeParam, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -85,7 +85,7 @@ const ExpenseView = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of Expense #{model.description} </Modal.Title>
+                <Modal.Title>Details of CustomerDeposit #{model.description} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {
@@ -119,23 +119,11 @@ const ExpenseView = forwardRef((props, ref) => {
                             <th>Date:</th><td> {model.date}</td>
                             <th>Description:</th><td> {model.description}</td>
                             <th>Amount</th><td> {model.amount}</td>
-                            <th>Payment method</th><td> {model.payment_method}</td>
-                        </tr>
-                        <tr>
-                            <th>Categories:</th><td>
-                                <ul>
-                                    {model.category_name &&
-                                        model.category_name.map((name) => (
-                                            <li key={name}>{name}</li>
-                                        ))}
-                                </ul>
-                            </td>
+                            <th>Customer</th><td> {model.customer_name}</td>
                         </tr>
                         <tr>
                             <th>Created At:</th><td> {model.created_at}</td>
                             <th>Updated At:</th><td> {model.updated_at}</td>
-                        </tr>
-                        <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
                         </tr>
@@ -155,7 +143,7 @@ const ExpenseView = forwardRef((props, ref) => {
                                 <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>
-                                        <img alt="Expense" src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
+                                        <img alt="CustomerDeposit" src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
                                     </td>
                                 </tr>
                             ))}
@@ -200,4 +188,4 @@ const ExpenseView = forwardRef((props, ref) => {
 
 });
 
-export default ExpenseView;
+export default CustomerDepositView;
