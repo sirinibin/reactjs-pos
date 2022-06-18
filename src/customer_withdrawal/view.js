@@ -7,18 +7,18 @@ import QRCode from "react-qr-code";
 import html2canvas from 'html2canvas';
 //let ThermalPrinterEncoder = require('thermal-printer-encoder');
 import ThermalPrinterEncoder from 'thermal-printer-encoder';
-import CustomerDepositCreate from "./create.js";
+import CustomerWithdrawalCreate from "./create.js";
 
 import { Button } from "react-bootstrap";
 
 
 
-const CustomerDepositView = forwardRef((props, ref) => {
+const CustomerWithdrawalView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
-                getCustomerDeposit(id);
+                getCustomerWithdrawal(id);
                 SetShow(true);
             }
 
@@ -36,8 +36,8 @@ const CustomerDepositView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    function getCustomerDeposit(id) {
-        console.log("inside get CustomerDeposit");
+    function getCustomerWithdrawal(id) {
+        console.log("inside get CustomerWithdrawal");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -54,7 +54,7 @@ const CustomerDepositView = forwardRef((props, ref) => {
         }
 
 
-        fetch('/v1/customer-deposit/' + id + storeParam, requestOptions)
+        fetch('/v1/customer-withdrawal/' + id + storeParam, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -85,7 +85,7 @@ const CustomerDepositView = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of CustomerDeposit #{model.description} </Modal.Title>
+                <Modal.Title>Details of CustomerWithdrawal #{model.description} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {
@@ -144,7 +144,7 @@ const CustomerDepositView = forwardRef((props, ref) => {
                                 <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>
-                                        <img alt="CustomerDeposit" src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
+                                        <img alt="CustomerWithdrawal" src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
                                     </td>
                                 </tr>
                             ))}
@@ -189,4 +189,4 @@ const CustomerDepositView = forwardRef((props, ref) => {
 
 });
 
-export default CustomerDepositView;
+export default CustomerWithdrawalView;

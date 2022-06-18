@@ -31,6 +31,8 @@ function Sidebar(props) {
             'product category',
             'expense category',
             'expenses',
+            'customer deposits',
+            'customer withdrawals',
             'users',
             'signatures'
         ],
@@ -227,17 +229,25 @@ function Sidebar(props) {
                         <span className="align-middle">Customer Deposits</span>
                     </Link>
                 </li>
-                {cookies.get('admin') === "true" ? <li onClick={() => {
+                <li onClick={() => {
                     toggleActive(appState.tabs[20]);
                 }} className={toggleActiveStyles(appState.tabs[20])}>
+                    <Link to="/dashboard/customer_withdrawals" className="sidebar-link">
+                        <i className="bi bi-diagram-3" />
+                        <span className="align-middle">Customer Withdrawals</span>
+                    </Link>
+                </li>
+                {cookies.get('admin') === "true" ? <li onClick={() => {
+                    toggleActive(appState.tabs[21]);
+                }} className={toggleActiveStyles(appState.tabs[21])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>
                     </Link>
                 </li> : ""}
                 <li onClick={() => {
-                    toggleActive(appState.tabs[21]);
-                }} className={toggleActiveStyles(appState.tabs[21])}>
+                    toggleActive(appState.tabs[22]);
+                }} className={toggleActiveStyles(appState.tabs[22])}>
                     <Link to="/dashboard/signatures" className="sidebar-link">
                         <i className="bi bi-fingerprint" />
                         <span className="align-middle">Signatures</span>

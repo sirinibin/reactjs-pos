@@ -28,6 +28,7 @@ import ExpenseCategoryIndex from './expense_category/index.js';
 import ExpenseIndex from './expense/index.js';
 
 import CustomerDepositIndex from './customer_deposit/index.js';
+import CustomerWithdrawalIndex from './customer_withdrawal/index.js';
 
 import UserIndex from './user/index.js';
 import SignatureIndex from './signature/index.js';
@@ -364,6 +365,19 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <CustomerDepositIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+
+            <Route path="/dashboard/customer_withdrawals">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <CustomerWithdrawalIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

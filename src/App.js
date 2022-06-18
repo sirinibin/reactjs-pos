@@ -100,6 +100,10 @@ function App() {
           <Dashboard />
         </Route>
 
+        <Route path="/dashboard/customer_withdrawals">
+          <Dashboard />
+        </Route>
+
         <Route path="/dashboard/users">
           <Dashboard />
         </Route>
