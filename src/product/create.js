@@ -427,6 +427,12 @@ const ProductCreate = forwardRef((props, ref) => {
             return;
         }
 
+        if (selectedStock[0].stock == 0) {
+            errors.stock = "Stock should not be 0";
+            setErrors({ ...errors });
+            return;
+        }
+
         if (isNaN(selectedStock[0].stock)) {
             errors.stock = "Invalid Stock";
             setErrors({ ...errors });
@@ -437,12 +443,12 @@ const ProductCreate = forwardRef((props, ref) => {
         if (isStockAddedToStore(selectedStock[0].id)) {
 
             const index = findStockIndexByStoreID(selectedStock[0].id);
-            selectedStocks[index].stock += parseInt(selectedStock[0].stock);
+            selectedStocks[index].stock += parseFloat(selectedStock[0].stock);
         } else {
             selectedStocks.push({
                 store_id: selectedStock[0].id,
                 store_name: selectedStock[0].name,
-                stock: parseInt(selectedStock[0].stock),
+                stock: parseFloat(selectedStock[0].stock),
             });
         }
 
@@ -940,11 +946,26 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                 <input
                                     value={selectedUnitPrice[0] && selectedUnitPrice[0].purchase_unit_price ? selectedUnitPrice[0].purchase_unit_price : ""}
-                                    type='string'
+                                    type='number'
                                     onChange={(e) => {
                                         errors["purchase_unit_price"] = "";
                                         setErrors({ ...errors });
                                         selectedUnitPrice[0].purchase_unit_price = e.target.value;
+
+                                        if (!e.target.value) {
+                                            errors["purchase_unit_price"] = "Invalid Purchase Unit Price";
+                                            setErrors({ ...errors });
+                                            console.log("errors:", errors);
+                                            return;
+                                        }
+
+                                        if (parseFloat(e.target.value) === 0) {
+                                            errors["purchase_unit_price"] = "Purchase Unit Price should be > 0";
+                                            setErrors({ ...errors });
+                                            console.log("errors:", errors);
+                                            return;
+                                        }
+
                                     }}
                                     className="form-control"
                                     id="purchase_unit_price"
@@ -976,11 +997,27 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                 <input
                                     value={selectedUnitPrice[0] && selectedUnitPrice[0].wholesale_unit_price ? selectedUnitPrice[0].wholesale_unit_price : ""}
-                                    type='string'
+                                    type='number'
                                     onChange={(e) => {
                                         errors["wholesale_unit_price"] = "";
                                         setErrors({ ...errors });
                                         selectedUnitPrice[0].wholesale_unit_price = e.target.value;
+
+
+                                        if (!e.target.value) {
+                                            errors["wholesale_unit_price"] = "Invalid Wholesale Unit Price";
+                                            setErrors({ ...errors });
+                                            console.log("errors:", errors);
+                                            return;
+                                        }
+
+                                        if (parseFloat(e.target.value) === 0) {
+                                            errors["wholesale_unit_price"] = "Wholesale Unit Price should be > 0";
+                                            setErrors({ ...errors });
+                                            console.log("errors:", errors);
+                                            return;
+                                        }
+
                                     }}
                                     className="form-control"
                                     id="wholesale_unit_price"
@@ -1013,11 +1050,26 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                 <input
                                     value={selectedUnitPrice[0] && selectedUnitPrice[0].retail_unit_price ? selectedUnitPrice[0].retail_unit_price : ""}
-                                    type='string'
+                                    type='number'
                                     onChange={(e) => {
                                         errors["retail_unit_price"] = "";
                                         setErrors({ ...errors });
                                         selectedUnitPrice[0].retail_unit_price = e.target.value;
+
+                                        if (!e.target.value) {
+                                            errors["retail_unit_price"] = "Invalid Retail Unit Price";
+                                            setErrors({ ...errors });
+                                            console.log("errors:", errors);
+                                            return;
+                                        }
+
+                                        if (parseFloat(e.target.value) === 0) {
+                                            errors["retail_unit_price"] = "Retail Unit Price should be > 0";
+                                            setErrors({ ...errors });
+                                            console.log("errors:", errors);
+                                            return;
+                                        }
+
                                     }}
                                     className="form-control"
                                     id="retail_unit_price"
@@ -1071,24 +1123,26 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     placeholder="Purchase Unit Price" onChange={(e) => {
                                                         errors["purchase_unit_price_" + index] = "";
                                                         setErrors({ ...errors });
+
                                                         if (!e.target.value) {
                                                             errors["purchase_unit_price_" + index] = "Invalid Purchase Unit Price";
-                                                            selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
+                                                            selectedUnitPrices[index].purchase_unit_price = e.target.value;
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
-                                                        if (e.target.value === 0) {
+                                                        if (parseFloat(e.target.value) === 0) {
                                                             errors["purchase_unit_price_" + index] = "Purchase Unit Price should be > 0";
-                                                            selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
+                                                            selectedUnitPrices[index].purchase_unit_price = e.target.value;
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
-
                                                         selectedUnitPrices[index].purchase_unit_price = parseFloat(e.target.value);
+
+
                                                         console.log("selectedUnitPrices[index].purchase_unit_price:", selectedUnitPrices[index].purchase_unit_price);
                                                         setSelectedUnitPrices([...selectedUnitPrices]);
 
@@ -1114,18 +1168,20 @@ const ProductCreate = forwardRef((props, ref) => {
                                                     placeholder="Wholesale Unit Price" onChange={(e) => {
                                                         errors["wholesale_unit_price_" + index] = "";
                                                         setErrors({ ...errors });
+
+
                                                         if (!e.target.value) {
                                                             errors["wholesale_unit_price_" + index] = "Invalid Unit Price";
-                                                            selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                            selectedUnitPrices[index].wholesale_unit_price = e.target.value;
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
 
-                                                        if (e.target.value === 0) {
+                                                        if (parseFloat(e.target.value) === 0) {
                                                             errors["wholesale_unit_price_" + index] = "Unit Price should be > 0";
-                                                            selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
+                                                            selectedUnitPrices[index].wholesale_unit_price = e.target.value;
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
@@ -1133,6 +1189,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                                         }
 
                                                         selectedUnitPrices[index].wholesale_unit_price = parseFloat(e.target.value);
+
                                                         console.log("selectedUnitPrices[index].wholesale_unit_price:", selectedUnitPrices[index].wholesale_unit_price);
                                                         setSelectedUnitPrices([...selectedUnitPrices]);
 
@@ -1159,16 +1216,16 @@ const ProductCreate = forwardRef((props, ref) => {
                                                         setErrors({ ...errors });
                                                         if (!e.target.value) {
                                                             errors["retail_unit_price_" + index] = "Invalid Retail Unit Price";
-                                                            selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
+                                                            selectedUnitPrices[index].retail_unit_price = e.target.value;
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
 
-                                                        if (e.target.value === 0) {
+                                                        if (parseFloat(e.target.value) === 0) {
                                                             errors["retail_unit_price_" + index] = "Retail Unit Price should be > 0";
-                                                            selectedUnitPrices[index].retail_unit_price = parseFloat(e.target.value);
+                                                            selectedUnitPrices[index].retail_unit_price = e.target.value;
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
@@ -1268,10 +1325,28 @@ const ProductCreate = forwardRef((props, ref) => {
 
                                 <input
                                     value={selectedStock[0] && selectedStock[0].stock ? selectedStock[0].stock : ""}
-                                    type='string'
+                                    type='number'
                                     onChange={(e) => {
                                         errors["stock"] = "";
                                         setErrors({ ...errors });
+
+                                        if (!e.target.value) {
+                                            errors["stock"] = "Invalid Stock value";
+                                            selectedStock[0].stock = e.target.value;
+                                            setErrors({ ...errors });
+                                            console.log("errors:", errors);
+                                            return;
+                                        }
+
+                                        if (parseFloat(e.target.value) === 0) {
+                                            errors["stock"] = "Stock should be should be > 0";
+                                            selectedStock[0].stock = e.target.value;
+                                            setErrors({ ...errors });
+                                            console.log("errors:", errors);
+                                            return;
+                                        }
+
+
                                         selectedStock[0].stock = e.target.value;
                                     }}
                                     className="form-control"
@@ -1317,22 +1392,31 @@ const ProductCreate = forwardRef((props, ref) => {
                                             <td>{index + 1}</td>
                                             <td>{stock.store_name}</td>
                                             <td style={{ width: "125px" }}>
-
-                                                <input type="number" value={stock.stock ? stock.stock : ""} className="form-control"
+                                                <input type="number" value={stock.stock || stock.stock === 0 ? stock.stock : ""} className="form-control"
 
                                                     placeholder="Stock" onChange={(e) => {
                                                         errors["stock_" + index] = "";
                                                         setErrors({ ...errors });
                                                         if (!e.target.value) {
                                                             errors["stock_" + index] = "Invalid Stock";
-                                                            selectedStocks[index].stock = "";
+                                                            selectedStocks[index].stock = e.target.value;
                                                             setSelectedStocks([...selectedStocks]);
                                                             setErrors({ ...errors });
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
-                                                        //  stock.stock = parseInt(e.target.value);
-                                                        selectedStocks[index].stock = parseInt(e.target.value);
+
+
+                                                        if (parseFloat(e.target.value) === 0) {
+                                                            // errors["stock_" + index] = "Stock should be should be > 0";
+                                                            selectedStocks[index].stock = parseFloat(e.target.value);
+                                                            //selectedStocks[index].stock = e.target.value;
+                                                            // setErrors({ ...errors });
+                                                            //console.log("errors:", errors);
+                                                            return;
+                                                        }
+
+                                                        selectedStocks[index].stock = parseFloat(e.target.value);
                                                         console.log("selectedStocks[index].stock:", selectedStocks[index].stock);
                                                         setSelectedStocks([...selectedStocks]);
 
