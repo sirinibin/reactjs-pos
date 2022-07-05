@@ -489,6 +489,12 @@ const ProductCreate = forwardRef((props, ref) => {
             return;
         }
 
+        if (parseFloat(selectedUnitPrice[0].purchase_unit_price) <= 0) {
+            errors.purchase_unit_price = "Purchase Unit Price should be > 0";
+            setErrors({ ...errors });
+            return;
+        }
+
 
         if (isNaN(selectedUnitPrice[0].purchase_unit_price)) {
             errors.purchase_unit_price = "Invalid Purchase Unit Price";
@@ -503,21 +509,21 @@ const ProductCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
-
-
+        
+        
         if (isNaN(selectedUnitPrice[0].wholesale_unit_price)) {
             errors.wholesale_unit_price = "Invalid Wholesale Unit Price";
             setErrors({ ...errors });
             return;
         }
-
-
+        
+        
         if (!selectedUnitPrice[0].retail_unit_price) {
             errors.retail_unit_price = "Retail Unit Price is required";
             setErrors({ ...errors });
             return;
         }
-
+        
         if (isNaN(selectedUnitPrice[0].retail_unit_price)) {
             errors.retail_unit_price = "Invalid Retail Unit Price";
             setErrors({ ...errors });
@@ -950,21 +956,24 @@ const ProductCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         errors["purchase_unit_price"] = "";
                                         setErrors({ ...errors });
-                                        selectedUnitPrice[0].purchase_unit_price = e.target.value;
+
 
                                         if (!e.target.value) {
                                             errors["purchase_unit_price"] = "Invalid Purchase Unit Price";
+                                            selectedUnitPrice[0].purchase_unit_price = e.target.value;
                                             setErrors({ ...errors });
                                             console.log("errors:", errors);
                                             return;
                                         }
 
-                                        if (parseFloat(e.target.value) === 0) {
+                                        if (parseFloat(e.target.value) <= 0) {
                                             errors["purchase_unit_price"] = "Purchase Unit Price should be > 0";
+                                            selectedUnitPrice[0].purchase_unit_price = e.target.value;
                                             setErrors({ ...errors });
                                             console.log("errors:", errors);
                                             return;
                                         }
+                                        selectedUnitPrice[0].purchase_unit_price = parseFloat(e.target.value);
 
                                     }}
                                     className="form-control"
@@ -1001,22 +1010,24 @@ const ProductCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         errors["wholesale_unit_price"] = "";
                                         setErrors({ ...errors });
-                                        selectedUnitPrice[0].wholesale_unit_price = e.target.value;
 
 
                                         if (!e.target.value) {
                                             errors["wholesale_unit_price"] = "Invalid Wholesale Unit Price";
+                                            selectedUnitPrice[0].wholesale_unit_price = e.target.value;
                                             setErrors({ ...errors });
                                             console.log("errors:", errors);
                                             return;
                                         }
 
-                                        if (parseFloat(e.target.value) === 0) {
+                                        if (parseFloat(e.target.value) <= 0) {
                                             errors["wholesale_unit_price"] = "Wholesale Unit Price should be > 0";
+                                            selectedUnitPrice[0].wholesale_unit_price = e.target.value;
                                             setErrors({ ...errors });
                                             console.log("errors:", errors);
                                             return;
                                         }
+                                        selectedUnitPrice[0].wholesale_unit_price = parseFloat(e.target.value);
 
                                     }}
                                     className="form-control"
@@ -1054,21 +1065,24 @@ const ProductCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         errors["retail_unit_price"] = "";
                                         setErrors({ ...errors });
-                                        selectedUnitPrice[0].retail_unit_price = e.target.value;
 
                                         if (!e.target.value) {
                                             errors["retail_unit_price"] = "Invalid Retail Unit Price";
+                                            selectedUnitPrice[0].retail_unit_price = e.target.value;
                                             setErrors({ ...errors });
                                             console.log("errors:", errors);
                                             return;
                                         }
 
-                                        if (parseFloat(e.target.value) === 0) {
+                                        if (parseFloat(e.target.value) <= 0) {
                                             errors["retail_unit_price"] = "Retail Unit Price should be > 0";
+                                            selectedUnitPrice[0].retail_unit_price = e.target.value;
                                             setErrors({ ...errors });
                                             console.log("errors:", errors);
                                             return;
                                         }
+
+                                        selectedUnitPrice[0].retail_unit_price = parseFloat(e.target.value);
 
                                     }}
                                     className="form-control"
@@ -1132,7 +1146,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                                             console.log("errors:", errors);
                                                             return;
                                                         }
-                                                        if (parseFloat(e.target.value) === 0) {
+                                                        if (parseFloat(e.target.value) <= 0) {
                                                             errors["purchase_unit_price_" + index] = "Purchase Unit Price should be > 0";
                                                             selectedUnitPrices[index].purchase_unit_price = e.target.value;
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
@@ -1179,7 +1193,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                                             return;
                                                         }
 
-                                                        if (parseFloat(e.target.value) === 0) {
+                                                        if (parseFloat(e.target.value) <= 0) {
                                                             errors["wholesale_unit_price_" + index] = "Unit Price should be > 0";
                                                             selectedUnitPrices[index].wholesale_unit_price = e.target.value;
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
@@ -1223,7 +1237,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                                             return;
                                                         }
 
-                                                        if (parseFloat(e.target.value) === 0) {
+                                                        if (parseFloat(e.target.value) <= 0) {
                                                             errors["retail_unit_price_" + index] = "Retail Unit Price should be > 0";
                                                             selectedUnitPrices[index].retail_unit_price = e.target.value;
                                                             setSelectedUnitPrices([...selectedUnitPrices]);
@@ -1505,7 +1519,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                             }
                                             formData.images_content[0] = result;
                                             setFormData({ ...formData });
-    
+     
                                             console.log("formData.images_content[0]:", formData.images_content[0]);
                                         });
                                         */
