@@ -18,8 +18,56 @@ import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
+import ReactExport from "react-export-excel";
+
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
+
+
 function OrderIndex(props) {
     const cookies = new Cookies();
+
+    const dataSet1 = [
+        {
+            name: "Johson",
+            amount: 30000,
+            sex: 'M',
+            is_married: true
+        },
+        {
+            name: "Monika",
+            amount: 355000,
+            sex: 'F',
+            is_married: false
+        },
+        {
+            name: "John",
+            amount: 250000,
+            sex: 'M',
+            is_married: false
+        },
+        {
+            name: "Josef",
+            amount: 450500,
+            sex: 'M',
+            is_married: true
+        }
+    ];
+
+    const dataSet2 = [
+        {
+            name: "Johnson",
+            total: 25,
+            remainig: 16
+        },
+        {
+            name: "Josef",
+            total: 25,
+            remainig: 7
+        }
+    ];
+
 
     //list
     const [orderList, setOrderList] = useState([]);
@@ -276,7 +324,7 @@ function OrderIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,loss,net_profit,store_id,total";
+            "select=id,code,date,net_total,discount_percent,discount,created_by_name,customer_name,status,created_at,loss,net_profit,store_id,total";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -488,7 +536,21 @@ function OrderIndex(props) {
                         <h1 className="h3">Sales Orders</h1>
                     </div>
 
+
                     <div className="col text-end">
+
+                        <ExcelFile element={<Button variant="primary" className="btn btn-primary mb-3" >Download Excel</Button>}    >
+                            <ExcelSheet data={dataSet1} name="Employees"  >
+                                <ExcelColumn label="Name" value="name" />
+                                <ExcelColumn label="Wallet Money" value="amount" />
+                                <ExcelColumn label="Gender" value="sex" />
+                                <ExcelColumn label="Marital Status"
+                                    value={(col) => col.is_married ? "Married" : "Single"} />
+                            </ExcelSheet>
+                        </ExcelFile>
+
+                        &nbsp;&nbsp;
+
                         <Button
                             hide={true.toString()}
                             variant="primary"
@@ -677,6 +739,44 @@ function OrderIndex(props) {
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "net_total" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("discount");
+                                                        }}
+                                                    >
+                                                        Discount
+                                                        {sortField === "discount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "discount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("discount_percent");
+                                                        }}
+                                                    >
+                                                        Discount %
+                                                        {sortField === "discount_percent" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "discount_percent" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
@@ -872,6 +972,26 @@ function OrderIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="discount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("discount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="discount_percent"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("discount_percent", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
@@ -966,6 +1086,8 @@ function OrderIndex(props) {
                                                             )}
                                                         </td>
                                                         <td>{order.net_total.toFixed(2)} SAR</td>
+                                                        <td>{order.discount.toFixed(2)} SAR</td>
+                                                        <td>{order.discount_percent.toFixed(2)} %</td>
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td> : ""}
                                                         <td>{order.created_by_name}</td>
