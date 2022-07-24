@@ -18,6 +18,9 @@ import PurchasePaymentCreate from "./../purchase_payment/create.js";
 import PurchasePaymentDetailsView from "./../purchase_payment/view.js";
 
 
+import ReactExport from 'react-data-export';
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function PurchaseIndex(props) {
     const cookies = new Cookies();
@@ -96,6 +99,313 @@ function PurchaseIndex(props) {
         list();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+
+    let [allPurchases, setAllPurchases] = useState([]);
+    let [excelData, setExcelData] = useState([]);
+    let [purchaseReportFileName, setPurchaseReportFileName] = useState("Purchase Report");
+    let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
+
+    function prepareExcelData() {
+        console.log("Inside prepareExcelData()");
+        var groupedByDate = [];
+        for (var i = 0; i < allPurchases.length; i++) {
+            let date = format(
+                new Date(allPurchases[i].date),
+                "dd-MMM-yyyy"
+            );
+            if (!groupedByDate[date]) {
+                groupedByDate[date] = [];
+            }
+
+            groupedByDate[date].push(allPurchases[i]);
+
+        }
+
+        console.log("groupedByDate:", groupedByDate);
+
+        excelData = [{
+            columns: [
+                { title: "Description", width: { wch: 50 } },//pixels width 
+                { title: "Quantity", width: { wpx: 90 } },//char width 
+                { title: "Unit", width: { wpx: 90 } },
+                { title: "Rate", width: { wpx: 90 } },
+                { title: "Gross", width: { wpx: 90 } },
+                { title: "Disc %", width: { wpx: 90 } },
+                { title: "Disc", width: { wpx: 90 } },
+                { title: "Tax %", width: { wpx: 90 } },
+                { title: "Tax Amount", width: { wpx: 90 } },
+                { title: "Net Amount", width: { wpx: 90 } },
+            ],
+            data: [],
+        }];
+
+
+        let invoiceCount = 0;
+        for (let purchaseDate in groupedByDate) {
+
+            console.log("purchaseDate:", purchaseDate);
+            excelData[0].data.push([{ value: "Inv Date: " + purchaseDate }]);
+            let dayTotal = 0.00;
+
+            for (var i = 0; i < groupedByDate[purchaseDate].length > 0; i++) {
+                invoiceCount++;
+                let purchase = groupedByDate[purchaseDate][i];
+                let invoiceNo = purchase.vendor_invoice_no ? purchase.vendor_invoice_no + " / " + purchase.code : purchase.code;
+                excelData[0].data.push([{ value: "Inv No (" + invoiceNo + ") - " + invoiceCount + " [" + purchase.vendor_name + "]" }]);
+
+                if (!purchase.products) {
+                    continue;
+                }
+
+                for (var j = 0; j < purchase.products.length; j++) {
+
+                    let product = purchase.products[j];
+
+                    excelData[0].data.push([
+                        {
+                            value: product.name
+                        },
+                        {
+                            value: product.quantity.toFixed(2),
+                        },
+                        {
+                            value: product.unit ? product.unit : "PCs",
+                        },
+                        {
+                            value: product.purchase_unit_price ? product.purchase_unit_price.toFixed(2) : 0.00,
+                        },
+                        {
+                            value: (product.purchase_unit_price * product.quantity).toFixed(2)
+                        },
+                        {
+                            value: "0.00",
+                        },
+                        {
+                            value: "0.00",
+                        },
+                        {
+                            value: "15.00",
+                        },
+                        {
+                            value: ((product.purchase_unit_price * product.quantity).toFixed(2) * 0.15).toFixed(2),
+                        },
+                        {
+                            value: (product.purchase_unit_price * product.quantity).toFixed(2),
+                        },
+                    ]);
+                }
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Shipping/Handling Fees",
+                    }, {
+                        value: purchase.shipping_handling_fees.toFixed(2),
+                    },
+                ]);
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Discount",
+                    }, {
+                        value: purchase.discount.toFixed(2),
+                    },
+                ]);
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Tax",
+                    }, {
+                        value: purchase.vat_price.toFixed(2),
+                    },
+                ]);
+
+
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Total",
+                    }, {
+                        value: purchase.net_total.toFixed(2),
+                    },
+                ]);
+
+                dayTotal += purchase.net_total;
+
+            }
+
+            excelData[0].data.push([
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                {
+                    value: "Day Total",
+                }, {
+                    value: dayTotal.toFixed(2),
+                },
+            ]);
+
+
+        }
+
+
+        setExcelData(excelData);
+
+        console.log("excelData:", excelData);
+    }
+
+    function makePurchaseReportFilename() {
+        purchaseReportFileName = "Purchase Report";
+        if (searchParams["from_date"] && searchParams["to_date"]) {
+            purchaseReportFileName += " - From " + searchParams["from_date"] + " to " + searchParams["to_date"];
+        } else if (searchParams["from_date"]) {
+            purchaseReportFileName += " - From " + searchParams["from_date"] + " to " + format(
+                new Date(),
+                "dd-MMM-yyyy"
+            );
+        } else if (searchParams["to_date"]) {
+            purchaseReportFileName += " - Upto " + searchParams["to_date"];
+        } else if (searchParams["date_str"]) {
+            purchaseReportFileName += " of date_" + searchParams["date_str"];
+        }
+
+        setPurchaseReportFileName(purchaseReportFileName);
+    }
+    async function getAllPurchases() {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+        let Select =
+            "select=id,code,vendor_invoice_no,date,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,created_at,vat_price";
+
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        console.log("Timezone:", parseFloat(diff / 60));
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        let size = 500;
+
+        let purchases = [];
+        var pageNo = 1;
+
+        makePurchaseReportFilename();
+
+        for (; true;) {
+
+            fettingAllRecordsInProgress = true;
+            setFettingAllRecordsInProgress(true);
+            let res = await fetch(
+                "/v1/purchase?" +
+                Select +
+                queryParams +
+                "&sort=" +
+                sortOrder +
+                sortField +
+                "&page=" +
+                pageNo +
+                "&limit=" +
+                size,
+                requestOptions
+            )
+                .then(async (response) => {
+                    const isJson = response.headers
+                        .get("content-type")
+                        ?.includes("application/json");
+                    const data = isJson && (await response.json());
+
+                    // check for error response
+                    if (!response.ok) {
+                        const error = data && data.errors;
+                        return Promise.reject(error);
+                    }
+
+                    setIsListLoading(false);
+                    if (!data.result || data.result.length === 0) {
+                        return [];
+                    }
+
+
+                    // console.log("Orders:", orders);
+
+                    return data.result;
+
+
+                })
+                .catch((error) => {
+                    console.log(error);
+                    return [];
+                    //break;
+
+                });
+            if (res.length === 0) {
+                break;
+            }
+            purchases = purchases.concat(res);
+            pageNo++;
+        }
+
+        allPurchases = purchases;
+        setAllPurchases(purchases);
+
+        console.log("allPurchases:", allPurchases);
+        prepareExcelData();
+        fettingAllRecordsInProgress = false;
+        setFettingAllRecordsInProgress(false);
+
+    }
+
+
 
     //Search params
     const [searchParams, setSearchParams] = useState({});
@@ -259,6 +569,8 @@ function PurchaseIndex(props) {
     }
 
     function list() {
+        excelData = [];
+        setExcelData(excelData);
         const requestOptions = {
             method: "GET",
             headers: {
@@ -464,6 +776,13 @@ function PurchaseIndex(props) {
                     </div>
 
                     <div className="col text-end">
+                        <ExcelFile filename={purchaseReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Purchase Report</Button> : ""}>
+                            <ExcelSheet dataSet={excelData} name={purchaseReportFileName} />
+                        </ExcelFile>
+
+                        {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchases} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Report"}</Button> : ""}
+                        &nbsp;&nbsp;
+
                         <Button
                             hide={true.toString()}
                             variant="primary"
