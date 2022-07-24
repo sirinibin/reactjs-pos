@@ -70,6 +70,8 @@ const OrderIndex = forwardRef((props, ref) => {
             filename: salesReportFileName,
         }];
 
+        let totalAmount = 0;
+        let totalTax = 0;
 
         let invoiceCount = 0;
         for (let orderDate in groupedByDate) {
@@ -77,6 +79,7 @@ const OrderIndex = forwardRef((props, ref) => {
             console.log("orderDate:", orderDate);
             excelData[0].data.push([{ value: "Inv Date: " + orderDate }]);
             let dayTotal = 0.00;
+            let dayTax = 0.00;
 
             for (var i = 0; i < groupedByDate[orderDate].length > 0; i++) {
                 invoiceCount++;
@@ -192,8 +195,25 @@ const OrderIndex = forwardRef((props, ref) => {
                 ]);
 
                 dayTotal += order.net_total;
+                dayTax += order.vat_price;
 
             }
+
+            excelData[0].data.push([
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                {
+                    value: "Day Tax",
+                }, {
+                    value: dayTax.toFixed(2),
+                },
+            ]);
 
             excelData[0].data.push([
                 { value: "", },
@@ -211,8 +231,59 @@ const OrderIndex = forwardRef((props, ref) => {
                 },
             ]);
 
+            totalAmount += dayTotal;
+            totalTax += dayTax;
 
-        }
+
+        }//end for1
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            {
+                value: "",
+            }, {
+                value: "",
+            },
+        ]);
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            {
+                value: "Total Tax",
+            }, {
+                value: totalTax.toFixed(2),
+            },
+        ]);
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            {
+                value: "Total",
+            }, {
+                value: totalAmount.toFixed(2),
+            },
+        ]);
 
 
         setExcelData(excelData);

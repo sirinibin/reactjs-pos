@@ -141,12 +141,16 @@ function PurchaseIndex(props) {
         }];
 
 
+        let totalAmount = 0;
+        let totalTax = 0;
+
         let invoiceCount = 0;
         for (let purchaseDate in groupedByDate) {
 
             console.log("purchaseDate:", purchaseDate);
             excelData[0].data.push([{ value: "Inv Date: " + purchaseDate }]);
             let dayTotal = 0.00;
+            let dayTax = 0.00;
 
             for (var i = 0; i < groupedByDate[purchaseDate].length > 0; i++) {
                 invoiceCount++;
@@ -263,8 +267,26 @@ function PurchaseIndex(props) {
                 ]);
 
                 dayTotal += purchase.net_total;
+                dayTax += purchase.vat_price;
 
             }
+
+            excelData[0].data.push([
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                {
+                    value: "Day Tax",
+                }, {
+                    value: dayTax.toFixed(2),
+                },
+            ]);
+
 
             excelData[0].data.push([
                 { value: "", },
@@ -282,8 +304,61 @@ function PurchaseIndex(props) {
                 },
             ]);
 
+            totalAmount += dayTotal;
+            totalTax += dayTax;
 
-        }
+
+        }//end for1
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            {
+                value: "",
+            }, {
+                value: "",
+            },
+        ]);
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            {
+                value: "Total Tax",
+            }, {
+                value: totalTax.toFixed(2),
+            },
+        ]);
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            {
+                value: "Total",
+            }, {
+                value: totalAmount.toFixed(2),
+            },
+        ]);
+
+
 
 
         setExcelData(excelData);
