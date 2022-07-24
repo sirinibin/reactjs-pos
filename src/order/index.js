@@ -87,7 +87,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     continue;
                 }
 
-                for (var j = 0; i < order.products.length > j; j++) {
+                for (var j = 0; j < order.products.length; j++) {
 
                     let product = order.products[j];
 
@@ -809,36 +809,11 @@ const OrderIndex = forwardRef((props, ref) => {
 
                     <div className="col text-end">
 
-                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <button variant="primary" className="btn btn-primary mb-3" >Download Sales Report</button> : ""}>
+                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Report</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={salesReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length == 0 ? <button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Report"}</button> : ""}
-
-
-                        {/*
-                        <ExcelFile element={<Button variant="primary" className="btn btn-primary mb-3" >Download Excel</Button>}    >
-                            <ExcelSheet data={excelData} name="Employees"  >
-                                <ExcelColumn label="Description" value="description" width="500" />
-                                <ExcelColumn label="Quantity" value="quantity" />
-                                <ExcelColumn label="Unit" value="unit" />
-                                <ExcelColumn label="Rate" value="rate" />
-                                <ExcelColumn label="Gross" value="gross" />
-                                <ExcelColumn label="Disc(%)" value="discount_percent" />
-                                <ExcelColumn label="Disc Amount" value="discount" />
-                                <ExcelColumn label="Tax(%)" value="tax_percent" />
-                                <ExcelColumn label="Tax Amount" value="tax_amount" />
-                                <ExcelColumn label="Net Amount" value="net_amount" />
-
-                                {/*
-                                <ExcelColumn label="Marital Status"
-                                    value={(col) => col.is_married ? "Married" : "Single"} />
-                                
-
-                            </ExcelSheet>
-                        </ExcelFile>
-                        */}
-
+                        {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Report"}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
