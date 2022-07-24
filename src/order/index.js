@@ -232,7 +232,7 @@ const OrderIndex = forwardRef((props, ref) => {
         } else if (searchParams["created_at_to"]) {
             salesReportFileName += " - Upto " + searchParams["created_at_to"];
         } else if (searchParams["created_at"]) {
-            salesReportFileName += " of date_" + searchParams["created_at"];
+            salesReportFileName += " of " + searchParams["created_at"];
         }
 
         setSalesReportFileName(salesReportFileName);

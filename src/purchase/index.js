@@ -303,7 +303,7 @@ function PurchaseIndex(props) {
         } else if (searchParams["to_date"]) {
             purchaseReportFileName += " - Upto " + searchParams["to_date"];
         } else if (searchParams["date_str"]) {
-            purchaseReportFileName += " of date_" + searchParams["date_str"];
+            purchaseReportFileName += " of " + searchParams["date_str"];
         }
 
         setPurchaseReportFileName(purchaseReportFileName);

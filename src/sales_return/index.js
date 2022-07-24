@@ -282,7 +282,7 @@ function SalesReturnIndex(props) {
         } else if (searchParams["to_date"]) {
             salesReturnReportFileName += " - Upto " + searchParams["to_date"];
         } else if (searchParams["date_str"]) {
-            salesReturnReportFileName += " of date_" + searchParams["date_str"];
+            salesReturnReportFileName += " of " + searchParams["date_str"];
         }
 
         setSalesReturnReportFileName(salesReturnReportFileName);

@@ -281,7 +281,7 @@ function PurchaseReturnIndex(props) {
         } else if (searchParams["to_date"]) {
             purchaseReturnReportFileName += " - Upto " + searchParams["to_date"];
         } else if (searchParams["date_str"]) {
-            purchaseReturnReportFileName += " of date_" + searchParams["date_str"];
+            purchaseReturnReportFileName += " of " + searchParams["date_str"];
         }
 
         setPurchaseReturnReportFileName(purchaseReturnReportFileName);
