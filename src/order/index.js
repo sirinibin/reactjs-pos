@@ -135,6 +135,22 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
+                        value: "Shipping/Handling Fees",
+                    }, {
+                        value: order.shipping_handling_fees.toFixed(2),
+                    },
+                ]);
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
                         value: "Discount",
                     }, {
                         value: order.discount.toFixed(2),
@@ -227,7 +243,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,discount_percent,discount,products,created_by_name,customer_name,status,created_at,loss,net_profit,store_id,total";
+            "select=id,code,date,net_total,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
