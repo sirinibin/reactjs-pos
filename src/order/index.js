@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef } from "react";
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
 import SalesReturnCreate from "./../sales_return/create.js";
@@ -18,55 +18,304 @@ import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
-import ReactExport from "react-export-excel";
 
+import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
-const ExcelColumn = ReactExport.ExcelFile.ExcelColumn;
 
 
-function OrderIndex(props) {
+const OrderIndex = forwardRef((props, ref) => {
+
+
     const cookies = new Cookies();
 
-    const dataSet1 = [
-        {
-            name: "Johson",
-            amount: 30000,
-            sex: 'M',
-            is_married: true
-        },
-        {
-            name: "Monika",
-            amount: 355000,
-            sex: 'F',
-            is_married: false
-        },
-        {
-            name: "John",
-            amount: 250000,
-            sex: 'M',
-            is_married: false
-        },
-        {
-            name: "Josef",
-            amount: 450500,
-            sex: 'M',
-            is_married: true
-        }
-    ];
 
-    const dataSet2 = [
-        {
-            name: "Johnson",
-            total: 25,
-            remainig: 16
-        },
-        {
-            name: "Josef",
-            total: 25,
-            remainig: 7
+    let [allOrders, setAllOrders] = useState([]);
+    let [excelData, setExcelData] = useState([]);
+    let [salesReportFileName, setSalesReportFileName] = useState("Sales Report");
+    let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
+
+    function prepareExcelData() {
+        console.log("Inside prepareExcelData()");
+        var groupedByDate = [];
+        for (var i = 0; i < allOrders.length; i++) {
+            let date = format(
+                new Date(allOrders[i].created_at),
+                "dd-MMM-yyyy"
+            );
+            if (!groupedByDate[date]) {
+                groupedByDate[date] = [];
+            }
+
+            groupedByDate[date].push(allOrders[i]);
+
         }
-    ];
+
+        console.log("groupedByDate:", groupedByDate);
+
+        excelData = [{
+            columns: [
+                { title: "Description", width: { wch: 50 } },//pixels width 
+                { title: "Quantity", width: { wpx: 90 } },//char width 
+                { title: "Unit", width: { wpx: 90 } },
+                { title: "Rate", width: { wpx: 90 } },
+                { title: "Gross", width: { wpx: 90 } },
+                { title: "Disc %", width: { wpx: 90 } },
+                { title: "Disc", width: { wpx: 90 } },
+                { title: "Tax %", width: { wpx: 90 } },
+                { title: "Tax Amount", width: { wpx: 90 } },
+                { title: "Net Amount", width: { wpx: 90 } },
+            ],
+            data: [],
+            filename: salesReportFileName,
+        }];
+
+
+        let invoiceCount = 0;
+        for (let orderDate in groupedByDate) {
+
+            console.log("orderDate:", orderDate);
+            excelData[0].data.push([{ value: "Inv Date: " + orderDate }]);
+            let dayTotal = 0.00;
+
+            for (var i = 0; i < groupedByDate[orderDate].length > 0; i++) {
+                invoiceCount++;
+                let order = groupedByDate[orderDate][i];
+                excelData[0].data.push([{ value: "Inv No (" + order.code + ") - " + invoiceCount + " [" + order.customer_name + "]" }]);
+
+                if (!order.products) {
+                    continue;
+                }
+
+                for (var j = 0; i < order.products.length > j; j++) {
+
+                    let product = order.products[j];
+
+                    excelData[0].data.push([
+                        {
+                            value: product.name
+                        },
+                        {
+                            value: product.quantity.toFixed(2),
+                        },
+                        {
+                            value: product.unit ? product.unit : "PCs",
+                        },
+                        {
+                            value: product.unit_price ? product.unit_price.toFixed(2) : 0.00,
+                        },
+                        {
+                            value: (product.unit_price * product.quantity).toFixed(2)
+                        },
+                        {
+                            value: "0.00",
+                        },
+                        {
+                            value: "0.00",
+                        },
+                        {
+                            value: "15.00",
+                        },
+                        {
+                            value: ((product.unit_price * product.quantity).toFixed(2) * 0.15).toFixed(2),
+                        },
+                        {
+                            value: (product.unit_price * product.quantity).toFixed(2),
+                        },
+                    ]);
+                }
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Discount",
+                    }, {
+                        value: order.discount.toFixed(2),
+                    },
+                ]);
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Tax",
+                    }, {
+                        value: order.vat_price.toFixed(2),
+                    },
+                ]);
+
+
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Total",
+                    }, {
+                        value: order.net_total.toFixed(2),
+                    },
+                ]);
+
+                dayTotal += order.net_total;
+
+            }
+
+            excelData[0].data.push([
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                {
+                    value: "Day Total",
+                }, {
+                    value: dayTotal.toFixed(2),
+                },
+            ]);
+
+
+        }
+
+
+        setExcelData(excelData);
+
+        console.log("excelData:", excelData);
+    }
+
+    function makeSalesReportFilename() {
+        salesReportFileName = "Sales Report";
+        if (searchParams["created_at_from"] && searchParams["created_at_to"]) {
+            salesReportFileName += " - From " + searchParams["created_at_from"] + " to " + searchParams["created_at_to"];
+        } else if (searchParams["created_at_from"]) {
+            salesReportFileName += " - From " + searchParams["created_at_from"] + " to present";
+        } else if (searchParams["created_at_to"]) {
+            salesReportFileName += " - Upto " + searchParams["created_at_to"];
+        } else if (searchParams["created_at"]) {
+            salesReportFileName += " of date_" + searchParams["created_at"];
+        }
+
+        setSalesReportFileName(salesReportFileName);
+    }
+    async function getAllOrders() {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+        let Select =
+            "select=id,code,date,net_total,discount_percent,discount,products,created_by_name,customer_name,status,created_at,loss,net_profit,store_id,total";
+
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        console.log("Timezone:", parseFloat(diff / 60));
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        let size = 500;
+
+        let orders = [];
+        var pageNo = 1;
+
+        makeSalesReportFilename();
+
+        for (; true;) {
+
+            fettingAllRecordsInProgress = true;
+            setFettingAllRecordsInProgress(true);
+            let res = await fetch(
+                "/v1/order?" +
+                Select +
+                queryParams +
+                "&sort=" +
+                sortOrder +
+                sortField +
+                "&page=" +
+                pageNo +
+                "&limit=" +
+                size,
+                requestOptions
+            )
+                .then(async (response) => {
+                    const isJson = response.headers
+                        .get("content-type")
+                        ?.includes("application/json");
+                    const data = isJson && (await response.json());
+
+                    // check for error response
+                    if (!response.ok) {
+                        const error = data && data.errors;
+                        return Promise.reject(error);
+                    }
+
+                    setIsListLoading(false);
+                    if (!data.result || data.result.length === 0) {
+                        return [];
+                    }
+
+
+                    // console.log("Orders:", orders);
+
+                    return data.result;
+
+
+                })
+                .catch((error) => {
+                    console.log(error);
+                    return [];
+                    //break;
+
+                });
+            if (res.length === 0) {
+                break;
+            }
+            orders = orders.concat(res);
+            pageNo++;
+        }
+
+        allOrders = orders;
+        setAllOrders(orders);
+
+        console.log("allOrders:", allOrders);
+        prepareExcelData();
+        fettingAllRecordsInProgress = false;
+        setFettingAllRecordsInProgress(false);
+
+    }
+
+
 
 
     //list
@@ -137,6 +386,7 @@ function OrderIndex(props) {
 
     useEffect(() => {
         list();
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -316,6 +566,8 @@ function OrderIndex(props) {
     }
 
     function list() {
+        excelData = [];
+        setExcelData(excelData);
         const requestOptions = {
             method: "GET",
             headers: {
@@ -467,6 +719,7 @@ function OrderIndex(props) {
         SalesPaymentCreateRef.current.open(id);
     }
 
+
     return (
         <>
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
@@ -482,6 +735,7 @@ function OrderIndex(props) {
 
             <div className="container-fluid p-0">
                 <div className="row">
+
 
                     <div className="col">
                         <h1 className="text-end">
@@ -539,15 +793,35 @@ function OrderIndex(props) {
 
                     <div className="col text-end">
 
+                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <button variant="primary" className="btn btn-primary mb-3" >Download Sales Report</button> : ""}>
+                            <ExcelSheet dataSet={excelData} name={salesReportFileName} />
+                        </ExcelFile>
+
+                        {excelData.length == 0 ? <button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Report"}</button> : ""}
+
+
+                        {/*
                         <ExcelFile element={<Button variant="primary" className="btn btn-primary mb-3" >Download Excel</Button>}    >
-                            <ExcelSheet data={dataSet1} name="Employees"  >
-                                <ExcelColumn label="Name" value="name" />
-                                <ExcelColumn label="Wallet Money" value="amount" />
-                                <ExcelColumn label="Gender" value="sex" />
+                            <ExcelSheet data={excelData} name="Employees"  >
+                                <ExcelColumn label="Description" value="description" width="500" />
+                                <ExcelColumn label="Quantity" value="quantity" />
+                                <ExcelColumn label="Unit" value="unit" />
+                                <ExcelColumn label="Rate" value="rate" />
+                                <ExcelColumn label="Gross" value="gross" />
+                                <ExcelColumn label="Disc(%)" value="discount_percent" />
+                                <ExcelColumn label="Disc Amount" value="discount" />
+                                <ExcelColumn label="Tax(%)" value="tax_percent" />
+                                <ExcelColumn label="Tax Amount" value="tax_amount" />
+                                <ExcelColumn label="Net Amount" value="net_amount" />
+
+                                {/*
                                 <ExcelColumn label="Marital Status"
                                     value={(col) => col.is_married ? "Married" : "Single"} />
+                                
+
                             </ExcelSheet>
                         </ExcelFile>
+                        */}
 
                         &nbsp;&nbsp;
 
@@ -1190,6 +1464,6 @@ function OrderIndex(props) {
             </div>
         </>
     );
-}
+});
 
 export default OrderIndex;
