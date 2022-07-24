@@ -13,6 +13,12 @@ import NumberFormat from "react-number-format";
 import SalesReturnPaymentCreate from "./../sales_return_payment/create.js";
 import SalesReturnPaymentDetailsView from "./../sales_return_payment/view.js";
 
+
+import ReactExport from 'react-data-export';
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+
+
 function SalesReturnIndex(props) {
     const cookies = new Cookies();
 
@@ -89,6 +95,295 @@ function SalesReturnIndex(props) {
         list();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+
+    let [allSalesReturns, setAllSalesReturns] = useState([]);
+    let [excelData, setExcelData] = useState([]);
+    let [salesReturnReportFileName, setSalesReturnReportFileName] = useState("Sales Return Report");
+    let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
+
+    function prepareExcelData() {
+        console.log("Inside prepareExcelData()");
+        var groupedByDate = [];
+        for (var i = 0; i < allSalesReturns.length; i++) {
+            let date = format(
+                new Date(allSalesReturns[i].date),
+                "dd-MMM-yyyy"
+            );
+            if (!groupedByDate[date]) {
+                groupedByDate[date] = [];
+            }
+
+            groupedByDate[date].push(allSalesReturns[i]);
+
+        }
+
+        console.log("groupedByDate:", groupedByDate);
+
+        excelData = [{
+            columns: [
+                { title: "Description", width: { wch: 50 } },//pixels width 
+                { title: "Quantity", width: { wpx: 90 } },//char width 
+                { title: "Unit", width: { wpx: 90 } },
+                { title: "Rate", width: { wpx: 90 } },
+                { title: "Gross", width: { wpx: 90 } },
+                { title: "Disc %", width: { wpx: 90 } },
+                { title: "Disc", width: { wpx: 90 } },
+                { title: "Tax %", width: { wpx: 90 } },
+                { title: "Tax Amount", width: { wpx: 90 } },
+                { title: "Net Amount", width: { wpx: 90 } },
+            ],
+            data: [],
+        }];
+
+
+        let invoiceCount = 0;
+        for (let returnDate in groupedByDate) {
+
+            console.log("returnDate:", returnDate);
+            excelData[0].data.push([{ value: "Inv Date: " + returnDate }]);
+            let dayTotal = 0.00;
+
+            for (var i = 0; i < groupedByDate[returnDate].length > 0; i++) {
+                invoiceCount++;
+                let salesReturn = groupedByDate[returnDate][i];
+                excelData[0].data.push([{ value: "Inv No (" + salesReturn.code + ") - " + invoiceCount + " [" + salesReturn.customer_name + "]" }]);
+
+                if (!salesReturn.products) {
+                    continue;
+                }
+
+                for (var j = 0; j < salesReturn.products.length; j++) {
+
+                    let product = salesReturn.products[j];
+
+                    excelData[0].data.push([
+                        {
+                            value: product.name
+                        },
+                        {
+                            value: product.quantity.toFixed(2),
+                        },
+                        {
+                            value: product.unit ? product.unit : "PCs",
+                        },
+                        {
+                            value: product.unit_price ? product.unit_price.toFixed(2) : 0.00,
+                        },
+                        {
+                            value: (product.unit_price * product.quantity).toFixed(2)
+                        },
+                        {
+                            value: "0.00",
+                        },
+                        {
+                            value: "0.00",
+                        },
+                        {
+                            value: "15.00",
+                        },
+                        {
+                            value: ((product.unit_price * product.quantity).toFixed(2) * 0.15).toFixed(2),
+                        },
+                        {
+                            value: (product.unit_price * product.quantity).toFixed(2),
+                        },
+                    ]);
+                }
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Discount",
+                    }, {
+                        value: salesReturn.discount.toFixed(2),
+                    },
+                ]);
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Tax",
+                    }, {
+                        value: salesReturn.vat_price.toFixed(2),
+                    },
+                ]);
+
+
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Total",
+                    }, {
+                        value: salesReturn.net_total.toFixed(2),
+                    },
+                ]);
+
+                dayTotal += salesReturn.net_total;
+
+            }
+
+            excelData[0].data.push([
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                {
+                    value: "Day Total",
+                }, {
+                    value: dayTotal.toFixed(2),
+                },
+            ]);
+
+
+        }
+
+
+        setExcelData(excelData);
+
+        console.log("excelData:", excelData);
+    }
+
+    function makeSalesReturnReportFilename() {
+        salesReturnReportFileName = "Sales Return Report";
+        if (searchParams["from_date"] && searchParams["to_date"]) {
+            salesReturnReportFileName += " - From " + searchParams["from_date"] + " to " + searchParams["to_date"];
+        } else if (searchParams["from_date"]) {
+            salesReturnReportFileName += " - From " + searchParams["from_date"] + " to " + format(
+                new Date(),
+                "dd-MMM-yyyy"
+            );
+        } else if (searchParams["to_date"]) {
+            salesReturnReportFileName += " - Upto " + searchParams["to_date"];
+        } else if (searchParams["date_str"]) {
+            salesReturnReportFileName += " of date_" + searchParams["date_str"];
+        }
+
+        setSalesReturnReportFileName(salesReturnReportFileName);
+    }
+    async function getAllSalesReturns() {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+        let Select =
+            "select=id,code,date,net_total,discount_percent,discount,products,customer_name,created_at,vat_price";
+
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        console.log("Timezone:", parseFloat(diff / 60));
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        let size = 500;
+
+        let salesReturns = [];
+        var pageNo = 1;
+
+        makeSalesReturnReportFilename();
+
+        for (; true;) {
+
+            fettingAllRecordsInProgress = true;
+            setFettingAllRecordsInProgress(true);
+            let res = await fetch(
+                "/v1/sales-return?" +
+                Select +
+                queryParams +
+                "&sort=" +
+                sortSalesReturn +
+                sortField +
+                "&page=" +
+                pageNo +
+                "&limit=" +
+                size,
+                requestOptions
+            )
+                .then(async (response) => {
+                    const isJson = response.headers
+                        .get("content-type")
+                        ?.includes("application/json");
+                    const data = isJson && (await response.json());
+
+                    // check for error response
+                    if (!response.ok) {
+                        const error = data && data.errors;
+                        return Promise.reject(error);
+                    }
+
+                    setIsListLoading(false);
+                    if (!data.result || data.result.length === 0) {
+                        return [];
+                    }
+
+
+
+
+                    return data.result;
+
+
+                })
+                .catch((error) => {
+                    console.log(error);
+                    return [];
+                    //break;
+
+                });
+            if (res.length === 0) {
+                break;
+            }
+            salesReturns = salesReturns.concat(res);
+            pageNo++;
+        }
+
+        allSalesReturns = salesReturns;
+        setAllSalesReturns(salesReturns);
+
+        console.log("allSalesReturns:", allSalesReturns);
+        prepareExcelData();
+        fettingAllRecordsInProgress = false;
+        setFettingAllRecordsInProgress(false);
+
+    }
+
 
     //Search params
     const [searchParams, setSearchParams] = useState({});
@@ -254,6 +549,9 @@ function SalesReturnIndex(props) {
     }
 
     function list() {
+        excelData = [];
+        setExcelData(excelData);
+
         const requestOptions = {
             method: "GET",
             headers: {
@@ -416,6 +714,14 @@ function SalesReturnIndex(props) {
                     </div>
 
                     <div className="col text-end">
+                        <ExcelFile filename={salesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Return Report</Button> : ""}>
+                            <ExcelSheet dataSet={excelData} name={salesReturnReportFileName} />
+                        </ExcelFile>
+
+                        {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllSalesReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Return Report"}</Button> : ""}
+                        &nbsp;&nbsp;
+
+
                         {/*
                         <Button
                             hide={true}

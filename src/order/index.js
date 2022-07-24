@@ -225,7 +225,10 @@ const OrderIndex = forwardRef((props, ref) => {
         if (searchParams["created_at_from"] && searchParams["created_at_to"]) {
             salesReportFileName += " - From " + searchParams["created_at_from"] + " to " + searchParams["created_at_to"];
         } else if (searchParams["created_at_from"]) {
-            salesReportFileName += " - From " + searchParams["created_at_from"] + " to present";
+            salesReportFileName += " - From " + searchParams["created_at_from"] + " to " + format(
+                new Date(),
+                "dd-MMM-yyyy"
+            );
         } else if (searchParams["created_at_to"]) {
             salesReportFileName += " - Upto " + searchParams["created_at_to"];
         } else if (searchParams["created_at"]) {
