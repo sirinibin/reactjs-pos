@@ -275,7 +275,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     signature_date_str: format(new Date(), "MMM dd yyyy"),
                     purchase_id: purchase.id,
                     purchase_code: purchase.code,
-                    vendor_invoice_no: purchase.vendor_invoice_no,
+                    //   vendor_invoice_no: purchase.vendor_invoice_no,
                     store_id: purchase.store_id,
                     vendor_id: purchase.vendor_id,
                     vat_percent: purchase.vat_percent,
@@ -960,6 +960,40 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Vendor Invoice No. (Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["vendor_invoice_no"] = "";
+                                        setErrors({ ...errors });
+                                        formData.vendor_invoice_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="vendor_invoice_no"
+                                    placeholder="Vendor Invoice No."
+                                />
+                                {errors.vendor_invoice_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.vendor_invoice_no}
+                                    </div>
+                                )}
+                                {formData.vendor_invoice_no && !errors.rack && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
 
                         <div className="col-md-6">
                             <label className="form-label">VAT %*</label>

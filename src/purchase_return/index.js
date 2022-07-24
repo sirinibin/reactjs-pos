@@ -13,6 +13,10 @@ import NumberFormat from "react-number-format";
 import PurchaseReturnPaymentCreate from "./../purchase_return_payment/create.js";
 import PurchaseReturnPaymentDetailsView from "./../purchase_return_payment/view.js";
 
+import ReactExport from 'react-data-export';
+const ExcelFile = ReactExport.ExcelFile;
+const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+
 
 function PurchaseReturnIndex(props) {
     const cookies = new Cookies();
@@ -89,6 +93,297 @@ function PurchaseReturnIndex(props) {
         list();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+
+    let [allPurchaseReturns, setAllPurchaseReturns] = useState([]);
+    let [excelData, setExcelData] = useState([]);
+    let [purchaseReturnReportFileName, setPurchaseReturnReportFileName] = useState("Purchase Return Report");
+    let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
+
+    function prepareExcelData() {
+        console.log("Inside prepareExcelData()");
+        var groupedByDate = [];
+        for (var i = 0; i < allPurchaseReturns.length; i++) {
+            let date = format(
+                new Date(allPurchaseReturns[i].date),
+                "dd-MMM-yyyy"
+            );
+            if (!groupedByDate[date]) {
+                groupedByDate[date] = [];
+            }
+
+            groupedByDate[date].push(allPurchaseReturns[i]);
+
+        }
+
+        console.log("groupedByDate:", groupedByDate);
+
+        excelData = [{
+            columns: [
+                { title: "Description", width: { wch: 50 } },//pixels width 
+                { title: "Quantity", width: { wpx: 90 } },//char width 
+                { title: "Unit", width: { wpx: 90 } },
+                { title: "Rate", width: { wpx: 90 } },
+                { title: "Gross", width: { wpx: 90 } },
+                { title: "Disc %", width: { wpx: 90 } },
+                { title: "Disc", width: { wpx: 90 } },
+                { title: "Tax %", width: { wpx: 90 } },
+                { title: "Tax Amount", width: { wpx: 90 } },
+                { title: "Net Amount", width: { wpx: 90 } },
+            ],
+            data: [],
+        }];
+
+
+        let invoiceCount = 0;
+        for (let purchaseReturnDate in groupedByDate) {
+
+            console.log("purchaseReturnDate:", purchaseReturnDate);
+            excelData[0].data.push([{ value: "Inv Date: " + purchaseReturnDate }]);
+            let dayTotal = 0.00;
+
+            for (var i = 0; i < groupedByDate[purchaseReturnDate].length > 0; i++) {
+                invoiceCount++;
+                let purchaseReturn = groupedByDate[purchaseReturnDate][i];
+                let invoiceNo = purchaseReturn.vendor_invoice_no ? purchaseReturn.vendor_invoice_no + " / " + purchaseReturn.code : purchaseReturn.code;
+                excelData[0].data.push([{ value: "Inv No (" + invoiceNo + ") - " + invoiceCount + " [" + purchaseReturn.vendor_name + "]" }]);
+
+                if (!purchaseReturn.products) {
+                    continue;
+                }
+
+                for (var j = 0; j < purchaseReturn.products.length; j++) {
+
+                    let product = purchaseReturn.products[j];
+
+                    excelData[0].data.push([
+                        {
+                            value: product.name
+                        },
+                        {
+                            value: product.quantity.toFixed(2),
+                        },
+                        {
+                            value: product.unit ? product.unit : "PCs",
+                        },
+                        {
+                            value: product.purchasereturn_unit_price ? product.purchasereturn_unit_price.toFixed(2) : 0.00,
+                        },
+                        {
+                            value: (product.purchasereturn_unit_price * product.quantity).toFixed(2)
+                        },
+                        {
+                            value: "0.00",
+                        },
+                        {
+                            value: "0.00",
+                        },
+                        {
+                            value: "15.00",
+                        },
+                        {
+                            value: ((product.purchasereturn_unit_price * product.quantity).toFixed(2) * 0.15).toFixed(2),
+                        },
+                        {
+                            value: (product.purchasereturn_unit_price * product.quantity).toFixed(2),
+                        },
+                    ]);
+                }
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Discount",
+                    }, {
+                        value: purchaseReturn.discount.toFixed(2),
+                    },
+                ]);
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Tax",
+                    }, {
+                        value: purchaseReturn.vat_price.toFixed(2),
+                    },
+                ]);
+
+
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Total",
+                    }, {
+                        value: purchaseReturn.net_total.toFixed(2),
+                    },
+                ]);
+
+                dayTotal += purchaseReturn.net_total;
+
+            }
+
+            excelData[0].data.push([
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                {
+                    value: "Day Total",
+                }, {
+                    value: dayTotal.toFixed(2),
+                },
+            ]);
+
+
+        }
+
+
+        setExcelData(excelData);
+
+        console.log("excelData:", excelData);
+    }
+
+    function makePurchaseReturnReportFilename() {
+        purchaseReturnReportFileName = "Purchase Return Report";
+        if (searchParams["from_date"] && searchParams["to_date"]) {
+            purchaseReturnReportFileName += " - From " + searchParams["from_date"] + " to " + searchParams["to_date"];
+        } else if (searchParams["from_date"]) {
+            purchaseReturnReportFileName += " - From " + searchParams["from_date"] + " to " + format(
+                new Date(),
+                "dd-MMM-yyyy"
+            );
+        } else if (searchParams["to_date"]) {
+            purchaseReturnReportFileName += " - Upto " + searchParams["to_date"];
+        } else if (searchParams["date_str"]) {
+            purchaseReturnReportFileName += " of date_" + searchParams["date_str"];
+        }
+
+        setPurchaseReturnReportFileName(purchaseReturnReportFileName);
+    }
+    async function getAllPurchaseReturns() {
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+        let Select =
+            "select=id,code,vendor_invoice_no,date,net_total,discount_percent,discount,products,vendor_name,created_at,vat_price";
+
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        console.log("Timezone:", parseFloat(diff / 60));
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+        setSearchParams(searchParams);
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        let size = 500;
+
+        let purchaseReturns = [];
+        var pageNo = 1;
+
+        makePurchaseReturnReportFilename();
+
+        for (; true;) {
+
+            fettingAllRecordsInProgress = true;
+            setFettingAllRecordsInProgress(true);
+            let res = await fetch(
+                "/v1/purchase-return?" +
+                Select +
+                queryParams +
+                "&sort=" +
+                sortOrder +
+                sortField +
+                "&page=" +
+                pageNo +
+                "&limit=" +
+                size,
+                requestOptions
+            )
+                .then(async (response) => {
+                    const isJson = response.headers
+                        .get("content-type")
+                        ?.includes("application/json");
+                    const data = isJson && (await response.json());
+
+                    // check for error response
+                    if (!response.ok) {
+                        const error = data && data.errors;
+                        return Promise.reject(error);
+                    }
+
+                    setIsListLoading(false);
+                    if (!data.result || data.result.length === 0) {
+                        return [];
+                    }
+
+
+                    // console.log("Orders:", orders);
+
+                    return data.result;
+
+
+                })
+                .catch((error) => {
+                    console.log(error);
+                    return [];
+                    //break;
+
+                });
+            if (res.length === 0) {
+                break;
+            }
+            purchaseReturns = purchaseReturns.concat(res);
+            pageNo++;
+        }
+
+        allPurchaseReturns = purchaseReturns;
+        setAllPurchaseReturns(purchaseReturns);
+
+        console.log("allPurchaseReturns:", allPurchaseReturns);
+        prepareExcelData();
+        fettingAllRecordsInProgress = false;
+        setFettingAllRecordsInProgress(false);
+
+    }
+
+
 
     //Search params
     const [searchParams, setSearchParams] = useState({});
@@ -250,6 +545,8 @@ function PurchaseReturnIndex(props) {
     }
 
     function list() {
+        excelData = [];
+        setExcelData(excelData);
         const requestOptions = {
             method: "GET",
             headers: {
@@ -400,6 +697,13 @@ function PurchaseReturnIndex(props) {
                     </div>
 
                     <div className="col text-end">
+                        <ExcelFile filename={purchaseReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Purchase Return Report</Button> : ""}>
+                            <ExcelSheet dataSet={excelData} name={purchaseReturnReportFileName} />
+                        </ExcelFile>
+
+                        {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchaseReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Return Report"}</Button> : ""}
+                        &nbsp;&nbsp;
+
                         {/*
                         <Button
                             hide={true}
