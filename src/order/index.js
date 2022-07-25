@@ -489,6 +489,10 @@ const OrderIndex = forwardRef((props, ref) => {
     let [totalSales, setTotalSales] = useState(0.00);
     let [netProfit, setNetProfit] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
+    let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
+    let [totalDiscount, setTotalDiscount] = useState(0.00);
+
+
     let [loss, setLoss] = useState(0.00);
 
     function ObjectToSearchQueryParams(object) {
@@ -731,6 +735,13 @@ const OrderIndex = forwardRef((props, ref) => {
 
                 vatPrice = data.meta.vat_price;
                 setVatPrice(vatPrice);
+
+                totalShippingHandlingFees = data.meta.shipping_handling_fees;
+                setTotalShippingHandlingFees(totalShippingHandlingFees);
+
+                totalDiscount = data.meta.discount;
+                setTotalDiscount(totalDiscount);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -839,6 +850,40 @@ const OrderIndex = forwardRef((props, ref) => {
                                 />
                             </Badge>
                         </h1>
+                        <h1 className="text-end">
+                            Discounts: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalDiscount.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Shipping/Handling fees: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalShippingHandlingFees.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            VAT Collected: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={vatPrice.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+
                         {cookies.get('admin') === "true" ? <h1 className="text-end">
                             Net Profit: <Badge bg="secondary">
                                 <NumberFormat
@@ -861,17 +906,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                 />
                             </Badge>
                         </h1> : ""}
-                        <h1 className="text-end">
-                            VAT Collected: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={vatPrice.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" SAR"}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
+
                     </div>
 
                 </div>

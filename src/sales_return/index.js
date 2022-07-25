@@ -24,6 +24,7 @@ function SalesReturnIndex(props) {
 
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
+    let [totalDiscount, setTotalDiscount] = useState(0.00);
 
     //list
     const [salesreturnList, setSalesReturnList] = useState([]);
@@ -692,6 +693,9 @@ function SalesReturnIndex(props) {
                 vatPrice = data.meta.vat_price;
                 setVatPrice(vatPrice);
 
+                totalDiscount = data.meta.discount;
+                setTotalDiscount(totalDiscount);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -760,6 +764,17 @@ function SalesReturnIndex(props) {
                             Sales Return: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalSalesReturn}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Discounts: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}

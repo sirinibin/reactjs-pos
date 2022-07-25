@@ -22,6 +22,8 @@ function PurchaseReturnIndex(props) {
     const cookies = new Cookies();
 
     let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
+    let [vatPrice, setVatPrice] = useState(0.00);
+    let [totalDiscount, setTotalDiscount] = useState(0.00);
 
     //list
     const [purchasereturnList, setPurchaseReturnList] = useState([]);
@@ -682,6 +684,13 @@ function PurchaseReturnIndex(props) {
 
                 totalPurchaseReturn = data.meta.total_purchase_return;
                 setTotalPurchaseReturn(totalPurchaseReturn);
+
+                vatPrice = data.meta.vat_price;
+                setVatPrice(vatPrice);
+
+                totalDiscount = data.meta.discount;
+                setTotalDiscount(totalDiscount);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -753,6 +762,28 @@ function PurchaseReturnIndex(props) {
                             Purchase Return: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPurchaseReturn}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Discounts: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalDiscount.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            VAT Collected: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={vatPrice.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}

@@ -27,6 +27,8 @@ function PurchaseIndex(props) {
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
+    let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
+    let [totalDiscount, setTotalDiscount] = useState(0.00);
     let [netRetailProfit, setNetRetailProfit] = useState(0.00);
     let [netWholesaleProfit, setNetWholesaleProfit] = useState(0.00);
 
@@ -713,6 +715,12 @@ function PurchaseIndex(props) {
                 vatPrice = data.meta.vat_price;
                 setVatPrice(vatPrice);
 
+                totalShippingHandlingFees = data.meta.shipping_handling_fees;
+                setTotalShippingHandlingFees(totalShippingHandlingFees);
+
+                totalDiscount = data.meta.discount;
+                setTotalDiscount(totalDiscount);
+
 
                 netRetailProfit = data.meta.net_retail_profit;
                 setNetRetailProfit(netRetailProfit);
@@ -816,6 +824,28 @@ function PurchaseIndex(props) {
                             Purchases: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPurchase}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Discounts: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalDiscount.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Shipping/Handling fees: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalShippingHandlingFees.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
