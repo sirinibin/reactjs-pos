@@ -26,6 +26,7 @@ function PurchaseIndex(props) {
     const cookies = new Cookies();
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
+    let [vatPrice, setVatPrice] = useState(0.00);
     let [netRetailProfit, setNetRetailProfit] = useState(0.00);
     let [netWholesaleProfit, setNetWholesaleProfit] = useState(0.00);
 
@@ -709,6 +710,10 @@ function PurchaseIndex(props) {
                 totalPurchase = data.meta.total_purchase;
                 setTotalPurchase(totalPurchase);
 
+                vatPrice = data.meta.vat_price;
+                setVatPrice(vatPrice);
+
+
                 netRetailProfit = data.meta.net_retail_profit;
                 setNetRetailProfit(netRetailProfit);
 
@@ -811,6 +816,17 @@ function PurchaseIndex(props) {
                             Purchases: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPurchase}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            VAT paid: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={vatPrice.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
