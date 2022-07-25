@@ -333,7 +333,7 @@ function PurchaseReturnIndex(props) {
             { value: "", },
             { value: "", },
             {
-                value: "Total",
+                value: "Total Amount",
             }, {
                 value: totalAmount.toFixed(2),
             },

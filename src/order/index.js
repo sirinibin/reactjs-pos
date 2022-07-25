@@ -286,7 +286,7 @@ const OrderIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total",
+                value: "Total Amount",
             }, {
                 value: totalAmount.toFixed(2),
             },
