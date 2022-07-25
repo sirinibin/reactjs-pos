@@ -146,14 +146,16 @@ function PurchaseIndex(props) {
 
         let totalAmount = 0;
         let totalTax = 0;
+        let dayTotal = 0.00;
+        let dayTax = 0.00;
 
         let invoiceCount = 0;
         for (let purchaseDate in groupedByDate) {
 
             console.log("purchaseDate:", purchaseDate);
             excelData[0].data.push([{ value: "Inv Date: " + purchaseDate }]);
-            let dayTotal = 0.00;
-            let dayTax = 0.00;
+            dayTotal = 0.00;
+            dayTax = 0.00;
 
             for (var i = 0; i < groupedByDate[purchaseDate].length > 0; i++) {
                 invoiceCount++;
@@ -267,11 +269,11 @@ function PurchaseIndex(props) {
                     {
                         value: "Total",
                     }, {
-                        value: ((purchase.total + purchase.shipping_handling_fees) - purchase.discount).toFixed(2),
+                        value: (purchase.total + purchase.shipping_handling_fees - purchase.discount).toFixed(2),
                     },
                 ]);
 
-                dayTotal += (purchase.total + purchase.shipping_handling_fees) - purchase.discount;
+                dayTotal += (purchase.total + purchase.shipping_handling_fees - purchase.discount);
                 dayTax += purchase.vat_price;
 
             }
