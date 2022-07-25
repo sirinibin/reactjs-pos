@@ -144,10 +144,10 @@ function PurchaseIndex(props) {
         }];
 
 
-        let totalAmount = 0;
-        let totalTax = 0;
-        let dayTotal = 0.00;
-        let dayTax = 0.00;
+        var totalAmount = 0.00;
+        var totalTax = 0.00;
+        var dayTotal = 0.00;
+        var dayTax = 0.00;
 
         let invoiceCount = 0;
         for (let purchaseDate in groupedByDate) {
