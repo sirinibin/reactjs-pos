@@ -661,7 +661,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,discount,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,net_retail_profit,net_wholesale_profit";
+            "select=id,code,date,net_total,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,net_retail_profit,net_wholesale_profit";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -1160,6 +1160,25 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vat_price");
+                                                        }}
+                                                    >
+                                                        VAT
+                                                        {sortField === "vat_price" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "vat_price" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                 {cookies.get('admin') === "true" ?
                                                     <th>
                                                         <b
@@ -1390,6 +1409,16 @@ function PurchaseIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="vat_price"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("vat_price", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 {cookies.get('admin') === "true" ?
                                                     <th>
                                                         <input
@@ -1544,6 +1573,15 @@ function PurchaseIndex(props) {
                                                         <td>
                                                             <NumberFormat
                                                                 value={purchase.discount}
+                                                                displayType={"text"}
+                                                                thousandSeparator={true}
+                                                                suffix={" SAR"}
+                                                                renderText={(value, props) => value}
+                                                            />
+                                                        </td>
+                                                        <td>
+                                                            <NumberFormat
+                                                                value={purchase.vat_price}
                                                                 displayType={"text"}
                                                                 thousandSeparator={true}
                                                                 suffix={" SAR"}
