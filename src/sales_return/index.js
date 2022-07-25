@@ -242,11 +242,11 @@ function SalesReturnIndex(props) {
                     {
                         value: "Total",
                     }, {
-                        value: salesReturn.net_total.toFixed(2),
+                        value: (salesReturn.total - salesReturn.discount).toFixed(2),
                     },
                 ]);
 
-                dayTotal += salesReturn.net_total;
+                dayTotal += salesReturn.total - salesReturn.discount;
                 dayTax += salesReturn.vat_price;
 
             }
@@ -371,7 +371,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,discount_percent,discount,products,customer_name,created_at,vat_price";
+            "select=id,code,date,total,net_total,discount_percent,discount,products,customer_name,created_at,vat_price";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");

@@ -242,11 +242,11 @@ function PurchaseReturnIndex(props) {
                     {
                         value: "Total",
                     }, {
-                        value: purchaseReturn.net_total.toFixed(2),
+                        value: (purchaseReturn.total - purchaseReturn.discount).toFixed(2),
                     },
                 ]);
 
-                dayTotal += purchaseReturn.net_total;
+                dayTotal += (purchaseReturn.total - purchaseReturn.discount);
                 dayTax += purchaseReturn.vat_price;
 
             }
@@ -370,7 +370,7 @@ function PurchaseReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,vendor_invoice_no,date,net_total,discount_percent,discount,products,vendor_name,created_at,vat_price";
+            "select=id,code,vendor_invoice_no,date,total,net_total,discount_percent,discount,products,vendor_name,created_at,vat_price";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");

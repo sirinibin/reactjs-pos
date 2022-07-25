@@ -265,11 +265,11 @@ function PurchaseIndex(props) {
                     {
                         value: "Total",
                     }, {
-                        value: purchase.net_total.toFixed(2),
+                        value: ((purchase.total + purchase.shipping_handling_fees) - purchase.discount).toFixed(2),
                     },
                 ]);
 
-                dayTotal += purchase.net_total;
+                dayTotal += (purchase.total + purchase.shipping_handling_fees) - purchase.discount;
                 dayTax += purchase.vat_price;
 
             }
@@ -395,7 +395,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,vendor_invoice_no,date,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,created_at,vat_price";
+            "select=id,code,vendor_invoice_no,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,created_at,vat_price";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");

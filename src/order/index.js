@@ -72,6 +72,8 @@ const OrderIndex = forwardRef((props, ref) => {
 
         let totalAmount = 0;
         let totalTax = 0;
+        let totalDiscount = 0;
+        let totalShippingFees = 0;
 
         let invoiceCount = 0;
         for (let orderDate in groupedByDate) {
@@ -80,6 +82,8 @@ const OrderIndex = forwardRef((props, ref) => {
             excelData[0].data.push([{ value: "Inv Date: " + orderDate }]);
             let dayTotal = 0.00;
             let dayTax = 0.00;
+            let dayDiscount = 0.00;
+            let dayShippingFees = 0.00;
 
             for (var i = 0; i < groupedByDate[orderDate].length > 0; i++) {
                 invoiceCount++;
@@ -190,12 +194,15 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "Total",
                     }, {
-                        value: order.net_total.toFixed(2),
+                        value: ((order.total + order.shipping_handling_fees) - order.discount).toFixed(2),
                     },
                 ]);
 
-                dayTotal += order.net_total;
+
                 dayTax += order.vat_price;
+                dayTotal += (order.total + order.shipping_handling_fees) - order.discount;
+                dayDiscount += order.discount;
+                dayShippingFees += order.shipping_handling_fees;
 
             }
 
@@ -317,7 +324,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price";
+            "select=id,code,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
