@@ -161,9 +161,11 @@ function PurchaseIndex(props) {
                 let invoiceNo = purchase.vendor_invoice_no ? purchase.vendor_invoice_no + " / " + purchase.code : purchase.code;
                 excelData[0].data.push([{ value: "Inv No (" + invoiceNo + ") - " + invoiceCount + " [" + purchase.vendor_name + "]" }]);
 
+                /*
                 if (!purchase.products) {
                     continue;
                 }
+                */
 
                 for (var j = 0; j < purchase.products.length; j++) {
 
