@@ -56,6 +56,12 @@ function PurchaseIndex(props) {
     const [createdAtFromValue, setCreatedAtFromValue] = useState("");
     const [createdAtToValue, setCreatedAtToValue] = useState("");
 
+    //Updated At filter
+    const [showUpdatedAtDateRange, setShowUpdatedAtDateRange] = useState(false);
+    const [updatedAtValue, setUpdatedAtValue] = useState("");
+    const [updatedAtFromValue, setUpdatedAtFromValue] = useState("");
+    const [updatedAtToValue, setUpdatedAtToValue] = useState("");
+
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
@@ -399,7 +405,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,vendor_invoice_no,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,created_at,vat_price";
+            "select=id,code,vendor_invoice_no,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,created_at,updated_at,vat_price";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -610,7 +616,15 @@ function PurchaseIndex(props) {
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
+        } else if (field === "updated_at") {
+            setUpdatedAtValue(value);
+            setUpdatedAtFromValue("");
+            setUpdatedAtToValue("");
+            searchParams["updated_at_from"] = "";
+            searchParams["updated_at_to"] = "";
+            searchParams[field] = value;
         }
+
         if (field === "created_at_from") {
             setCreatedAtFromValue(value);
             setCreatedAtValue("");
@@ -622,6 +636,19 @@ function PurchaseIndex(props) {
             searchParams["created_at"] = "";
             searchParams[field] = value;
         }
+
+        if (field === "updated_at_from") {
+            setUpdatedAtFromValue(value);
+            setUpdatedAtValue("");
+            searchParams["updated_at"] = "";
+            searchParams[field] = value;
+        } else if (field === "updated_at_to") {
+            setUpdatedAtToValue(value);
+            setUpdatedAtValue("");
+            searchParams["updated_at"] = "";
+            searchParams[field] = value;
+        }
+
 
         page = 1;
         setPage(page);
@@ -661,7 +688,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,net_retail_profit,net_wholesale_profit";
+            "select=id,code,date,net_total,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -1278,6 +1305,25 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("updated_at");
+                                                        }}
+                                                    >
+                                                        Updated At
+                                                        {sortField === "updated_at" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-down"></i>
+                                                        ) : null}
+                                                        {sortField === "updated_at" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
@@ -1547,6 +1593,73 @@ function PurchaseIndex(props) {
                                                         </span>
                                                     ) : null}
                                                 </th>
+                                                <th>
+                                                    <DatePicker
+                                                        id="updated_at"
+                                                        value={updatedAtValue}
+                                                        selected={selectedDate}
+                                                        className="form-control"
+                                                        dateFormat="MMM dd yyyy"
+                                                        onChange={(date) => {
+                                                            if (!date) {
+                                                                setUpdatedAtValue("");
+                                                                searchByDateField("updated_at", "");
+                                                                return;
+                                                            }
+                                                            searchByDateField("updated_at", date);
+                                                        }}
+                                                    />
+                                                    <small
+                                                        style={{
+                                                            color: "blue",
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={(e) =>
+                                                            setShowUpdatedAtDateRange(!showUpdatedAtDateRange)
+                                                        }
+                                                    >
+                                                        {showUpdatedAtDateRange ? "Less.." : "More.."}
+                                                    </small>
+                                                    <br />
+
+                                                    {showUpdatedAtDateRange ? (
+                                                        <span className="text-left">
+                                                            From:{" "}
+                                                            <DatePicker
+                                                                id="updated_at_from"
+                                                                value={updatedAtFromValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setUpdatedAtFromValue("");
+                                                                        searchByDateField("updated_at_from", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("updated_at_from", date);
+                                                                }}
+                                                            />
+                                                            To:{" "}
+                                                            <DatePicker
+                                                                id="updated_at_to"
+                                                                value={updatedAtToValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setUpdatedAtToValue("");
+                                                                        searchByDateField("updated_at_to", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("updated_at_to", date);
+                                                                }}
+                                                            />
+                                                        </span>
+                                                    ) : null}
+                                                </th>
                                                 <th></th>
                                             </tr>
                                         </thead>
@@ -1623,6 +1736,12 @@ function PurchaseIndex(props) {
                                                                 new Date(purchase.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
+                                                        </td>
+                                                        <td>
+                                                            {purchase.updated_at ? format(
+                                                                new Date(purchase.updated_at),
+                                                                "MMM dd yyyy h:mma"
+                                                            ) : ""}
                                                         </td>
                                                         <td>
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
