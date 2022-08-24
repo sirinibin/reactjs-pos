@@ -492,7 +492,7 @@ function SalesReturnIndex(props) {
             },
         };
 
-        let Select = "select=id,name";
+        let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(
             `/v1/customer?${Select}${queryString}`,
             requestOptions
@@ -1227,7 +1227,7 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="customer_id"
-                                                        labelKey="name"
+                                                        labelKey="search_label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "customer_id",

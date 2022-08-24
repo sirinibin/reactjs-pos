@@ -233,6 +233,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           {
             id: deliverynote.customer_id,
             name: deliverynote.customer_name,
+            search_label: deliverynote.customer_name,
           }
         ];
 
@@ -339,7 +340,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,name";
+    let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
     setIsCustomersLoading(true);
     let result = await fetch(
       "/v1/customer?" + Select + queryString,
@@ -982,7 +983,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <div className="input-group mb-3">
                 <Typeahead
                   id="customer_id"
-                  labelKey="name"
+                  labelKey="search_label"
                   isLoading={isCustomersLoading}
                   isInvalid={errors.customer_id ? true : false}
                   onChange={(selectedItems) => {
@@ -1001,7 +1002,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     setSelectedCustomers(selectedItems);
                   }}
                   options={customerOptions}
-                  placeholder="Select Customer"
+                  placeholder="Type name or mob"
                   selected={selectedCustomers}
                   highlightOnlyResult={true}
                   onInputChange={(searchTerm, e) => {

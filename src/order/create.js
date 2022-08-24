@@ -125,10 +125,14 @@ const OrderCreate = forwardRef((props, ref) => {
                     }
                 ];
 
+
+                let searchLabel = formData.customer_name;
+
                 let selectedCustomers = [
                     {
                         id: formData.customer_id,
                         name: formData.customer_name,
+                        search_label: searchLabel,
                     }
                 ];
 
@@ -326,7 +330,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,name";
+        let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
         setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
@@ -1067,7 +1071,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="customer_id"
-                                    labelKey="name"
+                                    labelKey="search_label"
                                     isLoading={isCustomersLoading}
                                     isInvalid={errors.customer_id ? true : false}
                                     onChange={(selectedItems) => {
@@ -1086,7 +1090,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setSelectedCustomers(selectedItems);
                                     }}
                                     options={customerOptions}
-                                    placeholder="Select Customer"
+                                    placeholder="Type name or mob"
                                     selected={selectedCustomers}
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {

@@ -247,6 +247,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     {
                         id: purchase.vendor_id,
                         name: purchase.vendor_name,
+                        search_label: purchase.vendor_name,
                     }
                 ];
 
@@ -354,7 +355,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,name";
+        let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
         setIsVendorsLoading(true);
         let result = await fetch(
             "/v1/vendor?" + Select + queryString,
@@ -1043,7 +1044,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="vendor_id"
-                                    labelKey="name"
+                                    labelKey="search_label"
                                     isLoading={isVendorsLoading}
                                     isInvalid={errors.vendor_id ? true : false}
                                     onChange={(selectedItems) => {
@@ -1062,7 +1063,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         setSelectedVendors(selectedItems);
                                     }}
                                     options={vendorOptions}
-                                    placeholder="Select Vendor"
+                                    placeholder="Type name or mob"
                                     selected={selectedVendors}
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {

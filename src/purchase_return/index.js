@@ -492,7 +492,7 @@ function PurchaseReturnIndex(props) {
             },
         };
 
-        let Select = "select=id,name";
+        let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
         let data = await result.json();
 
@@ -1147,7 +1147,7 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="vendor_id"
-                                                        labelKey="name"
+                                                        labelKey="search_label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "vendor_id",

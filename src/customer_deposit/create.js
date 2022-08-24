@@ -133,6 +133,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                     {
                         id: formData.customer_id,
                         name: formData.customer_name,
+                        search_label: formData.customer_name,
                     }
                 ];
 
@@ -235,7 +236,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,name";
+        let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
         setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
@@ -510,7 +511,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="customer_id"
-                                    labelKey="name"
+                                    labelKey="search_label"
                                     isLoading={isCustomersLoading}
                                     isInvalid={errors.customer_id ? true : false}
                                     onChange={(selectedItems) => {
