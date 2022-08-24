@@ -1155,7 +1155,7 @@ function PurchaseReturnIndex(props) {
                                                             );
                                                         }}
                                                         options={vendorOptions}
-                                                        placeholder="Select Vendor"
+                                                        placeholder="name or mob"
                                                         selected={selectedVendors}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {

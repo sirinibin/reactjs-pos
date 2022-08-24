@@ -870,7 +870,7 @@ function QuotationIndex(props) {
                               );
                             }}
                             options={customerOptions}
-                            placeholder="Select customers"
+                            placeholder="name or mob"
                             selected={selectedCustomers}
                             highlightOnlyResult={true}
                             onInputChange={(searchTerm, e) => {
