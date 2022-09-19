@@ -83,7 +83,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     <div className="col">
                         <u
                         ><h1 className="text-center" style={{ fontSize: "3mm" }}>
-                                INVOICE / فاتورة
+                                TAX INVOICE / فاتورة ضريبية
                             </h1>
                         </u>
                     </div>
@@ -228,7 +228,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                     value={product.unit_price.toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
-                                                    suffix={" SAR"}
+                                                    suffix={""}
                                                     renderText={(value, props) => value}
                                                 /> : ""}
                                             </td>
@@ -237,7 +237,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                     value={(product.unit_price * product.quantity).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
-                                                    suffix={" SAR"}
+                                                    suffix={""}
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
@@ -257,7 +257,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 value={props.model.total.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>
@@ -272,7 +272,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 value={props.model.shipping_handling_fees.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>
@@ -287,7 +287,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 value={props.model.discount.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>
@@ -302,7 +302,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 value={props.model.vat_price.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>

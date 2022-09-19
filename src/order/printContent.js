@@ -49,6 +49,10 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
 
             >
+                <h2 style={{ fontSize: "4mm", position: "absolute", left: "305px", top: (40 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
+                    {"TAX INVOICE / فاتورة ضريبية"}
+                </h2>
+
                 <h4 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: (14 + page.top) + "px", border: "solid " + border + "px", }}>
                     {props.model.customer && props.model.customer.name ? props.model.customer.name : "N/A"}
                 </h4>
