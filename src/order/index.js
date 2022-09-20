@@ -481,6 +481,25 @@ const OrderIndex = forwardRef((props, ref) => {
 
     const [selectedStatusList, setSelectedStatusList] = useState([]);
 
+
+    //Payment Status Auto Suggestion
+    const paymentStatusOptions = [
+        {
+            id: "paid",
+            name: "Paid",
+        },
+        {
+            id: "not_paid",
+            name: "Not Paid",
+        },
+        {
+            id: "paid_partially",
+            name: "Paid partially",
+        },
+    ];
+
+    const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+
     useEffect(() => {
         list();
 
@@ -652,6 +671,8 @@ const OrderIndex = forwardRef((props, ref) => {
             setSelectedCustomers(values);
         } else if (field === "status") {
             setSelectedStatusList(values);
+        } else if (field === "payment_status") {
+            setSelectedPaymentStatusList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -677,7 +698,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,discount_percent,discount,created_by_name,customer_name,status,created_at,loss,net_profit,store_id,total";
+            "select=id,code,date,net_total,discount_percent,discount,created_by_name,customer_name,status,payment_status,created_at,loss,net_profit,store_id,total";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -1239,6 +1260,27 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payment_status");
+                                                        }}
+                                                    >
+                                                        Payment Status
+                                                        {sortField === "payment_status" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_status" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                {/*
                                                 <th>
                                                     <b
                                                         style={{
@@ -1258,6 +1300,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                        */}
 
                                                 <th>Actions</th>
                                             </tr>
@@ -1435,6 +1478,24 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 </th>
                                                 <th>
                                                     <Typeahead
+                                                        id="payment_status"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_status",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentStatusOptions}
+                                                        placeholder="Select Payment Status"
+                                                        selected={selectedPaymentStatusList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                {/*
+                                                <th>
+                                                    <Typeahead
                                                         id="status"
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
@@ -1450,6 +1511,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         multiple
                                                     />
                                                 </th>
+                                                    */}
 
                                                 <th style={{ width: "150px" }}></th>
                                             </tr>
@@ -1474,10 +1536,25 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td>{order.created_by_name}</td>
                                                         <td>{order.customer_name}</td>
                                                         <td>
+                                                            {order.payment_status == "paid" ?
+                                                                <span className="badge bg-success">
+                                                                    Paid
+                                                                </span> : ""}
+                                                            {order.payment_status == "paid_partially" ?
+                                                                <span className="badge bg-warning">
+                                                                    Paid Partially
+                                                                </span> : ""}
+                                                            {order.payment_status == "not_paid" ?
+                                                                <span className="badge bg-danger">
+                                                                    Not Paid
+                                                                </span> : ""}
+                                                        </td>
+                                                        {/*
+                                                        <td>
                                                             <span className="badge bg-success">
                                                                 {order.status}
                                                             </span>
-                                                        </td>
+                                                            </td>*/}
 
                                                         <td>
                                                             {/*
