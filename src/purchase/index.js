@@ -150,24 +150,34 @@ function PurchaseIndex(props) {
         }];
 
 
-        var totalAmount = 0.00;
-        var totalTax = 0.00;
-        var dayTotal = 0.00;
-        var dayTax = 0.00;
+        var totalAmountBeforeVAT = 0.00;
+        var totalAmountAfterVAT = 0.00;
+        var totalVAT = 0.00;
+        var dayTotalBeforeVAT = 0.00;
+        var dayTotalAfterVAT = 0.00;
+        var dayVAT = 0.00;
 
         let invoiceCount = 0;
         for (let purchaseDate in groupedByDate) {
 
             console.log("purchaseDate:", purchaseDate);
             excelData[0].data.push([{ value: "Inv Date: " + purchaseDate }]);
-            dayTotal = 0.00;
-            dayTax = 0.00;
+            dayTotalBeforeVAT = 0.00;
+            dayTotalAfterVAT = 0.00;
+            dayVAT = 0.00;
 
             for (var i = 0; i < groupedByDate[purchaseDate].length > 0; i++) {
                 invoiceCount++;
                 let purchase = groupedByDate[purchaseDate][i];
                 let invoiceNo = purchase.vendor_invoice_no ? purchase.vendor_invoice_no + " / " + purchase.code : purchase.code;
-                excelData[0].data.push([{ value: "Inv No (" + invoiceNo + ") - " + invoiceCount + " [" + purchase.vendor_name + "]" }]);
+                excelData[0].data.push([{ value: "Inv No (" + invoiceNo + ") - " + invoiceCount }]);
+                excelData[0].data.push([{ value: "Supplier Name: " + purchase.vendor_name }]);
+                if (purchase.vendor && purchase.vendor.vat_no) {
+                    excelData[0].data.push([{ value: "Supplier VAT No.: " + purchase.vendor.vat_no }]);
+                } else {
+                    excelData[0].data.push([{ value: "Supplier VAT No.: N/A" }]);
+                }
+
 
                 /*
                 if (!purchase.products) {
@@ -239,6 +249,23 @@ function PurchaseIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
+                        value: "Total Amount Before VAT",
+                    }, {
+                        value: (purchase.total + purchase.shipping_handling_fees).toFixed(2),
+                    },
+                ]);
+
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
                         value: "Discount",
                     }, {
                         value: purchase.discount.toFixed(2),
@@ -255,7 +282,24 @@ function PurchaseIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Tax",
+                        value: "Total Amount After Discount",
+                    }, {
+                        value: (purchase.total + purchase.shipping_handling_fees - purchase.discount).toFixed(2),
+                    },
+                ]);
+
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "VAT Amount",
                     }, {
                         value: purchase.vat_price.toFixed(2),
                     },
@@ -273,17 +317,19 @@ function PurchaseIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total",
+                        value: "Total Amount After VAT",
                     }, {
-                        value: (purchase.total + purchase.shipping_handling_fees - purchase.discount).toFixed(2),
+                        value: (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price).toFixed(2),
                     },
                 ]);
 
-                dayTotal += (purchase.total + purchase.shipping_handling_fees - purchase.discount);
-                dayTax += purchase.vat_price;
+                dayTotalBeforeVAT += (purchase.total + purchase.shipping_handling_fees - purchase.discount);
+                dayTotalAfterVAT += (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price);
+                dayVAT += purchase.vat_price;
 
             }
 
+
             excelData[0].data.push([
                 { value: "", },
                 { value: "", },
@@ -294,9 +340,25 @@ function PurchaseIndex(props) {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Tax",
+                    value: "Day Total Before VAT",
                 }, {
-                    value: dayTax.toFixed(2),
+                    value: dayTotalBeforeVAT.toFixed(2),
+                },
+            ]);
+
+            excelData[0].data.push([
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                {
+                    value: "Day VAT",
+                }, {
+                    value: dayVAT.toFixed(2),
                 },
             ]);
 
@@ -311,14 +373,15 @@ function PurchaseIndex(props) {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total",
+                    value: "Day Total After VAT",
                 }, {
-                    value: dayTotal.toFixed(2),
+                    value: dayTotalAfterVAT.toFixed(2),
                 },
             ]);
 
-            totalAmount += dayTotal;
-            totalTax += dayTax;
+            totalAmountBeforeVAT += dayTotalBeforeVAT;
+            totalAmountAfterVAT += dayTotalAfterVAT;
+            totalVAT += dayVAT;
 
 
         }//end for1
@@ -349,9 +412,9 @@ function PurchaseIndex(props) {
             { value: "", },
             { value: "", },
             {
-                value: "Total Tax",
+                value: "Total Amount Before VAT",
             }, {
-                value: totalTax.toFixed(2),
+                value: totalAmountBeforeVAT.toFixed(2),
             },
         ]);
 
@@ -365,9 +428,25 @@ function PurchaseIndex(props) {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount",
+                value: "Total VAT",
             }, {
-                value: totalAmount.toFixed(2),
+                value: totalVAT.toFixed(2),
+            },
+        ]);
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            {
+                value: "Total Amount After VAT",
+            }, {
+                value: totalAmountAfterVAT.toFixed(2),
             },
         ]);
 
@@ -405,7 +484,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,vendor_invoice_no,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,created_at,updated_at,vat_price";
+            "select=id,code,vendor_id,vendor.id,vendor.vat_no,vendor_invoice_no,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,created_at,updated_at,vat_price";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");

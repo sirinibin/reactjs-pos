@@ -63,16 +63,18 @@ const OrderIndex = forwardRef((props, ref) => {
                 { title: "Disc %", width: { wpx: 90 } },
                 { title: "Disc", width: { wpx: 90 } },
                 { title: "Tax %", width: { wpx: 90 } },
-                { title: "Tax Amount", width: { wpx: 90 } },
+                { title: "Tax Amount", width: { wpx: 180 } },
                 { title: "Net Amount", width: { wpx: 90 } },
             ],
             data: [],
             filename: salesReportFileName,
         }];
 
-        let totalAmount = 0;
-        let totalTax = 0;
+        let totalAmountBeforeVAT = 0;
+        let totalAmountAfterVAT = 0;
+        let totalVAT = 0;
         let totalDiscount = 0;
+        let totalAmountAfterDiscount = 0;
         let totalShippingFees = 0;
 
         let invoiceCount = 0;
@@ -80,15 +82,22 @@ const OrderIndex = forwardRef((props, ref) => {
 
             console.log("orderDate:", orderDate);
             excelData[0].data.push([{ value: "Inv Date: " + orderDate }]);
-            let dayTotal = 0.00;
-            let dayTax = 0.00;
+            let dayTotalBeforeVAT = 0.00;
+            let dayTotalAfterVAT = 0.00;
+            let dayVAT = 0.00;
             let dayDiscount = 0.00;
             let dayShippingFees = 0.00;
 
             for (var i = 0; i < groupedByDate[orderDate].length > 0; i++) {
                 invoiceCount++;
                 let order = groupedByDate[orderDate][i];
-                excelData[0].data.push([{ value: "Inv No (" + order.code + ") - " + invoiceCount + " [" + order.customer_name + "]" }]);
+                excelData[0].data.push([{ value: "Inv No (" + order.code + ") - " + invoiceCount }]);
+                excelData[0].data.push([{ value: "Customer: " + order.customer_name }]);
+                if (order.customer && order.customer.vat_no) {
+                    excelData[0].data.push([{ value: "Customer VAT NO.: " + order.customer.vat_no }]);
+                } else {
+                    excelData[0].data.push([{ value: "Customer VAT NO.: N/A" }]);
+                }
 
                 if (!order.products) {
                     continue;
@@ -158,6 +167,22 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
+                        value: "Total Amount Before VAT",
+                    }, {
+                        value: ((order.total + order.shipping_handling_fees)).toFixed(2),
+                    },
+                ]);
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
                         value: "Discount",
                     }, {
                         value: order.discount.toFixed(2),
@@ -174,7 +199,24 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Tax",
+                        value: "Total Amount After Discount",
+                    }, {
+                        value: ((order.total + order.shipping_handling_fees) - order.discount).toFixed(2),
+                    },
+                ]);
+
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "VAT Amount",
                     }, {
                         value: order.vat_price.toFixed(2),
                     },
@@ -192,15 +234,16 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total",
+                        value: "Total Amount After VAT",
                     }, {
-                        value: ((order.total + order.shipping_handling_fees) - order.discount).toFixed(2),
+                        value: ((order.total + order.shipping_handling_fees) - order.discount + order.vat_price).toFixed(2),
                     },
                 ]);
 
 
-                dayTax += order.vat_price;
-                dayTotal += (order.total + order.shipping_handling_fees) - order.discount;
+                dayVAT += order.vat_price;
+                dayTotalBeforeVAT += (order.total + order.shipping_handling_fees) - order.discount;
+                dayTotalAfterVAT += (order.total + order.shipping_handling_fees) - order.discount + order.vat_price;
                 dayDiscount += order.discount;
                 dayShippingFees += order.shipping_handling_fees;
 
@@ -216,9 +259,9 @@ const OrderIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Tax",
+                    value: "Day Total Before VAT",
                 }, {
-                    value: dayTax.toFixed(2),
+                    value: dayTotalBeforeVAT.toFixed(2),
                 },
             ]);
 
@@ -232,14 +275,31 @@ const OrderIndex = forwardRef((props, ref) => {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total",
+                    value: "Day VAT",
                 }, {
-                    value: dayTotal.toFixed(2),
+                    value: dayVAT.toFixed(2),
                 },
             ]);
 
-            totalAmount += dayTotal;
-            totalTax += dayTax;
+            excelData[0].data.push([
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                {
+                    value: "Day Total After VAT",
+                }, {
+                    value: dayTotalAfterVAT.toFixed(2),
+                },
+            ]);
+
+            totalAmountBeforeVAT += dayTotalBeforeVAT;
+            totalAmountAfterVAT += dayTotalAfterVAT;
+            totalVAT += dayVAT;
 
 
         }//end for1
@@ -260,6 +320,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         ]);
 
+
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -270,9 +331,9 @@ const OrderIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total Tax",
+                value: "Total Amount Before VAT",
             }, {
-                value: totalTax.toFixed(2),
+                value: totalAmountBeforeVAT.toFixed(2),
             },
         ]);
 
@@ -286,9 +347,25 @@ const OrderIndex = forwardRef((props, ref) => {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount",
+                value: "Total VAT",
             }, {
-                value: totalAmount.toFixed(2),
+                value: totalVAT.toFixed(2),
+            },
+        ]);
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            {
+                value: "Total Amount After VAT",
+            }, {
+                value: totalAmountAfterVAT.toFixed(2),
             },
         ]);
 
@@ -324,7 +401,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price";
+            "select=id,code,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price,customer_id,customer.id,customer.vat_no";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
