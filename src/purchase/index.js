@@ -143,7 +143,7 @@ function PurchaseIndex(props) {
                 { title: "Disc %", width: { wpx: 90 } },
                 { title: "Disc", width: { wpx: 90 } },
                 { title: "Tax %", width: { wpx: 90 } },
-                { title: "Tax Amount", width: { wpx: 90 } },
+                { title: "Tax Amount", width: { wpx: 180 } },
                 { title: "Net Amount", width: { wpx: 90 } },
             ],
             data: [],
