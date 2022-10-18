@@ -164,7 +164,9 @@ function PurchaseIndex(props) {
 
         var totalAmountBeforeVAT = 0.00;
         var totalAmountAfterVAT = 0.00;
+        var totalAmountAfterDiscount = 0.00;
         var totalVAT = 0.00;
+        var totalDiscount = 0.00;
         var dayTotalBeforeVAT = 0.00;
         var dayTotalAfterVAT = 0.00;
         var dayVAT = 0.00;
@@ -187,9 +189,15 @@ function PurchaseIndex(props) {
                     supplierVatNo = purchase.vendor.vat_no;
                 }
 
-                let amountBeforeVAT = (purchase.total + purchase.shipping_handling_fees).toFixed(2);
-                let amountAfterDiscount = (purchase.total + purchase.shipping_handling_fees - purchase.discount).toFixed(2);
-                let totalAmountAfterVAT = (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price).toFixed(2);
+                let amountBeforeVAT = (purchase.total + purchase.shipping_handling_fees);
+                let amountAfterDiscount = (purchase.total + purchase.shipping_handling_fees - purchase.discount);
+                let amountAfterVAT = (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price);
+
+                totalAmountBeforeVAT += amountBeforeVAT;
+                totalDiscount += purchase.discount;
+                totalAmountAfterDiscount += amountAfterDiscount;
+                totalVAT += purchase.vat_price;
+                totalAmountAfterVAT += amountAfterVAT;
 
                 excelData[0].data.push([
                     { value: invoiceCount, style: { alignment: { horizontal: "center" } } },
@@ -197,14 +205,39 @@ function PurchaseIndex(props) {
                     { value: invoiceNo, style: { alignment: { horizontal: "center" } } },
                     { value: purchase.vendor_name },
                     { value: supplierVatNo, style: { alignment: { horizontal: "center" } } },
-                    { value: amountBeforeVAT, style: { alignment: { horizontal: "right" } } },
+                    { value: amountBeforeVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
                     { value: purchase.discount.toFixed(2), style: { alignment: { horizontal: "right" } } },
-                    { value: amountAfterDiscount, style: { alignment: { horizontal: "right" } } },
+                    { value: amountAfterDiscount.toFixed(2), style: { alignment: { horizontal: "right" } } },
                     { value: purchase.vat_price.toFixed(2), style: { alignment: { horizontal: "right" } } },
-                    { value: totalAmountAfterVAT, style: { alignment: { horizontal: "right" } } },
+                    { value: amountAfterVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
                 ]);
             }
         }
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+        ]);
+
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "TOTAL", style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalAmountBeforeVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalDiscount.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalAmountAfterDiscount.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalAmountAfterVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+        ]);
         /*
         excelData[0].data.push([{ value: "Inv No (" + invoiceNo + ") - " + invoiceCount }]);
         excelData[0].data.push([{ value: "Supplier Name: " + purchase.vendor_name }]);
@@ -224,9 +257,9 @@ function PurchaseIndex(props) {
 
         /*
         for (var j = 0; j < purchase.products.length; j++) {
-
+    
             let product = purchase.products[j];
-
+    
             excelData[0].data.push([
                 {
                     value: product.name
@@ -260,7 +293,7 @@ function PurchaseIndex(props) {
                 },
             ]);
         }
-
+    
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -276,7 +309,7 @@ function PurchaseIndex(props) {
                 value: purchase.shipping_handling_fees.toFixed(2),
             },
         ]);
-
+    
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -292,8 +325,8 @@ function PurchaseIndex(props) {
                 value: (purchase.total + purchase.shipping_handling_fees).toFixed(2),
             },
         ]);
-
-
+    
+    
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -309,7 +342,7 @@ function PurchaseIndex(props) {
                 value: purchase.discount.toFixed(2),
             },
         ]);
-
+    
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -325,8 +358,8 @@ function PurchaseIndex(props) {
                 value: (purchase.total + purchase.shipping_handling_fees - purchase.discount).toFixed(2),
             },
         ]);
-
-
+    
+    
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -342,9 +375,9 @@ function PurchaseIndex(props) {
                 value: purchase.vat_price.toFixed(2),
             },
         ]);
-
-
-
+    
+    
+    
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -360,14 +393,14 @@ function PurchaseIndex(props) {
                 value: (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price).toFixed(2),
             },
         ]);
-
+    
         dayTotalBeforeVAT += (purchase.total + purchase.shipping_handling_fees - purchase.discount);
         dayTotalAfterVAT += (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price);
         dayVAT += purchase.vat_price;
-
+    
     }
-
-
+    
+    
     excelData[0].data.push([
         { value: "", },
         { value: "", },
@@ -383,7 +416,7 @@ function PurchaseIndex(props) {
             value: dayTotalBeforeVAT.toFixed(2),
         },
     ]);
-
+    
     excelData[0].data.push([
         { value: "", },
         { value: "", },
@@ -399,8 +432,8 @@ function PurchaseIndex(props) {
             value: dayVAT.toFixed(2),
         },
     ]);
-
-
+    
+    
     excelData[0].data.push([
         { value: "", },
         { value: "", },
@@ -416,14 +449,14 @@ function PurchaseIndex(props) {
             value: dayTotalAfterVAT.toFixed(2),
         },
     ]);
-
+    
     totalAmountBeforeVAT += dayTotalBeforeVAT;
     totalAmountAfterVAT += dayTotalAfterVAT;
     totalVAT += dayVAT;
-
-
-}//end for1
-*/
+    
+    
+    }//end for1
+    */
 
         /*
         excelData[0].data.push([
@@ -441,7 +474,7 @@ function PurchaseIndex(props) {
                 value: "",
             },
         ]);
- 
+     
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -457,7 +490,7 @@ function PurchaseIndex(props) {
                 value: totalAmountBeforeVAT.toFixed(2),
             },
         ]);
- 
+     
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -473,7 +506,7 @@ function PurchaseIndex(props) {
                 value: totalVAT.toFixed(2),
             },
         ]);
- 
+     
         excelData[0].data.push([
             { value: "", },
             { value: "", },
