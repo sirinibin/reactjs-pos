@@ -135,16 +135,16 @@ function PurchaseIndex(props) {
 
         excelData = [{
             columns: [
-                { title: "الرقم التسلسلي  - S/L No.", width: { wch: 18 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width 
-                { title: "تاريخ الفاتورة - Date of Invoice", width: { wch: 25 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
-                { title: "رقم الفاتورة - Invoice Number", width: { wch: 25 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
-                { title: "اسم المورد بالعربية - Supplier Name", width: { wch: 30 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
-                { title: "الرقمالضريبيللمورد - Supplier VAT No", width: { wch: 30 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
-                { title: "المبلغ قبل الضريبة - Amount Before VAT", width: { wch: 30 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
-                { title: "تخفيض - Discount", width: { wch: 15 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
-                { title: "المبلغ بعد الخصم - Amount After Discount", width: { wch: 30 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
-                { title: "قيمة الضريبة -  VAT Amount", width: { wch: 20 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
-                { title: "الإجمالي شامل الضريبة - Total Amount after VAT", width: { wch: 35 }, style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "الرقم التسلسلي - S/L No.", width: { wch: 18 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width 
+                { title: "تاريخ الفاتورة - Date of Invoice", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "رقم الفاتورة - Invoice Number", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "اسم المورد بالعربية - Supplier Name", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "الرقمالضريبيللمورد - Supplier VAT No", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "المبلغ قبل الضريبة - Amount Before VAT", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "تخفيض - Discount", width: { wch: 15 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "المبلغ بعد الخصم - Amount After Discount", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "قيمة الضريبة -  VAT Amount", width: { wch: 20 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "الإجمالي شامل الضريبة - Total Amount after VAT", width: { wch: 35 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
                 /*
                 { title: "Description", width: { wch: 50 } },//pixels width  wpx
                 { title: "Quantity", width: { wpx: 90 } },//char width  wch
@@ -257,9 +257,9 @@ function PurchaseIndex(props) {
 
         /*
         for (var j = 0; j < purchase.products.length; j++) {
-    
+     
             let product = purchase.products[j];
-    
+     
             excelData[0].data.push([
                 {
                     value: product.name
@@ -293,7 +293,7 @@ function PurchaseIndex(props) {
                 },
             ]);
         }
-    
+     
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -309,7 +309,7 @@ function PurchaseIndex(props) {
                 value: purchase.shipping_handling_fees.toFixed(2),
             },
         ]);
-    
+     
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -325,8 +325,8 @@ function PurchaseIndex(props) {
                 value: (purchase.total + purchase.shipping_handling_fees).toFixed(2),
             },
         ]);
-    
-    
+     
+     
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -342,7 +342,7 @@ function PurchaseIndex(props) {
                 value: purchase.discount.toFixed(2),
             },
         ]);
-    
+     
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -358,8 +358,8 @@ function PurchaseIndex(props) {
                 value: (purchase.total + purchase.shipping_handling_fees - purchase.discount).toFixed(2),
             },
         ]);
-    
-    
+     
+     
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -375,9 +375,9 @@ function PurchaseIndex(props) {
                 value: purchase.vat_price.toFixed(2),
             },
         ]);
-    
-    
-    
+     
+     
+     
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -393,14 +393,14 @@ function PurchaseIndex(props) {
                 value: (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price).toFixed(2),
             },
         ]);
-    
+     
         dayTotalBeforeVAT += (purchase.total + purchase.shipping_handling_fees - purchase.discount);
         dayTotalAfterVAT += (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price);
         dayVAT += purchase.vat_price;
-    
+     
     }
-    
-    
+     
+     
     excelData[0].data.push([
         { value: "", },
         { value: "", },
@@ -416,7 +416,7 @@ function PurchaseIndex(props) {
             value: dayTotalBeforeVAT.toFixed(2),
         },
     ]);
-    
+     
     excelData[0].data.push([
         { value: "", },
         { value: "", },
@@ -432,8 +432,8 @@ function PurchaseIndex(props) {
             value: dayVAT.toFixed(2),
         },
     ]);
-    
-    
+     
+     
     excelData[0].data.push([
         { value: "", },
         { value: "", },
@@ -449,12 +449,12 @@ function PurchaseIndex(props) {
             value: dayTotalAfterVAT.toFixed(2),
         },
     ]);
-    
+     
     totalAmountBeforeVAT += dayTotalBeforeVAT;
     totalAmountAfterVAT += dayTotalAfterVAT;
     totalVAT += dayVAT;
-    
-    
+     
+     
     }//end for1
     */
 
