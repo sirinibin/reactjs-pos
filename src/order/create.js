@@ -24,6 +24,17 @@ const OrderCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
+            selectedProducts = [];
+            setSelectedProducts([]);
+
+            selectedStores = [];
+            setSelectedStores([]);
+
+            selectedCustomers = [];
+            setSelectedCustomers([]);
+
+
+
             if (cookies.get("user_id")) {
                 selectedDeliveredByUsers = [{
                     id: cookies.get("user_id"),
@@ -48,10 +59,12 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.status = "delivered";
             formData.payment_method = "cash";
             formData.payment_status = "";
+            formData.date_str = new Date();
             if (id) {
                 getOrder(id);
             }
             setFormData({ ...formData });
+            reCalculate();
             setShow(true);
 
         },
@@ -85,6 +98,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 formData = data.result;
+                formData.date_str = data.result.created_at;
                 /*
                 let order = data.result;
                 formData = {
@@ -205,7 +219,7 @@ const OrderCreate = forwardRef((props, ref) => {
         discount: 0.00,
         discount_percent: 0.0,
         is_discount_percent: false,
-        date_str: format(new Date(), "MMM dd yyyy"),
+        date_str: new Date(),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
         payment_status: "",
@@ -222,7 +236,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     //Customer Auto Suggestion
     const [customerOptions, setCustomerOptions] = useState([]);
-    const [selectedCustomers, setSelectedCustomers] = useState([]);
+    let [selectedCustomers, setSelectedCustomers] = useState([]);
     const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
     //Product Auto Suggestion
@@ -1982,6 +1996,39 @@ const OrderCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div> : ""}
+
+                        <div className="col-md-6">
+                            <label className="form-label">Created At*</label>
+
+                            <div className="input-group mb-3">
+                                <DatePicker
+                                    id="date_str"
+                                    selected={formData.date_str ? new Date(formData.date_str) : null}
+                                    value={formData.date_str ? format(
+                                        new Date(formData.date_str),
+                                        "MMMM d, yyyy h:mm aa"
+                                    ) : null}
+                                    className="form-control"
+                                    dateFormat="MMMM d, yyyy h:mm aa"
+                                    showTimeSelect
+                                    timeIntervals="1"
+                                    onChange={(value) => {
+                                        console.log("Value", value);
+                                        formData.date_str = value;
+                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+
+                                {errors.date_str && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.date_str}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close

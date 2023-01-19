@@ -45,6 +45,7 @@ import { Redirect } from 'react-router-dom'
 import Toast from 'react-bootstrap/Toast'
 import ToastContainer from 'react-bootstrap/ToastContainer'
 import './dashboard.css'
+import Analytics from './analytics/index.js';
 
 function Dashboard() {
 
@@ -126,6 +127,19 @@ function Dashboard() {
 
         </ToastContainer>
         <Switch>
+
+            <Route path="/dashboard/analytics">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <Analytics />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
 
             <Route path="/dashboard/sales">
                 <div className="wrapper">
@@ -452,7 +466,7 @@ function Dashboard() {
                 </div>
             </Route>
             <Route path="/">
-                {at && <Redirect to="/dashboard/sales" />}
+                {at && <Redirect to="/dashboard/analytics" />}
                 <Login />
             </Route>
         </Switch>

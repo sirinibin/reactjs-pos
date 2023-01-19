@@ -20,6 +20,10 @@ function App() {
   return (
     <Router>
       <Switch>
+        <Route path="/dashboard/analytics">
+          <Dashboard />
+        </Route>
+
         <Route path="/dashboard/sales">
           <Dashboard />
         </Route>

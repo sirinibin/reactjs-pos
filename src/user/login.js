@@ -16,7 +16,7 @@ function Login() {
         let at = cookies.get("access_token");
         if (at) {
             // history.push("/dashboard/quotations");
-            window.location = "/dashboard/sales";
+            window.location = "/dashboard/analytics";
         }
     });
 
@@ -61,7 +61,7 @@ function Login() {
                     cookies.set('user_photo', data.result.photo, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
                 }
 
-                history.push("/dashboard/sales");
+                history.push("/dashboard/analytics");
             })
             .catch(error => {
                 setProcessing(false);
