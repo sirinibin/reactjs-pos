@@ -120,7 +120,6 @@ const DailySales = forwardRef((props, ref) => {
             ]);
 
         }
-        console.log(data);
         dailySales = data;
         setDailySales(data);
     }

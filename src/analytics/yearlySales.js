@@ -57,7 +57,6 @@ const YearlySales = forwardRef((props, ref) => {
             ]);
 
         }
-        console.log(data);
         yearlySales = data;
         setYearlySales(data);
         //setYearlySales(data);

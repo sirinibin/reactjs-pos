@@ -156,7 +156,6 @@ const HourlySales = forwardRef((props, ref) => {
             ]);
 
         }
-        console.log(data);
         hourlySales = data;
         setHourlySales(data);
     }

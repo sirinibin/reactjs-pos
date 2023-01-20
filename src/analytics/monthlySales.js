@@ -121,7 +121,6 @@ const MonthlySales = forwardRef((props, ref) => {
             ]);
 
         }
-        console.log(data);
         monthlySales = data;
         setMonthlySales(data);
         //setMonthlySales(data);
