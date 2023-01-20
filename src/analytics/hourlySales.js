@@ -229,9 +229,10 @@ const HourlySales = forwardRef((props, ref) => {
                                     if (!e.target.value) {
                                         return;
                                     }
-                                    makeDateOptions();
+
                                     hourlySalesSelectedMonth = parseInt(e.target.value);
                                     setHourlySalesSelectedMonth(parseInt(e.target.value));
+                                    makeDateOptions();
                                     makeHourlySalesData();
                                 }}
                                 className="form-control"
