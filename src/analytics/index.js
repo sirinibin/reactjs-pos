@@ -7,7 +7,7 @@ import { Chart } from "react-google-charts";
 const Analytics = forwardRef((props, ref) => {
     const cookies = new Cookies();
 
-    const [dailySales, setDailySales] = useState([]);
+    let [dailySales, setDailySales] = useState([]);
     let [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     let [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -17,7 +17,7 @@ const Analytics = forwardRef((props, ref) => {
 
     function makeDailySalesData() {
         let data = [
-            ["Day", "Sales"],
+            ["Day", "Sales", "Sales Profit", "Loss"],
         ];
         let firstDay = 1;
         //selectedMonth = 1;
@@ -29,49 +29,34 @@ const Analytics = forwardRef((props, ref) => {
         for (let day = 1; day <= lastDay; day++) {
 
             let sales = 0.00;
+            let profit = 0.00;
+            let loss = 0.00;
             for (const sale of allOrders) {
                 // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
                 // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
                 if ((new Date(sale.created_at).getMonth() + 1) == selectedMonth && new Date(sale.created_at).getFullYear() == selectedYear && new Date(sale.created_at).getDate() == day) {
                     sales += parseFloat(sale.net_total);
+                    profit += parseFloat(sale.net_profit);
+                    loss += parseFloat(sale.loss);
                 }
             }
 
-            data.push([day, parseFloat(sales.toFixed(2))]);
-            sales = 0.00;
+            data.push([
+                day,
+                parseFloat(sales.toFixed(2)),
+                parseFloat(profit.toFixed(2)),
+                parseFloat(loss.toFixed(2))
+            ]);
 
         }
         console.log(data);
+        dailySales = data;
+        setDailySales(data);
+        //setDailySales(data);
     }
 
     const [data, setData] = useState([
-        ["Day", "Sales"],
-        [1, 10],
-        [2, 23],
-        [3, 17],
-        [4, 18],
-        [5, 9],
-        [6, 11],
-        [7, 27],
-        [8, 27],
-        [9, 27],
-        [10, 27],
-        [11, 27],
-        [12, 27],
-        [13, 27],
-        [14, 27],
-        [15, 27],
-        [16, 27],
-        [17, 27],
-        [18, 27],
-        [19, 27],
-        [20, 27],
-        [21, 27],
-        [22, 27],
-        [23, 27],
-        [24, 27],
-        [25, 27],
-        [26, 27],
+        ["Day", "Sales", "Sales Profit", "Loss"],
     ]);
 
     const [options, setOptions] = useState({
@@ -82,11 +67,11 @@ const Analytics = forwardRef((props, ref) => {
             title: "Day",
         },
         vAxis: {
-            title: "Amount",
+            title: "Amount(SAR)",
         },
         series: {
-            0: { curveType: "function", axis: 'Temps' },
-            1: { curveType: "function", axis: 'Daylight' },
+            // 0: { curveType: "function", axis: 'Temps' },
+            // 1: { curveType: "function", axis: 'Daylight' },
         },
     });
 
@@ -117,7 +102,7 @@ const Analytics = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price,customer_id,customer.id,customer.vat_no";
+            "select=id,code,date,total,net_total,net_profit,loss,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price,customer_id,customer.id,customer.vat_no";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -218,14 +203,70 @@ const Analytics = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
+                <h2>Daily Sales</h2>
                 <div className="row">
-                    Analytics
+
+                    <div className="col-md-2">
+                        <label className="form-label">Year</label>
+
+                        <div className="input-group mb-3">
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => {
+                                    if (!e.target.value) {
+                                        return;
+                                    }
+                                    selectedYear = parseInt(e.target.value);
+                                    setSelectedYear(parseInt(e.target.value));
+                                    makeDailySalesData();
+                                }}
+                                className="form-control"
+                            >
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="col-md-2">
+                        <label className="form-label">Month</label>
+
+                        <div className="input-group mb-3">
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => {
+                                    if (!e.target.value) {
+                                        return;
+                                    }
+                                    selectedMonth = parseInt(e.target.value);
+                                    setSelectedMonth(parseInt(e.target.value));
+                                    makeDailySalesData();
+                                }}
+                                className="form-control"
+                            >
+                                <option value="1">JAN</option>
+                                <option value="2">FEB</option>
+                                <option value="3">MAR</option>
+                                <option value="4">APR</option>
+                                <option value="5">MAY</option>
+                                <option value="6">JUN</option>
+                                <option value="7">JULY</option>
+                                <option value="8">AUG</option>
+                                <option value="9">SEP</option>
+                                <option value="10">OCT</option>
+                                <option value="11">NOV</option>
+                                <option value="12">DEC</option>
+
+                            </select>
+                        </div>
+                    </div>
 
                     <Chart
                         chartType="LineChart"
                         width="100%"
                         height="400px"
-                        data={data}
+                        data={dailySales}
                         options={options}
                     />
                 </div>
