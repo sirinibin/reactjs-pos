@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef } from "react";
 import Cookies from "universal-cookie";
-import { Chart } from "react-google-charts";
+import HourlySales from "./hourlySales";
 import DailySales from "./dailySales";
 import MonthlySales from "./monthlySales";
 import YearlySales from "./yearlySales";
@@ -119,6 +119,7 @@ const Analytics = forwardRef((props, ref) => {
         //prepareExcelData();
         fettingAllRecordsInProgress = false;
         setFettingAllRecordsInProgress(false);
+        initHourlySalesGraph();
         initDailySalesGraph();
         initMonthlySalesGraph();
         initYearlySalesGraph();
@@ -132,6 +133,12 @@ const Analytics = forwardRef((props, ref) => {
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+
+    const HourlySalesRef = useRef();
+    function initHourlySalesGraph() {
+        HourlySalesRef.current.init();
+    }
 
     const DailySalesRef = useRef();
     function initDailySalesGraph() {
@@ -148,8 +155,11 @@ const Analytics = forwardRef((props, ref) => {
         YearlySalesRef.current.init();
     }
 
+
     return (
         <>
+            <HourlySales ref={HourlySalesRef} allOrders={allOrders} />
+            <hr />
             <DailySales ref={DailySalesRef} allOrders={allOrders} />
             <hr />
             <MonthlySales ref={MonthlySalesRef} allOrders={allOrders} />

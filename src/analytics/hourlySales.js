@@ -4,12 +4,13 @@ import { Chart } from "react-google-charts";
 
 
 
-const DailySales = forwardRef((props, ref) => {
+const HourlySales = forwardRef((props, ref) => {
     const cookies = new Cookies();
     useImperativeHandle(ref, () => ({
         init() {
+            makeDateOptions();
             if (props.allOrders.length > 0) {
-                makeDailySalesData();
+                makeHourlySalesData();
             }
         }
     }));
@@ -75,29 +76,60 @@ const DailySales = forwardRef((props, ref) => {
         },
     ]);
 
+    let [dateOptions, setDateOptions] = useState([]);
 
 
-    let [dailySales, setDailySales] = useState([]);
-    let [dailySalesSelectedMonth, setDailySalesSelectedMonth] = useState(new Date().getMonth() + 1);
-    let [dailySalesSelectedYear, setDailySalesSelectedYear] = useState(new Date().getFullYear());
+
+    let [hourlySales, setHourlySales] = useState([]);
+    let [hourlySalesSelectedDate, setHourlySalesSelectedDate] = useState(new Date().getDate());
+    let [hourlySalesSelectedMonth, setHourlySalesSelectedMonth] = useState(new Date().getMonth() + 1);
+    let [hourlySalesSelectedYear, setHourlySalesSelectedYear] = useState(new Date().getFullYear());
 
 
     function daysInMonth(month, year) {
         return new Date(year, month, 0).getDate();
     }
 
-    function makeDailySalesData() {
+    function makeDateOptions() {
+        let days = daysInMonth(hourlySalesSelectedMonth, hourlySalesSelectedYear);
+        let options = [];
+        for (let i = 1; i <= days; i++) {
+            options.push({
+                label: i,
+                value: i,
+            });
+        }
+
+        dateOptions = options;
+        setDateOptions(options);
+    }
+
+    function makeHourlySalesData() {
         let data = [
-            ["Date", "Sales", "Sales Profit", "Loss"],
+            ["Time", "Sales", "Sales Profit", "Loss"],
         ];
-        let firstDay = 1;
+        let firstHour = 1;
         //selectedMonth = 1;
         //setSelectedMonth(1);
-        console.log("selectedMonth:", dailySalesSelectedMonth);
-        console.log("selectedYear:", dailySalesSelectedYear);
-        let lastDay = daysInMonth(dailySalesSelectedMonth, dailySalesSelectedYear);
-        console.log("lastDay:", lastDay);
-        for (let day = 1; day <= lastDay; day++) {
+        console.log("selectedDate:", hourlySalesSelectedDate);
+        console.log("selectedMonth:", hourlySalesSelectedMonth);
+        console.log("selectedYear:", hourlySalesSelectedYear);
+        let lastHour = 24;
+        let am = true;
+        let timeLabel = "";
+
+        for (let hour = 0; hour < lastHour; hour++) {
+            if (hour >= 12) {
+                am = false;
+                if (hour == 12) {
+                    timeLabel = hour.toString() + "pm";
+                } else {
+                    timeLabel = (hour - 12).toString() + "pm";
+                }
+
+            } else {
+                timeLabel = hour.toString() + "am";
+            }
 
             let sales = 0.00;
             let profit = 0.00;
@@ -105,7 +137,11 @@ const DailySales = forwardRef((props, ref) => {
             for (const sale of props.allOrders) {
                 // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
                 // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
-                if ((new Date(sale.created_at).getMonth() + 1) == dailySalesSelectedMonth && new Date(sale.created_at).getFullYear() == dailySalesSelectedYear && new Date(sale.created_at).getDate() == day) {
+                if ((new Date(sale.created_at).getMonth() + 1) == hourlySalesSelectedMonth
+                    && new Date(sale.created_at).getFullYear() == hourlySalesSelectedYear
+                    && new Date(sale.created_at).getDate() == hourlySalesSelectedDate
+                    && new Date(sale.created_at).getHours() == hour
+                ) {
                     sales += parseFloat(sale.net_total);
                     profit += parseFloat(sale.net_profit);
                     loss += parseFloat(sale.loss);
@@ -113,7 +149,7 @@ const DailySales = forwardRef((props, ref) => {
             }
 
             data.push([
-                day,
+                timeLabel,
                 parseFloat(sales.toFixed(2)),
                 parseFloat(profit.toFixed(2)),
                 parseFloat(loss.toFixed(2))
@@ -121,12 +157,12 @@ const DailySales = forwardRef((props, ref) => {
 
         }
         console.log(data);
-        dailySales = data;
-        setDailySales(data);
+        hourlySales = data;
+        setHourlySales(data);
     }
 
     const [data, setData] = useState([
-        ["Date", "Sales", "Sales Profit", "Loss"],
+        ["Time", "Sales", "Sales Profit", "Loss"],
     ]);
 
     const [options, setOptions] = useState({
@@ -134,7 +170,7 @@ const DailySales = forwardRef((props, ref) => {
         subtitle: '(SAR)',
         legend: { position: 'bottom' },
         hAxis: {
-            title: "Date",
+            title: "Time(Hrs)",
         },
         vAxis: {
             title: "Amount(SAR)",
@@ -158,7 +194,7 @@ const DailySales = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Daily Sales</h2>
+                <h2>Hourly Sales</h2>
                 <div className="row">
 
                     <div className="col-md-2">
@@ -166,14 +202,14 @@ const DailySales = forwardRef((props, ref) => {
 
                         <div className="input-group mb-3">
                             <select
-                                value={dailySalesSelectedYear}
+                                value={hourlySalesSelectedYear}
                                 onChange={(e) => {
                                     if (!e.target.value) {
                                         return;
                                     }
-                                    dailySalesSelectedYear = parseInt(e.target.value);
-                                    setDailySalesSelectedYear(parseInt(e.target.value));
-                                    makeDailySalesData();
+                                    hourlySalesSelectedYear = parseInt(e.target.value);
+                                    setHourlySalesSelectedYear(parseInt(e.target.value));
+                                    makeHourlySalesData();
                                 }}
                                 className="form-control"
                             >
@@ -189,14 +225,15 @@ const DailySales = forwardRef((props, ref) => {
 
                         <div className="input-group mb-3">
                             <select
-                                value={dailySalesSelectedMonth}
+                                value={hourlySalesSelectedMonth}
                                 onChange={(e) => {
                                     if (!e.target.value) {
                                         return;
                                     }
-                                    dailySalesSelectedMonth = parseInt(e.target.value);
-                                    setDailySalesSelectedMonth(parseInt(e.target.value));
-                                    makeDailySalesData();
+                                    makeDateOptions();
+                                    hourlySalesSelectedMonth = parseInt(e.target.value);
+                                    setHourlySalesSelectedMonth(parseInt(e.target.value));
+                                    makeHourlySalesData();
                                 }}
                                 className="form-control"
                             >
@@ -208,11 +245,35 @@ const DailySales = forwardRef((props, ref) => {
                         </div>
                     </div>
 
-                    {dailySales && dailySales.length > 0 ? <Chart
+                    <div className="col-md-2">
+                        <label className="form-label">Date</label>
+
+                        <div className="input-group mb-3">
+                            <select
+                                value={hourlySalesSelectedDate}
+                                onChange={(e) => {
+                                    if (!e.target.value) {
+                                        return;
+                                    }
+                                    hourlySalesSelectedDate = parseInt(e.target.value);
+                                    setHourlySalesSelectedDate(parseInt(e.target.value));
+                                    makeHourlySalesData();
+                                }}
+                                className="form-control"
+                            >
+                                {dateOptions.map((option) => (
+                                    <option value={option.value}>{option.label}</option>
+                                ))}
+
+                            </select>
+                        </div>
+                    </div>
+
+                    {hourlySales && hourlySales.length > 0 ? <Chart
                         chartType="LineChart"
                         width="100%"
                         height="400px"
-                        data={dailySales}
+                        data={hourlySales}
                         options={options}
                     /> : ""}
                 </div>
@@ -221,4 +282,4 @@ const DailySales = forwardRef((props, ref) => {
     );
 });
 
-export default DailySales;
+export default HourlySales;
