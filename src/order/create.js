@@ -2029,6 +2029,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+                        {/*
                         <div className="col-md-6">
                             <label className="form-label">ID</label>
 
@@ -2061,6 +2062,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+                                */}
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>

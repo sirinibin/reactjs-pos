@@ -137,7 +137,10 @@ const Analytics = forwardRef((props, ref) => {
 
     const HourlySalesRef = useRef();
     function initHourlySalesGraph() {
-        HourlySalesRef.current.init();
+        if (HourlySalesRef.current) {
+            HourlySalesRef.current.init();
+        }
+
     }
 
     const DailySalesRef = useRef();
