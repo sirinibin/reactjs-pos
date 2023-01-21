@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef } from "react";
 import Cookies from "universal-cookie";
+import AllSales from "./sales";
 import HourlySales from "./hourlySales";
 import DailySales from "./dailySales";
 import MonthlySales from "./monthlySales";
@@ -119,10 +120,12 @@ const Analytics = forwardRef((props, ref) => {
         //prepareExcelData();
         fettingAllRecordsInProgress = false;
         setFettingAllRecordsInProgress(false);
+        initAllSalesGraph();
         initHourlySalesGraph();
         initDailySalesGraph();
         initMonthlySalesGraph();
         initYearlySalesGraph();
+
     }
 
 
@@ -143,6 +146,11 @@ const Analytics = forwardRef((props, ref) => {
 
     }
 
+    const AllSalesRef = useRef();
+    function initAllSalesGraph() {
+        AllSalesRef.current.init();
+    }
+
     const DailySalesRef = useRef();
     function initDailySalesGraph() {
         DailySalesRef.current.init();
@@ -161,6 +169,8 @@ const Analytics = forwardRef((props, ref) => {
 
     return (
         <>
+            <AllSales ref={AllSalesRef} allOrders={allOrders} />
+            <hr />
             <HourlySales ref={HourlySalesRef} allOrders={allOrders} />
             <hr />
             <DailySales ref={DailySalesRef} allOrders={allOrders} />
