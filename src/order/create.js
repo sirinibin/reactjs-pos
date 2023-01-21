@@ -2029,6 +2029,39 @@ const OrderCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+                        <div className="col-md-6">
+                            <label className="form-label">ID</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.code ? formData.code : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["code"] = "";
+                                        setErrors({ ...errors });
+                                        formData.code = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="code"
+                                    placeholder="Code"
+                                />
+                                {errors.code && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.code}
+                                    </div>
+                                )}
+                                {formData.code && !errors.code && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
