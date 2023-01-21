@@ -139,7 +139,7 @@ const Analytics = forwardRef((props, ref) => {
 
 
     const HourlySalesRef = useRef();
-    function initHourlySalesGraph() {
+    async function initHourlySalesGraph() {
         if (HourlySalesRef.current) {
             HourlySalesRef.current.init();
         }
@@ -147,23 +147,32 @@ const Analytics = forwardRef((props, ref) => {
     }
 
     const AllSalesRef = useRef();
-    function initAllSalesGraph() {
-        AllSalesRef.current.init();
+    async function initAllSalesGraph() {
+        if (AllSalesRef.current) {
+            AllSalesRef.current.init();
+        }
     }
 
     const DailySalesRef = useRef();
-    function initDailySalesGraph() {
-        DailySalesRef.current.init();
+    async function initDailySalesGraph() {
+        if (DailySalesRef.current) {
+            DailySalesRef.current.init();
+        }
+
     }
 
     const MonthlySalesRef = useRef();
-    function initMonthlySalesGraph() {
-        MonthlySalesRef.current.init();
+    async function initMonthlySalesGraph() {
+        if (MonthlySalesRef.current) {
+            MonthlySalesRef.current.init();
+        }
     }
 
     const YearlySalesRef = useRef();
-    function initYearlySalesGraph() {
-        YearlySalesRef.current.init();
+    async function initYearlySalesGraph() {
+        if (YearlySalesRef.current) {
+            YearlySalesRef.current.init();
+        }
     }
 
 
