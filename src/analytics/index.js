@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef } from "react";
 import Cookies from "universal-cookie";
-import AllSales from "./sales";
+import AllSales from "./allSales";
 import HourlySales from "./hourlySales";
 import DailySales from "./dailySales";
 import MonthlySales from "./monthlySales";
