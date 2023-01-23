@@ -139,7 +139,7 @@ const AllSales = forwardRef((props, ref) => {
         subtitle: '(SAR)',
         legend: { position: 'bottom' },
         hAxis: {
-            title: "Time(Hrs)",
+            title: "Time",
         },
         vAxis: {
             title: "Amount(SAR)",
