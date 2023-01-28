@@ -199,6 +199,9 @@ const AllSales = forwardRef((props, ref) => {
                         data={allSales}
                         options={options}
                     /> : ""}
+                </div>
+                <br /><br />
+                <div className="row">
                     {calendarAllSales && calendarAllSales.length > 0 ? <Chart
                         chartType="Calendar"
                         width="100%"
@@ -206,6 +209,8 @@ const AllSales = forwardRef((props, ref) => {
                         data={calendarAllSales}
                         options={calendarOptions}
                     /> : ""}
+                </div>
+                <div className="row">
                     {calendarAllSalesProfit && calendarAllSalesProfit.length > 0 ? <Chart
                         chartType="Calendar"
                         width="100%"
