@@ -8,79 +8,17 @@ const AllSales = forwardRef((props, ref) => {
     const cookies = new Cookies();
     useImperativeHandle(ref, () => ({
         init() {
-            makeDateOptions();
             if (props.allOrders.length > 0) {
                 makeAllSalesData();
             }
         }
     }));
 
-    const [yearOptions, setYearOptions] = useState([
-        {
-            label: "2023",
-            value: 2023,
-        },
-        {
-            label: "2022",
-            value: 2022,
-        }
-    ]);
-    const [monthOptions, setMonthOptions] = useState([
-        {
-            label: "JAN",
-            value: 1,
-        },
-        {
-            label: "FEB",
-            value: 2,
-        },
-        {
-            label: "MAR",
-            value: 3,
-        },
-        {
-            label: "APR",
-            value: 4,
-        },
-        {
-            label: "MAY",
-            value: 5,
-        },
-        {
-            label: "JUN",
-            value: 6,
-        },
-        {
-            label: "JULY",
-            value: 7,
-        },
-        {
-            label: "AUG",
-            value: 8,
-        },
-        {
-            label: "SEP",
-            value: 9,
-        },
-        {
-            label: "OCT",
-            value: 10,
-        },
-        {
-            label: "NOV",
-            value: 11,
-        },
-        {
-            label: "DEC",
-            value: 12,
-        },
-    ]);
-
-    let [dateOptions, setDateOptions] = useState([]);
 
 
 
     let [allSales, setAllSales] = useState([]);
+    let [calendarAllSales, setCalendarAllSales] = useState([]);
     let [allSalesSelectedDate, setAllSalesSelectedDate] = useState(new Date().getDate());
     let [allSalesSelectedMonth, setAllSalesSelectedMonth] = useState(new Date().getMonth() + 1);
     let [allSalesSelectedYear, setAllSalesSelectedYear] = useState(new Date().getFullYear());
@@ -90,23 +28,24 @@ const AllSales = forwardRef((props, ref) => {
         return new Date(year, month, 0).getDate();
     }
 
-    function makeDateOptions() {
-        let days = daysInMonth(allSalesSelectedMonth, allSalesSelectedYear);
-        let options = [];
-        for (let i = 1; i <= days; i++) {
-            options.push({
-                label: i,
-                value: i,
-            });
-        }
 
-        dateOptions = options;
-        setDateOptions(options);
-    }
 
     function makeAllSalesData() {
         let data = [
-            [{ type: "datetime", label: "Time" }, "Sales", "Sales Profit", "Loss"],
+            [
+                { type: "datetime", label: "Time" },
+                { type: "number", label: "Sales" },
+                { type: "number", label: "Sales Profit" },
+                { type: "number", label: "Loss" },
+                // { type: "string", label: "Customer" },
+            ],
+        ];
+
+        let calendarData = [
+            [
+                { type: "date", id: "Date" },
+                { type: "number", id: "Sales" },
+            ],
         ];
         let firstHour = 1;
         //selectedMonth = 1;
@@ -117,17 +56,44 @@ const AllSales = forwardRef((props, ref) => {
         let lastHour = 24;
         let am = true;
         let timeLabel = "";
+        let dtStrCpy = "";
+
+        let totalSales = [];
 
         for (const sale of props.allOrders) {
             data.push([
                 new Date(sale.created_at),
                 parseFloat(sale.net_total.toFixed(2)),
                 parseFloat(sale.net_profit.toFixed(2)),
-                parseFloat(sale.loss.toFixed(2))
+                parseFloat(sale.loss.toFixed(2)),
+                // sale.customer_name,
+            ]);
+
+            let dt = new Date(sale.created_at);
+            let dtStr = dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate();
+            if (!totalSales[dtStr]) {
+                totalSales[dtStr] = 0;
+            }
+            totalSales[dtStr] += parseFloat(sale.net_total);
+        }
+
+
+        for (let saleDate in totalSales) {
+            let parts = saleDate.split('-');
+            calendarData.push([
+                new Date(parts[0], parts[1], parts[2]),
+                parseFloat(totalSales[saleDate].toFixed(2)),
             ]);
         }
+
+        console.log("calendarData:", calendarData);
+
+
         allSales = data;
         setAllSales(data);
+
+        calendarAllSales = calendarData
+        setCalendarAllSales(calendarData);
     }
 
     const [data, setData] = useState([
@@ -136,6 +102,8 @@ const AllSales = forwardRef((props, ref) => {
 
     const [options, setOptions] = useState({
         title: 'Sales',
+        displayExactValues: true,
+        // displayAnnotationsFilter: true,
         subtitle: '(SAR)',
         legend: { position: 'bottom' },
         hAxis: {
@@ -150,6 +118,23 @@ const AllSales = forwardRef((props, ref) => {
         },
     });
 
+    const [calendarOptions, setCalendarOptions] = useState({
+        title: '',
+        /*
+        subtitle: '(SAR)',
+        legend: { position: 'bottom' },
+        hAxis: {
+            title: "Date",
+        },
+        vAxis: {
+            title: "Amount(SAR)",
+        },
+        series: {
+            // 0: { curveType: "function", axis: 'Temps' },
+            // 1: { curveType: "function", axis: 'Daylight' },
+        },
+        */
+    });
 
 
 
@@ -171,6 +156,13 @@ const AllSales = forwardRef((props, ref) => {
                         height="400px"
                         data={allSales}
                         options={options}
+                    /> : ""}
+                    {calendarAllSales && calendarAllSales.length > 0 ? <Chart
+                        chartType="Calendar"
+                        width="100%"
+                        height="400px"
+                        data={calendarAllSales}
+                        options={calendarOptions}
                     /> : ""}
                 </div>
             </div>

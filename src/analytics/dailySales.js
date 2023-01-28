@@ -77,6 +77,7 @@ const DailySales = forwardRef((props, ref) => {
 
 
 
+    let [calendarDailySales, setCalendarDailySales] = useState([]);
     let [dailySales, setDailySales] = useState([]);
     let [dailySalesSelectedMonth, setDailySalesSelectedMonth] = useState(new Date().getMonth() + 1);
     let [dailySalesSelectedYear, setDailySalesSelectedYear] = useState(new Date().getFullYear());
@@ -89,6 +90,12 @@ const DailySales = forwardRef((props, ref) => {
     function makeDailySalesData() {
         let data = [
             ["Date", "Sales", "Sales Profit", "Loss"],
+        ];
+        let calendarData = [
+            [
+                { type: "date", id: "Date" },
+                { type: "number", id: "Sales" },
+            ],
         ];
         let firstDay = 1;
         //selectedMonth = 1;
@@ -119,13 +126,31 @@ const DailySales = forwardRef((props, ref) => {
                 parseFloat(loss.toFixed(2))
             ]);
 
+            /*
+            calendarData.push([
+                new Date(dailySalesSelectedYear, (dailySalesSelectedMonth - 1), day),
+                parseFloat(sales.toFixed(2)),
+            ]);
+            */
+
         }
         dailySales = data;
         setDailySales(data);
+
+        /*
+        calendarDailySales = calendarData;
+        setCalendarDailySales(calendarData);
+        console.log("calendarDailySales:", calendarDailySales);
+        */
     }
 
     const [data, setData] = useState([
         ["Date", "Sales", "Sales Profit", "Loss"],
+    ]);
+
+    const [calendarData, setCalendarData] = useState([
+        { type: "date", id: "Date" },
+        { type: "number", id: "Sales" },
     ]);
 
     const [options, setOptions] = useState({
@@ -142,6 +167,24 @@ const DailySales = forwardRef((props, ref) => {
             // 0: { curveType: "function", axis: 'Temps' },
             // 1: { curveType: "function", axis: 'Daylight' },
         },
+    });
+
+    const [calendarOptions, setCalendarOptions] = useState({
+        title: 'Daily Sales',
+        /*
+        subtitle: '(SAR)',
+        legend: { position: 'bottom' },
+        hAxis: {
+            title: "Date",
+        },
+        vAxis: {
+            title: "Amount(SAR)",
+        },
+        series: {
+            // 0: { curveType: "function", axis: 'Temps' },
+            // 1: { curveType: "function", axis: 'Daylight' },
+        },
+        */
     });
 
 
@@ -214,6 +257,13 @@ const DailySales = forwardRef((props, ref) => {
                         data={dailySales}
                         options={options}
                     /> : ""}
+                    {/*calendarDailySales && calendarDailySales.length > 0 ? <Chart
+                        chartType="Calendar"
+                        width="100%"
+                        height="400px"
+                        data={calendarDailySales}
+                        options={calendarOptions}
+                    /> : ""*/}
                 </div>
             </div>
         </>
