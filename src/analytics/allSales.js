@@ -166,7 +166,7 @@ const AllSales = forwardRef((props, ref) => {
                 <h2>All Sales</h2>
                 <div className="row">
                     {allSales && allSales.length > 0 ? <Chart
-                        chartType="LineChart"
+                        chartType="AnnotationChart"
                         width="100%"
                         height="400px"
                         data={allSales}
