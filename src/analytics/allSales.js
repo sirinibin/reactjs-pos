@@ -19,6 +19,7 @@ const AllSales = forwardRef((props, ref) => {
 
     let [allSales, setAllSales] = useState([]);
     let [calendarAllSales, setCalendarAllSales] = useState([]);
+    let [calendarAllSalesProfit, setCalendarAllSalesProfit] = useState([]);
     let [allSalesSelectedDate, setAllSalesSelectedDate] = useState(new Date().getDate());
     let [allSalesSelectedMonth, setAllSalesSelectedMonth] = useState(new Date().getMonth() + 1);
     let [allSalesSelectedYear, setAllSalesSelectedYear] = useState(new Date().getFullYear());
@@ -47,6 +48,13 @@ const AllSales = forwardRef((props, ref) => {
                 { type: "number", id: "Sales" },
             ],
         ];
+
+        let calendarProfitData = [
+            [
+                { type: "date", id: "Date" },
+                { type: "number", id: "Profit" },
+            ],
+        ];
         let firstHour = 1;
         //selectedMonth = 1;
         //setSelectedMonth(1);
@@ -59,6 +67,7 @@ const AllSales = forwardRef((props, ref) => {
         let dtStrCpy = "";
 
         let totalSales = [];
+        let totalSalesProfit = [];
 
         for (const sale of props.allOrders) {
             data.push([
@@ -74,7 +83,13 @@ const AllSales = forwardRef((props, ref) => {
             if (!totalSales[dtStr]) {
                 totalSales[dtStr] = 0;
             }
+
+            if (!totalSalesProfit[dtStr]) {
+                totalSalesProfit[dtStr] = 0;
+            }
+
             totalSales[dtStr] += parseFloat(sale.net_total);
+            totalSalesProfit[dtStr] += parseFloat(sale.net_profit);
         }
 
 
@@ -84,9 +99,14 @@ const AllSales = forwardRef((props, ref) => {
                 new Date(parts[0], parts[1], parts[2]),
                 parseFloat(totalSales[saleDate].toFixed(2)),
             ]);
+
+            calendarProfitData.push([
+                new Date(parts[0], parts[1], parts[2]),
+                parseFloat(totalSalesProfit[saleDate].toFixed(2)),
+            ]);
         }
 
-        console.log("calendarData:", calendarData);
+        // console.log("calendarData:", calendarData);
 
 
         allSales = data;
@@ -94,6 +114,10 @@ const AllSales = forwardRef((props, ref) => {
 
         calendarAllSales = calendarData
         setCalendarAllSales(calendarData);
+
+        console.log("calendarProfitData:", calendarProfitData);
+        calendarAllSalesProfit = calendarProfitData;
+        setCalendarAllSalesProfit(calendarProfitData);
     }
 
     const [data, setData] = useState([
@@ -119,7 +143,25 @@ const AllSales = forwardRef((props, ref) => {
     });
 
     const [calendarOptions, setCalendarOptions] = useState({
-        title: '',
+        title: 'Sales',
+        /*
+        subtitle: '(SAR)',
+        legend: { position: 'bottom' },
+        hAxis: {
+            title: "Date",
+        },
+        vAxis: {
+            title: "Amount(SAR)",
+        },
+        series: {
+            // 0: { curveType: "function", axis: 'Temps' },
+            // 1: { curveType: "function", axis: 'Daylight' },
+        },
+        */
+    });
+
+    const [calendarProfitOptions, setCalendarProfitOptions] = useState({
+        title: 'Profit',
         /*
         subtitle: '(SAR)',
         legend: { position: 'bottom' },
@@ -163,6 +205,13 @@ const AllSales = forwardRef((props, ref) => {
                         height="400px"
                         data={calendarAllSales}
                         options={calendarOptions}
+                    /> : ""}
+                    {calendarAllSalesProfit && calendarAllSalesProfit.length > 0 ? <Chart
+                        chartType="Calendar"
+                        width="100%"
+                        height="400px"
+                        data={calendarAllSalesProfit}
+                        options={calendarProfitOptions}
                     /> : ""}
                 </div>
             </div>
