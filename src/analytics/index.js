@@ -13,6 +13,10 @@ const Analytics = forwardRef((props, ref) => {
     let [allOrders, setAllOrders] = useState([]);
     let [allExpenses, setAllExpenses] = useState([]);
     let [allPurchases, setAllPurchases] = useState([]);
+    let [allSalesReturns, setAllSalesReturns] = useState([]);
+    let [allPurchaseReturns, setAllPurchaseReturns] = useState([]);
+
+
     const [searchParams, setSearchParams] = useState({});
     let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
     let [sortField, setSortField] = useState("created_at");
@@ -121,18 +125,32 @@ const Analytics = forwardRef((props, ref) => {
         fields = "select=id,code,date,net_total,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit";
         let purchases = await getAllRecords("purchase", fields);
 
+        fields = "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss,order_code";
+        let salesReturns = await getAllRecords("sales-return", fields);
+
+        fields = "select=id,code,purchase_code,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at";
+        let purchaseReturns = await getAllRecords("purchase-return", fields);
+
 
         allOrders = orders;
         setAllOrders(orders);
-        console.log("allOrders:", allOrders);
+        // console.log("allOrders:", allOrders);
 
         allExpenses = expenses;
         setAllExpenses(expenses);
-        console.log("allExpenses:", allExpenses);
+        // console.log("allExpenses:", allExpenses);
 
         allPurchases = purchases;
         setAllPurchases(purchases);
-        console.log("allPurchases:", allPurchases);
+        // console.log("allPurchases:", allPurchases);
+
+        allSalesReturns = salesReturns;
+        setAllSalesReturns(salesReturns);
+        console.log("allSalesReturns:", allSalesReturns);
+
+        allPurchaseReturns = purchaseReturns;
+        setAllPurchaseReturns(purchaseReturns);
+        console.log("allPurchaseReturns:", allPurchaseReturns);
 
         initAllSalesGraph();
         initHourlySalesGraph();
@@ -184,15 +202,45 @@ const Analytics = forwardRef((props, ref) => {
 
     return (
         <>
-            <AllSales ref={AllSalesRef} allOrders={allOrders} allExpenses={allExpenses} allPurchases={allPurchases} />
+            <AllSales ref={AllSalesRef}
+                allOrders={allOrders}
+                allExpenses={allExpenses}
+                allPurchases={allPurchases}
+                allSalesReturns={allSalesReturns}
+                allPurchaseReturns={allPurchaseReturns}
+            />
             <hr />
-            <HourlySales ref={HourlySalesRef} allOrders={allOrders} allExpenses={allExpenses} allPurchases={allPurchases} />
+            <HourlySales ref={HourlySalesRef}
+                allOrders={allOrders}
+                allExpenses={allExpenses}
+                allPurchases={allPurchases}
+                allSalesReturns={allSalesReturns}
+                allPurchaseReturns={allPurchaseReturns}
+            />
             <hr />
-            <DailySales ref={DailySalesRef} allOrders={allOrders} allExpenses={allExpenses} allPurchases={allPurchases} />
+            <DailySales ref={DailySalesRef}
+                allOrders={allOrders}
+                allExpenses={allExpenses}
+                allPurchases={allPurchases}
+                allSalesReturns={allSalesReturns}
+                allPurchaseReturns={allPurchaseReturns}
+            />
             <hr />
-            <MonthlySales ref={MonthlySalesRef} allOrders={allOrders} allExpenses={allExpenses} allPurchases={allPurchases} />
+            <MonthlySales ref={MonthlySalesRef}
+                allOrders={allOrders}
+                allExpenses={allExpenses}
+                allPurchases={allPurchases}
+                allSalesReturns={allSalesReturns}
+                allPurchaseReturns={allPurchaseReturns}
+            />
             <hr />
-            <YearlySales ref={YearlySalesRef} allOrders={allOrders} allExpenses={allExpenses} allPurchases={allPurchases} />
+            <YearlySales ref={YearlySalesRef}
+                allOrders={allOrders}
+                allExpenses={allExpenses}
+                allPurchases={allPurchases}
+                allSalesReturns={allSalesReturns}
+                allPurchaseReturns={allPurchaseReturns}
+            />
         </>
     );
 });

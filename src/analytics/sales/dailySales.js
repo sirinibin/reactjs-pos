@@ -95,7 +95,7 @@ const DailySales = forwardRef((props, ref) => {
 
     function makeDailySalesData() {
         let data = [
-            ["Date", "Sales", "Sales Profit", "Expense", "Purchase", "Loss"],
+            ["Date", "Sales", "Sales Profit", "Expense", "Purchase", "Sales Return", "Purchase Return", "Loss"],
         ];
 
         console.log("selectedMonth:", dailySalesSelectedMonth);
@@ -135,12 +135,32 @@ const DailySales = forwardRef((props, ref) => {
                 }
             }
 
+            let totalSalesReturn = 0.00;
+            for (const salesReturn of props.allSalesReturns) {
+                if ((new Date(salesReturn.date).getMonth() + 1) == dailySalesSelectedMonth &&
+                    new Date(salesReturn.date).getFullYear() == dailySalesSelectedYear &&
+                    new Date(salesReturn.date).getDate() == day) {
+                    totalSalesReturn += parseFloat(salesReturn.net_total);
+                }
+            }
+
+            let totalPurchaseReturn = 0.00;
+            for (const purchaseReturn of props.allPurchaseReturns) {
+                if ((new Date(purchaseReturn.date).getMonth() + 1) == dailySalesSelectedMonth &&
+                    new Date(purchaseReturn.date).getFullYear() == dailySalesSelectedYear &&
+                    new Date(purchaseReturn.date).getDate() == day) {
+                    totalPurchaseReturn += parseFloat(purchaseReturn.net_total);
+                }
+            }
+
             data.push([
                 day,
                 parseFloat(sales.toFixed(2)),
                 parseFloat(profit.toFixed(2)),
                 parseFloat(totalExpense.toFixed(2)),
                 parseFloat(totalPurchase.toFixed(2)),
+                parseFloat(totalSalesReturn.toFixed(2)),
+                parseFloat(totalPurchaseReturn.toFixed(2)),
                 parseFloat(loss.toFixed(2))
             ]);
         }
@@ -148,19 +168,11 @@ const DailySales = forwardRef((props, ref) => {
         setDailySales(data);
     }
 
-    const [data, setData] = useState([
-        ["Date", "Sales", "Sales Profit", "Loss"],
-    ]);
-
-    const [calendarData, setCalendarData] = useState([
-        { type: "date", id: "Date" },
-        { type: "number", id: "Sales" },
-    ]);
 
     const [options, setOptions] = useState({
-        title: 'Daily Sales vs Sales Profit vs Expense vs Purchase',
+        title: 'Daily Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return',
         subtitle: '(SAR)',
-        legend: { position: 'bottom' },
+        legend: { position: 'right' },
         hAxis: {
             title: "Date",
         },
@@ -183,7 +195,7 @@ const DailySales = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Daily Sales vs Sales Profit vs Expense vs Purchase</h2>
+                <h2>Daily Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return</h2>
                 <div className="row">
 
                     <div className="col-md-2">

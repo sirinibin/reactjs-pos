@@ -100,7 +100,16 @@ const MonthlySales = forwardRef((props, ref) => {
 
     function makeMonthlySalesData() {
         let data = [
-            ["Month", "Sales", "Sales Profit", "Expense", "Purchase", "Loss"],
+            [
+                "Month",
+                "Sales",
+                "Sales Profit",
+                "Expense",
+                "Purchase",
+                "Sales Return",
+                "Purchase Return",
+                "Loss",
+            ],
         ];
         console.log("selectedYear:", monthlySalesSelectedYear);
         let lastMonth = 12;
@@ -138,12 +147,30 @@ const MonthlySales = forwardRef((props, ref) => {
                 }
             }
 
+            let totalSalesReturn = 0.00;
+            for (const salesReturn of props.allSalesReturns) {
+                if ((new Date(salesReturn.date).getMonth() + 1) == month &&
+                    new Date(salesReturn.date).getFullYear() == monthlySalesSelectedYear) {
+                    totalSalesReturn += parseFloat(salesReturn.net_total);
+                }
+            }
+
+            let totalPurchaseReturn = 0.00;
+            for (const purchaseReturn of props.allPurchaseReturns) {
+                if ((new Date(purchaseReturn.date).getMonth() + 1) == month &&
+                    new Date(purchaseReturn.date).getFullYear() == monthlySalesSelectedYear) {
+                    totalPurchaseReturn += parseFloat(purchaseReturn.net_total);
+                }
+            }
+
             data.push([
                 getMonthNameByNumber(month),
                 parseFloat(sales.toFixed(2)),
                 parseFloat(profit.toFixed(2)),
                 parseFloat(totalExpense.toFixed(2)),
                 parseFloat(totalPurchase.toFixed(2)),
+                parseFloat(totalSalesReturn.toFixed(2)),
+                parseFloat(totalPurchaseReturn.toFixed(2)),
                 parseFloat(loss.toFixed(2))
             ]);
 
@@ -153,14 +180,11 @@ const MonthlySales = forwardRef((props, ref) => {
         //setMonthlySales(data);
     }
 
-    const [data, setData] = useState([
-        ["Month", "Sales", "Sales Profit", "Loss"],
-    ]);
 
     const [options, setOptions] = useState({
         title: 'Sales',
         subtitle: '(SAR)',
-        legend: { position: 'bottom' },
+        legend: { position: 'right' },
         hAxis: {
             title: "Month",
         },
@@ -186,7 +210,7 @@ const MonthlySales = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Monthly Sales vs Sales Profit vs Expense vs Purchase</h2>
+                <h2>Monthly Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return</h2>
                 <div className="row">
 
                     <div className="col-md-2">

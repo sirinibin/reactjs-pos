@@ -35,7 +35,7 @@ const YearlySales = forwardRef((props, ref) => {
 
     function makeYearlySalesData() {
         let data = [
-            ["Year", "Sales", "Sales Profit", "Expense", "Purchase", "Loss"],
+            ["Year", "Sales", "Sales Profit", "Expense", "Purchase", "Sales Return", "Purchase Return", "Loss"],
         ];
         let firstYear = 2020;
         let lastYear = new Date().getFullYear();
@@ -67,12 +67,28 @@ const YearlySales = forwardRef((props, ref) => {
                 }
             }
 
+            let totalSalesReturn = 0.00;
+            for (const salesReturn of props.allSalesReturns) {
+                if (parseInt(new Date(salesReturn.date).getFullYear()) === year) {
+                    totalSalesReturn += parseFloat(salesReturn.net_total);
+                }
+            }
+
+            let totalPurchaseReturn = 0.00;
+            for (const purchaseReturn of props.allPurchaseReturns) {
+                if (parseInt(new Date(purchaseReturn.date).getFullYear()) === year) {
+                    totalPurchaseReturn += parseFloat(purchaseReturn.net_total);
+                }
+            }
+
             data.push([
                 year.toString(),
                 parseFloat(sales.toFixed(2)),
                 parseFloat(profit.toFixed(2)),
                 parseFloat(totalExpense.toFixed(2)),
                 parseFloat(totalPurchase.toFixed(2)),
+                parseFloat(totalSalesReturn.toFixed(2)),
+                parseFloat(totalPurchaseReturn.toFixed(2)),
                 parseFloat(loss.toFixed(2))
             ]);
 
@@ -82,14 +98,10 @@ const YearlySales = forwardRef((props, ref) => {
         //setYearlySales(data);
     }
 
-    const [data, setData] = useState([
-        ["Year", "Sales", "Sales Profit", "Loss"],
-    ]);
-
     const [options, setOptions] = useState({
         title: 'Sales',
         subtitle: '(SAR)',
-        legend: { position: 'bottom' },
+        legend: { position: 'right' },
         hAxis: {
             title: "Year",
         },
@@ -115,7 +127,7 @@ const YearlySales = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Yearly Sales vs Sales Profit vs Expense vs Purchase</h2>
+                <h2>Yearly Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return</h2>
                 <div className="row">
                     {yearlySales && yearlySales.length > 0 ? <Chart
                         chartType="LineChart"

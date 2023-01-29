@@ -114,14 +114,9 @@ const HourlySales = forwardRef((props, ref) => {
 
     function makeHourlySalesData() {
         let data = [
-            ["Time", "Sales", "Sales Profit", "Expense", "Purchase", "Loss"],
+            ["Time", "Sales", "Sales Profit", "Expense", "Purchase", "Sales Return", "Purchase Return", "Loss"],
         ];
-        let firstHour = 1;
-        //selectedMonth = 1;
-        //setSelectedMonth(1);
-        console.log("selectedDate:", hourlySalesSelectedDate);
-        console.log("selectedMonth:", hourlySalesSelectedMonth);
-        console.log("selectedYear:", hourlySalesSelectedYear);
+
         let lastHour = 24;
         let am = true;
         let timeLabel = "";
@@ -180,6 +175,30 @@ const HourlySales = forwardRef((props, ref) => {
                 }
             }
 
+            let totalSalesReturn = 0.00;
+            for (const salesReturn of props.allSalesReturns) {
+                if ((new Date(salesReturn.date).getMonth() + 1) == hourlySalesSelectedMonth
+                    && new Date(salesReturn.date).getFullYear() == hourlySalesSelectedYear
+                    && new Date(salesReturn.date).getDate() == hourlySalesSelectedDate
+                    && new Date(salesReturn.date).getHours() == hour
+                ) {
+
+                    totalSalesReturn += parseFloat(salesReturn.net_total);
+                }
+            }
+
+            let totalPurchaseReturn = 0.00;
+            for (const purchaseReturn of props.allPurchaseReturns) {
+                if ((new Date(purchaseReturn.date).getMonth() + 1) == hourlySalesSelectedMonth
+                    && new Date(purchaseReturn.date).getFullYear() == hourlySalesSelectedYear
+                    && new Date(purchaseReturn.date).getDate() == hourlySalesSelectedDate
+                    && new Date(purchaseReturn.date).getHours() == hour
+                ) {
+
+                    totalPurchaseReturn += parseFloat(purchaseReturn.net_total);
+                }
+            }
+
 
             data.push([
                 timeLabel,
@@ -187,22 +206,20 @@ const HourlySales = forwardRef((props, ref) => {
                 parseFloat(profit.toFixed(2)),
                 parseFloat(totalExpense.toFixed(2)),
                 parseFloat(totalPurchase.toFixed(2)),
+                parseFloat(totalSalesReturn.toFixed(2)),
+                parseFloat(totalPurchaseReturn.toFixed(2)),
                 parseFloat(loss.toFixed(2))
             ]);
-
         }
+
         hourlySales = data;
         setHourlySales(data);
     }
 
-    const [data, setData] = useState([
-        ["Time", "Sales", "Sales Profit", "Loss"],
-    ]);
-
     const [options, setOptions] = useState({
         title: 'Sales',
         subtitle: '(SAR)',
-        legend: { position: 'bottom' },
+        legend: { position: 'right' },
         hAxis: {
             title: "Time(Hrs)",
         },
@@ -228,7 +245,7 @@ const HourlySales = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Hourly Sales vs Sales Profit vs Expense vs Purchase</h2>
+                <h2>Hourly Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return</h2>
                 <div className="row">
 
                     <div className="col-md-2">

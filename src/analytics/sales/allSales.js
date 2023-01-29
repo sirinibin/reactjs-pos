@@ -18,10 +18,16 @@ const AllSales = forwardRef((props, ref) => {
 
 
     let [allSales, setAllSales] = useState([]);
+
     let [calendarAllSales, setCalendarAllSales] = useState([]);
     let [calendarAllSalesProfit, setCalendarAllSalesProfit] = useState([]);
     let [calendarAllExpenses, setCalendarAllExpenses] = useState([]);
     let [calendarAllPurchases, setCalendarAllPurchases] = useState([]);
+
+    let [calendarAllSalesReturns, setCalendarAllSalesReturns] = useState([]);
+    let [calendarAllPurchaseReturns, setCalendarAllPurchaseReturns] = useState([]);
+
+
     let [allSalesSelectedDate, setAllSalesSelectedDate] = useState(new Date().getDate());
     let [allSalesSelectedMonth, setAllSalesSelectedMonth] = useState(new Date().getMonth() + 1);
     let [allSalesSelectedYear, setAllSalesSelectedYear] = useState(new Date().getFullYear());
@@ -41,6 +47,8 @@ const AllSales = forwardRef((props, ref) => {
                 { type: "number", label: "Sales Profit" },
                 { type: "number", label: "Expense" },
                 { type: "number", label: "Purchase" },
+                { type: "number", label: "Sales Return" },
+                { type: "number", label: "Purchase Return" },
                 { type: "number", label: "Loss" },
                 // { type: "string", label: "Customer" },
             ],
@@ -74,12 +82,19 @@ const AllSales = forwardRef((props, ref) => {
             ],
         ];
 
-        //selectedMonth = 1;
-        //setSelectedMonth(1);
-        console.log("selectedDate:", allSalesSelectedDate);
-        console.log("selectedMonth:", allSalesSelectedMonth);
-        console.log("selectedYear:", allSalesSelectedYear);
+        let calendarSalesReturnData = [
+            [
+                { type: "date", id: "Date" },
+                { type: "number", id: "Sales Return" },
+            ],
+        ];
 
+        let calendarPurchaseReturnData = [
+            [
+                { type: "date", id: "Date" },
+                { type: "number", id: "Purchase Return" },
+            ],
+        ];
 
         let dailySales = [];
         let dailySalesProfit = [];
@@ -91,8 +106,9 @@ const AllSales = forwardRef((props, ref) => {
                 parseFloat(sale.net_profit.toFixed(2)),
                 undefined,
                 undefined,
+                undefined,//Sales Return
+                undefined,//Purchase return
                 parseFloat(sale.loss.toFixed(2)),
-                // sale.customer_name,
             ]);
 
             let dt = new Date(sale.created_at);
@@ -124,13 +140,6 @@ const AllSales = forwardRef((props, ref) => {
         }
 
 
-
-
-        // console.log("calendarData:", calendarData);
-
-
-
-
         calendarAllSales = calendarSalesData
         setCalendarAllSales(calendarSalesData);
 
@@ -146,8 +155,9 @@ const AllSales = forwardRef((props, ref) => {
                 undefined,
                 parseFloat(expense.amount.toFixed(2)),
                 undefined,
-                undefined,
-                // sale.customer_name,
+                undefined,//Sales Return
+                undefined,//Purchase return
+                undefined,//Loss
             ]);
 
             let dt = new Date(expense.date);
@@ -179,8 +189,9 @@ const AllSales = forwardRef((props, ref) => {
                 undefined,
                 undefined,
                 parseFloat(purchase.net_total.toFixed(2)),
-                undefined,
-                // sale.customer_name,
+                undefined,//Sales Return
+                undefined,//Purchase return
+                undefined,//Loss
             ]);
 
             let dt = new Date(purchase.date);
@@ -191,8 +202,6 @@ const AllSales = forwardRef((props, ref) => {
             dailyPurchases[dtStr] += parseFloat(purchase.net_total);
         }
 
-        allSales = salesData;
-        setAllSales(salesData);
 
         for (let purchaseDate in dailyPurchases) {
             let parts = purchaseDate.split('-');
@@ -204,12 +213,79 @@ const AllSales = forwardRef((props, ref) => {
 
         calendarAllPurchases = calendarPurchaseData
         setCalendarAllPurchases(calendarPurchaseData);
+
+
+        //sales returns
+        let dailySalesReturns = [];
+        for (const salesReturn of props.allSalesReturns) {
+            salesData.push([
+                new Date(salesReturn.date),
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                parseFloat(salesReturn.net_total.toFixed(2)),
+                undefined,//Purchase return
+                undefined,//Loss
+            ]);
+
+            let dt = new Date(salesReturn.date);
+            let dtStr = dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate();
+            if (!dailySalesReturns[dtStr]) {
+                dailySalesReturns[dtStr] = 0;
+            }
+            dailySalesReturns[dtStr] += parseFloat(salesReturn.net_total);
+        }
+
+        for (let salesReturnDate in dailySalesReturns) {
+            let parts = salesReturnDate.split('-');
+            calendarSalesReturnData.push([
+                new Date(parts[0], parts[1], parts[2]),
+                parseFloat(dailySalesReturns[salesReturnDate].toFixed(2)),
+            ]);
+        }
+
+        calendarAllSalesReturns = calendarSalesReturnData
+        setCalendarAllSalesReturns(calendarSalesReturnData);
+
+
+        //purchase returns
+        let dailyPurchaseReturns = [];
+        for (const purchaseReturn of props.allPurchaseReturns) {
+            salesData.push([
+                new Date(purchaseReturn.date),
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                undefined,
+                parseFloat(purchaseReturn.net_total.toFixed(2)),
+                undefined,//Loss
+            ]);
+
+            let dt = new Date(purchaseReturn.date);
+            let dtStr = dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate();
+            if (!dailyPurchaseReturns[dtStr]) {
+                dailyPurchaseReturns[dtStr] = 0;
+            }
+            dailyPurchaseReturns[dtStr] += parseFloat(purchaseReturn.net_total);
+        }
+
+        allSales = salesData;
+        setAllSales(salesData);
+
+        for (let purchaseReturnDate in dailyPurchaseReturns) {
+            let parts = purchaseReturnDate.split('-');
+            calendarPurchaseReturnData.push([
+                new Date(parts[0], parts[1], parts[2]),
+                parseFloat(dailyPurchaseReturns[purchaseReturnDate].toFixed(2)),
+            ]);
+        }
+
+        calendarAllPurchaseReturns = calendarPurchaseReturnData
+        setCalendarAllPurchaseReturns(calendarPurchaseReturnData);
     }
 
-
-    const [salesData, setSalesData] = useState([
-        [{ type: "datetime", label: "Time" }, "Sales", "Sales Profit", "Loss"],
-    ]);
 
     const [salesOptions, setSalesOptions] = useState({
         title: 'Sales',
@@ -243,6 +319,14 @@ const AllSales = forwardRef((props, ref) => {
         title: 'Daily Purchases',
     });
 
+    const [calendarSalesReturnOptions, setCalendarSalesReturnOptions] = useState({
+        title: 'Daily Sales Returns',
+    });
+
+    const [calendarPurchaseReturnOptions, setCalendarPurchaseReturnOptions] = useState({
+        title: 'Daily Purchase Returns',
+    });
+
 
 
 
@@ -255,7 +339,7 @@ const AllSales = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Sales vs Sales Profit vs Expense vs Purchase</h2>
+                <h2>Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return</h2>
                 <div className="row">
                     {allSales && allSales.length > 0 ? <Chart
                         chartType="AnnotationChart"
@@ -301,6 +385,26 @@ const AllSales = forwardRef((props, ref) => {
                         height="700px"
                         data={calendarAllPurchases}
                         options={calendarPurchaseOptions}
+                    /> : ""}
+                </div>
+
+                <div className="row"  >
+                    {calendarAllSalesReturns && calendarAllSalesReturns.length > 0 ? <Chart
+                        chartType="Calendar"
+                        width="100%"
+                        height="400px"
+                        data={calendarAllSalesReturns}
+                        options={calendarSalesReturnOptions}
+                    /> : ""}
+                </div>
+
+                <div className="row"  >
+                    {calendarAllPurchaseReturns && calendarAllPurchaseReturns.length > 0 ? <Chart
+                        chartType="Calendar"
+                        width="100%"
+                        height="400px"
+                        data={calendarAllPurchaseReturns}
+                        options={calendarPurchaseReturnOptions}
                     /> : ""}
                 </div>
             </div>
