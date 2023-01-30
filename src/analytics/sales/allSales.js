@@ -7,7 +7,7 @@ const AllSales = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         init() {
             if (props.allOrders.length > 0) {
-                makeAllSalesData();
+                makeAllData();
             }
         }
     }));
@@ -16,231 +16,231 @@ const AllSales = forwardRef((props, ref) => {
     let [allSales, setAllSales] = useState([]);
 
 
-    function makeAllSalesData() {
+    function makeAllData() {
         let columns = [
             { type: "datetime", label: "Time" }
         ];
-        if (props.columns.all.sales) {
+        if (props.columns.sales) {
             columns.push({ type: "number", label: "Sales" });
         }
 
-        if (props.columns.all.salesProfit) {
+        if (props.columns.salesProfit) {
             columns.push({ type: "number", label: "Sales Profit" });
         }
 
-        if (props.columns.all.expense) {
+        if (props.columns.expense) {
             columns.push({ type: "number", label: "Expense" });
         }
 
-        if (props.columns.all.purchase) {
+        if (props.columns.purchase) {
             columns.push({ type: "number", label: "Purchase" });
         }
 
-        if (props.columns.all.salesReturn) {
+        if (props.columns.salesReturn) {
             columns.push({ type: "number", label: "Sales Return" });
         }
 
-        if (props.columns.all.purchaseReturn) {
+        if (props.columns.purchaseReturn) {
             columns.push({ type: "number", label: "Purchase Return" });
         }
 
-        if (props.columns.all.loss) {
+        if (props.columns.loss) {
             columns.push({ type: "number", label: "Loss" });
         }
 
-        let salesData = [];
+        let data = [];
 
 
         if (columns.length > 1) {
-            salesData.push(columns)
+            data.push(columns)
         }
 
 
-        if (props.columns.all.sales || props.columns.all.salesProfit || props.columns.all.loss) {
+        if (props.columns.sales || props.columns.salesProfit || props.columns.loss) {
             for (const sale of props.allOrders) {
                 let row = [new Date(sale.created_at)];
 
-                if (props.columns.all.sales) {
+                if (props.columns.sales) {
                     row.push(parseFloat(sale.net_total.toFixed(2)));
                 }
 
-                if (props.columns.all.salesProfit) {
+                if (props.columns.salesProfit) {
                     row.push(parseFloat(sale.net_profit.toFixed(2)));
                 }
 
-                if (props.columns.all.expense) {
+                if (props.columns.expense) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.purchase) {
+                if (props.columns.purchase) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.salesReturn) {
+                if (props.columns.salesReturn) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.purchaseReturn) {
+                if (props.columns.purchaseReturn) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.loss) {
+                if (props.columns.loss) {
                     row.push(parseFloat(sale.loss.toFixed(2)));
                 }
 
-                salesData.push(row);
+                data.push(row);
             }
         }
 
-        if (props.columns.all.expense) {
+        if (props.columns.expense) {
             for (const expense of props.allExpenses) {
                 let row = [new Date(expense.date)];
 
-                if (props.columns.all.sales) {
+                if (props.columns.sales) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.salesProfit) {
+                if (props.columns.salesProfit) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.expense) {
+                if (props.columns.expense) {
                     row.push(parseFloat(expense.amount.toFixed(2)));
                 }
 
-                if (props.columns.all.purchase) {
+                if (props.columns.purchase) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.salesReturn) {
+                if (props.columns.salesReturn) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.purchaseReturn) {
+                if (props.columns.purchaseReturn) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.loss) {
+                if (props.columns.loss) {
                     row.push(undefined);
                 }
 
-                salesData.push(row);
+                data.push(row);
             }
         }
 
-        if (props.columns.all.purchase) {
+        if (props.columns.purchase) {
             for (const purchase of props.allPurchases) {
                 let row = [new Date(purchase.date)];
 
-                if (props.columns.all.sales) {
+                if (props.columns.sales) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.salesProfit) {
+                if (props.columns.salesProfit) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.expense) {
+                if (props.columns.expense) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.purchase) {
+                if (props.columns.purchase) {
                     row.push(parseFloat(purchase.net_total.toFixed(2)));
                 }
 
-                if (props.columns.all.salesReturn) {
+                if (props.columns.salesReturn) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.purchaseReturn) {
+                if (props.columns.purchaseReturn) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.loss) {
+                if (props.columns.loss) {
                     row.push(undefined);
                 }
 
-                salesData.push(row);
+                data.push(row);
             }
         }
 
 
-        if (props.columns.all.salesReturn) {
+        if (props.columns.salesReturn) {
             for (const salesReturn of props.allSalesReturns) {
 
                 let row = [new Date(salesReturn.date)];
 
-                if (props.columns.all.sales) {
+                if (props.columns.sales) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.salesProfit) {
+                if (props.columns.salesProfit) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.expense) {
+                if (props.columns.expense) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.purchase) {
+                if (props.columns.purchase) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.salesReturn) {
+                if (props.columns.salesReturn) {
                     row.push(parseFloat(salesReturn.net_total.toFixed(2)));
                 }
 
-                if (props.columns.all.purchaseReturn) {
+                if (props.columns.purchaseReturn) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.loss) {
+                if (props.columns.loss) {
                     row.push(undefined);
                 }
 
-                salesData.push(row);
+                data.push(row);
             }
         }
 
 
-        if (props.columns.all.purchaseReturn) {
+        if (props.columns.purchaseReturn) {
             for (const purchaseReturn of props.allPurchaseReturns) {
                 let row = [new Date(purchaseReturn.date)];
 
-                if (props.columns.all.sales) {
+                if (props.columns.sales) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.salesProfit) {
+                if (props.columns.salesProfit) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.expense) {
+                if (props.columns.expense) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.purchase) {
+                if (props.columns.purchase) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.salesReturn) {
+                if (props.columns.salesReturn) {
                     row.push(undefined);
                 }
 
-                if (props.columns.all.purchaseReturn) {
+                if (props.columns.purchaseReturn) {
                     row.push(parseFloat(purchaseReturn.net_total.toFixed(2)));
                 }
 
-                if (props.columns.all.loss) {
+                if (props.columns.loss) {
                     row.push(undefined);
                 }
 
-                salesData.push(row);
+                data.push(row);
             }
         }
 
-        allSales = salesData;
-        setAllSales(salesData);
+        allSales = data;
+        setAllSales(data);
     }
 
 

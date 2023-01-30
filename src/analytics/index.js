@@ -153,51 +153,53 @@ const Analytics = forwardRef((props, ref) => {
         setAllPurchaseReturns(purchaseReturns);
         console.log("allPurchaseReturns:", allPurchaseReturns);
 
-        initAllSalesGraph();
-        initHourlySalesGraph();
-        initDailySalesGraph();
-        initMonthlySalesGraph();
-        initYearlySalesGraph();
+        initAllGraph();
+        initHourlyGraph();
+        initDailyGraph();
+        initMonthlyGraph();
+        initYearlyGraph();
         initCalendarGraph();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
 
-    const HourlySalesRef = useRef();
-    async function initHourlySalesGraph() {
-        if (HourlySalesRef.current) {
-            HourlySalesRef.current.init();
+
+
+    const AllGraphRef = useRef();
+    async function initAllGraph() {
+        if (AllGraphRef.current) {
+            AllGraphRef.current.init();
+        }
+    }
+
+    const HourlyGraphRef = useRef();
+    async function initHourlyGraph() {
+        if (HourlyGraphRef.current) {
+            HourlyGraphRef.current.init();
         }
 
     }
 
-    const AllSalesRef = useRef();
-    async function initAllSalesGraph() {
-        if (AllSalesRef.current) {
-            AllSalesRef.current.init();
-        }
-    }
-
-    const DailySalesRef = useRef();
-    async function initDailySalesGraph() {
-        if (DailySalesRef.current) {
-            DailySalesRef.current.init();
+    const DailyGraphRef = useRef();
+    async function initDailyGraph() {
+        if (DailyGraphRef.current) {
+            DailyGraphRef.current.init();
         }
 
     }
 
-    const MonthlySalesRef = useRef();
-    async function initMonthlySalesGraph() {
-        if (MonthlySalesRef.current) {
-            MonthlySalesRef.current.init();
+    const MonthlyGraphRef = useRef();
+    async function initMonthlyGraph() {
+        if (MonthlyGraphRef.current) {
+            MonthlyGraphRef.current.init();
         }
     }
 
-    const YearlySalesRef = useRef();
-    async function initYearlySalesGraph() {
-        if (YearlySalesRef.current) {
-            YearlySalesRef.current.init();
+    const YearlyGraphRef = useRef();
+    async function initYearlyGraph() {
+        if (YearlyGraphRef.current) {
+            YearlyGraphRef.current.init();
         }
     }
 
@@ -210,8 +212,8 @@ const Analytics = forwardRef((props, ref) => {
 
     let [columns, setColumns] = useState({
         all: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
-        daily: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
         hourly: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        daily: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
         monthly: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
         yearly: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
     });
@@ -223,89 +225,266 @@ const Analytics = forwardRef((props, ref) => {
                 <input type="checkbox" checked={columns.all.sales} onChange={(e) => {
                     columns.all.sales = !columns.all.sales;
                     setColumns({ ...columns });
-                    initAllSalesGraph();
+                    initAllGraph();
 
                 }} />Sales vs &nbsp;
                 <input type="checkbox" checked={columns.all.salesProfit} onChange={(e) => {
                     columns.all.salesProfit = !columns.all.salesProfit;
                     setColumns({ ...columns });
-                    initAllSalesGraph();
+                    initAllGraph();
 
                 }} />Sales Profit vs &nbsp;
                 <input type="checkbox" checked={columns.all.expense} onChange={(e) => {
                     columns.all.expense = !columns.all.expense;
                     setColumns({ ...columns });
-                    initAllSalesGraph();
+                    initAllGraph();
 
                 }} />Expense vs &nbsp;
                 <input type="checkbox" checked={columns.all.purchase} onChange={(e) => {
                     columns.all.purchase = !columns.all.purchase;
                     setColumns({ ...columns });
-                    initAllSalesGraph();
+                    initAllGraph();
 
                 }} />Purchase vs &nbsp;
                 <input type="checkbox" checked={columns.all.salesReturn} onChange={(e) => {
                     columns.all.salesReturn = !columns.all.salesReturn;
                     setColumns({ ...columns });
-                    initAllSalesGraph();
+                    initAllGraph();
 
                 }} />Sales Return vs &nbsp;
                 <input type="checkbox" checked={columns.all.purchaseReturn} onChange={(e) => {
                     columns.all.purchaseReturn = !columns.all.purchaseReturn;
                     setColumns({ ...columns });
-                    initAllSalesGraph();
+                    initAllGraph();
 
                 }} />Purchase Return vs &nbsp;
                 <input type="checkbox" checked={columns.all.loss} onChange={(e) => {
                     columns.all.loss = !columns.all.loss;
                     setColumns({ ...columns });
-                    initAllSalesGraph();
+                    initAllGraph();
 
                 }} />Loss
             </h2>
-            <AllSales ref={AllSalesRef}
+            <AllSales ref={AllGraphRef}
                 allOrders={allOrders}
                 allExpenses={allExpenses}
                 allPurchases={allPurchases}
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
-                columns={columns}
+                columns={columns.all}
             />
             <hr />
-            <HourlySales ref={HourlySalesRef}
+            <h2>Hourly &nbsp;
+                <input type="checkbox" checked={columns.hourly.sales} onChange={(e) => {
+                    columns.hourly.sales = !columns.hourly.sales;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Sales vs &nbsp;
+                <input type="checkbox" checked={columns.hourly.salesProfit} onChange={(e) => {
+                    columns.hourly.salesProfit = !columns.hourly.salesProfit;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Sales Profit vs &nbsp;
+                <input type="checkbox" checked={columns.hourly.expense} onChange={(e) => {
+                    columns.hourly.expense = !columns.hourly.expense;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Expense vs &nbsp;
+                <input type="checkbox" checked={columns.hourly.purchase} onChange={(e) => {
+                    columns.hourly.purchase = !columns.hourly.purchase;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Purchase vs &nbsp;
+                <input type="checkbox" checked={columns.hourly.salesReturn} onChange={(e) => {
+                    columns.hourly.salesReturn = !columns.hourly.salesReturn;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Sales Return vs &nbsp;
+                <input type="checkbox" checked={columns.hourly.purchaseReturn} onChange={(e) => {
+                    columns.hourly.purchaseReturn = !columns.hourly.purchaseReturn;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Purchase Return vs &nbsp;
+                <input type="checkbox" checked={columns.hourly.loss} onChange={(e) => {
+                    columns.hourly.loss = !columns.hourly.loss;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Loss
+            </h2>
+            <HourlySales ref={HourlyGraphRef}
                 allOrders={allOrders}
                 allExpenses={allExpenses}
                 allPurchases={allPurchases}
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
-                columns={columns}
+                columns={columns.hourly}
             />
             <hr />
-            <DailySales ref={DailySalesRef}
+            <h2>Daily &nbsp;
+                <input type="checkbox" checked={columns.daily.sales} onChange={(e) => {
+                    columns.daily.sales = !columns.daily.sales;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Sales vs &nbsp;
+                <input type="checkbox" checked={columns.daily.salesProfit} onChange={(e) => {
+                    columns.daily.salesProfit = !columns.daily.salesProfit;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Sales Profit vs &nbsp;
+                <input type="checkbox" checked={columns.daily.expense} onChange={(e) => {
+                    columns.daily.expense = !columns.daily.expense;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Expense vs &nbsp;
+                <input type="checkbox" checked={columns.daily.purchase} onChange={(e) => {
+                    columns.daily.purchase = !columns.daily.purchase;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Purchase vs &nbsp;
+                <input type="checkbox" checked={columns.daily.salesReturn} onChange={(e) => {
+                    columns.daily.salesReturn = !columns.daily.salesReturn;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Sales Return vs &nbsp;
+                <input type="checkbox" checked={columns.daily.purchaseReturn} onChange={(e) => {
+                    columns.daily.purchaseReturn = !columns.daily.purchaseReturn;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Purchase Return vs &nbsp;
+                <input type="checkbox" checked={columns.daily.loss} onChange={(e) => {
+                    columns.daily.loss = !columns.daily.loss;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Loss
+            </h2>
+            <DailySales ref={DailyGraphRef}
                 allOrders={allOrders}
                 allExpenses={allExpenses}
                 allPurchases={allPurchases}
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
-                columns={columns}
+                columns={columns.daily}
             />
             <hr />
-            <MonthlySales ref={MonthlySalesRef}
+            <h2>Monthly &nbsp;
+                <input type="checkbox" checked={columns.monthly.sales} onChange={(e) => {
+                    columns.monthly.sales = !columns.monthly.sales;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Sales vs &nbsp;
+                <input type="checkbox" checked={columns.monthly.salesProfit} onChange={(e) => {
+                    columns.monthly.salesProfit = !columns.monthly.salesProfit;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Sales Profit vs &nbsp;
+                <input type="checkbox" checked={columns.monthly.expense} onChange={(e) => {
+                    columns.monthly.expense = !columns.monthly.expense;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Expense vs &nbsp;
+                <input type="checkbox" checked={columns.monthly.purchase} onChange={(e) => {
+                    columns.monthly.purchase = !columns.monthly.purchase;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Purchase vs &nbsp;
+                <input type="checkbox" checked={columns.monthly.salesReturn} onChange={(e) => {
+                    columns.monthly.salesReturn = !columns.monthly.salesReturn;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Sales Return vs &nbsp;
+                <input type="checkbox" checked={columns.monthly.purchaseReturn} onChange={(e) => {
+                    columns.monthly.purchaseReturn = !columns.monthly.purchaseReturn;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Purchase Return vs &nbsp;
+                <input type="checkbox" checked={columns.monthly.loss} onChange={(e) => {
+                    columns.monthly.loss = !columns.monthly.loss;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Loss
+
+            </h2>
+            <MonthlySales ref={MonthlyGraphRef}
                 allOrders={allOrders}
                 allExpenses={allExpenses}
                 allPurchases={allPurchases}
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
-                columns={columns}
+                columns={columns.monthly}
             />
             <hr />
-            <YearlySales ref={YearlySalesRef}
+            <h2>Yearly &nbsp;
+                <input type="checkbox" checked={columns.yearly.sales} onChange={(e) => {
+                    columns.yearly.sales = !columns.yearly.sales;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Sales vs &nbsp;
+                <input type="checkbox" checked={columns.yearly.salesProfit} onChange={(e) => {
+                    columns.yearly.salesProfit = !columns.yearly.salesProfit;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Sales Profit vs &nbsp;
+                <input type="checkbox" checked={columns.yearly.expense} onChange={(e) => {
+                    columns.yearly.expense = !columns.yearly.expense;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Expense vs &nbsp;
+                <input type="checkbox" checked={columns.yearly.purchase} onChange={(e) => {
+                    columns.yearly.purchase = !columns.yearly.purchase;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Purchase vs &nbsp;
+                <input type="checkbox" checked={columns.yearly.salesReturn} onChange={(e) => {
+                    columns.yearly.salesReturn = !columns.yearly.salesReturn;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Sales Return vs &nbsp;
+                <input type="checkbox" checked={columns.yearly.purchaseReturn} onChange={(e) => {
+                    columns.yearly.purchaseReturn = !columns.yearly.purchaseReturn;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Purchase Return vs &nbsp;
+                <input type="checkbox" checked={columns.yearly.loss} onChange={(e) => {
+                    columns.yearly.loss = !columns.yearly.loss;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Loss
+            </h2>
+            <YearlySales ref={YearlyGraphRef}
                 allOrders={allOrders}
                 allExpenses={allExpenses}
                 allPurchases={allPurchases}
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
-                columns={columns}
+                columns={columns.yearly}
             />
             <hr />
             <Calendar ref={CalendarRef}

@@ -35,8 +35,18 @@ const YearlySales = forwardRef((props, ref) => {
 
     function makeYearlySalesData() {
         let data = [
-            ["Year", "Sales", "Sales Profit", "Expense", "Purchase", "Sales Return", "Purchase Return", "Loss"],
+            [
+                { type: "string", label: "Year" },
+                { type: "number", label: "Sales" },
+                { type: "number", label: "Sales Profit" },
+                { type: "number", label: "Expense" },
+                { type: "number", label: "Purchase" },
+                { type: "number", label: "Sales Return" },
+                { type: "number", label: "Purchase Return" },
+                { type: "number", label: "Loss" }
+            ],
         ];
+
         let firstYear = 2020;
         let lastYear = new Date().getFullYear();
 
@@ -127,7 +137,6 @@ const YearlySales = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Yearly Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return</h2>
                 <div className="row">
                     {yearlySales && yearlySales.length > 0 ? <Chart
                         chartType="LineChart"

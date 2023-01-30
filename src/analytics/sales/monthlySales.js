@@ -101,16 +101,17 @@ const MonthlySales = forwardRef((props, ref) => {
     function makeMonthlySalesData() {
         let data = [
             [
-                "Month",
-                "Sales",
-                "Sales Profit",
-                "Expense",
-                "Purchase",
-                "Sales Return",
-                "Purchase Return",
-                "Loss",
+                { type: "string", label: "Month" },
+                { type: "number", label: "Sales" },
+                { type: "number", label: "Sales Profit" },
+                { type: "number", label: "Expense" },
+                { type: "number", label: "Purchase" },
+                { type: "number", label: "Sales Return" },
+                { type: "number", label: "Purchase Return" },
+                { type: "number", label: "Loss" }
             ],
         ];
+
         console.log("selectedYear:", monthlySalesSelectedYear);
         let lastMonth = 12;
 
@@ -210,9 +211,7 @@ const MonthlySales = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Monthly Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return</h2>
                 <div className="row">
-
                     <div className="col-md-2">
                         <label className="form-label">Year</label>
 

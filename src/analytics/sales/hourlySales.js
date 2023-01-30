@@ -113,115 +113,270 @@ const HourlySales = forwardRef((props, ref) => {
     }
 
     function makeHourlySalesData() {
-        let data = [
-            ["Time", "Sales", "Sales Profit", "Expense", "Purchase", "Sales Return", "Purchase Return", "Loss"],
+        let columns = [
+            { type: "datetime", label: "Time" }
         ];
+        if (props.columns.sales) {
+            columns.push({ type: "number", label: "Sales" });
+        }
 
-        let lastHour = 24;
-        let am = true;
-        let timeLabel = "";
+        if (props.columns.salesProfit) {
+            columns.push({ type: "number", label: "Sales Profit" });
+        }
 
-        for (let hour = 0; hour < lastHour; hour++) {
-            if (hour >= 12) {
-                am = false;
-                if (hour == 12) {
-                    timeLabel = hour.toString() + "pm";
-                } else {
-                    timeLabel = (hour - 12).toString() + "pm";
-                }
+        if (props.columns.expense) {
+            columns.push({ type: "number", label: "Expense" });
+        }
 
-            } else {
-                timeLabel = hour.toString() + "am";
-            }
+        if (props.columns.purchase) {
+            columns.push({ type: "number", label: "Purchase" });
+        }
 
-            let sales = 0.00;
-            let profit = 0.00;
-            let loss = 0.00;
+        if (props.columns.salesReturn) {
+            columns.push({ type: "number", label: "Sales Return" });
+        }
+
+        if (props.columns.purchaseReturn) {
+            columns.push({ type: "number", label: "Purchase Return" });
+        }
+
+        if (props.columns.loss) {
+            columns.push({ type: "number", label: "Loss" });
+        }
+
+        let data = [];
+
+
+        if (columns.length > 1) {
+            data.push(columns)
+        }
+
+
+
+        if (props.columns.sales || props.columns.salesProfit || props.columns.loss) {
             for (const sale of props.allOrders) {
                 // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
                 // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
                 if ((new Date(sale.created_at).getMonth() + 1) == hourlySalesSelectedMonth
                     && new Date(sale.created_at).getFullYear() == hourlySalesSelectedYear
                     && new Date(sale.created_at).getDate() == hourlySalesSelectedDate
-                    && new Date(sale.created_at).getHours() == hour
+                    // && new Date(sale.created_at).getHours() == hour
                 ) {
-                    sales += parseFloat(sale.net_total);
-                    profit += parseFloat(sale.net_profit);
-                    loss += parseFloat(sale.loss);
+
+
+                    let row = [new Date(sale.created_at)];
+
+                    if (props.columns.sales) {
+                        row.push(parseFloat(sale.net_total.toFixed(2)));
+                    }
+
+                    if (props.columns.salesProfit) {
+                        row.push(parseFloat(sale.net_profit.toFixed(2)));
+                    }
+
+                    if (props.columns.expense) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.purchase) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.purchaseReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.loss) {
+                        row.push(parseFloat(sale.loss.toFixed(2)));
+                    }
+
+                    data.push(row);
                 }
             }
+        }
 
-            let totalExpense = 0.00;
+        if (props.columns.expense) {
             for (const expense of props.allExpenses) {
                 if ((new Date(expense.date).getMonth() + 1) == hourlySalesSelectedMonth
                     && new Date(expense.date).getFullYear() == hourlySalesSelectedYear
                     && new Date(expense.date).getDate() == hourlySalesSelectedDate
-                    && new Date(expense.date).getHours() == hour
                 ) {
 
-                    totalExpense += parseFloat(expense.amount);
+                    let row = [new Date(expense.date)];
+
+                    if (props.columns.sales) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesProfit) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.expense) {
+                        row.push(parseFloat(expense.amount.toFixed(2)));
+                    }
+
+                    if (props.columns.purchase) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.purchaseReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.loss) {
+                        row.push(undefined);
+                    }
+
+                    data.push(row);
                 }
             }
+        }
 
-            let totalPurchase = 0.00;
+        if (props.columns.purchase) {
             for (const purchase of props.allPurchases) {
                 if ((new Date(purchase.date).getMonth() + 1) == hourlySalesSelectedMonth
                     && new Date(purchase.date).getFullYear() == hourlySalesSelectedYear
                     && new Date(purchase.date).getDate() == hourlySalesSelectedDate
-                    && new Date(purchase.date).getHours() == hour
                 ) {
+                    let row = [new Date(purchase.date)];
 
-                    totalPurchase += parseFloat(purchase.net_total);
+                    if (props.columns.sales) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesProfit) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.expense) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.purchase) {
+                        row.push(parseFloat(purchase.net_total.toFixed(2)));
+                    }
+
+                    if (props.columns.salesReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.purchaseReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.loss) {
+                        row.push(undefined);
+                    }
+
+                    data.push(row);
                 }
             }
+        }
 
-            let totalSalesReturn = 0.00;
+        if (props.columns.salesReturn) {
             for (const salesReturn of props.allSalesReturns) {
                 if ((new Date(salesReturn.date).getMonth() + 1) == hourlySalesSelectedMonth
                     && new Date(salesReturn.date).getFullYear() == hourlySalesSelectedYear
                     && new Date(salesReturn.date).getDate() == hourlySalesSelectedDate
-                    && new Date(salesReturn.date).getHours() == hour
                 ) {
 
-                    totalSalesReturn += parseFloat(salesReturn.net_total);
+                    let row = [new Date(salesReturn.date)];
+
+                    if (props.columns.sales) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesProfit) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.expense) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.purchase) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturn) {
+                        row.push(parseFloat(salesReturn.net_total.toFixed(2)));
+                    }
+
+                    if (props.columns.purchaseReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.loss) {
+                        row.push(undefined);
+                    }
+
+                    data.push(row);
                 }
             }
+        }
 
-            let totalPurchaseReturn = 0.00;
+        if (props.columns.purchaseReturn) {
             for (const purchaseReturn of props.allPurchaseReturns) {
                 if ((new Date(purchaseReturn.date).getMonth() + 1) == hourlySalesSelectedMonth
                     && new Date(purchaseReturn.date).getFullYear() == hourlySalesSelectedYear
                     && new Date(purchaseReturn.date).getDate() == hourlySalesSelectedDate
-                    && new Date(purchaseReturn.date).getHours() == hour
                 ) {
 
-                    totalPurchaseReturn += parseFloat(purchaseReturn.net_total);
+                    let row = [new Date(purchaseReturn.date)];
+
+                    if (props.columns.sales) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesProfit) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.expense) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.purchase) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.purchaseReturn) {
+                        row.push(parseFloat(purchaseReturn.net_total.toFixed(2)));
+                    }
+
+                    if (props.columns.loss) {
+                        row.push(undefined);
+                    }
+
+                    data.push(row);
                 }
             }
-
-
-            data.push([
-                timeLabel,
-                parseFloat(sales.toFixed(2)),
-                parseFloat(profit.toFixed(2)),
-                parseFloat(totalExpense.toFixed(2)),
-                parseFloat(totalPurchase.toFixed(2)),
-                parseFloat(totalSalesReturn.toFixed(2)),
-                parseFloat(totalPurchaseReturn.toFixed(2)),
-                parseFloat(loss.toFixed(2))
-            ]);
         }
+
 
         hourlySales = data;
         setHourlySales(data);
     }
 
     const [options, setOptions] = useState({
-        title: 'Sales',
+        title: '',
         subtitle: '(SAR)',
         legend: { position: 'right' },
         hAxis: {
-            title: "Time(Hrs)",
+            title: "Time",
         },
         vAxis: {
             title: "Amount(SAR)",
@@ -245,7 +400,6 @@ const HourlySales = forwardRef((props, ref) => {
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Hourly Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return</h2>
                 <div className="row">
 
                     <div className="col-md-2">
