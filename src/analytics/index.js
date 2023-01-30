@@ -5,6 +5,7 @@ import HourlySales from "./sales/hourlySales";
 import DailySales from "./sales/dailySales";
 import MonthlySales from "./sales/monthlySales";
 import YearlySales from "./sales/yearlySales";
+import Calendar from "./sales/calendar";
 
 
 
@@ -157,6 +158,7 @@ const Analytics = forwardRef((props, ref) => {
         initDailySalesGraph();
         initMonthlySalesGraph();
         initYearlySalesGraph();
+        initCalendarGraph();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -199,15 +201,75 @@ const Analytics = forwardRef((props, ref) => {
         }
     }
 
+    const CalendarRef = useRef();
+    async function initCalendarGraph() {
+        if (CalendarRef.current) {
+            CalendarRef.current.init();
+        }
+    }
+
+    let [columns, setColumns] = useState({
+        all: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        daily: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        hourly: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        monthly: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        yearly: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+    });
+
 
     return (
         <>
+            <h2>
+                <input type="checkbox" checked={columns.all.sales} onChange={(e) => {
+                    columns.all.sales = !columns.all.sales;
+                    setColumns({ ...columns });
+                    initAllSalesGraph();
+
+                }} />Sales vs &nbsp;
+                <input type="checkbox" checked={columns.all.salesProfit} onChange={(e) => {
+                    columns.all.salesProfit = !columns.all.salesProfit;
+                    setColumns({ ...columns });
+                    initAllSalesGraph();
+
+                }} />Sales Profit vs &nbsp;
+                <input type="checkbox" checked={columns.all.expense} onChange={(e) => {
+                    columns.all.expense = !columns.all.expense;
+                    setColumns({ ...columns });
+                    initAllSalesGraph();
+
+                }} />Expense vs &nbsp;
+                <input type="checkbox" checked={columns.all.purchase} onChange={(e) => {
+                    columns.all.purchase = !columns.all.purchase;
+                    setColumns({ ...columns });
+                    initAllSalesGraph();
+
+                }} />Purchase vs &nbsp;
+                <input type="checkbox" checked={columns.all.salesReturn} onChange={(e) => {
+                    columns.all.salesReturn = !columns.all.salesReturn;
+                    setColumns({ ...columns });
+                    initAllSalesGraph();
+
+                }} />Sales Return vs &nbsp;
+                <input type="checkbox" checked={columns.all.purchaseReturn} onChange={(e) => {
+                    columns.all.purchaseReturn = !columns.all.purchaseReturn;
+                    setColumns({ ...columns });
+                    initAllSalesGraph();
+
+                }} />Purchase Return vs &nbsp;
+                <input type="checkbox" checked={columns.all.loss} onChange={(e) => {
+                    columns.all.loss = !columns.all.loss;
+                    setColumns({ ...columns });
+                    initAllSalesGraph();
+
+                }} />Loss
+            </h2>
             <AllSales ref={AllSalesRef}
                 allOrders={allOrders}
                 allExpenses={allExpenses}
                 allPurchases={allPurchases}
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
+                columns={columns}
             />
             <hr />
             <HourlySales ref={HourlySalesRef}
@@ -216,6 +278,7 @@ const Analytics = forwardRef((props, ref) => {
                 allPurchases={allPurchases}
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
+                columns={columns}
             />
             <hr />
             <DailySales ref={DailySalesRef}
@@ -224,6 +287,7 @@ const Analytics = forwardRef((props, ref) => {
                 allPurchases={allPurchases}
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
+                columns={columns}
             />
             <hr />
             <MonthlySales ref={MonthlySalesRef}
@@ -232,9 +296,19 @@ const Analytics = forwardRef((props, ref) => {
                 allPurchases={allPurchases}
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
+                columns={columns}
             />
             <hr />
             <YearlySales ref={YearlySalesRef}
+                allOrders={allOrders}
+                allExpenses={allExpenses}
+                allPurchases={allPurchases}
+                allSalesReturns={allSalesReturns}
+                allPurchaseReturns={allPurchaseReturns}
+                columns={columns}
+            />
+            <hr />
+            <Calendar ref={CalendarRef}
                 allOrders={allOrders}
                 allExpenses={allExpenses}
                 allPurchases={allPurchases}

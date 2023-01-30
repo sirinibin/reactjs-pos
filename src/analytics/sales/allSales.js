@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import Cookies from "universal-cookie";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, memo } from "react";
 import { Chart } from "react-google-charts";
 
 
 
 const AllSales = forwardRef((props, ref) => {
-    const cookies = new Cookies();
     useImperativeHandle(ref, () => ({
         init() {
             if (props.allOrders.length > 0) {
@@ -15,275 +13,234 @@ const AllSales = forwardRef((props, ref) => {
     }));
 
 
-
-
     let [allSales, setAllSales] = useState([]);
-
-    let [calendarAllSales, setCalendarAllSales] = useState([]);
-    let [calendarAllSalesProfit, setCalendarAllSalesProfit] = useState([]);
-    let [calendarAllExpenses, setCalendarAllExpenses] = useState([]);
-    let [calendarAllPurchases, setCalendarAllPurchases] = useState([]);
-
-    let [calendarAllSalesReturns, setCalendarAllSalesReturns] = useState([]);
-    let [calendarAllPurchaseReturns, setCalendarAllPurchaseReturns] = useState([]);
-
-
-    let [allSalesSelectedDate, setAllSalesSelectedDate] = useState(new Date().getDate());
-    let [allSalesSelectedMonth, setAllSalesSelectedMonth] = useState(new Date().getMonth() + 1);
-    let [allSalesSelectedYear, setAllSalesSelectedYear] = useState(new Date().getFullYear());
-
-
-    function daysInMonth(month, year) {
-        return new Date(year, month, 0).getDate();
-    }
-
 
 
     function makeAllSalesData() {
-        let salesData = [
-            [
-                { type: "datetime", label: "Time" },
-                { type: "number", label: "Sales" },
-                { type: "number", label: "Sales Profit" },
-                { type: "number", label: "Expense" },
-                { type: "number", label: "Purchase" },
-                { type: "number", label: "Sales Return" },
-                { type: "number", label: "Purchase Return" },
-                { type: "number", label: "Loss" },
-                // { type: "string", label: "Customer" },
-            ],
+        let columns = [
+            { type: "datetime", label: "Time" }
         ];
+        if (props.columns.all.sales) {
+            columns.push({ type: "number", label: "Sales" });
+        }
 
-        let calendarSalesData = [
-            [
-                { type: "date", id: "Date" },
-                { type: "number", id: "Sales" },
-            ],
-        ];
+        if (props.columns.all.salesProfit) {
+            columns.push({ type: "number", label: "Sales Profit" });
+        }
 
-        let calendarSalesProfitData = [
-            [
-                { type: "date", id: "Date" },
-                { type: "number", id: "Profit" },
-            ],
-        ];
+        if (props.columns.all.expense) {
+            columns.push({ type: "number", label: "Expense" });
+        }
 
-        let calendarExpenseData = [
-            [
-                { type: "date", id: "Date" },
-                { type: "number", id: "Expense" },
-            ],
-        ];
+        if (props.columns.all.purchase) {
+            columns.push({ type: "number", label: "Purchase" });
+        }
 
-        let calendarPurchaseData = [
-            [
-                { type: "date", id: "Date" },
-                { type: "number", id: "Purchase" },
-            ],
-        ];
+        if (props.columns.all.salesReturn) {
+            columns.push({ type: "number", label: "Sales Return" });
+        }
 
-        let calendarSalesReturnData = [
-            [
-                { type: "date", id: "Date" },
-                { type: "number", id: "Sales Return" },
-            ],
-        ];
+        if (props.columns.all.purchaseReturn) {
+            columns.push({ type: "number", label: "Purchase Return" });
+        }
 
-        let calendarPurchaseReturnData = [
-            [
-                { type: "date", id: "Date" },
-                { type: "number", id: "Purchase Return" },
-            ],
-        ];
+        if (props.columns.all.loss) {
+            columns.push({ type: "number", label: "Loss" });
+        }
 
-        let dailySales = [];
-        let dailySalesProfit = [];
+        let salesData = [];
 
-        for (const sale of props.allOrders) {
-            salesData.push([
-                new Date(sale.created_at),
-                parseFloat(sale.net_total.toFixed(2)),
-                parseFloat(sale.net_profit.toFixed(2)),
-                undefined,
-                undefined,
-                undefined,//Sales Return
-                undefined,//Purchase return
-                parseFloat(sale.loss.toFixed(2)),
-            ]);
 
-            let dt = new Date(sale.created_at);
-            let dtStr = dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate();
-            if (!dailySales[dtStr]) {
-                dailySales[dtStr] = 0;
+        if (columns.length > 1) {
+            salesData.push(columns)
+        }
+
+
+        if (props.columns.all.sales || props.columns.all.salesProfit || props.columns.all.loss) {
+            for (const sale of props.allOrders) {
+                let row = [new Date(sale.created_at)];
+
+                if (props.columns.all.sales) {
+                    row.push(parseFloat(sale.net_total.toFixed(2)));
+                }
+
+                if (props.columns.all.salesProfit) {
+                    row.push(parseFloat(sale.net_profit.toFixed(2)));
+                }
+
+                if (props.columns.all.expense) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.purchase) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.salesReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.purchaseReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.loss) {
+                    row.push(parseFloat(sale.loss.toFixed(2)));
+                }
+
+                salesData.push(row);
             }
+        }
 
-            if (!dailySalesProfit[dtStr]) {
-                dailySalesProfit[dtStr] = 0;
+        if (props.columns.all.expense) {
+            for (const expense of props.allExpenses) {
+                let row = [new Date(expense.date)];
+
+                if (props.columns.all.sales) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.salesProfit) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.expense) {
+                    row.push(parseFloat(expense.amount.toFixed(2)));
+                }
+
+                if (props.columns.all.purchase) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.salesReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.purchaseReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.loss) {
+                    row.push(undefined);
+                }
+
+                salesData.push(row);
             }
-
-            dailySales[dtStr] += parseFloat(sale.net_total);
-            dailySalesProfit[dtStr] += parseFloat(sale.net_profit);
         }
 
+        if (props.columns.all.purchase) {
+            for (const purchase of props.allPurchases) {
+                let row = [new Date(purchase.date)];
 
-        for (let saleDate in dailySales) {
-            let parts = saleDate.split('-');
-            calendarSalesData.push([
-                new Date(parts[0], parts[1], parts[2]),
-                parseFloat(dailySales[saleDate].toFixed(2)),
-            ]);
+                if (props.columns.all.sales) {
+                    row.push(undefined);
+                }
 
-            calendarSalesProfitData.push([
-                new Date(parts[0], parts[1], parts[2]),
-                parseFloat(dailySalesProfit[saleDate].toFixed(2)),
-            ]);
-        }
+                if (props.columns.all.salesProfit) {
+                    row.push(undefined);
+                }
 
+                if (props.columns.all.expense) {
+                    row.push(undefined);
+                }
 
-        calendarAllSales = calendarSalesData
-        setCalendarAllSales(calendarSalesData);
+                if (props.columns.all.purchase) {
+                    row.push(parseFloat(purchase.net_total.toFixed(2)));
+                }
 
-        console.log("calendarSalesProfitData:", calendarSalesProfitData);
-        calendarAllSalesProfit = calendarSalesProfitData;
-        setCalendarAllSalesProfit(calendarSalesProfitData);
+                if (props.columns.all.salesReturn) {
+                    row.push(undefined);
+                }
 
-        let dailyExpenses = [];
-        for (const expense of props.allExpenses) {
-            salesData.push([
-                new Date(expense.date),
-                undefined,
-                undefined,
-                parseFloat(expense.amount.toFixed(2)),
-                undefined,
-                undefined,//Sales Return
-                undefined,//Purchase return
-                undefined,//Loss
-            ]);
+                if (props.columns.all.purchaseReturn) {
+                    row.push(undefined);
+                }
 
-            let dt = new Date(expense.date);
-            let dtStr = dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate();
-            if (!dailyExpenses[dtStr]) {
-                dailyExpenses[dtStr] = 0;
+                if (props.columns.all.loss) {
+                    row.push(undefined);
+                }
+
+                salesData.push(row);
             }
-            dailyExpenses[dtStr] += parseFloat(expense.amount);
         }
 
 
-        for (let expenseDate in dailyExpenses) {
-            let parts = expenseDate.split('-');
-            calendarExpenseData.push([
-                new Date(parts[0], parts[1], parts[2]),
-                parseFloat(dailyExpenses[expenseDate].toFixed(2)),
-            ]);
-        }
+        if (props.columns.all.salesReturn) {
+            for (const salesReturn of props.allSalesReturns) {
 
-        calendarAllExpenses = calendarExpenseData
-        setCalendarAllExpenses(calendarExpenseData);
+                let row = [new Date(salesReturn.date)];
 
+                if (props.columns.all.sales) {
+                    row.push(undefined);
+                }
 
-        let dailyPurchases = [];
-        for (const purchase of props.allPurchases) {
-            salesData.push([
-                new Date(purchase.date),
-                undefined,
-                undefined,
-                undefined,
-                parseFloat(purchase.net_total.toFixed(2)),
-                undefined,//Sales Return
-                undefined,//Purchase return
-                undefined,//Loss
-            ]);
+                if (props.columns.all.salesProfit) {
+                    row.push(undefined);
+                }
 
-            let dt = new Date(purchase.date);
-            let dtStr = dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate();
-            if (!dailyPurchases[dtStr]) {
-                dailyPurchases[dtStr] = 0;
+                if (props.columns.all.expense) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.purchase) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.salesReturn) {
+                    row.push(parseFloat(salesReturn.net_total.toFixed(2)));
+                }
+
+                if (props.columns.all.purchaseReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.loss) {
+                    row.push(undefined);
+                }
+
+                salesData.push(row);
             }
-            dailyPurchases[dtStr] += parseFloat(purchase.net_total);
         }
 
 
-        for (let purchaseDate in dailyPurchases) {
-            let parts = purchaseDate.split('-');
-            calendarPurchaseData.push([
-                new Date(parts[0], parts[1], parts[2]),
-                parseFloat(dailyPurchases[purchaseDate].toFixed(2)),
-            ]);
-        }
+        if (props.columns.all.purchaseReturn) {
+            for (const purchaseReturn of props.allPurchaseReturns) {
+                let row = [new Date(purchaseReturn.date)];
 
-        calendarAllPurchases = calendarPurchaseData
-        setCalendarAllPurchases(calendarPurchaseData);
+                if (props.columns.all.sales) {
+                    row.push(undefined);
+                }
 
+                if (props.columns.all.salesProfit) {
+                    row.push(undefined);
+                }
 
-        //sales returns
-        let dailySalesReturns = [];
-        for (const salesReturn of props.allSalesReturns) {
-            salesData.push([
-                new Date(salesReturn.date),
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                parseFloat(salesReturn.net_total.toFixed(2)),
-                undefined,//Purchase return
-                undefined,//Loss
-            ]);
+                if (props.columns.all.expense) {
+                    row.push(undefined);
+                }
 
-            let dt = new Date(salesReturn.date);
-            let dtStr = dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate();
-            if (!dailySalesReturns[dtStr]) {
-                dailySalesReturns[dtStr] = 0;
+                if (props.columns.all.purchase) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.salesReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.all.purchaseReturn) {
+                    row.push(parseFloat(purchaseReturn.net_total.toFixed(2)));
+                }
+
+                if (props.columns.all.loss) {
+                    row.push(undefined);
+                }
+
+                salesData.push(row);
             }
-            dailySalesReturns[dtStr] += parseFloat(salesReturn.net_total);
-        }
-
-        for (let salesReturnDate in dailySalesReturns) {
-            let parts = salesReturnDate.split('-');
-            calendarSalesReturnData.push([
-                new Date(parts[0], parts[1], parts[2]),
-                parseFloat(dailySalesReturns[salesReturnDate].toFixed(2)),
-            ]);
-        }
-
-        calendarAllSalesReturns = calendarSalesReturnData
-        setCalendarAllSalesReturns(calendarSalesReturnData);
-
-
-        //purchase returns
-        let dailyPurchaseReturns = [];
-        for (const purchaseReturn of props.allPurchaseReturns) {
-            salesData.push([
-                new Date(purchaseReturn.date),
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                undefined,
-                parseFloat(purchaseReturn.net_total.toFixed(2)),
-                undefined,//Loss
-            ]);
-
-            let dt = new Date(purchaseReturn.date);
-            let dtStr = dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate();
-            if (!dailyPurchaseReturns[dtStr]) {
-                dailyPurchaseReturns[dtStr] = 0;
-            }
-            dailyPurchaseReturns[dtStr] += parseFloat(purchaseReturn.net_total);
         }
 
         allSales = salesData;
         setAllSales(salesData);
-
-        for (let purchaseReturnDate in dailyPurchaseReturns) {
-            let parts = purchaseReturnDate.split('-');
-            calendarPurchaseReturnData.push([
-                new Date(parts[0], parts[1], parts[2]),
-                parseFloat(dailyPurchaseReturns[purchaseReturnDate].toFixed(2)),
-            ]);
-        }
-
-        calendarAllPurchaseReturns = calendarPurchaseReturnData
-        setCalendarAllPurchaseReturns(calendarPurchaseReturnData);
     }
 
 
@@ -305,41 +262,18 @@ const AllSales = forwardRef((props, ref) => {
         },
     });
 
-    const [calendarSalesOptions, setCalendarSalesOptions] = useState({
-        title: 'Daily Sales',
-    });
-
-    const [calendarSalesProfitOptions, setCalendarSalesProfitOptions] = useState({
-        title: 'Daily Profit',
-    });
-    const [calendarExpenseOptions, setCalendarExpenseOptions] = useState({
-        title: 'Daily Expenses',
-    });
-    const [calendarPurchaseOptions, setCalendarPurchaseOptions] = useState({
-        title: 'Daily Purchases',
-    });
-
-    const [calendarSalesReturnOptions, setCalendarSalesReturnOptions] = useState({
-        title: 'Daily Sales Returns',
-    });
-
-    const [calendarPurchaseReturnOptions, setCalendarPurchaseReturnOptions] = useState({
-        title: 'Daily Purchase Returns',
-    });
-
-
-
-
     useEffect(() => {
-        // getAllOrders();
+        console.log("Inside useEffect");
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+
+    const AllSalesRef = useRef();
+
     return (
         <>
             <div className="container-fluid p-0">
-                <h2>Sales vs Sales Profit vs Expense vs Purchase vs Sales Return vs Purchase Return</h2>
                 <div className="row">
                     {allSales && allSales.length > 0 ? <Chart
                         chartType="AnnotationChart"
@@ -347,69 +281,44 @@ const AllSales = forwardRef((props, ref) => {
                         height="400px"
                         data={allSales}
                         options={salesOptions}
+                        chartEvents={[
+                            {
+                                eventName: "ready",
+                                callback: ({ chartWrapper, google }) => {
+                                    const chart = chartWrapper.getChart();
+                                    /*
+                                    google.visualization.events.addListener(chart, "onmouseover", e => {
+                                        const { row, column } = e;
+                                        console.warn("MOUSE OVER ", { row, column });
+                                    });
+                                    google.visualization.events.addListener(chart, "onmouseout", e => {
+                                        const { row, column } = e;
+                                        console.warn("MOUSE OUT ", { row, column });
+                                    });
+                                    */
+                                    google.visualization.events.addListener(chart, "select", e => {
+                                        console.log(e);
+                                        let selection = chart.getSelection();
+                                        console.log("selection:", selection);
+                                    });
+                                    /*
+                                    google.visualization.events.addListener(chart, "click", e => {
+                                        console.log(e);
+                                        //  let selection = chart.getSelection();
+                                        // console.log("selection:", selection);
+                                    });
+                                    */
+                                }
+                            },
+                        ]}
+
                     /> : ""}
                 </div>
                 <br /><br />
-                <div className="row">
-                    {calendarAllSales && calendarAllSales.length > 0 ? <Chart
-                        chartType="Calendar"
-                        width="100%"
-                        height="400px"
-                        data={calendarAllSales}
-                        options={calendarSalesOptions}
-                    /> : ""}
-                </div>
-                <div className="row">
-                    {calendarAllSalesProfit && calendarAllSalesProfit.length > 0 ? <Chart
-                        chartType="Calendar"
-                        width="100%"
-                        height="400px"
-                        data={calendarAllSalesProfit}
-                        options={calendarSalesProfitOptions}
-                    /> : ""}
-                </div>
-                <div className="row">
-                    {calendarAllExpenses && calendarAllExpenses.length > 0 ? <Chart
-                        chartType="Calendar"
-                        width="100%"
-                        height="400px"
-                        data={calendarAllExpenses}
-                        options={calendarExpenseOptions}
-                    /> : ""}
-                </div>
 
-                <div className="row" style={{ overflowY: "scroll", height: "700px" }} >
-                    {calendarAllPurchases && calendarAllPurchases.length > 0 ? <Chart
-                        chartType="Calendar"
-                        width="100%"
-                        height="700px"
-                        data={calendarAllPurchases}
-                        options={calendarPurchaseOptions}
-                    /> : ""}
-                </div>
-
-                <div className="row"  >
-                    {calendarAllSalesReturns && calendarAllSalesReturns.length > 0 ? <Chart
-                        chartType="Calendar"
-                        width="100%"
-                        height="400px"
-                        data={calendarAllSalesReturns}
-                        options={calendarSalesReturnOptions}
-                    /> : ""}
-                </div>
-
-                <div className="row"  >
-                    {calendarAllPurchaseReturns && calendarAllPurchaseReturns.length > 0 ? <Chart
-                        chartType="Calendar"
-                        width="100%"
-                        height="400px"
-                        data={calendarAllPurchaseReturns}
-                        options={calendarPurchaseReturnOptions}
-                    /> : ""}
-                </div>
             </div>
         </>
     );
 });
 
-export default AllSales;
+export default memo(AllSales);
