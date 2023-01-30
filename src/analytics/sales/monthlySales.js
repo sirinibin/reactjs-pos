@@ -99,18 +99,43 @@ const MonthlySales = forwardRef((props, ref) => {
 
 
     function makeMonthlySalesData() {
-        let data = [
-            [
-                { type: "string", label: "Month" },
-                { type: "number", label: "Sales" },
-                { type: "number", label: "Sales Profit" },
-                { type: "number", label: "Expense" },
-                { type: "number", label: "Purchase" },
-                { type: "number", label: "Sales Return" },
-                { type: "number", label: "Purchase Return" },
-                { type: "number", label: "Loss" }
-            ],
+        let columns = [
+            { type: "string", label: "Month" }
         ];
+        if (props.columns.sales) {
+            columns.push({ type: "number", label: "Sales" });
+        }
+
+        if (props.columns.salesProfit) {
+            columns.push({ type: "number", label: "Sales Profit" });
+        }
+
+        if (props.columns.expense) {
+            columns.push({ type: "number", label: "Expense" });
+        }
+
+        if (props.columns.purchase) {
+            columns.push({ type: "number", label: "Purchase" });
+        }
+
+        if (props.columns.salesReturn) {
+            columns.push({ type: "number", label: "Sales Return" });
+        }
+
+        if (props.columns.purchaseReturn) {
+            columns.push({ type: "number", label: "Purchase Return" });
+        }
+
+        if (props.columns.loss) {
+            columns.push({ type: "number", label: "Loss" });
+        }
+
+        let data = [];
+
+
+        if (columns.length > 1) {
+            data.push(columns)
+        }
 
         console.log("selectedYear:", monthlySalesSelectedYear);
         let lastMonth = 12;
@@ -120,60 +145,94 @@ const MonthlySales = forwardRef((props, ref) => {
             let sales = 0.00;
             let profit = 0.00;
             let loss = 0.00;
-            for (const sale of props.allOrders) {
-                // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
-                // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
-                if ((new Date(sale.created_at).getMonth() + 1) == month && new Date(sale.created_at).getFullYear() == monthlySalesSelectedYear) {
-                    sales += parseFloat(sale.net_total);
-                    profit += parseFloat(sale.net_profit);
-                    loss += parseFloat(sale.loss);
+            if (props.columns.sales || props.columns.salesProfit || props.columns.loss) {
+                for (const sale of props.allOrders) {
+                    // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
+                    // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
+                    if ((new Date(sale.created_at).getMonth() + 1) == month && new Date(sale.created_at).getFullYear() == monthlySalesSelectedYear) {
+                        sales += parseFloat(sale.net_total);
+                        profit += parseFloat(sale.net_profit);
+                        loss += parseFloat(sale.loss);
+                    }
                 }
             }
 
             let totalExpense = 0.00;
-            for (const expense of props.allExpenses) {
-                // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
-                // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
-                if ((new Date(expense.date).getMonth() + 1) == month &&
-                    new Date(expense.date).getFullYear() == monthlySalesSelectedYear) {
-                    totalExpense += parseFloat(expense.amount);
+            if (props.columns.expense) {
+                for (const expense of props.allExpenses) {
+                    // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
+                    // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
+                    if ((new Date(expense.date).getMonth() + 1) == month &&
+                        new Date(expense.date).getFullYear() == monthlySalesSelectedYear) {
+                        totalExpense += parseFloat(expense.amount);
+                    }
                 }
             }
 
             let totalPurchase = 0.00;
-            for (const purchase of props.allPurchases) {
-                if ((new Date(purchase.date).getMonth() + 1) == month &&
-                    new Date(purchase.date).getFullYear() == monthlySalesSelectedYear) {
-                    totalPurchase += parseFloat(purchase.net_total);
+            if (props.columns.purchase) {
+                for (const purchase of props.allPurchases) {
+                    if ((new Date(purchase.date).getMonth() + 1) == month &&
+                        new Date(purchase.date).getFullYear() == monthlySalesSelectedYear) {
+                        totalPurchase += parseFloat(purchase.net_total);
+                    }
                 }
             }
 
             let totalSalesReturn = 0.00;
-            for (const salesReturn of props.allSalesReturns) {
-                if ((new Date(salesReturn.date).getMonth() + 1) == month &&
-                    new Date(salesReturn.date).getFullYear() == monthlySalesSelectedYear) {
-                    totalSalesReturn += parseFloat(salesReturn.net_total);
+            if (props.columns.salesReturn) {
+                for (const salesReturn of props.allSalesReturns) {
+                    if ((new Date(salesReturn.date).getMonth() + 1) == month &&
+                        new Date(salesReturn.date).getFullYear() == monthlySalesSelectedYear) {
+                        totalSalesReturn += parseFloat(salesReturn.net_total);
+                    }
                 }
             }
 
             let totalPurchaseReturn = 0.00;
-            for (const purchaseReturn of props.allPurchaseReturns) {
-                if ((new Date(purchaseReturn.date).getMonth() + 1) == month &&
-                    new Date(purchaseReturn.date).getFullYear() == monthlySalesSelectedYear) {
-                    totalPurchaseReturn += parseFloat(purchaseReturn.net_total);
+            if (props.columns.purchaseReturn) {
+                for (const purchaseReturn of props.allPurchaseReturns) {
+                    if ((new Date(purchaseReturn.date).getMonth() + 1) == month &&
+                        new Date(purchaseReturn.date).getFullYear() == monthlySalesSelectedYear) {
+                        totalPurchaseReturn += parseFloat(purchaseReturn.net_total);
+                    }
                 }
             }
 
-            data.push([
-                getMonthNameByNumber(month),
-                parseFloat(sales.toFixed(2)),
-                parseFloat(profit.toFixed(2)),
-                parseFloat(totalExpense.toFixed(2)),
-                parseFloat(totalPurchase.toFixed(2)),
-                parseFloat(totalSalesReturn.toFixed(2)),
-                parseFloat(totalPurchaseReturn.toFixed(2)),
-                parseFloat(loss.toFixed(2))
-            ]);
+
+            let row = [getMonthNameByNumber(month)];
+
+            if (props.columns.sales) {
+                row.push(parseFloat(sales.toFixed(2)));
+            }
+
+            if (props.columns.salesProfit) {
+                row.push(parseFloat(profit.toFixed(2)));
+            }
+
+            if (props.columns.expense) {
+                row.push(parseFloat(totalExpense.toFixed(2)));
+            }
+
+            if (props.columns.purchase) {
+                row.push(parseFloat(totalPurchase.toFixed(2)));
+            }
+
+            if (props.columns.salesReturn) {
+                row.push(parseFloat(totalSalesReturn.toFixed(2)));
+            }
+
+            if (props.columns.purchaseReturn) {
+                row.push(parseFloat(totalPurchaseReturn.toFixed(2)));
+            }
+
+            if (props.columns.loss) {
+                row.push(parseFloat(loss.toFixed(2)));
+            }
+
+            if (row.length > 1) {
+                data.push(row);
+            }
 
         }
         monthlySales = data;
