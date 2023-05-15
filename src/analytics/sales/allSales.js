@@ -28,6 +28,15 @@ const AllSales = forwardRef((props, ref) => {
             columns.push({ type: "number", label: "Sales Profit" });
         }
 
+        if (props.columns.paidSales) {
+            columns.push({ type: "number", label: "Paid Sales" });
+        }
+
+        if (props.columns.unpaidSales) {
+            columns.push({ type: "number", label: "UnPaid Sales" });
+        }
+
+
         if (props.columns.expense) {
             columns.push({ type: "number", label: "Expense" });
         }
@@ -56,7 +65,12 @@ const AllSales = forwardRef((props, ref) => {
         }
 
 
-        if (props.columns.sales || props.columns.salesProfit || props.columns.loss) {
+        if (props.columns.sales || 
+            props.columns.salesProfit || 
+            props.columns.loss||
+            props.columns.paidSales||
+            props.columns.unpaidSales
+            ) {
             for (const sale of props.allOrders) {
                 let row = [new Date(sale.created_at)];
 
@@ -66,6 +80,22 @@ const AllSales = forwardRef((props, ref) => {
 
                 if (props.columns.salesProfit) {
                     row.push(parseFloat(sale.net_profit.toFixed(2)));
+                }
+
+                if (props.columns.paidSales) {
+                    if(sale.payment_status=="paid"){
+                        row.push(parseFloat(sale.net_total.toFixed(2)));
+                    }else {
+                        row.push(0.00);
+                    }
+                }
+
+                if (props.columns.unpaidSales) {
+                    if(sale.payment_status=="not_paid"){
+                        row.push(parseFloat(sale.net_total.toFixed(2)));
+                    }else {
+                        row.push(0.00);
+                    }
                 }
 
                 if (props.columns.expense) {

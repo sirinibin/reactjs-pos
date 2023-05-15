@@ -118,7 +118,7 @@ const Analytics = forwardRef((props, ref) => {
     }
 
     useEffect(async () => {
-        let fields = "select=id,code,date,total,net_total,net_profit,loss,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price,customer_id,customer.id,customer.vat_no";
+        let fields = "select=id,code,date,total,net_total,payment_status,net_profit,loss,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price,customer_id,customer.id,customer.vat_no";
         let orders = await getAllRecords("order", fields);
         fields = "select=id,code,date,amount,description,category_name,created_by_name,created_at";
         let expenses = await getAllRecords("expense", fields);
@@ -158,7 +158,7 @@ const Analytics = forwardRef((props, ref) => {
         initDailyGraph();
         initMonthlyGraph();
         initYearlyGraph();
-        initCalendarGraph();
+        //initCalendarGraph();
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -211,11 +211,11 @@ const Analytics = forwardRef((props, ref) => {
     }
 
     let [columns, setColumns] = useState({
-        all: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
-        hourly: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
-        daily: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
-        monthly: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
-        yearly: { sales: true, salesProfit: false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        all: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        hourly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        daily: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        monthly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        yearly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
     });
 
 
@@ -234,6 +234,18 @@ const Analytics = forwardRef((props, ref) => {
                     initAllGraph();
 
                 }} />Sales Profit vs &nbsp;
+                   <input type="checkbox" checked={columns.all.paidSales} onChange={(e) => {
+                    columns.all.paidSales = !columns.all.paidSales;
+                    setColumns({ ...columns });
+                    initAllGraph();
+
+                }} />Paid Sales vs &nbsp;
+                      <input type="checkbox" checked={columns.all.unpaidSales} onChange={(e) => {
+                    columns.all.unpaidSales = !columns.all.unpaidSales;
+                    setColumns({ ...columns });
+                    initAllGraph();
+
+                }} />UnPaid Sales vs &nbsp;
                 <input type="checkbox" checked={columns.all.expense} onChange={(e) => {
                     columns.all.expense = !columns.all.expense;
                     setColumns({ ...columns });
@@ -287,6 +299,18 @@ const Analytics = forwardRef((props, ref) => {
                     initHourlyGraph();
 
                 }} />Sales Profit vs &nbsp;
+                  <input type="checkbox" checked={columns.hourly.paidSales} onChange={(e) => {
+                    columns.hourly.paidSales = !columns.hourly.paidSales;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Paid Sales vs &nbsp;
+                      <input type="checkbox" checked={columns.hourly.unpaidSales} onChange={(e) => {
+                    columns.hourly.unpaidSales = !columns.hourly.unpaidSales;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />UnPaid Sales vs &nbsp;
                 <input type="checkbox" checked={columns.hourly.expense} onChange={(e) => {
                     columns.hourly.expense = !columns.hourly.expense;
                     setColumns({ ...columns });
@@ -340,6 +364,18 @@ const Analytics = forwardRef((props, ref) => {
                     initDailyGraph();
 
                 }} />Sales Profit vs &nbsp;
+                  <input type="checkbox" checked={columns.daily.paidSales} onChange={(e) => {
+                    columns.daily.paidSales = !columns.daily.paidSales;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Paid Sales vs &nbsp;
+                      <input type="checkbox" checked={columns.daily.unpaidSales} onChange={(e) => {
+                    columns.daily.unpaidSales = !columns.daily.unpaidSales;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />UnPaid Sales vs &nbsp;
                 <input type="checkbox" checked={columns.daily.expense} onChange={(e) => {
                     columns.daily.expense = !columns.daily.expense;
                     setColumns({ ...columns });
@@ -393,6 +429,18 @@ const Analytics = forwardRef((props, ref) => {
                     initMonthlyGraph();
 
                 }} />Sales Profit vs &nbsp;
+                  <input type="checkbox" checked={columns.monthly.paidSales} onChange={(e) => {
+                    columns.monthly.paidSales = !columns.monthly.paidSales;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Paid Sales vs &nbsp;
+                      <input type="checkbox" checked={columns.monthly.unpaidSales} onChange={(e) => {
+                    columns.monthly.unpaidSales = !columns.monthly.unpaidSales;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />UnPaid Sales vs &nbsp;
                 <input type="checkbox" checked={columns.monthly.expense} onChange={(e) => {
                     columns.monthly.expense = !columns.monthly.expense;
                     setColumns({ ...columns });
@@ -447,6 +495,18 @@ const Analytics = forwardRef((props, ref) => {
                     initYearlyGraph();
 
                 }} />Sales Profit vs &nbsp;
+                  <input type="checkbox" checked={columns.yearly.paidSales} onChange={(e) => {
+                    columns.yearly.paidSales = !columns.yearly.paidSales;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Paid Sales vs &nbsp;
+                      <input type="checkbox" checked={columns.yearly.unpaidSales} onChange={(e) => {
+                    columns.yearly.unpaidSales = !columns.yearly.unpaidSales;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />UnPaid Sales vs &nbsp;
                 <input type="checkbox" checked={columns.yearly.expense} onChange={(e) => {
                     columns.yearly.expense = !columns.yearly.expense;
                     setColumns({ ...columns });
@@ -487,6 +547,7 @@ const Analytics = forwardRef((props, ref) => {
                 columns={columns.yearly}
             />
             <hr />
+            {/*
             <Calendar ref={CalendarRef}
                 allOrders={allOrders}
                 allExpenses={allExpenses}
@@ -494,6 +555,7 @@ const Analytics = forwardRef((props, ref) => {
                 allSalesReturns={allSalesReturns}
                 allPurchaseReturns={allPurchaseReturns}
             />
+            */}
         </>
     );
 });

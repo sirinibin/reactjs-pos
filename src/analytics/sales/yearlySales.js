@@ -45,6 +45,14 @@ const YearlySales = forwardRef((props, ref) => {
             columns.push({ type: "number", label: "Sales Profit" });
         }
 
+        if (props.columns.paidSales) {
+            columns.push({ type: "number", label: "Paid Sales" });
+        }
+
+        if (props.columns.unpaidSales) {
+            columns.push({ type: "number", label: "UnPaid Sales" });
+        }
+
         if (props.columns.expense) {
             columns.push({ type: "number", label: "Expense" });
         }
@@ -79,12 +87,20 @@ const YearlySales = forwardRef((props, ref) => {
 
             let sales = 0.00;
             let profit = 0.00;
+            let paidSales = 0.00;
+            let unpaidSales = 0.00;
             let loss = 0.00;
-            if (props.columns.sales || props.columns.salesProfit || props.columns.loss) {
+            if (props.columns.sales || props.columns.salesProfit || props.columns.paidSales || props.columns.unpaidSales || props.columns.loss) {
                 for (const sale of props.allOrders) {
                     if (parseInt(new Date(sale.created_at).getFullYear()) === year) {
                         sales += parseFloat(sale.net_total);
                         profit += parseFloat(sale.net_profit);
+                        
+                        if(sale.payment_status=="paid"){
+                            paidSales += parseFloat(sale.net_total);
+                        }else if(sale.payment_status=="not_paid"){
+                            unpaidSales += parseFloat(sale.net_total);
+                        }
                         loss += parseFloat(sale.loss);
                     }
                 }
@@ -134,6 +150,14 @@ const YearlySales = forwardRef((props, ref) => {
 
             if (props.columns.salesProfit) {
                 row.push(parseFloat(profit.toFixed(2)));
+            }
+
+            if (props.columns.paidSales) {
+                row.push(parseFloat(paidSales.toFixed(2)));
+            }
+
+            if (props.columns.unpaidSales) {
+                row.push(parseFloat(unpaidSales.toFixed(2)));
             }
 
             if (props.columns.expense) {

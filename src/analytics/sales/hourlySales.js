@@ -124,6 +124,14 @@ const HourlySales = forwardRef((props, ref) => {
             columns.push({ type: "number", label: "Sales Profit" });
         }
 
+        if (props.columns.paidSales) {
+            columns.push({ type: "number", label: "Paid Sales" });
+        }
+
+        if (props.columns.unpaidSales) {
+            columns.push({ type: "number", label: "UnPaid Sales" });
+        }
+
         if (props.columns.expense) {
             columns.push({ type: "number", label: "Expense" });
         }
@@ -153,7 +161,7 @@ const HourlySales = forwardRef((props, ref) => {
 
 
 
-        if (props.columns.sales || props.columns.salesProfit || props.columns.loss) {
+        if (props.columns.sales || props.columns.salesProfit || props.columns.loss||props.columns.paidSales||props.columns.unpaidSales) {
             for (const sale of props.allOrders) {
                 // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
                 // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
@@ -173,6 +181,22 @@ const HourlySales = forwardRef((props, ref) => {
                     if (props.columns.salesProfit) {
                         row.push(parseFloat(sale.net_profit.toFixed(2)));
                     }
+
+                    if (props.columns.paidSales) {
+                        if(sale.payment_status=="paid"){
+                            row.push(parseFloat(sale.net_total.toFixed(2)));
+                        }else {
+                            row.push(0.00);
+                        }
+                    }
+
+                    if (props.columns.unpaidSales) {
+                        if(sale.payment_status=="not_paid"){
+                            row.push(parseFloat(sale.net_total.toFixed(2)));
+                        }else {
+                            row.push(0.00);
+                        }
+                    }    
 
                     if (props.columns.expense) {
                         row.push(undefined);
@@ -216,6 +240,14 @@ const HourlySales = forwardRef((props, ref) => {
                         row.push(undefined);
                     }
 
+                    if (props.columns.sales) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesProfit) {
+                        row.push(undefined);
+                    }
+                    
                     if (props.columns.expense) {
                         row.push(parseFloat(expense.amount.toFixed(2)));
                     }
@@ -248,6 +280,14 @@ const HourlySales = forwardRef((props, ref) => {
                     && new Date(purchase.date).getDate() == hourlySalesSelectedDate
                 ) {
                     let row = [new Date(purchase.date)];
+
+                    if (props.columns.sales) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesProfit) {
+                        row.push(undefined);
+                    }
 
                     if (props.columns.sales) {
                         row.push(undefined);
@@ -299,6 +339,14 @@ const HourlySales = forwardRef((props, ref) => {
                         row.push(undefined);
                     }
 
+                    if (props.columns.sales) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesProfit) {
+                        row.push(undefined);
+                    }
+
                     if (props.columns.expense) {
                         row.push(undefined);
                     }
@@ -332,6 +380,14 @@ const HourlySales = forwardRef((props, ref) => {
                 ) {
 
                     let row = [new Date(purchaseReturn.date)];
+
+                    if (props.columns.sales) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesProfit) {
+                        row.push(undefined);
+                    }
 
                     if (props.columns.sales) {
                         row.push(undefined);
