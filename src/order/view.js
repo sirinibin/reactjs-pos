@@ -444,7 +444,7 @@ const OrderView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <td className="text-center">
                                         <NumberFormat
-                                            value={model.profit}
+                                            value={model.profit?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" SAR"}
@@ -453,7 +453,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td> : ""}
                                 {cookies.get('admin') === "true" ? <td className="text-center">
                                     <NumberFormat
-                                        value={model.loss}
+                                        value={model.loss?.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
