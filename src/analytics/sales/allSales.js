@@ -49,12 +49,20 @@ const AllSales = forwardRef((props, ref) => {
             columns.push({ type: "number", label: "Sales Return" });
         }
 
+        if (props.columns.salesReturnProfit) {
+            columns.push({ type: "number", label: "Sales Return Profit" });
+        }
+
+        if (props.columns.salesReturnLoss) {
+            columns.push({ type: "number", label: "Sales Return Loss" });
+        }
+
         if (props.columns.purchaseReturn) {
             columns.push({ type: "number", label: "Purchase Return" });
         }
 
         if (props.columns.loss) {
-            columns.push({ type: "number", label: "Loss" });
+            columns.push({ type: "number", label: "Sales Loss" });
         }
 
         let data = [];
@@ -110,6 +118,14 @@ const AllSales = forwardRef((props, ref) => {
                     row.push(undefined);
                 }
 
+                if (props.columns.salesReturnProfit) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnLoss) {
+                    row.push(undefined);
+                }
+
                 if (props.columns.purchaseReturn) {
                     row.push(undefined);
                 }
@@ -146,6 +162,14 @@ const AllSales = forwardRef((props, ref) => {
                     row.push(undefined);
                 }
 
+                if (props.columns.salesReturnProfit) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnLoss) {
+                    row.push(undefined);
+                }
+
                 if (props.columns.purchaseReturn) {
                     row.push(undefined);
                 }
@@ -179,6 +203,14 @@ const AllSales = forwardRef((props, ref) => {
                 }
 
                 if (props.columns.salesReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnProfit) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnLoss) {
                     row.push(undefined);
                 }
 
@@ -220,6 +252,104 @@ const AllSales = forwardRef((props, ref) => {
                     row.push(parseFloat(salesReturn.net_total.toFixed(2)));
                 }
 
+                if (props.columns.salesReturnProfit) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnLoss) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.purchaseReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.loss) {
+                    row.push(undefined);
+                }
+
+                data.push(row);
+            }
+        }
+
+        if (props.columns.salesReturnProfit) {
+            for (const salesReturn of props.allSalesReturns) {
+
+                let row = [new Date(salesReturn.date)];
+
+                if (props.columns.sales) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesProfit) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.expense) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.purchase) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnProfit) {
+                    row.push(parseFloat(salesReturn.net_profit.toFixed(2)));
+                }
+
+                if (props.columns.salesReturnLoss) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.purchaseReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.loss) {
+                    row.push(undefined);
+                }
+
+                data.push(row);
+            }
+        }
+
+        if (props.columns.salesReturnLoss) {
+            for (const salesReturn of props.allSalesReturns) {
+
+                let row = [new Date(salesReturn.date)];
+
+                if (props.columns.sales) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesProfit) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.expense) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.purchase) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnProfit) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnLoss) {
+                    row.push(parseFloat(salesReturn.loss.toFixed(2)));
+                }
+
                 if (props.columns.purchaseReturn) {
                     row.push(undefined);
                 }
@@ -254,6 +384,14 @@ const AllSales = forwardRef((props, ref) => {
                 }
 
                 if (props.columns.salesReturn) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnProfit) {
+                    row.push(undefined);
+                }
+
+                if (props.columns.salesReturnLoss) {
                     row.push(undefined);
                 }
 

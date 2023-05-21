@@ -123,12 +123,20 @@ const DailySales = forwardRef((props, ref) => {
             columns.push({ type: "number", label: "Sales Return" });
         }
 
+        if (props.columns.salesReturnProfit) {
+            columns.push({ type: "number", label: "Sales Return Profit" });
+        }
+
+        if (props.columns.salesReturnLoss) {
+            columns.push({ type: "number", label: "Sales Return Loss" });
+        }
+
         if (props.columns.purchaseReturn) {
             columns.push({ type: "number", label: "Purchase Return" });
         }
 
         if (props.columns.loss) {
-            columns.push({ type: "number", label: "Loss" });
+            columns.push({ type: "number", label: "Sales Loss" });
         }
 
         let data = [];
@@ -190,12 +198,16 @@ const DailySales = forwardRef((props, ref) => {
             }
 
             let totalSalesReturn = 0.00;
-            if (props.columns.salesReturn) {
+            let totalSalesReturnProfit = 0.00;
+            let totalSalesReturnLoss = 0.00;
+            if (props.columns.salesReturn||props.columns.salesReturnProfit||props.columns.salesReturnLoss) {
                 for (const salesReturn of props.allSalesReturns) {
                     if ((new Date(salesReturn.date).getMonth() + 1) == dailySalesSelectedMonth &&
                         new Date(salesReturn.date).getFullYear() == dailySalesSelectedYear &&
                         new Date(salesReturn.date).getDate() == day) {
                         totalSalesReturn += parseFloat(salesReturn.net_total);
+                        totalSalesReturnProfit += parseFloat(salesReturn.net_profit);
+                        totalSalesReturnLoss += parseFloat(salesReturn.loss);
                     }
                 }
             }
@@ -239,6 +251,14 @@ const DailySales = forwardRef((props, ref) => {
 
             if (props.columns.salesReturn) {
                 row.push(parseFloat(totalSalesReturn.toFixed(2)));
+            }
+
+            if (props.columns.salesReturnProfit) {
+                row.push(parseFloat(totalSalesReturnProfit.toFixed(2)));
+            }
+
+            if (props.columns.salesReturnLoss) {
+                row.push(parseFloat(totalSalesReturnLoss.toFixed(2)));
             }
 
             if (props.columns.purchaseReturn) {

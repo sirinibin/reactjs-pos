@@ -130,6 +130,14 @@ const MonthlySales = forwardRef((props, ref) => {
             columns.push({ type: "number", label: "Sales Return" });
         }
 
+        if (props.columns.salesReturnProfit) {
+            columns.push({ type: "number", label: "Sales Return Profit" });
+        }
+
+        if (props.columns.salesReturnLoss) {
+            columns.push({ type: "number", label: "Sales Return Loss" });
+        }
+
         if (props.columns.purchaseReturn) {
             columns.push({ type: "number", label: "Purchase Return" });
         }
@@ -197,11 +205,15 @@ const MonthlySales = forwardRef((props, ref) => {
             }
 
             let totalSalesReturn = 0.00;
-            if (props.columns.salesReturn) {
+            let totalSalesReturnProfit = 0.00;
+            let totalSalesReturnLoss = 0.00;
+            if (props.columns.salesReturn||props.columns.salesReturnProfit||props.columns.salesReturnLoss) {
                 for (const salesReturn of props.allSalesReturns) {
                     if ((new Date(salesReturn.date).getMonth() + 1) == month &&
                         new Date(salesReturn.date).getFullYear() == monthlySalesSelectedYear) {
                         totalSalesReturn += parseFloat(salesReturn.net_total);
+                        totalSalesReturnProfit += parseFloat(salesReturn.net_profit);
+                        totalSalesReturnLoss += parseFloat(salesReturn.loss);
                     }
                 }
             }
@@ -245,6 +257,14 @@ const MonthlySales = forwardRef((props, ref) => {
 
             if (props.columns.salesReturn) {
                 row.push(parseFloat(totalSalesReturn.toFixed(2)));
+            }
+
+            if (props.columns.salesReturnProfit) {
+                row.push(parseFloat(totalSalesReturnProfit.toFixed(2)));
+            }
+
+            if (props.columns.salesReturnLoss) {
+                row.push(parseFloat(totalSalesReturnLoss.toFixed(2)));
             }
 
             if (props.columns.purchaseReturn) {

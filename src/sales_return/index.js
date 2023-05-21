@@ -371,7 +371,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,total,net_total,discount_percent,discount,products,customer_name,created_at,vat_price";
+            "select=id,code,date,total,net_total,discount_percent,discount,products,customer_name,created_at,vat_price,loss,net_profit";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -690,6 +690,12 @@ function SalesReturnIndex(props) {
                 totalSalesReturn = data.meta.total_sales_return;
                 setTotalSalesReturn(totalSalesReturn);
 
+                netProfit = data.meta.net_profit;
+                setNetProfit(netProfit);
+
+                loss = data.meta.loss;
+                setLoss(loss);
+
                 vatPrice = data.meta.vat_price;
                 setVatPrice(vatPrice);
 
@@ -747,6 +753,9 @@ function SalesReturnIndex(props) {
         SalesReturnPaymentCreateRef.current.open(id);
     }
 
+    let [netProfit, setNetProfit] = useState(0.00);
+    let [loss, setLoss] = useState(0.00);
+
 
     return (
         <>
@@ -771,8 +780,30 @@ function SalesReturnIndex(props) {
                                 />
                             </Badge>
                         </h1>
+                        {cookies.get('admin') === "true" ? <h1 className="text-end">
+                            Net Profit Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={netProfit}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1> : ""}
+                        {cookies.get('admin') === "true" ? <h1 className="text-end">
+                            Loss Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={loss}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1> : ""}
                         <h1 className="text-end">
-                            Discounts: <Badge bg="secondary">
+                            Discount Retun: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalDiscount.toFixed(2)}
                                     displayType={"text"}
@@ -783,7 +814,7 @@ function SalesReturnIndex(props) {
                             </Badge>
                         </h1>
                         <h1 className="text-end">
-                            VAT Returned: <Badge bg="secondary">
+                            VAT Return: <Badge bg="secondary">
                                 <NumberFormat
                                     value={vatPrice.toFixed(2)}
                                     displayType={"text"}

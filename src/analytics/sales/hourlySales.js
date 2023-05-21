@@ -144,12 +144,20 @@ const HourlySales = forwardRef((props, ref) => {
             columns.push({ type: "number", label: "Sales Return" });
         }
 
+        if (props.columns.salesReturnProfit) {
+            columns.push({ type: "number", label: "Sales Return profit" });
+        }
+
+        if (props.columns.salesReturnLoss) {
+            columns.push({ type: "number", label: "Sales Return Loss" });
+        }
+
         if (props.columns.purchaseReturn) {
             columns.push({ type: "number", label: "Purchase Return" });
         }
 
         if (props.columns.loss) {
-            columns.push({ type: "number", label: "Loss" });
+            columns.push({ type: "number", label: "Sales Loss" });
         }
 
         let data = [];
@@ -210,6 +218,14 @@ const HourlySales = forwardRef((props, ref) => {
                         row.push(undefined);
                     }
 
+                    if (props.columns.salesReturnProfit) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturnLoss) {
+                        row.push(undefined);
+                    }
+
                     if (props.columns.purchaseReturn) {
                         row.push(undefined);
                     }
@@ -257,6 +273,14 @@ const HourlySales = forwardRef((props, ref) => {
                     }
 
                     if (props.columns.salesReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturnProfit) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturnLoss) {
                         row.push(undefined);
                     }
 
@@ -309,6 +333,14 @@ const HourlySales = forwardRef((props, ref) => {
                         row.push(undefined);
                     }
 
+                    if (props.columns.salesReturnProfit) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturnLoss) {
+                        row.push(undefined);
+                    }
+
                     if (props.columns.purchaseReturn) {
                         row.push(undefined);
                     }
@@ -322,7 +354,7 @@ const HourlySales = forwardRef((props, ref) => {
             }
         }
 
-        if (props.columns.salesReturn) {
+        if (props.columns.salesReturn || props.columns.salesReturnProfit || props.columns.salesReturnLoss) {
             for (const salesReturn of props.allSalesReturns) {
                 if ((new Date(salesReturn.date).getMonth() + 1) == hourlySalesSelectedMonth
                     && new Date(salesReturn.date).getFullYear() == hourlySalesSelectedYear
@@ -357,6 +389,14 @@ const HourlySales = forwardRef((props, ref) => {
 
                     if (props.columns.salesReturn) {
                         row.push(parseFloat(salesReturn.net_total.toFixed(2)));
+                    }
+
+                    if (props.columns.salesReturnProfit) {
+                        row.push(parseFloat(salesReturn.net_profit.toFixed(2)));
+                    }
+
+                    if (props.columns.salesReturnLoss) {
+                        row.push(parseFloat(salesReturn.loss.toFixed(2)));
                     }
 
                     if (props.columns.purchaseReturn) {
@@ -406,6 +446,14 @@ const HourlySales = forwardRef((props, ref) => {
                     }
 
                     if (props.columns.salesReturn) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturnProfit) {
+                        row.push(undefined);
+                    }
+
+                    if (props.columns.salesReturnLoss) {
                         row.push(undefined);
                     }
 

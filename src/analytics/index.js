@@ -126,7 +126,7 @@ const Analytics = forwardRef((props, ref) => {
         fields = "select=id,code,date,net_total,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit";
         let purchases = await getAllRecords("purchase", fields);
 
-        fields = "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss,order_code";
+        fields = "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,loss,order_code";
         let salesReturns = await getAllRecords("sales-return", fields);
 
         fields = "select=id,code,purchase_code,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at";
@@ -211,11 +211,11 @@ const Analytics = forwardRef((props, ref) => {
     }
 
     let [columns, setColumns] = useState({
-        all: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
-        hourly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
-        daily: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
-        monthly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
-        yearly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, purchaseReturn: false, loss: false },
+        all: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false,salesReturnProfit: false,salesReturnLoss: false, purchaseReturn: false, loss: false },
+        hourly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false,salesReturnProfit: false,salesReturnLoss: false, purchaseReturn: false, loss: false },
+        daily: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false,salesReturnProfit: false,salesReturnLoss: false, purchaseReturn: false, loss: false },
+        monthly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false,salesReturnProfit: false,salesReturnLoss: false, purchaseReturn: false, loss: false },
+        yearly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, salesReturnProfit: false,salesReturnLoss: false,purchaseReturn: false, loss: false },
     });
 
 
@@ -264,6 +264,18 @@ const Analytics = forwardRef((props, ref) => {
                     initAllGraph();
 
                 }} />Sales Return vs &nbsp;
+                  <input type="checkbox" checked={columns.all.salesReturnProfit} onChange={(e) => {
+                    columns.all.salesReturnProfit = !columns.all.salesReturnProfit;
+                    setColumns({ ...columns });
+                    initAllGraph();
+
+                }} />Sales Return Profit vs &nbsp;
+                   <input type="checkbox" checked={columns.all.salesReturnLoss} onChange={(e) => {
+                    columns.all.salesReturnLoss = !columns.all.salesReturnLoss;
+                    setColumns({ ...columns });
+                    initAllGraph();
+
+                }} />Sales Return Loss vs &nbsp;
                 <input type="checkbox" checked={columns.all.purchaseReturn} onChange={(e) => {
                     columns.all.purchaseReturn = !columns.all.purchaseReturn;
                     setColumns({ ...columns });
@@ -275,7 +287,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initAllGraph();
 
-                }} />Loss
+                }} />Sales Loss
             </h2>
             <AllSales ref={AllGraphRef}
                 allOrders={allOrders}
@@ -329,6 +341,18 @@ const Analytics = forwardRef((props, ref) => {
                     initHourlyGraph();
 
                 }} />Sales Return vs &nbsp;
+                <input type="checkbox" checked={columns.hourly.salesReturnProfit} onChange={(e) => {
+                    columns.hourly.salesReturnProfit = !columns.hourly.salesReturnProfit;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Sales Return Profit vs &nbsp;
+                <input type="checkbox" checked={columns.hourly.salesReturnLoss} onChange={(e) => {
+                    columns.hourly.salesReturnLoss = !columns.hourly.salesReturnLoss;
+                    setColumns({ ...columns });
+                    initHourlyGraph();
+
+                }} />Sales Return Loss vs &nbsp;
                 <input type="checkbox" checked={columns.hourly.purchaseReturn} onChange={(e) => {
                     columns.hourly.purchaseReturn = !columns.hourly.purchaseReturn;
                     setColumns({ ...columns });
@@ -340,7 +364,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initHourlyGraph();
 
-                }} />Loss
+                }} />Sales Loss
             </h2>
             <HourlySales ref={HourlyGraphRef}
                 allOrders={allOrders}
@@ -394,6 +418,18 @@ const Analytics = forwardRef((props, ref) => {
                     initDailyGraph();
 
                 }} />Sales Return vs &nbsp;
+                 <input type="checkbox" checked={columns.daily.salesReturnProfit} onChange={(e) => {
+                    columns.daily.salesReturnProfit = !columns.daily.salesReturnProfit;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Sales Return Profit vs &nbsp;
+                <input type="checkbox" checked={columns.daily.salesReturnLoss} onChange={(e) => {
+                    columns.daily.salesReturnLoss = !columns.daily.salesReturnLoss;
+                    setColumns({ ...columns });
+                    initDailyGraph();
+
+                }} />Sales Return Loss vs &nbsp;
                 <input type="checkbox" checked={columns.daily.purchaseReturn} onChange={(e) => {
                     columns.daily.purchaseReturn = !columns.daily.purchaseReturn;
                     setColumns({ ...columns });
@@ -405,7 +441,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initDailyGraph();
 
-                }} />Loss
+                }} />Sales Loss
             </h2>
             <DailySales ref={DailyGraphRef}
                 allOrders={allOrders}
@@ -459,6 +495,18 @@ const Analytics = forwardRef((props, ref) => {
                     initMonthlyGraph();
 
                 }} />Sales Return vs &nbsp;
+                <input type="checkbox" checked={columns.monthly.salesReturnProfit} onChange={(e) => {
+                    columns.monthly.salesReturnProfit = !columns.monthly.salesReturnProfit;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Sales Return Profit vs &nbsp;
+                <input type="checkbox" checked={columns.monthly.salesReturnLoss} onChange={(e) => {
+                    columns.monthly.salesReturnLoss = !columns.monthly.salesReturnLoss;
+                    setColumns({ ...columns });
+                    initMonthlyGraph();
+
+                }} />Sales Return Loss vs &nbsp;
                 <input type="checkbox" checked={columns.monthly.purchaseReturn} onChange={(e) => {
                     columns.monthly.purchaseReturn = !columns.monthly.purchaseReturn;
                     setColumns({ ...columns });
@@ -470,7 +518,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initMonthlyGraph();
 
-                }} />Loss
+                }} />Sales Loss
 
             </h2>
             <MonthlySales ref={MonthlyGraphRef}
@@ -525,6 +573,18 @@ const Analytics = forwardRef((props, ref) => {
                     initYearlyGraph();
 
                 }} />Sales Return vs &nbsp;
+                <input type="checkbox" checked={columns.yearly.salesReturnProfit} onChange={(e) => {
+                    columns.yearly.salesReturnProfit = !columns.yearly.salesReturnProfit;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Sales Return Profit vs &nbsp;
+                <input type="checkbox" checked={columns.yearly.salesReturnLoss} onChange={(e) => {
+                    columns.yearly.salesReturnLoss = !columns.yearly.salesReturnLoss;
+                    setColumns({ ...columns });
+                    initYearlyGraph();
+
+                }} />Sales Return Loss vs &nbsp;
                 <input type="checkbox" checked={columns.yearly.purchaseReturn} onChange={(e) => {
                     columns.yearly.purchaseReturn = !columns.yearly.purchaseReturn;
                     setColumns({ ...columns });
@@ -536,7 +596,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initYearlyGraph();
 
-                }} />Loss
+                }} />Sales Loss
             </h2>
             <YearlySales ref={YearlyGraphRef}
                 allOrders={allOrders}
