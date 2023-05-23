@@ -218,7 +218,7 @@ function ProductIndex(props) {
             },
         };
         let Select =
-            "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,unit_prices";
+            "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,unit_prices,stock";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -656,8 +656,6 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
-
                                                 <th>
                                                     <b
                                                         style={{
@@ -673,6 +671,82 @@ function ProductIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "rack" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("retail_unit_price");
+                                                        }}
+                                                    >
+                                                        Retail Unit Price
+                                                        {sortField === "retail_unit_price" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "retail_unit_price" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("wholesale_unit_price");
+                                                        }}
+                                                    >
+                                                        Wholesale Unit Price
+                                                        {sortField === "wholesale_unit_price" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "wholesale_unit_price" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("purchase_unit_price");
+                                                        }}
+                                                    >
+                                                        Purchase Unit Price
+                                                        {sortField === "purchase_unit_price" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "purchase_unit_price" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stock");
+                                                        }}
+                                                    >
+                                                        Stock
+                                                        {sortField === "stock" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stock" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -782,6 +856,46 @@ function ProductIndex(props) {
                                                         id="rack"
                                                         onChange={(e) =>
                                                             searchByFieldValue("rack", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="retail_unit_price"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("retail_unit_price", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="wholesale_unit_price"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("wholesale_unit_price", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="purchase_unit_price"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_unit_price", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="stock"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("stock", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -904,9 +1018,43 @@ function ProductIndex(props) {
                                                         <td>{product.part_number}</td>
                                                         <td>{product.name + " / " + product.name_in_arabic}</td>
                                                         <td>{product.ean_12}</td>
-
-
                                                         <td>{product.rack}</td>
+                                                        <td>
+                                                            {product.unit_prices && product.unit_prices.map((unitPice)=>{
+                                                                if(cookies.get("store_id") && unitPice.store_id==cookies.get("store_id")){
+                                                                    return(<b>{unitPice.retail_unit_price?.toFixed(2)}</b>);
+                                                                }else if(!cookies.get("store_id")) {
+                                                                    return(<li><b>{unitPice.retail_unit_price?.toFixed(2)}</b> {"@"+unitPice.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.unit_prices && product.unit_prices.map((unitPice)=>{
+                                                                if(cookies.get("store_id") && unitPice.store_id==cookies.get("store_id")){
+                                                                    return(<b>{unitPice.wholesale_unit_price?.toFixed(2)}</b>);
+                                                                }else if(!cookies.get("store_id")) {
+                                                                    return(<li><b>{unitPice.wholesale_unit_price?.toFixed(2)}</b> {"@"+unitPice.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.unit_prices && product.unit_prices.map((unitPice)=>{
+                                                                if(cookies.get("store_id") && unitPice.store_id==cookies.get("store_id")){
+                                                                    return(<b>{unitPice.purchase_unit_price?.toFixed(2)}</b>);
+                                                                }else if(!cookies.get("store_id"))  {
+                                                                    return(<li><b>{unitPice.purchase_unit_price?.toFixed(2)}</b> {"@"+unitPice.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.stock && product.stock.map((stock)=>{
+                                                                if(cookies.get("store_id") && stock.store_id==cookies.get("store_id")){
+                                                                    return(<b>{stock.stock}</b>);
+                                                                }else if(!cookies.get("store_id")) {
+                                                                    return(<li><b>{stock.stock}</b> {"@"+stock.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
                                                         <td>
                                                             <ul>
                                                                 {product.category_name &&
