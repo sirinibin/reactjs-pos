@@ -682,14 +682,14 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("retail_unit_price");
+                                                            sort("unit_prices.retail_unit_price");
                                                         }}
                                                     >
                                                         Retail Unit Price
-                                                        {sortField === "retail_unit_price" && sortProduct === "-" ? (
+                                                        {sortField === "unit_prices.retail_unit_price" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "retail_unit_price" && sortProduct === "" ? (
+                                                        {sortField === "unit_prices.retail_unit_price" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -701,14 +701,14 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("wholesale_unit_price");
+                                                            sort("unit_prices.wholesale_unit_price");
                                                         }}
                                                     >
                                                         Wholesale Unit Price
-                                                        {sortField === "wholesale_unit_price" && sortProduct === "-" ? (
+                                                        {sortField === "unit_prices.wholesale_unit_price" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "wholesale_unit_price" && sortProduct === "" ? (
+                                                        {sortField === "unit_prices.wholesale_unit_price" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -720,14 +720,14 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("purchase_unit_price");
+                                                            sort("unit_prices.purchase_unit_price");
                                                         }}
                                                     >
                                                         Purchase Unit Price
-                                                        {sortField === "purchase_unit_price" && sortProduct === "-" ? (
+                                                        {sortField === "unit_prices.purchase_unit_price" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "purchase_unit_price" && sortProduct === "" ? (
+                                                        {sortField === "unit_prices.purchase_unit_price" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -739,11 +739,11 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("stock");
+                                                            sort("stock.stock");
                                                         }}
                                                     >
                                                         Stock
-                                                        {sortField === "stock" && sortProduct === "-" ? (
+                                                        {sortField === "stock.stock" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "stock" && sortProduct === "" ? (
