@@ -7,7 +7,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner } from "react-bootstrap";
+import { Button, Spinner,Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import SalesHistory from "./sales_history.js";
 import SalesReturnHistory from "./sales_return_history.js";
@@ -17,6 +17,7 @@ import PurchaseReturnHistory from "./purchase_return_history.js";
 
 import QuotationHistory from "./quotation_history.js";
 import DeliveryNoteHistory from "./delivery_note_history.js";
+import NumberFormat from "react-number-format";
 
 function ProductIndex(props) {
 
@@ -209,6 +210,11 @@ function ProductIndex(props) {
         list();
     }
 
+    let [stock, setStock] = useState(0.00);
+    let [retailStockValue, setRetailStockValue] = useState(0.00);
+    let [wholesaleStockValue, setWholesaleStockValue] = useState(0.00);
+    let [purchaseStockValue, setPurchaseStockValue] = useState(0.00);
+
     function list() {
         const requestOptions = {
             method: "GET",
@@ -273,6 +279,19 @@ function ProductIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
+                stock = data.meta.stock;
+                setStock(stock);
+
+                retailStockValue = data.meta.retail_stock_value;
+                setRetailStockValue(retailStockValue);
+
+                wholesaleStockValue = data.meta.wholesale_stock_value;
+                setWholesaleStockValue(wholesaleStockValue);
+
+                purchaseStockValue = data.meta.purchase_stock_value;
+                setPurchaseStockValue(purchaseStockValue);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -432,6 +451,59 @@ function ProductIndex(props) {
             <ProductJson ref={ProductJsonDialogRef} />
 
             <div className="container-fluid p-0">
+
+            <div className="row">
+                    <div className="col">
+                        <h1 className="text-end">
+                            Stock: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={stock}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" Units"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Retail Stock value: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={retailStockValue}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+
+                        <h1 className="text-end">
+                            Wholesale Stock value: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={wholesaleStockValue}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+
+                        <h1 className="text-end">
+                            Purchase Stock value: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={purchaseStockValue}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                    </div>
+
+                </div>
+
                 <div className="row">
                     <div className="col">
                         <h1 className="h3">Products</h1>
