@@ -352,22 +352,22 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     setIsCustomersLoading(false);
   }
 
-  function GetProductUnitPriceInStore(storeId, unitPriceListArray) {
-    if (!unitPriceListArray) {
+  function GetProductUnitPriceInStore(storeId, productStores) {
+    if (!productStores) {
       return "";
     }
 
-    for (var i = 0; i < unitPriceListArray.length; i++) {
-      console.log("unitPriceListArray[i]:", unitPriceListArray[i]);
+    for (var i = 0; i < productStores.length; i++) {
+      console.log("productStores[i]:", productStores[i]);
       console.log("store_id:", storeId);
 
-      if (unitPriceListArray[i].store_id === storeId) {
+      if (productStores[i].store_id === storeId) {
         console.log("macthed");
         console.log(
-          "unitPrice.retail_unit_price:",
-          unitPriceListArray[i].retail_unit_price
+          "productStores[i].retail_unit_price:",
+          productStores[i].retail_unit_price
         );
-        return unitPriceListArray[i];
+        return productStores[i];
       }
     }
     console.log("not matched");
@@ -430,7 +430,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,item_code,bar_code,name,unit_prices,stock,unit,part_number,name_in_arabic";
+    let Select = "select=id,item_code,bar_code,name,stores,unit,part_number,name_in_arabic";
     setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=200",
@@ -477,7 +477,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     };
 
 
-    let Select = "select=id,item_code,bar_code,ean_12,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
+    let Select = "select=id,item_code,bar_code,ean_12,part_number,name,stores,unit,part_number,name_in_arabic";
     let result = await fetch(
       "/v1/product/barcode/" + formData.barcode + "?" + Select,
       requestOptions
@@ -684,12 +684,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       return;
     }
 
-    let unitPrice = GetProductUnitPriceInStore(
+    let productStore = GetProductUnitPriceInStore(
       formData.store_id,
-      product.unit_prices
+      product.stores
     );
-    product.unit_price = unitPrice.retail_unit_price;
-    product.purchase_unit_price = unitPrice.purchase_unit_price;
+    product.unit_price = productStore.retail_unit_price;
+    product.purchase_unit_price = productStore.purchase_unit_price;
 
     let alreadyAdded = false;
     let index = -1;
@@ -719,7 +719,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         part_number: product.part_number,
         name: product.name,
         quantity: product.quantity,
-        stock: product.stock,
+        stores: product.stores,
         unit: product.unit,
       };
 

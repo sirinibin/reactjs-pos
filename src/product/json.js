@@ -32,12 +32,12 @@ const ProductJson = forwardRef((props, ref) => {
 
     function getProductRetailPrice(product) {
         let store_id = cookies.get("store_id");
-        if (!store_id || !product.unit_prices) {
+        if (!store_id || !product.stores) {
             return "";
         }
-        for (let i = 0; i < product.unit_prices.length; i++) {
-            if (product.unit_prices[i].store_id === store_id) {
-                return parseFloat(product.unit_prices[i].retail_unit_price + parseFloat(product.unit_prices[i].retail_unit_price * 0.15)).toFixed(2);
+        for (let i = 0; i < product.stores.length; i++) {
+            if (product.stores[i].store_id === store_id) {
+                return parseFloat(product.stores[i].retail_unit_price + parseFloat(product.stores[i].retail_unit_price * 0.15)).toFixed(2);
             }
         }
         return "";

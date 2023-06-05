@@ -224,7 +224,7 @@ function ProductIndex(props) {
             },
         };
         let Select =
-            "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,unit_prices,stock";
+            "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,stores";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -369,27 +369,27 @@ function ProductIndex(props) {
             vat_percent = parseFloat(cookies.get("vat_percent") / 100).toFixed(2);
         }
 
-        if (!store_id || !product.unit_prices) {
+        if (!store_id || !product.stores) {
             return {
                 retail_unit_price: "0.00",
                 purchase_unit_price_secret: "",
             };
         }
 
-        for (let i = 0; i < product.unit_prices.length; i++) {
-            if (product.unit_prices[i].store_id === store_id) {
-                // product.unit_prices[i].retail_unit_price = product.unit_prices[i].retail_unit_price; /* $2,500.00 */
+        for (let i = 0; i < product.stores.length; i++) {
+            if (product.stores[i].store_id === store_id) {
+                // product.stores[i].retail_unit_price = product.stores[i].retail_unit_price; /* $2,500.00 */
                 let res = {
                     retail_unit_price: "0.00",
                     purchase_unit_price_secret: "",
                 };
 
-                if (product.unit_prices[i].retail_unit_price) {
-                    res.retail_unit_price = parseFloat(product.unit_prices[i].retail_unit_price + parseFloat(product.unit_prices[i].retail_unit_price * vat_percent)).toFixed(2);
+                if (product.stores[i].retail_unit_price) {
+                    res.retail_unit_price = parseFloat(product.stores[i].retail_unit_price + parseFloat(product.stores[i].retail_unit_price * vat_percent)).toFixed(2);
                 }
 
-                if (product.unit_prices[i].purchase_unit_price_secret) {
-                    res.purchase_unit_price_secret = product.unit_prices[i].purchase_unit_price_secret;
+                if (product.stores[i].purchase_unit_price_secret) {
+                    res.purchase_unit_price_secret = product.stores[i].purchase_unit_price_secret;
                 }
                 return res;
             }
@@ -754,14 +754,14 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("unit_prices.retail_unit_price");
+                                                            sort("stores.retail_unit_price");
                                                         }}
                                                     >
                                                         Retail Unit Price
-                                                        {sortField === "unit_prices.retail_unit_price" && sortProduct === "-" ? (
+                                                        {sortField === "stores.retail_unit_price" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "unit_prices.retail_unit_price" && sortProduct === "" ? (
+                                                        {sortField === "stores.retail_unit_price" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -773,14 +773,14 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("unit_prices.wholesale_unit_price");
+                                                            sort("stores.wholesale_unit_price");
                                                         }}
                                                     >
                                                         Wholesale Unit Price
-                                                        {sortField === "unit_prices.wholesale_unit_price" && sortProduct === "-" ? (
+                                                        {sortField === "stores.wholesale_unit_price" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "unit_prices.wholesale_unit_price" && sortProduct === "" ? (
+                                                        {sortField === "stores.wholesale_unit_price" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -792,14 +792,14 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("unit_prices.purchase_unit_price");
+                                                            sort("stores.purchase_unit_price");
                                                         }}
                                                     >
                                                         Purchase Unit Price
-                                                        {sortField === "unit_prices.purchase_unit_price" && sortProduct === "-" ? (
+                                                        {sortField === "stores.purchase_unit_price" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "unit_prices.purchase_unit_price" && sortProduct === "" ? (
+                                                        {sortField === "stores.purchase_unit_price" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -811,14 +811,14 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("stock.stock");
+                                                            sort("stores.stock");
                                                         }}
                                                     >
                                                         Stock
-                                                        {sortField === "stock.stock" && sortProduct === "-" ? (
+                                                        {sortField === "stores.stock" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "stock" && sortProduct === "" ? (
+                                                        {sortField === "stores.stock" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -1092,38 +1092,38 @@ function ProductIndex(props) {
                                                         <td>{product.ean_12}</td>
                                                         <td>{product.rack}</td>
                                                         <td>
-                                                            {product.unit_prices && product.unit_prices.map((unitPice)=>{
-                                                                if(cookies.get("store_id") && unitPice.store_id==cookies.get("store_id")){
-                                                                    return(<b>{unitPice.retail_unit_price?.toFixed(2)}</b>);
+                                                            {product.stores && product.stores.map((store)=>{
+                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    return(<b>{store.retail_unit_price?.toFixed(2)}</b>);
                                                                 }else if(!cookies.get("store_id")) {
-                                                                    return(<li><b>{unitPice.retail_unit_price?.toFixed(2)}</b> {"@"+unitPice.store_name}</li>);
+                                                                    return(<li><b>{store.retail_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {product.unit_prices && product.unit_prices.map((unitPice)=>{
-                                                                if(cookies.get("store_id") && unitPice.store_id==cookies.get("store_id")){
-                                                                    return(<b>{unitPice.wholesale_unit_price?.toFixed(2)}</b>);
+                                                            {product.stores && product.stores.map((store)=>{
+                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    return(<b>{store.wholesale_unit_price?.toFixed(2)}</b>);
                                                                 }else if(!cookies.get("store_id")) {
-                                                                    return(<li><b>{unitPice.wholesale_unit_price?.toFixed(2)}</b> {"@"+unitPice.store_name}</li>);
+                                                                    return(<li><b>{store.wholesale_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {product.unit_prices && product.unit_prices.map((unitPice)=>{
-                                                                if(cookies.get("store_id") && unitPice.store_id==cookies.get("store_id")){
-                                                                    return(<b>{unitPice.purchase_unit_price?.toFixed(2)}</b>);
+                                                            {product.stores && product.stores.map((store)=>{
+                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    return(<b>{store.purchase_unit_price?.toFixed(2)}</b>);
                                                                 }else if(!cookies.get("store_id"))  {
-                                                                    return(<li><b>{unitPice.purchase_unit_price?.toFixed(2)}</b> {"@"+unitPice.store_name}</li>);
+                                                                    return(<li><b>{store.purchase_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {product.stock && product.stock.map((stock)=>{
-                                                                if(cookies.get("store_id") && stock.store_id==cookies.get("store_id")){
-                                                                    return(<b>{stock.stock}</b>);
+                                                            {product.stores && product.stores.map((store)=>{
+                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    return(<b>{store.stock}</b>);
                                                                 }else if(!cookies.get("store_id")) {
-                                                                    return(<li><b>{stock.stock}</b> {"@"+stock.store_name}</li>);
+                                                                    return(<li><b>{store.stock}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>

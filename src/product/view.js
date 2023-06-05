@@ -45,12 +45,12 @@ const ProductView = forwardRef((props, ref) => {
 
     function getProductRetailPrice(product) {
         let store_id = cookies.get("store_id");
-        if (!store_id || !product.unit_prices) {
+        if (!store_id || !product.stores) {
             return "";
         }
-        for (let i = 0; i < product.unit_prices.length; i++) {
-            if (product.unit_prices[i].store_id === store_id) {
-                return parseFloat(product.unit_prices[i].retail_unit_price + parseFloat(product.unit_prices[i].retail_unit_price * 0.15)).toFixed(2);
+        for (let i = 0; i < product.stores.length; i++) {
+            if (product.stores[i].store_id === store_id) {
+                return parseFloat(product.stores[i].retail_unit_price + parseFloat(product.stores[i].retail_unit_price * 0.15)).toFixed(2);
             }
         }
         return "";
@@ -373,26 +373,25 @@ const ProductView = forwardRef((props, ref) => {
                         </tr>
                     </tbody>
                 </Table>
-                <h4>Unit Prices</h4>
+                <h4>Unit Prices & Stock</h4>
                 <div className="table-responsive" style={{ overflowX: "auto" }}>
                     <table className="table table-striped table-sm table-bordered">
                         <thead>
                             <tr className="text-center">
-                                <th>SI No.</th>
-                                <th>Store Name</th>
-                                <th>Purchase Unit Price</th>
-                                <th>Wholesale Unit Price</th>
-                                <th>Retail Unit Price</th>
+                            {!cookies.get('store_id')?<th>Store Name</th>:""}
+                            <th>Retail Unit Price</th>
+                            <th>Wholesale Unit Price</th>
+                            <th>Purchase Unit Price</th>
+                            <th>Stock</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {model.unit_prices && model.unit_prices.map((unitPrice, index) => (
-                                <tr key={index} className="text-center">
-                                    <td>{index + 1}</td>
-                                    <td>{unitPrice.store_name}</td>
+                            {model.stores && model.stores.map((store, index) => (
+                                !cookies.get('store_id') || store.store_id==cookies.get('store_id')?<tr key={index} className="text-center">
+                                    {!cookies.get('store_id')?<td>{store.store_name}</td>:""}
                                     <td>
                                         <NumberFormat
-                                            value={unitPrice.purchase_unit_price}
+                                            value={store.retail_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
@@ -401,57 +400,29 @@ const ProductView = forwardRef((props, ref) => {
                                     </td>
                                     <td>
                                         <NumberFormat
-                                            value={unitPrice.wholesale_unit_price}
+                                            value={store.wholesale_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
                                             suffix={" SAR"}
                                         />
                                     </td>
+                                
                                     <td>
                                         <NumberFormat
-                                            value={unitPrice.retail_unit_price}
+                                            value={store.purchase_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
                                             suffix={" SAR"}
                                         />
                                     </td>
-                                </tr>
+                                    <td>{store.stock}</td>
+                                </tr>:''
                             ))}
                         </tbody>
                     </table>
                 </div>
-                <h4>Stocks</h4>
-                <div className="table-responsive" style={{ overflowX: "auto" }}>
-                    <table className="table table-striped table-sm table-bordered">
-                        <thead>
-                            <tr className="text-center">
-                                <th>SI No.</th>
-                                <th>Store Name</th>
-                                <th>Stock</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {model.stock && model.stock.map((stock, index) => (
-                                <tr key={index} className="text-center">
-                                    <td>{index + 1}</td>
-                                    <td>{stock.store_name}</td>
-                                    <td>
-                                        <NumberFormat
-                                            value={stock.stock}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            renderText={(value, props) => value}
-                                            suffix={" Units"}
-                                        />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
                 <h4>Images</h4>
                 <div className="table-responsive" style={{ overflowX: "auto" }}>
                     <table className="table table-striped table-sm table-bordered">

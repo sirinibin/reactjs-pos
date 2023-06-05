@@ -367,24 +367,24 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setIsVendorsLoading(false);
     }
 
-    function GetProductUnitPriceInStore(storeId, purchaseUnitPriceListArray) {
+    function GetProductUnitPriceInStore(storeId, productStores) {
         console.log("Inside GetProductUnitPriceInStore");
-        if (!purchaseUnitPriceListArray) {
+        if (!productStores) {
             return "";
         }
         console.log("Cool")
 
-        for (var i = 0; i < purchaseUnitPriceListArray.length; i++) {
-            console.log("purchaseUnitPriceListArray[i]:", purchaseUnitPriceListArray[i]);
+        for (var i = 0; i < productStores.length; i++) {
+            console.log("productStores[i]:", productStores[i]);
             console.log("store_id:", storeId);
 
-            if (purchaseUnitPriceListArray[i].store_id === storeId) {
+            if (productStores[i].store_id === storeId) {
                 console.log("macthed");
                 console.log(
                     "unitPrice.retail_unit_price:",
-                    purchaseUnitPriceListArray[i].purchase_unit_price
+                    productStores[i].purchase_unit_price
                 );
-                return purchaseUnitPriceListArray[i];
+                return productStores[i];
             }
         }
         console.log("not matched");
@@ -426,7 +426,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,item_code,bar_code,name,unit_prices,stock,unit,part_number,name_in_arabic";
+        let Select = "select=id,item_code,bar_code,name,stores,unit,part_number,name_in_arabic";
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200",
@@ -475,7 +475,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         };
 
 
-        let Select = "select=id,item_code,bar_code,part_number,name,unit_prices,stock,unit,part_number,name_in_arabic";
+        let Select = "select=id,item_code,bar_code,part_number,name,stores,unit,part_number,name_in_arabic";
         let result = await fetch(
             "/v1/product/barcode/" + formData.barcode + "?" + Select,
             requestOptions
@@ -733,23 +733,23 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
-        let unitPrice = {};
+        let productStore = {};
 
-        if (product.unit_prices) {
-            unitPrice = GetProductUnitPriceInStore(
+        if (product.stores) {
+            productStore = GetProductUnitPriceInStore(
                 formData.store_id,
-                product.unit_prices
+                product.stores
             );
-            if (unitPrice && unitPrice.retail_unit_price) {
-                product.retail_unit_price = unitPrice.retail_unit_price;
+            if (productStore && productStore.retail_unit_price) {
+                product.retail_unit_price = productStore.retail_unit_price;
             }
 
-            if (unitPrice && unitPrice.purchase_unit_price) {
-                product.purchase_unit_price = unitPrice.purchase_unit_price;
+            if (productStore && productStore.purchase_unit_price) {
+                product.purchase_unit_price = productStore.purchase_unit_price;
             }
 
-            if (unitPrice && unitPrice.wholesale_unit_price) {
-                product.wholesale_unit_price = unitPrice.wholesale_unit_price;
+            if (productStore && productStore.wholesale_unit_price) {
+                product.wholesale_unit_price = productStore.wholesale_unit_price;
             }
         }
 
@@ -785,7 +785,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 part_number: product.part_number,
                 name: product.name,
                 quantity: product.quantity,
-                stock: product.stock,
+                stores: product.stores,
                 unit: product.unit,
             };
 
