@@ -155,7 +155,7 @@ const OrderPrint = forwardRef((props, ref) => {
                 let storeData = data.result;
                 model.store = storeData;
 
-                var d = new Date(model.created_at);
+                var d = new Date(model.date);
                 console.log("d:", d);
 
 

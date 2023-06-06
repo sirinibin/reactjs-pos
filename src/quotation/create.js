@@ -214,7 +214,7 @@ const QuotationCreate = forwardRef((props, ref) => {
           is_discount_percent: quotation.is_discount_percent,
           shipping_handling_fees: quotation.shipping_handling_fees,
         };
-        formData.date_str = data.result.created_at;
+        formData.date_str = data.result.date;
 
         if (formData.is_discount_percent) {
           formData.discountValue = formData.discount_percent;
@@ -1544,7 +1544,7 @@ const QuotationCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="col-md-6">
-                            <label className="form-label">Created At*</label>
+                            <label className="form-label">Date*</label>
 
                             <div className="input-group mb-3">
                                 <DatePicker
