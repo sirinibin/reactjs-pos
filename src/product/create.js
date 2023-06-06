@@ -755,9 +755,9 @@ const ProductCreate = forwardRef((props, ref) => {
                 <thead>
                   <tr className="text-center">
                     {!cookies.get('store_id')?<th>Store Name</th>:""}
-                    <th>Retail Unit Price</th>
-                    <th>Wholesale Unit Price</th>
                     <th>Purchase Unit Price</th>
+                    <th>Wholesale Unit Price</th>
+                    <th>Retail Unit Price</th>
                     <th>Stock</th>
                   </tr>
                 </thead>
@@ -769,49 +769,45 @@ const ProductCreate = forwardRef((props, ref) => {
                         <input
                           type="number"
                           value={
-                            productStores[index]?.retail_unit_price||productStores[index]?.retail_unit_price===0
-                              ? productStores[index]?.retail_unit_price
-                              : ""
+                            productStores[index]?.purchase_unit_price||productStores[index]?.purchase_unit_price===0
+                              ? productStores[index]?.purchase_unit_price
+                              : ""  
                           }
                           className="form-control"
-                          placeholder="Retail Unit Price"
+                          placeholder="Purchase Unit Price"
                           onChange={(e) => {
-                            errors["retail_unit_price_" + index] = "";
+                            errors["purchase_unit_price_" + index] = "";
                             setErrors({ ...errors });
-                            if (!e.target.value) {
-                              productStores[index].retail_unit_price = "";
-                              setProductStores([...productStores]);
-                              return;
-                            }
 
-                            if (parseFloat(e.target.value) < 0) {
-                              errors["retail_unit_price_" + index] =
-                                "Retail Unit Price should not be < 0";
-                              productStores[index].retail_unit_price = "";
-                    
+                            if (!e.target.value) {
+                              productStores[index].purchase_unit_price = "";
                               setProductStores([...productStores]);
-                              setErrors({ ...errors });
+                             // setErrors({ ...errors });
                               console.log("errors:", errors);
                               return;
                             }
+                            if (parseFloat(e.target.value) < 0) {
+                                productStores[index].purchase_unit_price = "";
+                                setProductStores([...productStores]);
 
-                            console.log("e.target.value:",e.target.value);
+                              errors["purchase_unit_price_" + index] =
+                                "Purchase Unit Price should not be < 0";
+                                setErrors({ ...errors });
+                              return;
+                            }
 
-                            productStores[index].retail_unit_price = parseFloat(
-                              e.target.value
-                            );
-                            console.log("productStores[index].retail_unit_price:",productStores[index].retail_unit_price);
+                            productStores[index].purchase_unit_price = parseFloat(e.target.value);
                             setProductStores([...productStores]);
                           }}
                         />{" "}
-                        {errors["retail_unit_price_" + index] && (
+                        {errors["purchase_unit_price_" + index] && (
                           <div style={{ color: "red" }}>
                             <i className="bi bi-x-lg"> </i>
-                            {errors["retail_unit_price_" + index]}
+                            {errors["purchase_unit_price_" + index]}
                           </div>
                         )}
-                        {productStores[index]?.retail_unit_price &&
-                        !errors["retail_unit_price_" + index] ? (
+                        {productStores[index]?.purchase_unit_price &&
+                        !errors["purchase_unit_price_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
                             Looks good!
@@ -871,45 +867,49 @@ const ProductCreate = forwardRef((props, ref) => {
                         <input
                           type="number"
                           value={
-                            productStores[index]?.purchase_unit_price||productStores[index]?.purchase_unit_price===0
-                              ? productStores[index]?.purchase_unit_price
+                            productStores[index]?.retail_unit_price||productStores[index]?.retail_unit_price===0
+                              ? productStores[index]?.retail_unit_price
                               : ""
                           }
                           className="form-control"
-                          placeholder="Purchase Unit Price"
+                          placeholder="Retail Unit Price"
                           onChange={(e) => {
-                            errors["purchase_unit_price_" + index] = "";
+                            errors["retail_unit_price_" + index] = "";
                             setErrors({ ...errors });
-
                             if (!e.target.value) {
-                              productStores[index].purchase_unit_price = "";
+                              productStores[index].retail_unit_price = "";
                               setProductStores([...productStores]);
-                             // setErrors({ ...errors });
+                              return;
+                            }
+
+                            if (parseFloat(e.target.value) < 0) {
+                              errors["retail_unit_price_" + index] =
+                                "Retail Unit Price should not be < 0";
+                              productStores[index].retail_unit_price = "";
+                    
+                              setProductStores([...productStores]);
+                              setErrors({ ...errors });
                               console.log("errors:", errors);
                               return;
                             }
-                            if (parseFloat(e.target.value) < 0) {
-                                productStores[index].purchase_unit_price = "";
-                                setProductStores([...productStores]);
 
-                              errors["purchase_unit_price_" + index] =
-                                "Purchase Unit Price should not be < 0";
-                                setErrors({ ...errors });
-                              return;
-                            }
+                            console.log("e.target.value:",e.target.value);
 
-                            productStores[index].purchase_unit_price = parseFloat(e.target.value);
+                            productStores[index].retail_unit_price = parseFloat(
+                              e.target.value
+                            );
+                            console.log("productStores[index].retail_unit_price:",productStores[index].retail_unit_price);
                             setProductStores([...productStores]);
                           }}
                         />{" "}
-                        {errors["purchase_unit_price_" + index] && (
+                        {errors["retail_unit_price_" + index] && (
                           <div style={{ color: "red" }}>
                             <i className="bi bi-x-lg"> </i>
-                            {errors["purchase_unit_price_" + index]}
+                            {errors["retail_unit_price_" + index]}
                           </div>
                         )}
-                        {productStores[index]?.purchase_unit_price &&
-                        !errors["purchase_unit_price_" + index] ? (
+                        {productStores[index]?.retail_unit_price &&
+                        !errors["retail_unit_price_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
                             Looks good!

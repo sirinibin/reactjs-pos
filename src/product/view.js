@@ -379,9 +379,9 @@ const ProductView = forwardRef((props, ref) => {
                         <thead>
                             <tr className="text-center">
                             {!cookies.get('store_id')?<th>Store Name</th>:""}
-                            <th>Retail Unit Price</th>
-                            <th>Wholesale Unit Price</th>
                             <th>Purchase Unit Price</th>
+                            <th>Wholesale Unit Price</th>
+                            <th>Retail Unit Price</th>
                             <th>Stock</th>
                             </tr>
                         </thead>
@@ -391,7 +391,7 @@ const ProductView = forwardRef((props, ref) => {
                                     {!cookies.get('store_id')?<td>{store.store_name}</td>:""}
                                     <td>
                                         <NumberFormat
-                                            value={store.retail_unit_price}
+                                            value={store.purchase_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
@@ -407,10 +407,9 @@ const ProductView = forwardRef((props, ref) => {
                                             suffix={" SAR"}
                                         />
                                     </td>
-                                
                                     <td>
                                         <NumberFormat
-                                            value={store.purchase_unit_price}
+                                            value={store.retail_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}

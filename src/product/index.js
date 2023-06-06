@@ -754,14 +754,14 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("stores.retail_unit_price");
+                                                            sort("stores.purchase_unit_price");
                                                         }}
                                                     >
-                                                        Retail Unit Price
-                                                        {sortField === "stores.retail_unit_price" && sortProduct === "-" ? (
+                                                        Purchase Unit Price
+                                                        {sortField === "stores.purchase_unit_price" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "stores.retail_unit_price" && sortProduct === "" ? (
+                                                        {sortField === "stores.purchase_unit_price" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -792,18 +792,19 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("stores.purchase_unit_price");
+                                                            sort("stores.retail_unit_price");
                                                         }}
                                                     >
-                                                        Purchase Unit Price
-                                                        {sortField === "stores.purchase_unit_price" && sortProduct === "-" ? (
+                                                        Retail Unit Price
+                                                        {sortField === "stores.retail_unit_price" && sortProduct === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "stores.purchase_unit_price" && sortProduct === "" ? (
+                                                        {sortField === "stores.retail_unit_price" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                               
                                                 <th>
                                                     <b
                                                         style={{
@@ -935,13 +936,14 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="retail_unit_price"
+                                                        id="purchase_unit_price"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("retail_unit_price", e.target.value)
+                                                            searchByFieldValue("purchase_unit_price", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
+                                               
                                                 <th>
                                                     <input
                                                         type="text"
@@ -952,12 +954,13 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                              
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="purchase_unit_price"
+                                                        id="retail_unit_price"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("purchase_unit_price", e.target.value)
+                                                            searchByFieldValue("retail_unit_price", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1094,9 +1097,9 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
-                                                                    return(<b>{store.retail_unit_price?.toFixed(2)}</b>);
-                                                                }else if(!cookies.get("store_id")) {
-                                                                    return(<li><b>{store.retail_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
+                                                                    return(<b>{store.purchase_unit_price?.toFixed(2)}</b>);
+                                                                }else if(!cookies.get("store_id"))  {
+                                                                    return(<li><b>{store.purchase_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
@@ -1112,9 +1115,9 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
-                                                                    return(<b>{store.purchase_unit_price?.toFixed(2)}</b>);
-                                                                }else if(!cookies.get("store_id"))  {
-                                                                    return(<li><b>{store.purchase_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
+                                                                    return(<b>{store.retail_unit_price?.toFixed(2)}</b>);
+                                                                }else if(!cookies.get("store_id")) {
+                                                                    return(<li><b>{store.retail_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
