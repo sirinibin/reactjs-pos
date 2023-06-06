@@ -40,7 +40,7 @@ const OrderIndex = forwardRef((props, ref) => {
         var groupedByDate = [];
         for (var i = 0; i < allOrders.length; i++) {
             let date = format(
-                new Date(allOrders[i].created_at),
+                new Date(allOrders[i].date),
                 "dd-MMM-yyyy"
             );
             if (!groupedByDate[date]) {

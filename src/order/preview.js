@@ -168,7 +168,7 @@ const OrderPreview = forwardRef((props, ref) => {
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: model.created_at,
+                    invoiceTimestamp: model.date,
                     invoiceTotal: model.net_total,
                     invoiceVatTotal: model.vat_price,
                 });
