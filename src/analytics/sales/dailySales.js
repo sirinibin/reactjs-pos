@@ -160,9 +160,9 @@ const DailySales = forwardRef((props, ref) => {
             let loss = 0.00;
             if (props.columns.sales || props.columns.salesProfit || props.columns.loss|| props.columns.paidSales || props.columns.unpaidSales) {
                 for (const sale of props.allOrders) {
-                    // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
-                    // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
-                    if ((new Date(sale.created_at).getMonth() + 1) == dailySalesSelectedMonth && new Date(sale.created_at).getFullYear() == dailySalesSelectedYear && new Date(sale.created_at).getDate() == day) {
+                    // console.log("Sale Month:", new Date(sale.date).getMonth() + 1);
+                    // console.log("Sale Year:", new Date(sale.date).getFullYear());
+                    if ((new Date(sale.date).getMonth() + 1) == dailySalesSelectedMonth && new Date(sale.date).getFullYear() == dailySalesSelectedYear && new Date(sale.date).getDate() == day) {
                         sales += parseFloat(sale.net_total);
                         profit += parseFloat(sale.net_profit);
                         if(sale.payment_status=="paid"){

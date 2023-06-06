@@ -165,9 +165,9 @@ const MonthlySales = forwardRef((props, ref) => {
             let loss = 0.00;
             if (props.columns.sales || props.columns.salesProfit || props.columns.loss||props.columns.paidSales||props.columns.unpaidSales) {
                 for (const sale of props.allOrders) {
-                    // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
-                    // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
-                    if ((new Date(sale.created_at).getMonth() + 1) == month && new Date(sale.created_at).getFullYear() == monthlySalesSelectedYear) {
+                    // console.log("Sale Month:", new Date(sale.date).getMonth() + 1);
+                    // console.log("Sale Year:", new Date(sale.date).getFullYear());
+                    if ((new Date(sale.date).getMonth() + 1) == month && new Date(sale.date).getFullYear() == monthlySalesSelectedYear) {
                         sales += parseFloat(sale.net_total);
                         profit += parseFloat(sale.net_profit);
 
@@ -185,8 +185,8 @@ const MonthlySales = forwardRef((props, ref) => {
             let totalExpense = 0.00;
             if (props.columns.expense) {
                 for (const expense of props.allExpenses) {
-                    // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
-                    // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
+                    // console.log("Sale Month:", new Date(sale.date).getMonth() + 1);
+                    // console.log("Sale Year:", new Date(sale.date).getFullYear());
                     if ((new Date(expense.date).getMonth() + 1) == month &&
                         new Date(expense.date).getFullYear() == monthlySalesSelectedYear) {
                         totalExpense += parseFloat(expense.amount);

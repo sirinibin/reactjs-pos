@@ -80,7 +80,7 @@ const AllSales = forwardRef((props, ref) => {
             props.columns.unpaidSales
             ) {
             for (const sale of props.allOrders) {
-                let row = [new Date(sale.created_at)];
+                let row = [new Date(sale.date)];
 
                 if (props.columns.sales) {
                     row.push(parseFloat(sale.net_total.toFixed(2)));

@@ -100,7 +100,7 @@ const YearlySales = forwardRef((props, ref) => {
             let loss = 0.00;
             if (props.columns.sales || props.columns.salesProfit || props.columns.paidSales || props.columns.unpaidSales || props.columns.loss) {
                 for (const sale of props.allOrders) {
-                    if (parseInt(new Date(sale.created_at).getFullYear()) === year) {
+                    if (parseInt(new Date(sale.date).getFullYear()) === year) {
                         sales += parseFloat(sale.net_total);
                         profit += parseFloat(sale.net_profit);
 

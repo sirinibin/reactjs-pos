@@ -72,7 +72,7 @@ const Calendar = forwardRef((props, ref) => {
         let dailySalesProfit = [];
 
         for (const sale of props.allOrders) {
-            let dt = new Date(sale.created_at);
+            let dt = new Date(sale.date);
             let dtStr = dt.getFullYear() + "-" + dt.getMonth() + "-" + dt.getDate();
             if (!dailySales[dtStr]) {
                 dailySales[dtStr] = 0;

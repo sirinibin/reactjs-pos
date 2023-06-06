@@ -171,16 +171,16 @@ const HourlySales = forwardRef((props, ref) => {
 
         if (props.columns.sales || props.columns.salesProfit || props.columns.loss||props.columns.paidSales||props.columns.unpaidSales) {
             for (const sale of props.allOrders) {
-                // console.log("Sale Month:", new Date(sale.created_at).getMonth() + 1);
-                // console.log("Sale Year:", new Date(sale.created_at).getFullYear());
-                if ((new Date(sale.created_at).getMonth() + 1) == hourlySalesSelectedMonth
-                    && new Date(sale.created_at).getFullYear() == hourlySalesSelectedYear
-                    && new Date(sale.created_at).getDate() == hourlySalesSelectedDate
-                    // && new Date(sale.created_at).getHours() == hour
+                // console.log("Sale Month:", new Date(sale.date).getMonth() + 1);
+                // console.log("Sale Year:", new Date(sale.date).getFullYear());
+                if ((new Date(sale.date).getMonth() + 1) == hourlySalesSelectedMonth
+                    && new Date(sale.date).getFullYear() == hourlySalesSelectedYear
+                    && new Date(sale.date).getDate() == hourlySalesSelectedDate
+                    // && new Date(sale.date).getHours() == hour
                 ) {
 
 
-                    let row = [new Date(sale.created_at)];
+                    let row = [new Date(sale.date)];
 
                     if (props.columns.sales) {
                         row.push(parseFloat(sale.net_total.toFixed(2)));
