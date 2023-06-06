@@ -98,7 +98,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 formData = data.result;
-                formData.date_str = data.result.created_at;
+                formData.date_str = data.result.date;
                 /*
                 let order = data.result;
                 formData = {
@@ -1998,7 +1998,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div> : ""}
 
                         <div className="col-md-6">
-                            <label className="form-label">Created At*</label>
+                            <label className="form-label">Date*</label>
 
                             <div className="input-group mb-3">
                                 <DatePicker
