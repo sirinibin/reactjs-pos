@@ -74,31 +74,34 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   }));
 
+
   useEffect(() => {
     const listener = event => {
-      if (event.code === "Enter" || event.code === "NumpadEnter") {
-        console.log("Enter key was pressed. Run your function.");
-        // event.preventDefault();
+        if (event.code === "Enter" || event.code === "NumpadEnter") {
+            console.log("Enter key was pressed. Run your function-order.123");
+            // event.preventDefault();
 
-        var form = event.target.form;
-        if (form && event.target) {
-          var index = Array.prototype.indexOf.call(form, event.target);
-          if (form && form.elements[index + 1]) {
-            if (event.target.getAttribute("class").includes("barcode")) {
-              form.elements[index].focus();
-            } else {
-              form.elements[index + 1].focus();
+
+
+            var form = event.target.form;
+            if (form && event.target) {
+                var index = Array.prototype.indexOf.call(form, event.target);
+                if (form && form.elements[index + 1]) {
+                    if (event.target.getAttribute("class").includes("barcode")) {
+                        form.elements[index].focus();
+                    } else {
+                        form.elements[index + 1].focus();
+                    }
+                    event.preventDefault();
+                }
             }
-            event.preventDefault();
-          }
         }
-      }
     };
     document.addEventListener("keydown", listener);
     return () => {
-      document.removeEventListener("keydown", listener);
+        document.removeEventListener("keydown", listener);
     };
-  }, []);
+}, []);
 
 
   const selectedDate = new Date();
@@ -200,7 +203,7 @@ const QuotationCreate = forwardRef((props, ref) => {
           code: quotation.code,
           store_id: quotation.store_id,
           customer_id: quotation.customer_id,
-          date_str: quotation.date_str,
+         // date_str: quotation.date_str,
           date: quotation.date,
           vat_percent: quotation.vat_percent,
           discount: quotation.discount,
@@ -211,6 +214,7 @@ const QuotationCreate = forwardRef((props, ref) => {
           is_discount_percent: quotation.is_discount_percent,
           shipping_handling_fees: quotation.shipping_handling_fees,
         };
+        formData.date_str = data.result.created_at;
 
         if (formData.is_discount_percent) {
           formData.discountValue = formData.discount_percent;
@@ -1036,7 +1040,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   minLength={3}
                   debounceTimeout={500}
                   placeholder="Scan Barcode"
-                  className="form-control"
+                  className="form-control barcode"
                   value={formData.barcode}
                   onChange={event => getProductByBarCode(event.target.value)} />
                 {errors.bar_code && (
@@ -1538,6 +1542,38 @@ const QuotationCreate = forwardRef((props, ref) => {
                 )}
               </div>
             </div>
+
+            <div className="col-md-6">
+                            <label className="form-label">Created At*</label>
+
+                            <div className="input-group mb-3">
+                                <DatePicker
+                                    id="date_str"
+                                    selected={formData.date_str ? new Date(formData.date_str) : null}
+                                    value={formData.date_str ? format(
+                                        new Date(formData.date_str),
+                                        "MMMM d, yyyy h:mm aa"
+                                    ) : null}
+                                    className="form-control"
+                                    dateFormat="MMMM d, yyyy h:mm aa"
+                                    showTimeSelect
+                                    timeIntervals="1"
+                                    onChange={(value) => {
+                                        console.log("Value", value);
+                                        formData.date_str = value;
+                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+
+                                {errors.date_str && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.date_str}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>
