@@ -848,7 +848,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors["purchase_unit_price_" + index]}
                           </div>
                         )}
-                        {productStores[index]?.purchase_unit_price &&
+                        {(productStores[index]?.purchase_unit_price||productStores[index]?.purchase_unit_price===0) &&
                         !errors["purchase_unit_price_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
@@ -897,7 +897,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors["wholesale_unit_price_" + index]}
                           </div>
                         )}
-                        {productStores[index]?.wholesale_unit_price &&
+                        {(productStores[index]?.wholesale_unit_price || productStores[index]?.wholesale_unit_price===0) &&
                         !errors["wholesale_unit_price_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
@@ -950,7 +950,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors["retail_unit_price_" + index]}
                           </div>
                         )}
-                        {productStores[index]?.retail_unit_price &&
+                        {(productStores[index]?.retail_unit_price||productStores[index]?.retail_unit_price===0) &&
                         !errors["retail_unit_price_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
@@ -990,7 +990,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors["stock_" + index]}
                           </div>
                         )}
-                        {productStores[index]?.stock &&
+                        {(productStores[index]?.stock||productStores[index]?.stock===0) &&
                         !errors["stock_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
