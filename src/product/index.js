@@ -1255,14 +1255,14 @@ function ProductIndex(props) {
                                                                               </Tooltip>
                                                                             }
                                                                           >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_profit.toFixed(2)}</b></span>
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_profit?.toFixed(2)}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
                                                                     }else {
-                                                                    return(<b>{store.wholesale_unit_profit.toFixed(2)}</b>);
+                                                                    return(<b>{store.wholesale_unit_profit?.toFixed(2)}</b>);
                                                                     }
                                                                 }else if(!cookies.get("store_id")) {
-                                                                    return(<li><b>{store.wholesale_unit_profit.toFixed(2)}</b> {"@"+store.store_name}</li>);
+                                                                    return(<li><b>{store.wholesale_unit_profit?.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
@@ -1280,14 +1280,14 @@ function ProductIndex(props) {
                                                                               </Tooltip>
                                                                             }
                                                                           >
-                                                                            <span className="badge bg-danger"  ><b> {store.wholesale_unit_profit_perc.toFixed(2)+"%"}</b></span>
+                                                                            <span className="badge bg-danger"  ><b> {store.wholesale_unit_profit_perc?.toFixed(2)+"%"}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
                                                                     }else {
-                                                                    return(<b>{store.wholesale_unit_profit_perc.toFixed(2)+"%"}</b>);
+                                                                    return(<b>{store.wholesale_unit_profit_perc?.toFixed(2)+"%"}</b>);
                                                                     }
                                                                 }else if(!cookies.get("store_id")) {
-                                                                    return(<li><b>{store.wholesale_unit_profit_perc.toFixed(2)+"%"}</b> {"@"+store.store_name}</li>);
+                                                                    return(<li><b>{store.wholesale_unit_profit_perc?.toFixed(2)+"%"}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
@@ -1305,7 +1305,7 @@ function ProductIndex(props) {
                                                                               </Tooltip>
                                                                             }
                                                                           >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_profit.toFixed(2)}</b></span>
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_profit?.toFixed(2)}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
                                                                     }else {
@@ -1330,14 +1330,14 @@ function ProductIndex(props) {
                                                                               </Tooltip>
                                                                             }
                                                                           >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_profit_perc.toFixed(2)+"%"}</b></span>
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_profit_perc?.toFixed(2)+"%"}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
                                                                     }else {
-                                                                    return(<b>{store.retail_unit_profit_perc.toFixed(2)+"%"}</b>);
+                                                                    return(<b>{store.retail_unit_profit_perc?.toFixed(2)+"%"}</b>);
                                                                     }
                                                                 }else if(!cookies.get("store_id")) {
-                                                                    return(<li><b>{store.retail_unit_profit_perc.toFixed(2)+"%"}</b> {"@"+store.store_name}</li>);
+                                                                    return(<li><b>{store.retail_unit_profit_perc?.toFixed(2)+"%"}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
