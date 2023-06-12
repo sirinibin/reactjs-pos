@@ -769,7 +769,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         <input
                           type="number"
                           value={
-                            productStores[index]?.purchase_unit_price||productStores[index]?.purchase_unit_price===0
+                            productStores[index]?.purchase_unit_price||productStores[index]?.purchase_unit_price==0
                               ? productStores[index]?.purchase_unit_price
                               : ""  
                           }
