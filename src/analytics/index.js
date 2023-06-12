@@ -20,7 +20,7 @@ const Analytics = forwardRef((props, ref) => {
 
     const [searchParams, setSearchParams] = useState({});
     let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
-    let [sortField, setSortField] = useState("created_at");
+    let [sortField, setSortField] = useState("date");
     let [sortOrder, setSortOrder] = useState("-");
     const [isListLoading, setIsListLoading] = useState(false);
 
