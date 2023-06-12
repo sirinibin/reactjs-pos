@@ -1214,26 +1214,9 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
-                                                                    if((store.purchase_unit_price >= store.wholesale_unit_price)||(store.purchase_unit_price >= store.retail_unit_price)){
-                                                                        return(
-                                                                            <OverlayTrigger
-                                                                            key="right"
-                                                                            placement="right"
-                                                                            overlay={
-                                                                              <Tooltip id={`tooltip-right`}>
-                                                                               Purchase Unit price should be less than retail / wholesale unit price
-                                                                              </Tooltip>
-                                                                            }
-                                                                          >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.purchase_unit_price?.toFixed(2)}</b></span>
-                                                                          </OverlayTrigger>
-                                                                         );
-                                                                    }else {
                                                                         return(
                                                                             <b>{store.purchase_unit_price?.toFixed(2)}</b>
                                                                          );
-                                                                    }
-                                                                  
                                                                 }else if(!cookies.get("store_id"))  {
                                                                     return(<li><b>{store.purchase_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
@@ -1242,24 +1225,7 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
-                                                                   
-                                                                    if(store.purchase_unit_price >= store.wholesale_unit_price){
-                                                                        return(
-                                                                            <OverlayTrigger
-                                                                            key="right"
-                                                                            placement="right"
-                                                                            overlay={
-                                                                              <Tooltip id={`tooltip-right`}>
-                                                                               Wholesale unit price should be greater than purchase unit price
-                                                                              </Tooltip>
-                                                                            }
-                                                                          >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)}</b></span>
-                                                                          </OverlayTrigger>
-                                                                         );
-                                                                    } else {
-                                                                      return(<b>{store.wholesale_unit_price?.toFixed(2)}</b>);
-                                                                    }
+                                                                    return(<b>{store.wholesale_unit_price?.toFixed(2)}</b>);
                                                                 }else if(!cookies.get("store_id")) {
                                                                     return(<li><b>{store.wholesale_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
@@ -1267,25 +1233,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
-                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
-                                                         
-                                                                    if(store.purchase_unit_price >= store.retail_unit_price){
-                                                                        return(
-                                                                            <OverlayTrigger
-                                                                            key="right"
-                                                                            placement="right"
-                                                                            overlay={
-                                                                              <Tooltip id={`tooltip-right`}>
-                                                                               Retail unit price should be greater than purchase unit price
-                                                                              </Tooltip>
-                                                                            }
-                                                                          >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_price?.toFixed(2)}</b></span>
-                                                                          </OverlayTrigger>
-                                                                         );
-                                                                    }else {
+                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){   
                                                                     return(<b>{store.retail_unit_price?.toFixed(2)}</b>);
-                                                                    }
+                                                                
                                                                 }else if(!cookies.get("store_id")) {
                                                                     return(<li><b>{store.retail_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
@@ -1294,7 +1244,23 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    if(store.wholesale_unit_profit<=0){
+                                                                        return(
+                                                                            <OverlayTrigger
+                                                                            key="right"
+                                                                            placement="right"
+                                                                            overlay={
+                                                                              <Tooltip id={`tooltip-right`}>
+                                                                               Wholesale unit profit should be greater than zero.
+                                                                              </Tooltip>
+                                                                            }
+                                                                          >
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_profit.toFixed(2)}</b></span>
+                                                                          </OverlayTrigger>
+                                                                         );
+                                                                    }else {
                                                                     return(<b>{store.wholesale_unit_profit.toFixed(2)}</b>);
+                                                                    }
                                                                 }else if(!cookies.get("store_id")) {
                                                                     return(<li><b>{store.wholesale_unit_profit.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
@@ -1303,7 +1269,23 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    if(store.wholesale_unit_profit_perc<=0){
+                                                                        return(
+                                                                            <OverlayTrigger
+                                                                            key="right"
+                                                                            placement="right"
+                                                                            overlay={
+                                                                              <Tooltip id={`tooltip-right`}>
+                                                                               Wholesale unit profit % should be greater than zero.
+                                                                              </Tooltip>
+                                                                            }
+                                                                          >
+                                                                            <span className="badge bg-danger"  ><b> {store.wholesale_unit_profit_perc.toFixed(2)+"%"}</b></span>
+                                                                          </OverlayTrigger>
+                                                                         );
+                                                                    }else {
                                                                     return(<b>{store.wholesale_unit_profit_perc.toFixed(2)+"%"}</b>);
+                                                                    }
                                                                 }else if(!cookies.get("store_id")) {
                                                                     return(<li><b>{store.wholesale_unit_profit_perc.toFixed(2)+"%"}</b> {"@"+store.store_name}</li>);
                                                                 }
@@ -1312,7 +1294,23 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    if(store.retail_unit_profit<=0){
+                                                                        return(
+                                                                            <OverlayTrigger
+                                                                            key="right"
+                                                                            placement="right"
+                                                                            overlay={
+                                                                              <Tooltip id={`tooltip-right`}>
+                                                                               Reatail unit profit should be greater than zero.
+                                                                              </Tooltip>
+                                                                            }
+                                                                          >
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_profit.toFixed(2)}</b></span>
+                                                                          </OverlayTrigger>
+                                                                         );
+                                                                    }else {
                                                                     return(<b>{store.retail_unit_profit.toFixed(2)}</b>);
+                                                                    }
                                                                 }else if(!cookies.get("store_id")) {
                                                                     return(<li><b>{store.retail_unit_profit.toFixed(2)}</b> {"@"+store.store_name}</li>);
                                                                 }
@@ -1321,7 +1319,23 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    if(store.retail_unit_profit_perc<=0){
+                                                                        return(
+                                                                            <OverlayTrigger
+                                                                            key="right"
+                                                                            placement="right"
+                                                                            overlay={
+                                                                              <Tooltip id={`tooltip-right`}>
+                                                                              Retail unit profit % should be greater than zero.
+                                                                              </Tooltip>
+                                                                            }
+                                                                          >
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_profit_perc.toFixed(2)+"%"}</b></span>
+                                                                          </OverlayTrigger>
+                                                                         );
+                                                                    }else {
                                                                     return(<b>{store.retail_unit_profit_perc.toFixed(2)+"%"}</b>);
+                                                                    }
                                                                 }else if(!cookies.get("store_id")) {
                                                                     return(<li><b>{store.retail_unit_profit_perc.toFixed(2)+"%"}</b> {"@"+store.store_name}</li>);
                                                                 }
