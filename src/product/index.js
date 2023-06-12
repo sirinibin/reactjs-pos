@@ -804,6 +804,82 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.wholesale_unit_profit");
+                                                        }}
+                                                    >
+                                                        Wholesale Unit Profit
+                                                        {sortField === "stores.wholesale_unit_profit" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.wholesale_unit_profit" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.wholesale_unit_profit_perc");
+                                                        }}
+                                                    >
+                                                        Wholesale Unit Profit %
+                                                        {sortField === "stores.wholesale_unit_profit_perc" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.wholesale_unit_profit_perc" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.retail_unit_profit");
+                                                        }}
+                                                    >
+                                                        Retail Unit Profit
+                                                        {sortField === "stores.retail_unit_profit" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.retail_unit_profit" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.retail_unit_profit_perc");
+                                                        }}
+                                                    >
+                                                        Retail Unit Profit %
+                                                        {sortField === "stores.retail_unit_profit_perc" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.retail_unit_profit_perc" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                
                                                 <th>
                                                     <b
@@ -824,6 +900,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                               
                                                 <th>
                                                     <b
                                                         style={{
@@ -961,6 +1038,46 @@ function ProductIndex(props) {
                                                         id="retail_unit_price"
                                                         onChange={(e) =>
                                                             searchByFieldValue("retail_unit_price", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="wholesale_unit_profit"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("wholesale_unit_profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="wholesale_unit_profit_perc"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("wholesale_unit_profit_perc", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="retail_unit_profit"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("retail_unit_profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="retail_unit_profit_perc"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("retail_unit_profit_perc", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1125,10 +1242,6 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
-                                                                    let wholesaleProfitPerc=0.00;
-                                                                    if(store.wholesale_unit_price&&store.purchase_unit_price){
-                                                                        wholesaleProfitPerc = parseFloat((parseFloat((store.wholesale_unit_price-store.purchase_unit_price))/store.purchase_unit_price)*100);
-                                                                    }   
                                                                    
                                                                     if(store.purchase_unit_price >= store.wholesale_unit_price){
                                                                         return(
@@ -1141,21 +1254,7 @@ function ProductIndex(props) {
                                                                               </Tooltip>
                                                                             }
                                                                           >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)+" (Profit: "+wholesaleProfitPerc.toFixed(2)+"%)"}</b></span>
-                                                                          </OverlayTrigger>
-                                                                         );
-                                                                    }else if(wholesaleProfitPerc>100){
-                                                                        return(
-                                                                            <OverlayTrigger
-                                                                            key="right"
-                                                                            placement="right"
-                                                                            overlay={
-                                                                              <Tooltip id={`tooltip-right`}>
-                                                                               Wholesale unit profit is {wholesaleProfitPerc.toFixed(2)+"%"}
-                                                                              </Tooltip>
-                                                                            }
-                                                                          >
-                                                                            <span className="badge bg-warning" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)+" (Profit: "+wholesaleProfitPerc.toFixed(2)+"%)"}</b></span>
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
                                                                     } else {
@@ -1169,11 +1268,7 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
-                                                                    let retailProfitPerc=0.00;
-                                                                    if(store.retail_unit_price&&store.purchase_unit_price){
-                                                                        retailProfitPerc = parseFloat((parseFloat((store.retail_unit_price-store.purchase_unit_price))/store.purchase_unit_price)*100);
-                                                                    }
-                                                                     
+                                                         
                                                                     if(store.purchase_unit_price >= store.retail_unit_price){
                                                                         return(
                                                                             <OverlayTrigger
@@ -1185,21 +1280,7 @@ function ProductIndex(props) {
                                                                               </Tooltip>
                                                                             }
                                                                           >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_price?.toFixed(2)+" (Profit: "+retailProfitPerc.toFixed(2)+"%)"}</b></span>
-                                                                          </OverlayTrigger>
-                                                                         );
-                                                                    }else if(retailProfitPerc>100){
-                                                                        return(
-                                                                            <OverlayTrigger
-                                                                            key="right"
-                                                                            placement="right"
-                                                                            overlay={
-                                                                              <Tooltip id={`tooltip-right`}>
-                                                                               Retail unit profit is {retailProfitPerc.toFixed(2)+"%"}
-                                                                              </Tooltip>
-                                                                            }
-                                                                          >
-                                                                            <span className="badge bg-warning" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)+" (Profit: "+retailProfitPerc.toFixed(2)+"%)"}</b></span>
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_price?.toFixed(2)}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
                                                                     }else {
@@ -1207,6 +1288,42 @@ function ProductIndex(props) {
                                                                     }
                                                                 }else if(!cookies.get("store_id")) {
                                                                     return(<li><b>{store.retail_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.stores && product.stores.map((store)=>{
+                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    return(<b>{store.wholesale_unit_profit.toFixed(2)}</b>);
+                                                                }else if(!cookies.get("store_id")) {
+                                                                    return(<li><b>{store.wholesale_unit_profit.toFixed(2)}</b> {"@"+store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.stores && product.stores.map((store)=>{
+                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    return(<b>{store.wholesale_unit_profit_perc.toFixed(2)+"%"}</b>);
+                                                                }else if(!cookies.get("store_id")) {
+                                                                    return(<li><b>{store.wholesale_unit_profit_perc.toFixed(2)+"%"}</b> {"@"+store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.stores && product.stores.map((store)=>{
+                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    return(<b>{store.retail_unit_profit.toFixed(2)}</b>);
+                                                                }else if(!cookies.get("store_id")) {
+                                                                    return(<li><b>{store.retail_unit_profit.toFixed(2)}</b> {"@"+store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {product.stores && product.stores.map((store)=>{
+                                                                if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    return(<b>{store.retail_unit_profit_perc.toFixed(2)+"%"}</b>);
+                                                                }else if(!cookies.get("store_id")) {
+                                                                    return(<li><b>{store.retail_unit_profit_perc.toFixed(2)+"%"}</b> {"@"+store.store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
