@@ -19,7 +19,7 @@ const ProductCreate = forwardRef((props, ref) => {
     open(id) {
       selectedCategories = [];
       setSelectedCategories(selectedCategories);
-      getAllStores();
+     
 
 
       formData = {
@@ -28,9 +28,12 @@ const ProductCreate = forwardRef((props, ref) => {
         item_code: "",
       };
       setFormData({ formData });
+      getAllStores();
 
       if (id) {
         getProduct(id);
+      }else {
+        //getAllStores();
       }
 
       SetShow(true);
@@ -142,21 +145,52 @@ const ProductCreate = forwardRef((props, ref) => {
             });
           }
         }
+        setSelectedCategories(selectedCategories);
 
         if (data.result.stores) {
+            console.log("data.result.stores:",data.result.stores);
+               // productStores.push(data.result.stores);
+
+                let i=0;
+                for(let store of data.result.stores){
+                    if(productStores[i].store_id == store.store_id){
+                        productStores[i].purchase_unit_price= store.purchase_unit_price;
+                        productStores[i].wholesale_unit_price= store.wholesale_unit_price;
+                        productStores[i].retail_unit_price= store.retail_unit_price;
+                        productStores[i].stock= store.stock;
+                        i++;
+                    }
+                }
+                setProductStores([...productStores]);
+                console.log("productStores:",productStores);
+        }
+                /*
             if(cookies.get('store_id')){
-                console.log("data.result.stores.:",data.result.stores);
-                console.log("cookies.get('store_id'):",cookies.get('store_id'));
-                 let stores1 = data.result.stores.filter((store)=>store.store_id==cookies.get('store_id'));
-                 console.log("stores1:",stores1);
-                if(stores1.length>0){
-                    productStores= stores1;
+                 //let stores1 = data.result.stores.filter((store)=>store.store_id==cookies.get('store_id'));
+                // let stores1 = data.result.stores;
+                if(data.result.stores.length>0){
+                    productStores= data.result.stores;
                     setProductStores([...productStores]);
                 }
-            }
-        } 
+            }else {
+                console.log("data.result.stores:",data.result.stores);
+               // productStores.push(data.result.stores);
 
-        setSelectedCategories(selectedCategories);
+                let i=0;
+                for(let store of data.result.stores){
+                    if(productStores[i].store_id == store.store_id){
+                        productStores[i].purchase_unit_price= store.purchase_unit_price;
+                        productStores[i].wholesale_unit_price= store.wholesale_unit_price;
+                        productStores[i].retail_unit_price= store.retail_unit_price;
+                        productStores[i].stock= store.stock;
+                        i++;
+                    }
+                }
+                setProductStores([...productStores]);
+                console.log("productStores:",productStores);
+                */
+
+            
 
         formData = data.result;
         formData.name = data.result.name;
@@ -227,27 +261,14 @@ const ProductCreate = forwardRef((props, ref) => {
     setStores(data.result);
     productStores = [];
     for(let i=0; i<stores.length ;i++){
-        if(cookies.get("store_id")&&cookies.get("store_id")==stores[i].id){
-            productStores.push({
-                store_id: stores[i].id,
-                store_name: stores[i].name,
-                purchase_unit_price: "",
-                retail_unit_price: "",
-                wholesale_unit_price: "",
-                stock: "",
-              });
-
-        }else if(!cookies.get("store_id")){
-            productStores.push({
-                store_id: stores[i].id,
-                store_name: stores[i].name,
-                purchase_unit_price: "",
-                retail_unit_price: "",
-                wholesale_unit_price: "",
-                stock: "",
-              });
-        }
-       
+        productStores.push({
+            store_id: stores[i].id,
+            store_name: stores[i].name,
+            purchase_unit_price: "",
+            retail_unit_price: "",
+            wholesale_unit_price: "",
+            stock: "",
+          });
     }
 
     setProductStores([...productStores]);
