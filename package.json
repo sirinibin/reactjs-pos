@@ -25,6 +25,7 @@
     "react-datepicker": "^4.3.0",
     "react-debounce-input": "^3.2.5",
     "react-dom": "^17.0.2",
+    "react-google-charts": "^4.0.0",
     "react-image-file-resizer": "^0.4.7",
     "react-intl-datetime-format": "^1.0.3",
     "react-multi-threaded": "^0.0.4",
@@ -36,11 +37,11 @@
     "react-scripts": "4.0.3",
     "react-to-print": "^2.14.1",
     "tempa-xlsx": "^0.8.20",
-    "xlsx": "^0.15.6",
-    "xlsx-style": "^0.8.13",
     "thermal-printer-encoder": "^1.0.0",
     "universal-cookie": "^4.0.4",
-    "web-vitals": "^1.1.2"
+    "web-vitals": "^1.1.2",
+    "xlsx": "^0.15.6",
+    "xlsx-style": "^0.8.13"
   },
   "scripts": {
     "start": "react-scripts start",
