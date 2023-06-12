@@ -1144,7 +1144,7 @@ function ProductIndex(props) {
                                                                             <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)+" (Profit: "+wholesaleProfitPerc.toFixed(2)+"%)"}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
-                                                                    }else if(wholesaleProfitPerc>80){
+                                                                    }else if(wholesaleProfitPerc>100){
                                                                         return(
                                                                             <OverlayTrigger
                                                                             key="right"
@@ -1188,7 +1188,7 @@ function ProductIndex(props) {
                                                                             <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_price?.toFixed(2)+" (Profit: "+retailProfitPerc.toFixed(2)+"%)"}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
-                                                                    }else if(retailProfitPerc>80){
+                                                                    }else if(retailProfitPerc>100){
                                                                         return(
                                                                             <OverlayTrigger
                                                                             key="right"
