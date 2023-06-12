@@ -1309,7 +1309,7 @@ function ProductIndex(props) {
                                                                           </OverlayTrigger>
                                                                          );
                                                                     }else {
-                                                                    return(<b>{store.retail_unit_profit.toFixed(2)}</b>);
+                                                                    return(<b>{store.retail_unit_profit?.toFixed(2)}</b>);
                                                                     }
                                                                 }else if(!cookies.get("store_id")) {
                                                                     return(<li><b>{store.retail_unit_profit.toFixed(2)}</b> {"@"+store.store_name}</li>);
