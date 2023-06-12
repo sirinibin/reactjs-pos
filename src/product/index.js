@@ -1125,6 +1125,11 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    let wholesaleProfitPerc=0.00;
+                                                                    if(store.wholesale_unit_price&&store.purchase_unit_price){
+                                                                        wholesaleProfitPerc = parseFloat((parseFloat((store.wholesale_unit_price-store.purchase_unit_price))/store.purchase_unit_price)*100);
+                                                                    }   
+                                                                   
                                                                     if(store.purchase_unit_price >= store.wholesale_unit_price){
                                                                         return(
                                                                             <OverlayTrigger
@@ -1136,11 +1141,25 @@ function ProductIndex(props) {
                                                                               </Tooltip>
                                                                             }
                                                                           >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)}</b></span>
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)+" (Profit: "+wholesaleProfitPerc.toFixed(2)+"%)"}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
-                                                                    }else {
-                                                                    return(<b>{store.wholesale_unit_price?.toFixed(2)}</b>);
+                                                                    }else if(wholesaleProfitPerc>80){
+                                                                        return(
+                                                                            <OverlayTrigger
+                                                                            key="right"
+                                                                            placement="right"
+                                                                            overlay={
+                                                                              <Tooltip id={`tooltip-right`}>
+                                                                               Wholesale unit profit is {wholesaleProfitPerc.toFixed(2)+"%"}
+                                                                              </Tooltip>
+                                                                            }
+                                                                          >
+                                                                            <span className="badge bg-warning" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)+" (Profit: "+wholesaleProfitPerc.toFixed(2)+"%)"}</b></span>
+                                                                          </OverlayTrigger>
+                                                                         );
+                                                                    } else {
+                                                                      return(<b>{store.wholesale_unit_price?.toFixed(2)}</b>);
                                                                     }
                                                                 }else if(!cookies.get("store_id")) {
                                                                     return(<li><b>{store.wholesale_unit_price?.toFixed(2)}</b> {"@"+store.store_name}</li>);
@@ -1150,6 +1169,11 @@ function ProductIndex(props) {
                                                         <td>
                                                             {product.stores && product.stores.map((store)=>{
                                                                 if(cookies.get("store_id") && store.store_id==cookies.get("store_id")){
+                                                                    let retailProfitPerc=0.00;
+                                                                    if(store.retail_unit_price&&store.purchase_unit_price){
+                                                                        retailProfitPerc = parseFloat((parseFloat((store.retail_unit_price-store.purchase_unit_price))/store.purchase_unit_price)*100);
+                                                                    }
+                                                                     
                                                                     if(store.purchase_unit_price >= store.retail_unit_price){
                                                                         return(
                                                                             <OverlayTrigger
@@ -1161,7 +1185,21 @@ function ProductIndex(props) {
                                                                               </Tooltip>
                                                                             }
                                                                           >
-                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_price?.toFixed(2)}</b></span>
+                                                                            <span className="badge bg-danger" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.retail_unit_price?.toFixed(2)+" (Profit: "+retailProfitPerc.toFixed(2)+"%)"}</b></span>
+                                                                          </OverlayTrigger>
+                                                                         );
+                                                                    }else if(retailProfitPerc>80){
+                                                                        return(
+                                                                            <OverlayTrigger
+                                                                            key="right"
+                                                                            placement="right"
+                                                                            overlay={
+                                                                              <Tooltip id={`tooltip-right`}>
+                                                                               Retail unit profit is {retailProfitPerc.toFixed(2)+"%"}
+                                                                              </Tooltip>
+                                                                            }
+                                                                          >
+                                                                            <span className="badge bg-warning" data-bs-toggle="tooltip" title="Disabled tooltip" ><b> {store.wholesale_unit_price?.toFixed(2)+" (Profit: "+retailProfitPerc.toFixed(2)+"%)"}</b></span>
                                                                           </OverlayTrigger>
                                                                          );
                                                                     }else {
