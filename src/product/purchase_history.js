@@ -447,7 +447,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                     pageCount={totalPages}
                                                     previousLabel="< previous"
                                                     renderOnZeroPageCount={null}
-                                                    className="pagination"
+                                                    className="pagination  flex-wrap"
                                                     pageClassName="page-item"
                                                     pageLinkClassName="page-link"
                                                     activeClassName="active"
@@ -1006,7 +1006,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             pageCount={totalPages}
                                             previousLabel="< previous"
                                             renderOnZeroPageCount={null}
-                                            className="pagination"
+                                            className="pagination  flex-wrap"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"

@@ -372,7 +372,7 @@ function SignatureIndex(props) {
                                             pageCount={totalPages}
                                             previousLabel="< previous"
                                             renderOnZeroPageCount={null}
-                                            className="pagination"
+                                            className="pagination  flex-wrap"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"
@@ -628,7 +628,7 @@ function SignatureIndex(props) {
                                     pageCount={totalPages}
                                     previousLabel="< previous"
                                     renderOnZeroPageCount={null}
-                                    className="pagination"
+                                    className="pagination  flex-wrap"
                                     pageClassName="page-item"
                                     pageLinkClassName="page-link"
                                     activeClassName="active"

@@ -1118,7 +1118,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                 <br />
                                 <div className="row">
-                                    <div className="col" style={{ border: "solid 0px" }}>
+                                    <div className="col" style={{ border: "solid 0px",width:"100%" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
@@ -1129,7 +1129,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                             pageCount={totalPages}
                                             previousLabel="< previous"
                                             renderOnZeroPageCount={null}
-                                            className="pagination"
+                                            className="pagination  flex-wrap"
                                             pageClassName="page-item"
                                             pageLinkClassName="page-link"
                                             activeClassName="active"
@@ -1793,7 +1793,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     pageCount={totalPages}
                                     previousLabel="< previous"
                                     renderOnZeroPageCount={null}
-                                    className="pagination"
+                                    className="pagination  flex-wrap"
                                     pageClassName="page-item"
                                     pageLinkClassName="page-link"
                                     activeClassName="active"
