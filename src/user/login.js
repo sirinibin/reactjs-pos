@@ -18,7 +18,7 @@ function Login() {
             // history.push("/dashboard/quotations");
             window.location = "/dashboard/analytics";
         }
-    });
+    },[cookies.get("admin")]);
 
 
     function me() {
