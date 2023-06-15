@@ -118,18 +118,18 @@ const Analytics = forwardRef((props, ref) => {
     }
 
     useEffect(async () => {
-        let fields = "select=id,code,date,total,net_total,payment_status,net_profit,loss,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price,customer_id,customer.id,customer.vat_no";
+        let fields = "select=date,net_total,payment_status,net_profit,loss";
         let orders = await getAllRecords("order", fields);
-        fields = "select=id,code,date,amount,description,category_name,created_by_name,created_at";
+        fields = "select=date,amount";
         let expenses = await getAllRecords("expense", fields);
 
-        fields = "select=id,code,date,net_total,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit";
+        fields = "select=date,net_total";
         let purchases = await getAllRecords("purchase", fields);
 
-        fields = "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,loss,order_code";
+        fields = "select=date,net_total,net_profit,loss";
         let salesReturns = await getAllRecords("sales-return", fields);
 
-        fields = "select=id,code,purchase_code,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at";
+        fields = "select=date,net_total";
         let purchaseReturns = await getAllRecords("purchase-return", fields);
 
 
