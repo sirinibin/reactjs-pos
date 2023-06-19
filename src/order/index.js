@@ -574,8 +574,20 @@ const OrderIndex = forwardRef((props, ref) => {
             name: "Paid partially",
         },
     ];
-
     const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+
+    const paymentMethodOptions = [
+        {
+            id: "cash",
+            name: "cash",
+        },
+        {
+            id: "bank_account",
+            name: "Bank Account / Debit / Credit card",
+        },
+    ];
+    const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
+   
 
     useEffect(() => {
         list();
@@ -750,6 +762,8 @@ const OrderIndex = forwardRef((props, ref) => {
             setSelectedStatusList(values);
         } else if (field === "payment_status") {
             setSelectedPaymentStatusList(values);
+        }else if (field === "payment_method") {
+            setSelectedPaymentMethodList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -775,7 +789,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,discount_percent,discount,created_by_name,customer_name,status,payment_status,created_at,loss,net_profit,store_id,total";
+            "select=id,code,date,net_total,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_profit,store_id,total";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -1362,6 +1376,25 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("payment_method");
+                                                        }}
+                                                    >
+                                                        Payment Method
+                                                        {sortField === "payment_method" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_method" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("created_at");
                                                         }}
                                                     >
@@ -1585,6 +1618,23 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     />
                                                 </th>
                                                 <th>
+                                                    <Typeahead
+                                                        id="payment_method"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_method",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentMethodOptions}
+                                                        placeholder="Select payment methods"
+                                                        selected={selectedPaymentMethodList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
                                                     <DatePicker
                                                         id="created_at"
                                                         value={createdAtValue}
@@ -1705,6 +1755,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     Not Paid
                                                                 </span> : ""}
                                                         </td>
+                                                        <td>{order.payment_method}</td>
                                                         <td>
                                                             {format(
                                                                 new Date(order.created_at),

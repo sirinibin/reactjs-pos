@@ -52,12 +52,13 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log("formData.store_id:", formData.store_id);
             }
 
+            formData.id=undefined;
             formData.discount = 0.00;
             formData.discount_percent = 0.00;
             formData.shipping_handling_fees = 0.00;
             formData.partial_payment_amount = 0.00;
             formData.status = "delivered";
-            formData.payment_method = "cash";
+            formData.payment_method = "";
             formData.payment_status = "";
             formData.date_str = new Date();
             if (id) {
@@ -223,7 +224,7 @@ const OrderCreate = forwardRef((props, ref) => {
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
         payment_status: "",
-        payment_method: "cash",
+        payment_method: "",
         price_type: "retail",
         useLaserScanner: false,
         store_id: "",
@@ -967,20 +968,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
                     <div className="col align-self-end text-end">
                         <OrderPreview />
-                        <Button variant="primary" onClick={handleCreate} >
-                            {isProcessing ?
-                                <Spinner
-                                    as="span"
-                                    animation="border"
-                                    size="sm"
-                                    role="status"
-                                    aria-hidden={true}
-                                /> + " Creating..."
-
-                                : ""
-                            }
-                            {formData.id ? "Update" : "Create"}
-
+                        <Button variant="primary" onClick={handleCreate}>
+                                {isProcessing ? formData.id?"Updating....":"Creating..": formData.id?"Update":"Create"
+                                }
                         </Button>
 
                         <button
@@ -1879,7 +1869,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
                                 */}
 
-                        {!formData.id ? <div className="col-md-2">
+                        <div className="col-md-2">
                             <label className="form-label">Payment method*</label>
 
                             <div className="input-group mb-3">
@@ -1902,6 +1892,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
+                                    <option value="">Select</option>
                                     <option value="cash">Cash</option>
                                     <option value="bank_account">Bank Account / Debit / Credit Card</option>
                                 </select>
@@ -1912,7 +1903,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div> : ""}
+                        </div>
 
                         {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment Status*</label>
@@ -2069,16 +2060,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 Close
                             </Button>
                             <Button variant="primary" onClick={handleCreate}>
-                                {isProcessing ?
-                                    <Spinner
-                                        as="span"
-                                        animation="border"
-                                        size="sm"
-                                        role="status"
-                                        aria-hidden={true}
-                                    /> + " Creating..."
-
-                                    : "Create"
+                                {isProcessing ? formData.id?"Updating....":"Creating..": formData.id?"Update":"Create"
                                 }
                             </Button>
                         </Modal.Footer>
