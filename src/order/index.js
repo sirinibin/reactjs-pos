@@ -789,7 +789,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_profit,store_id,total";
+            "select=id,code,date,net_total,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_profit,store_id,total";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -1241,6 +1241,63 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("total_payment_received");
+                                                        }}
+                                                    >
+                                                        Payment Received
+                                                        {sortField === "total_payment_received" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "total_payment_received" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("balance_amount");
+                                                        }}
+                                                    >
+                                                        Balance
+                                                        {sortField === "balance_amount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "balance_amount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payments_count");
+                                                        }}
+                                                    >
+                                                        No.of Payments
+                                                        {sortField === "payments_count" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "payments_count" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("discount");
                                                         }}
                                                     >
@@ -1523,6 +1580,36 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
+                                                        id="total_payment_received"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("total_payment_received", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="balance_amount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="payments_count"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("payments_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
                                                         id="discount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("discount", e.target.value)
@@ -1734,7 +1821,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td>
                                                             {format(new Date(order.date), "MMM dd yyyy h:mma")}
                                                         </td>
-                                                        <td>{order.net_total.toFixed(2)} SAR</td>
+                                                        <td>{order.net_total.toFixed(2)}</td>
+                                                        <td>{order.total_payment_received.toFixed(2)}</td>
+                                                        <td>{order.balance_amount.toFixed(2)}</td>
+                                                        <td>{order.payments_count}</td>
                                                         <td>{order.discount.toFixed(2)} SAR</td>
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
