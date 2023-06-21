@@ -1821,9 +1821,9 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td>
                                                             {format(new Date(order.date), "MMM dd yyyy h:mma")}
                                                         </td>
-                                                        <td>{order.net_total.toFixed(2)}</td>
-                                                        <td>{order.total_payment_received.toFixed(2)}</td>
-                                                        <td>{order.balance_amount.toFixed(2)}</td>
+                                                        <td>{order.net_total?.toFixed(2)}</td>
+                                                        <td>{order.total_payment_received?.toFixed(2)}</td>
+                                                        <td>{order.balance_amount?.toFixed(2)}</td>
                                                         <td>{order.payments_count}</td>
                                                         <td>{order.discount.toFixed(2)} SAR</td>
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
