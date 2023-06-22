@@ -975,7 +975,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalSales}
+                                    value={totalSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -986,7 +986,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             Paid Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalPaidSales}
+                                    value={totalPaidSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -997,7 +997,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h4 className="text-end">
                             Cash Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalCashSales}
+                                    value={totalCashSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -1008,7 +1008,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h4 className="text-end">
                             Bank Account Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalBankAccountSales}
+                                    value={totalBankAccountSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -1019,7 +1019,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             Credit Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalUnPaidSales}
+                                    value={totalUnPaidSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
