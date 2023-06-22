@@ -50,7 +50,7 @@ const YearlySales = forwardRef((props, ref) => {
         }
 
         if (props.columns.unpaidSales) {
-            columns.push({ type: "number", label: "UnPaid Sales" });
+            columns.push({ type: "number", label: "Credit Sales" });
         }
 
         if (props.columns.expense) {
@@ -104,11 +104,16 @@ const YearlySales = forwardRef((props, ref) => {
                         sales += parseFloat(sale.net_total);
                         profit += parseFloat(sale.net_profit);
 
+                        paidSales += parseFloat(sale.total_payment_received);
+                        unpaidSales += parseFloat(sale.balance_amount);
+                        /*
                         if(sale.payment_status=="paid"){
                             paidSales += parseFloat(sale.net_total);
                         }else if(sale.payment_status=="not_paid"){
                             unpaidSales += parseFloat(sale.net_total);
                         }
+                        */
+
                         loss += parseFloat(sale.loss);
                     }
                 }

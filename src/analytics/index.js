@@ -118,7 +118,7 @@ const Analytics = forwardRef((props, ref) => {
     }
 
     useEffect(async () => {
-        let fields = "select=date,net_total,payment_status,net_profit,loss";
+        let fields = "select=date,net_total,total_payment_received,balance_amount,payment_status,net_profit,loss";
         let orders = await getAllRecords("order", fields);
         fields = "select=date,amount";
         let expenses = await getAllRecords("expense", fields);
@@ -245,7 +245,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initAllGraph();
 
-                }} />UnPaid Sales vs &nbsp;
+                }} />Credit Sales vs &nbsp;
                 <input type="checkbox" checked={columns.all.expense} onChange={(e) => {
                     columns.all.expense = !columns.all.expense;
                     setColumns({ ...columns });
@@ -322,7 +322,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initHourlyGraph();
 
-                }} />UnPaid Sales vs &nbsp;
+                }} />Credit Sales vs &nbsp;
                 <input type="checkbox" checked={columns.hourly.expense} onChange={(e) => {
                     columns.hourly.expense = !columns.hourly.expense;
                     setColumns({ ...columns });
@@ -399,7 +399,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initDailyGraph();
 
-                }} />UnPaid Sales vs &nbsp;
+                }} />Credit Sales vs &nbsp;
                 <input type="checkbox" checked={columns.daily.expense} onChange={(e) => {
                     columns.daily.expense = !columns.daily.expense;
                     setColumns({ ...columns });
@@ -476,7 +476,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initMonthlyGraph();
 
-                }} />UnPaid Sales vs &nbsp;
+                }} />Credit Sales vs &nbsp;
                 <input type="checkbox" checked={columns.monthly.expense} onChange={(e) => {
                     columns.monthly.expense = !columns.monthly.expense;
                     setColumns({ ...columns });
@@ -554,7 +554,7 @@ const Analytics = forwardRef((props, ref) => {
                     setColumns({ ...columns });
                     initYearlyGraph();
 
-                }} />UnPaid Sales vs &nbsp;
+                }} />Credit Sales vs &nbsp;
                 <input type="checkbox" checked={columns.yearly.expense} onChange={(e) => {
                     columns.yearly.expense = !columns.yearly.expense;
                     setColumns({ ...columns });

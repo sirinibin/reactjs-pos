@@ -129,7 +129,7 @@ const HourlySales = forwardRef((props, ref) => {
         }
 
         if (props.columns.unpaidSales) {
-            columns.push({ type: "number", label: "UnPaid Sales" });
+            columns.push({ type: "number", label: "Credit Sales" });
         }
 
         if (props.columns.expense) {
@@ -191,19 +191,25 @@ const HourlySales = forwardRef((props, ref) => {
                     }
 
                     if (props.columns.paidSales) {
+                        row.push(parseFloat(sale.total_payment_received.toFixed(2)));
+                        /*
                         if(sale.payment_status=="paid"){
                             row.push(parseFloat(sale.net_total.toFixed(2)));
                         }else {
                             row.push(0.00);
                         }
+                        */
                     }
 
                     if (props.columns.unpaidSales) {
+                        row.push(parseFloat(sale.balance_amount.toFixed(2)));
+                        /*
                         if(sale.payment_status=="not_paid"){
                             row.push(parseFloat(sale.net_total.toFixed(2)));
                         }else {
                             row.push(0.00);
                         }
+                        */
                     }    
 
                     if (props.columns.expense) {
