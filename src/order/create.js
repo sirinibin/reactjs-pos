@@ -1869,7 +1869,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         </div>
                                 */}
 
-                        <div className="col-md-2">
+                        {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment method*</label>
 
                             <div className="input-group mb-3">
@@ -1903,7 +1903,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div>:""}
 
                         {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment Status*</label>

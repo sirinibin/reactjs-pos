@@ -100,7 +100,7 @@ const OrderView = forwardRef((props, ref) => {
         let Select =
             "select=id,amount,method,store_name,order_code,order_id,created_by_name,created_at";
         if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+           // searchParams.store_id = cookies.get("store_id");
         }
         searchParams["order_id"] = order_id;
         setSearchParams(searchParams);
@@ -112,7 +112,7 @@ const OrderView = forwardRef((props, ref) => {
         fetch(
             "/v1/sales-payment?" +
             Select +
-            queryParams,
+            queryParams+"&limit=100",
             requestOptions
         )
             .then(async (response) => {
@@ -327,7 +327,7 @@ const OrderView = forwardRef((props, ref) => {
                                                 {salesPaymentList &&
                                                     salesPaymentList.map((payment) => (
                                                         <tr key={payment.id}>
-                                                            <td>{payment.amount.toFixed(2) + " SAR"}</td>
+                                                            <td>{payment.amount.toFixed(2)}</td>
                                                             <td>{payment.method}</td>
                                                             <td>{payment.created_by_name}</td>
                                                             <td>

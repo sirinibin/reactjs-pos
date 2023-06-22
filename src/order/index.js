@@ -762,7 +762,7 @@ const OrderIndex = forwardRef((props, ref) => {
             setSelectedStatusList(values);
         } else if (field === "payment_status") {
             setSelectedPaymentStatusList(values);
-        }else if (field === "payment_method") {
+        }else if (field === "payment_methods") {
             setSelectedPaymentMethodList(values);
         }
 
@@ -1433,14 +1433,14 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("payment_method");
+                                                            sort("payment_methods");
                                                         }}
                                                     >
-                                                        Payment Method
-                                                        {sortField === "payment_method" && sortOrder === "-" ? (
+                                                        Payment Methods
+                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "payment_method" && sortOrder === "" ? (
+                                                        {sortField === "payment_methods" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -1706,11 +1706,11 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 </th>
                                                 <th>
                                                     <Typeahead
-                                                        id="payment_method"
+                                                        id="payment_methods"
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
-                                                                "payment_method",
+                                                                "payment_methods",
                                                                 selectedItems
                                                             );
                                                         }}
@@ -1845,7 +1845,14 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     Not Paid
                                                                 </span> : ""}
                                                         </td>
-                                                        <td>{order.payment_method}</td>
+                                                        <td>
+                                                            
+                                                                    {order.payment_methods &&
+                                                                        order.payment_methods.map((name) => (
+                                                                            <span className="badge bg-info">{name}</span>
+                                                                        ))}
+                                                        
+                                                        </td>
                                                         <td>
                                                             {format(
                                                                 new Date(order.created_at),
