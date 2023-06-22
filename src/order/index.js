@@ -606,6 +606,10 @@ const OrderIndex = forwardRef((props, ref) => {
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
+    let [totalPaidSales, setTotalPaidSales] = useState(0.00);
+    let [totalUnPaidSales, setTotalUnPaidSales] = useState(0.00);
+    let [totalCashSales, setTotalCashSales] = useState(0.00);
+    let [totalBankAccountSales, setTotalBankAccountSales] = useState(0.00);
 
 
     let [loss, setLoss] = useState(0.00);
@@ -861,6 +865,18 @@ const OrderIndex = forwardRef((props, ref) => {
                 totalDiscount = data.meta.discount;
                 setTotalDiscount(totalDiscount);
 
+                totalPaidSales = data.meta.paid_sales;
+                setTotalPaidSales(totalPaidSales);
+
+                totalUnPaidSales = data.meta.unpaid_sales;
+                setTotalUnPaidSales(totalUnPaidSales);
+
+                totalCashSales = data.meta.cash_sales;
+                setTotalCashSales(totalCashSales);
+
+                totalBankAccountSales = data.meta.bank_account_sales;
+                setTotalBankAccountSales(totalBankAccountSales);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -960,6 +976,50 @@ const OrderIndex = forwardRef((props, ref) => {
                             Sales: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalSales}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Paid Sales: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalPaidSales}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h4 className="text-end">
+                            Cash Sales: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalCashSales}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4>
+                        <h4 className="text-end">
+                            Bank Account Sales: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalBankAccountSales}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4>
+                        <h1 className="text-end">
+                            Credit Sales: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalUnPaidSales}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
