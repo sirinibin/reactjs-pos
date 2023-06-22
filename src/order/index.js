@@ -950,7 +950,7 @@ const OrderIndex = forwardRef((props, ref) => {
             <SalesCashDiscountDetailsView ref={SalesCashDiscountDetailsViewRef} openUpdateForm={openSalesCashDiscountUpdateForm} showToastMessage={props.showToastMessage} />
 
 
-            <SalesPaymentCreate ref={SalesPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesPaymentDetailsView} />
+            <SalesPaymentCreate ref={SalesPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesPaymentDetailsView} refreshSalesList={list} />
             <SalesPaymentDetailsView ref={SalesPaymentDetailsViewRef} openUpdateForm={openSalesPaymentUpdateForm} showToastMessage={props.showToastMessage} />
 
             <div className="container-fluid p-0">

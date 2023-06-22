@@ -172,6 +172,8 @@ const UserCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
                 handleClose();
+                
+
                 props.openDetailsView(data.result.id);
             })
             .catch((error) => {

@@ -218,6 +218,9 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
                 handleClose();
+                if(props.refreshSalesList){
+                    props.refreshSalesList();
+                }
                 props.openDetailsView(data.result.id);
             })
             .catch((error) => {
