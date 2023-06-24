@@ -778,7 +778,7 @@ function SalesPaymentIndex(props) {
                                                     <tr key={salespayment.id}>
                                                         <td>{salespayment.order_code}</td>
                                                         <td>
-                                                            {format(new Date(salespayment.date), "MMM dd yyyy h:mma")}
+                                                            {salespayment.date ? format(new Date(salespayment.date), "MMM dd yyyy h:mma") : ""}
                                                         </td>
                                                         <td>{salespayment.amount.toFixed(2) + " SAR"}</td>
                                                         <td>{salespayment.method}</td>
