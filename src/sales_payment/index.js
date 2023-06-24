@@ -174,6 +174,10 @@ function SalesPaymentIndex(props) {
             searchParams.store_id = cookies.get("store_id");
         }
 
+        if (props.order) {
+            searchParams.order_id = props.order.id;
+        }
+
 
         console.log("searchParams.store_id:", searchParams.store_id);
 
@@ -267,14 +271,14 @@ function SalesPaymentIndex(props) {
 
     const CreateFormRef = useRef();
     function openCreateForm() {
-        CreateFormRef.current.open();
+        CreateFormRef.current.open("", props.order);
     }
 
     let [totalPayments, setTotalPayments] = useState(0.00);
 
     return (
         <>
-            <SalesPaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <SalesPaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} refreshSalesList={props.refreshSalesList ? props.refreshSalesList : ''} />
             <SalesPaymentView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
@@ -299,13 +303,24 @@ function SalesPaymentIndex(props) {
                     <div className="col">
                         <h1 className="h3">Sales Payments</h1>
                     </div>
+
+                    <div className="col text-end">
+                        <Button
+                            hide={true.toString()}
+                            variant="primary"
+                            className="btn btn-primary mb-3"
+                            onClick={openCreateForm}
+                        >
+                            <i className="bi bi-plus-lg"></i> Create
+                        </Button>
+                    </div>
                 </div>
 
                 <div className="row">
                     <div className="col-12">
                         <div className="card">
                             {/*
-  <div   className="card-header">
+                     <div   className="card-header">
                         <h5   className="card-title mb-0"></h5>
                     </div>
                     */}

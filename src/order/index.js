@@ -6,15 +6,17 @@ import SalesReturnCreate from "./../sales_return/create.js";
 import SalesCashDiscountCreate from "./../sales_cash_discount/create.js";
 import SalesCashDiscountDetailsView from "./../sales_cash_discount/view.js";
 
+import SalesPaymentIndex from "./../sales_payment/index.js";
 import SalesPaymentCreate from "./../sales_payment/create.js";
 import SalesPaymentDetailsView from "./../sales_payment/view.js";
+
 
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge } from "react-bootstrap";
+import { Button, Spinner, Badge, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
@@ -587,7 +589,7 @@ const OrderIndex = forwardRef((props, ref) => {
         },
     ];
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
-   
+
 
     useEffect(() => {
         list();
@@ -766,7 +768,7 @@ const OrderIndex = forwardRef((props, ref) => {
             setSelectedStatusList(values);
         } else if (field === "payment_status") {
             setSelectedPaymentStatusList(values);
-        }else if (field === "payment_methods") {
+        } else if (field === "payment_methods") {
             setSelectedPaymentMethodList(values);
         }
 
@@ -905,6 +907,21 @@ const OrderIndex = forwardRef((props, ref) => {
         list();
     }
 
+    let [showOrderPaymentHistory, setShowOrderPaymentHistory] = useState(false);
+    const [selectedOrder, setSelectedOrder] = useState({});
+
+    function openOrderPaymentsDialogue(order) {
+        setSelectedOrder(order);
+        showOrderPaymentHistory = true;
+        setShowOrderPaymentHistory(true);
+    }
+
+    function handleOrderPaymentHistoryClose() {
+        showOrderPaymentHistory = false;
+        setShowOrderPaymentHistory(false);
+        //list();
+    }
+
 
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
@@ -941,6 +958,12 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
     //Sales Payments
+
+    const SalesPaymentListRef = useRef();
+    function openSalesPaymentList(order) {
+        // SalesPaymentListRef.current.open(undefined, order);
+    }
+
     const SalesPaymentCreateRef = useRef();
     function openSalesPaymentCreateForm(order) {
         SalesPaymentCreateRef.current.open(undefined, order);
@@ -964,7 +987,6 @@ const OrderIndex = forwardRef((props, ref) => {
 
             <SalesCashDiscountCreate ref={SalesCashDiscountCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesCashDiscountDetailsView} />
             <SalesCashDiscountDetailsView ref={SalesCashDiscountDetailsViewRef} openUpdateForm={openSalesCashDiscountUpdateForm} showToastMessage={props.showToastMessage} />
-
 
             <SalesPaymentCreate ref={SalesPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesPaymentDetailsView} refreshSalesList={list} />
             <SalesPaymentDetailsView ref={SalesPaymentDetailsViewRef} openUpdateForm={openSalesPaymentUpdateForm} showToastMessage={props.showToastMessage} />
@@ -1064,7 +1086,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         {cookies.get('admin') === "true" ? <h1 className="text-end">
                             Net Profit: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={netProfit}
+                                    value={netProfit.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -1075,7 +1097,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         {cookies.get('admin') === "true" ? <h1 className="text-end">
                             Loss: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={loss}
+                                    value={loss.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -1192,7 +1214,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                 <br />
                                 <div className="row">
-                                    <div className="col" style={{ border: "solid 0px",width:"100%" }}>
+                                    <div className="col" style={{ border: "solid 0px", width: "100%" }}>
                                         {totalPages ? <ReactPaginate
                                             breakLabel="..."
                                             nextLabel="next >"
@@ -1882,9 +1904,21 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             {format(new Date(order.date), "MMM dd yyyy h:mma")}
                                                         </td>
                                                         <td>{order.net_total?.toFixed(2)}</td>
-                                                        <td>{order.total_payment_received?.toFixed(2)}</td>
+                                                        <td>
+                                                            <Button variant="link" onClick={() => {
+                                                                openOrderPaymentsDialogue(order);
+                                                            }}>
+                                                                {order.total_payment_received?.toFixed(2)}
+                                                            </Button>
+                                                        </td>
                                                         <td>{order.balance_amount?.toFixed(2)}</td>
-                                                        <td>{order.payments_count}</td>
+                                                        <td>
+                                                            <Button variant="link" onClick={() => {
+                                                                openOrderPaymentsDialogue(order);
+                                                            }}>
+                                                                {order.payments_count}
+                                                            </Button>
+                                                        </td>
                                                         <td>{order.discount.toFixed(2)} SAR</td>
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
@@ -1906,12 +1940,12 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 </span> : ""}
                                                         </td>
                                                         <td>
-                                                            
-                                                                    {order.payment_methods &&
-                                                                        order.payment_methods.map((name) => (
-                                                                            <span className="badge bg-info">{name}</span>
-                                                                        ))}
-                                                        
+
+                                                            {order.payment_methods &&
+                                                                order.payment_methods.map((name) => (
+                                                                    <span className="badge bg-info">{name}</span>
+                                                                ))}
+
                                                         </td>
                                                         <td>
                                                             {format(
@@ -2016,6 +2050,27 @@ const OrderIndex = forwardRef((props, ref) => {
                     </div>
                 </div>
             </div>
+
+
+            <Modal show={showOrderPaymentHistory} size="lg" onHide={handleOrderPaymentHistoryClose} animation={false} scrollable={true}>
+                <Modal.Header>
+                    <Modal.Title>Payment history of Order #{selectedOrder.code}</Modal.Title>
+
+                    <div className="col align-self-end text-end">
+                        <button
+                            type="button"
+                            className="btn-close"
+                            onClick={handleOrderPaymentHistoryClose}
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <SalesPaymentIndex ref={SalesPaymentListRef} showToastMessage={props.showToastMessage} order={selectedOrder} refreshSalesList={list} />
+                </Modal.Body>
+            </Modal>
+
         </>
     );
 });
