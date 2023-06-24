@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Table, Button } from 'react-bootstrap';
 import Cookies from "universal-cookie";
+import { format } from "date-fns";
 
 const SalesPaymentView = forwardRef((props, ref) => {
 
@@ -97,6 +98,7 @@ const SalesPaymentView = forwardRef((props, ref) => {
                             <th>Store Name:</th><td> {model.store_name}</td>
                         </tr>
                         <tr>
+                            <th>Date :</th><td>  {model.date ? format(new Date(model.date), "MMM dd yyyy h:mma") : ""} </td>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Created At:</th><td> {model.created_at}</td>
                             <th>Updated At:</th><td> {model.updated_at}</td>

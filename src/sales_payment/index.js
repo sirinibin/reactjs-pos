@@ -27,6 +27,12 @@ function SalesPaymentIndex(props) {
     const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
     const [offset, setOffset] = useState(0);
 
+    //Date filter
+    const [showDateRange, setShowDateRange] = useState(false);
+    const [dateValue, setDateValue] = useState("");
+    const [fromDateValue, setFromDateValue] = useState("");
+    const [toDateValue, setToDateValue] = useState("");
+
 
     //Created At filter
     const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
@@ -50,8 +56,8 @@ function SalesPaymentIndex(props) {
 
     //Search params
     const [searchParams, setSearchParams] = useState({});
+    let [sortOrder, setSortOrder] = useState("-");
     let [sortField, setSortField] = useState("created_at");
-    let [sortSalesPayment, setSortSalesPayment] = useState("-");
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -116,7 +122,24 @@ function SalesPaymentIndex(props) {
         d = new Date(d.toUTCString());
 
         value = format(d, "MMM dd yyyy");
-        if (field === "created_at") {
+        if (field === "date_str") {
+            setDateValue(value);
+            setFromDateValue("");
+            setToDateValue("");
+            searchParams["from_date"] = "";
+            searchParams["to_date"] = "";
+            searchParams[field] = value;
+        } else if (field === "from_date") {
+            setFromDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "to_date") {
+            setToDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "created_at") {
             setCreatedAtValue(value);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
@@ -124,6 +147,7 @@ function SalesPaymentIndex(props) {
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
         }
+
         if (field === "created_at_from") {
             setCreatedAtFromValue(value);
             setCreatedAtValue("");
@@ -168,7 +192,7 @@ function SalesPaymentIndex(props) {
             },
         };
         let Select =
-            "select=id,amount,method,store_name,order_code,order_id,created_by_name,created_at";
+            "select=id,date,amount,method,store_name,order_code,order_id,created_by_name,created_at";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -197,7 +221,7 @@ function SalesPaymentIndex(props) {
             Select +
             queryParams +
             "&sort=" +
-            sortSalesPayment +
+            sortOrder +
             sortField +
             "&page=" +
             page +
@@ -243,8 +267,8 @@ function SalesPaymentIndex(props) {
     function sort(field) {
         sortField = field;
         setSortField(sortField);
-        sortSalesPayment = sortSalesPayment === "-" ? "" : "-";
-        setSortSalesPayment(sortSalesPayment);
+        sortOrder = sortOrder === "-" ? "" : "-";
+        setSortOrder(sortOrder);
         list();
     }
 
@@ -452,11 +476,30 @@ function SalesPaymentIndex(props) {
                                                     >
 
                                                         Order ID
-                                                        {sortField === "order_code" && sortSalesPayment === "-" ? (
+                                                        {sortField === "order_code" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "order_code" && sortSalesPayment === "" ? (
+                                                        {sortField === "order_code" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("date");
+                                                        }}
+                                                    >
+                                                        Date
+                                                        {sortField === "date" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-down"></i>
+                                                        ) : null}
+                                                        {sortField === "date" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -471,10 +514,10 @@ function SalesPaymentIndex(props) {
                                                         }}
                                                     >
                                                         Amount
-                                                        {sortField === "amount" && sortSalesPayment === "-" ? (
+                                                        {sortField === "amount" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "amount" && sortSalesPayment === "" ? (
+                                                        {sortField === "amount" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -491,10 +534,10 @@ function SalesPaymentIndex(props) {
                                                         }}
                                                     >
                                                         Payment Method
-                                                        {sortField === "method" && sortSalesPayment === "-" ? (
+                                                        {sortField === "method" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "method" && sortSalesPayment === "" ? (
+                                                        {sortField === "method" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -511,10 +554,10 @@ function SalesPaymentIndex(props) {
                                                         }}
                                                     >
                                                         Created By
-                                                        {sortField === "created_by_name" && sortSalesPayment === "-" ? (
+                                                        {sortField === "created_by_name" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "created_by_name" && sortSalesPayment === "" ? (
+                                                        {sortField === "created_by_name" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -530,10 +573,10 @@ function SalesPaymentIndex(props) {
                                                         }}
                                                     >
                                                         Created At
-                                                        {sortField === "created_at" && sortSalesPayment === "-" ? (
+                                                        {sortField === "created_at" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-down"></i>
                                                         ) : null}
-                                                        {sortField === "created_at" && sortSalesPayment === "" ? (
+                                                        {sortField === "created_at" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
@@ -553,6 +596,71 @@ function SalesPaymentIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
+                                                </th>
+                                                <th>
+                                                    <DatePicker
+                                                        id="date_str"
+                                                        value={dateValue}
+                                                        selected={selectedDate}
+                                                        className="form-control"
+                                                        dateFormat="MMM dd yyyy"
+                                                        onChange={(date) => {
+                                                            if (!date) {
+                                                                setDateValue("");
+                                                                searchByDateField("date_str", "");
+                                                                return;
+                                                            }
+                                                            searchByDateField("date_str", date);
+                                                        }}
+                                                    />
+                                                    <small
+                                                        style={{
+                                                            color: "blue",
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={(e) => setShowDateRange(!showDateRange)}
+                                                    >
+                                                        {showDateRange ? "Less.." : "More.."}
+                                                    </small>
+                                                    <br />
+
+                                                    {showDateRange ? (
+                                                        <span className="text-left">
+                                                            From:{" "}
+                                                            <DatePicker
+                                                                id="from_date"
+                                                                value={fromDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setFromDateValue("");
+                                                                        searchByDateField("from_date", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("from_date", date);
+                                                                }}
+                                                            />
+                                                            To:{" "}
+                                                            <DatePicker
+                                                                id="to_date"
+                                                                value={toDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setToDateValue("");
+                                                                        searchByDateField("to_date", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("to_date", date);
+                                                                }}
+                                                            />
+                                                        </span>
+                                                    ) : null}
                                                 </th>
                                                 <th>
                                                     <input
@@ -669,6 +777,9 @@ function SalesPaymentIndex(props) {
                                                 salespaymentList.map((salespayment) => (
                                                     <tr key={salespayment.id}>
                                                         <td>{salespayment.order_code}</td>
+                                                        <td>
+                                                            {format(new Date(salespayment.date), "MMM dd yyyy h:mma")}
+                                                        </td>
                                                         <td>{salespayment.amount.toFixed(2) + " SAR"}</td>
                                                         <td>{salespayment.method}</td>
                                                         <td>{salespayment.created_by_name}</td>

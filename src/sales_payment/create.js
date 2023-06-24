@@ -4,6 +4,8 @@ import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import SalesPaymentView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
+import DatePicker from "react-datepicker";
+import { format } from "date-fns";
 
 
 const SalesPaymentCreate = forwardRef((props, ref) => {
@@ -15,12 +17,15 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
             formData = {
                 method: "cash",
             };
+
+            formData.date_str = new Date();
+
             if (order) {
                 formData.order_id = order.id;
                 formData.order_code = order.code;
                 formData.store_id = order.store_id;
-
             }
+
             setFormData(formData);
             selectedParentCategories = [];
             setSelectedParentCategories(selectedParentCategories);
@@ -118,6 +123,7 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 formData = data.result;
+                formData.date_str = data.result.date;
                 console.log("formData:", formData);
 
 
@@ -218,7 +224,7 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
                 handleClose();
-                if(props.refreshSalesList){
+                if (props.refreshSalesList) {
                     props.refreshSalesList();
                 }
                 props.openDetailsView(data.result.id);
@@ -313,93 +319,136 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                    <form className="row g-0 needs-validation" onSubmit={handleCreate}>
 
-                        <div className="col-md-3">
-                            <label className="form-label">Amount*</label>
+                        <div class="row">
+                            <div className="col-md-3">
+                                <label className="form-label">Amount*</label>
 
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.amount ? formData.amount : ""}
-                                    type='number'
-                                    onChange={(e) => {
-                                        console.log("Inside onchange vat ");
-                                        if (!e.target.value) {
-                                            formData.amount = e.target.value;
-                                            errors["amount"] = "Invalid amount";
+                                <div className="input-group mb-3">
+                                    <input
+                                        value={formData.amount ? formData.amount : ""}
+                                        type='number'
+                                        onChange={(e) => {
+                                            console.log("Inside onchange vat ");
+                                            if (!e.target.value) {
+                                                formData.amount = e.target.value;
+                                                errors["amount"] = "Invalid amount";
+                                                setErrors({ ...errors });
+                                                return;
+                                            }
+
+                                            if (parseFloat(e.target.value) <= 0) {
+                                                formData.amount = e.target.value;
+                                                errors["amount"] = "Amount should be > 0";
+                                                setErrors({ ...errors });
+                                                return;
+                                            }
+
+
+                                            formData.amount = parseFloat(e.target.value);
+                                            errors["amount"] = "";
+
+                                            if (formData.amount > order.net_total) {
+                                                errors["amount"] = "Amount should be less than or equal to net total amount:" + order.net_total;
+                                                setErrors({ ...errors });
+                                                return;
+                                            }
                                             setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        if (parseFloat(e.target.value) <= 0) {
-                                            formData.amount = e.target.value;
-                                            errors["amount"] = "Amount should be > 0";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-
-                                        formData.amount = parseFloat(e.target.value);
-                                        errors["amount"] = "";
-
-                                        if (formData.amount > order.net_total) {
-                                            errors["amount"] = "Amount should be less than or equal to net total amount:" + order.net_total;
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-                                        setErrors({ ...errors });
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="name"
-                                    placeholder="Amount"
-                                />
-                            </div>
-                            {errors.amount && (
-                                <div style={{ color: "red" }}>
-                                    {errors.amount}
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                        id="name"
+                                        placeholder="Amount"
+                                    />
                                 </div>
-                            )}
-                            {formData.amount && !errors.amount && (
-                                <div style={{ color: "green" }}>
-                                    <i className="bi bi-check-lg"> </i>
-                                    Looks good!
-                                </div>
-                            )}
-                        </div>
-                        <div className="col-md-3">
-                            <label className="form-label">Payment method*</label>
-
-                            <div className="input-group mb-3">
-                                <select
-                                    value={formData.method}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange payment method");
-                                        if (!e.target.value) {
-                                            errors["method"] = "Invalid Payment Method";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["method"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.method = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="cash">Cash</option>
-                                    <option value="bank_account">Bank Account / Debit / Credit Card</option>
-                                </select>
-                                {errors.method && (
+                                {errors.amount && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.method}
+                                        {errors.amount}
                                     </div>
                                 )}
+                                {formData.amount && !errors.amount && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="col-md-6">
+                                <label className="form-label">Date*</label>
+
+                                <div className="input-group mb-3">
+                                    <DatePicker
+                                        id="date_str"
+                                        selected={formData.date_str ? new Date(formData.date_str) : null}
+                                        value={formData.date_str ? format(
+                                            new Date(formData.date_str),
+                                            "MMMM d, yyyy h:mm aa"
+                                        ) : null}
+                                        className="form-control"
+                                        dateFormat="MMMM d, yyyy h:mm aa"
+                                        showTimeSelect
+                                        timeIntervals="1"
+                                        onChange={(value) => {
+                                            console.log("Value", value);
+                                            formData.date_str = value;
+                                            // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                            setFormData({ ...formData });
+                                        }}
+                                    />
+
+                                    {errors.date_str && (
+                                        <div style={{ color: "red" }}>
+                                            <i className="bi bi-x-lg"> </i>
+                                            {errors.date_str}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="row">
+                            <div className="col-md-3">
+                                <label className="form-label">Payment method*</label>
+
+                                <div className="input-group mb-3">
+                                    <select
+                                        value={formData.method}
+                                        onChange={(e) => {
+                                            console.log("Inside onchange payment method");
+                                            if (!e.target.value) {
+                                                errors["method"] = "Invalid Payment Method";
+                                                setErrors({ ...errors });
+                                                return;
+                                            }
+
+                                            errors["method"] = "";
+                                            setErrors({ ...errors });
+
+                                            formData.method = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                    >
+                                        <option value="cash">Cash</option>
+                                        <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                    </select>
+                                    {errors.method && (
+                                        <div style={{ color: "red" }}>
+                                            <i className="bi bi-x-lg"> </i>
+                                            {errors.method}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div className="row  g-5">
+                            <div className="col-md-3">
                             </div>
                         </div>
 
