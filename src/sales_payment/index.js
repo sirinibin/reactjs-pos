@@ -786,7 +786,7 @@ function SalesPaymentIndex(props) {
                                                         <td>
                                                             {format(
                                                                 new Date(salespayment.created_at),
-                                                                "MMM dd yyyy H:mma"
+                                                                "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
                                                         <td>
