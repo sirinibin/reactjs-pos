@@ -243,6 +243,7 @@ function ExpenseIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["stats"] = "1";
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);

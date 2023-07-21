@@ -413,6 +413,7 @@ const OrderIndex = forwardRef((props, ref) => {
         let diff = d.getTimezoneOffset();
         console.log("Timezone:", parseFloat(diff / 60));
         searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["stats"] = "1";
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -805,6 +806,7 @@ const OrderIndex = forwardRef((props, ref) => {
         let diff = d.getTimezoneOffset();
         console.log("Timezone:", parseFloat(diff / 60));
         searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["stats"] = "1";
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
