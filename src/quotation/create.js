@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import QuotationPreview from "./preview.js";
 import { Modal, Button, Form } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -14,10 +20,9 @@ import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import QuotationView from "./view.js";
 import ProductView from "./../product/view.js";
-import { DebounceInput } from 'react-debounce-input';
+import { DebounceInput } from "react-debounce-input";
 
 const QuotationCreate = forwardRef((props, ref) => {
-
   useImperativeHandle(ref, () => ({
     open(id) {
       formData = {
@@ -25,12 +30,14 @@ const QuotationCreate = forwardRef((props, ref) => {
         discount: 0.0,
         discountValue: 0.0,
         discount_percent: 0.0,
-        shipping_handling_fees: 0.00,
+        shipping_handling_fees: 0.0,
         is_discount_percent: false,
-        date_str: format(new Date(), "MMM dd yyyy"),
+        date_str: new Date(),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "delivered",
         price_type: "retail",
+        delivery_days: 7,
+        validity_days: 2,
       };
 
       selectedProducts = [];
@@ -51,17 +58,19 @@ const QuotationCreate = forwardRef((props, ref) => {
       reCalculate();
 
       if (cookies.get("user_id")) {
-        selectedDeliveredByUsers = [{
-          id: cookies.get("user_id"),
-          name: cookies.get("user_name"),
-        }];
+        selectedDeliveredByUsers = [
+          {
+            id: cookies.get("user_id"),
+            name: cookies.get("user_name"),
+          },
+        ];
         formData.delivered_by = cookies.get("user_id");
         setFormData({ ...formData });
         setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
       }
-      if (cookies.get('store_id')) {
-        formData.store_id = cookies.get('store_id');
-        formData.store_name = cookies.get('store_name');
+      if (cookies.get("store_id")) {
+        formData.store_id = cookies.get("store_id");
+        formData.store_name = cookies.get("store_name");
       }
 
       setFormData({ ...formData });
@@ -70,39 +79,33 @@ const QuotationCreate = forwardRef((props, ref) => {
       }
       SetShow(true);
     },
-
-
   }));
 
-
   useEffect(() => {
-    const listener = event => {
-        if (event.code === "Enter" || event.code === "NumpadEnter") {
-            console.log("Enter key was pressed. Run your function-order.123");
-            // event.preventDefault();
+    const listener = (event) => {
+      if (event.code === "Enter" || event.code === "NumpadEnter") {
+        console.log("Enter key was pressed. Run your function-order.123");
+        // event.preventDefault();
 
-
-
-            var form = event.target.form;
-            if (form && event.target) {
-                var index = Array.prototype.indexOf.call(form, event.target);
-                if (form && form.elements[index + 1]) {
-                    if (event.target.getAttribute("class").includes("barcode")) {
-                        form.elements[index].focus();
-                    } else {
-                        form.elements[index + 1].focus();
-                    }
-                    event.preventDefault();
-                }
+        var form = event.target.form;
+        if (form && event.target) {
+          var index = Array.prototype.indexOf.call(form, event.target);
+          if (form && form.elements[index + 1]) {
+            if (event.target.getAttribute("class").includes("barcode")) {
+              form.elements[index].focus();
+            } else {
+              form.elements[index + 1].focus();
             }
+            event.preventDefault();
+          }
         }
+      }
     };
     document.addEventListener("keydown", listener);
     return () => {
-        document.removeEventListener("keydown", listener);
+      document.removeEventListener("keydown", listener);
     };
-}, []);
-
+  }, []);
 
   const selectedDate = new Date();
 
@@ -117,13 +120,13 @@ const QuotationCreate = forwardRef((props, ref) => {
     discount: 0.0,
     discountValue: 0.0,
     discount_percent: 0.0,
-    date_str: format(new Date(), "MMM dd yyyy"),
+    //date_str: format(new Date(), "MMM dd yyyy"),
+    date_str: new Date(),
     signature_date_str: format(new Date(), "MMM dd yyyy"),
     status: "created",
     price_type: "retail",
     is_discount_percent: false,
   });
-
 
   //Store Auto Suggestion
   const [storeOptions, setStoreOptions] = useState([]);
@@ -161,7 +164,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     SetShow(false);
   }
 
-
   useEffect(() => {
     let at = cookies.get("access_token");
     if (!at) {
@@ -170,25 +172,26 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
   });
 
-
   function getQuotation(id) {
     console.log("inside get Quotation");
     const requestOptions = {
-      method: 'GET',
+      method: "GET",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': cookies.get('access_token'),
+        "Content-Type": "application/json",
+        Authorization: cookies.get("access_token"),
       },
     };
 
-    fetch('/v1/quotation/' + id, requestOptions)
-      .then(async response => {
-        const isJson = response.headers.get('content-type')?.includes('application/json');
-        const data = isJson && await response.json();
+    fetch("/v1/quotation/" + id, requestOptions)
+      .then(async (response) => {
+        const isJson = response.headers
+          .get("content-type")
+          ?.includes("application/json");
+        const data = isJson && (await response.json());
 
         // check for error response
         if (!response.ok) {
-          const error = (data && data.errors);
+          const error = data && data.errors;
           return Promise.reject(error);
         }
 
@@ -203,7 +206,7 @@ const QuotationCreate = forwardRef((props, ref) => {
           code: quotation.code,
           store_id: quotation.store_id,
           customer_id: quotation.customer_id,
-         // date_str: quotation.date_str,
+          // date_str: quotation.date_str,
           date: quotation.date,
           vat_percent: quotation.vat_percent,
           discount: quotation.discount,
@@ -213,6 +216,8 @@ const QuotationCreate = forwardRef((props, ref) => {
           delivered_by_signature_id: quotation.delivered_by_signature_id,
           is_discount_percent: quotation.is_discount_percent,
           shipping_handling_fees: quotation.shipping_handling_fees,
+          delivery_days: quotation.delivery_days,
+          validity_days: quotation.validity_days,
         };
         formData.date_str = data.result.date;
 
@@ -225,12 +230,11 @@ const QuotationCreate = forwardRef((props, ref) => {
         selectedProducts = quotation.products;
         setSelectedProducts([...selectedProducts]);
 
-
         let selectedStores = [
           {
             id: quotation.store_id,
             name: quotation.store_name,
-          }
+          },
         ];
 
         let selectedCustomers = [
@@ -238,14 +242,14 @@ const QuotationCreate = forwardRef((props, ref) => {
             id: quotation.customer_id,
             name: quotation.customer_name,
             search_label: quotation.customer_name,
-          }
+          },
         ];
 
         let selectedDeliveredByUsers = [
           {
             id: quotation.delivered_by,
-            name: quotation.delivered_by_name
-          }
+            name: quotation.delivered_by_name,
+          },
         ];
 
         if (quotation.delivered_by_signature_id) {
@@ -253,7 +257,7 @@ const QuotationCreate = forwardRef((props, ref) => {
             {
               id: quotation.delivered_by_signature_id,
               name: quotation.delivered_by_signature_name,
-            }
+            },
           ];
           setSelectedDeliveredBySignatures([...selectedDeliveredBySignatures]);
         }
@@ -263,12 +267,11 @@ const QuotationCreate = forwardRef((props, ref) => {
         setSelectedStores([...selectedStores]);
         setSelectedCustomers([...selectedCustomers]);
 
-
         setFormData({ ...formData });
 
         reCalculate();
       })
-      .catch(error => {
+      .catch((error) => {
         setProcessing(false);
         setErrors(error);
       });
@@ -344,7 +347,8 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
+    let Select =
+      "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
     setIsCustomersLoading(true);
     let result = await fetch(
       "/v1/customer?" + Select + queryString,
@@ -396,9 +400,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     return "";
   }
 
-
-
-
   let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
   async function suggestProducts(searchTerm) {
@@ -434,7 +435,8 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,item_code,bar_code,name,stores,unit,part_number,name_in_arabic";
+    let Select =
+      "select=id,item_code,bar_code,name,stores,unit,part_number,name_in_arabic";
     setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=200",
@@ -480,26 +482,24 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-
-    let Select = "select=id,item_code,bar_code,ean_12,part_number,name,stores,unit,part_number,name_in_arabic";
+    let Select =
+      "select=id,item_code,bar_code,ean_12,part_number,name,stores,unit,part_number,name_in_arabic";
     let result = await fetch(
       "/v1/product/barcode/" + formData.barcode + "?" + Select,
       requestOptions
     );
     let data = await result.json();
 
-
     let product = data.result;
     if (product) {
       addProduct(product);
     } else {
-      errors["bar_code"] = "Invalid Barcode:" + formData.barcode
+      errors["bar_code"] = "Invalid Barcode:" + formData.barcode;
       setErrors({ ...errors });
     }
 
     formData.barcode = "";
     setFormData({ ...formData });
-
   }
 
   async function suggestUsers(searchTerm) {
@@ -589,7 +589,9 @@ const QuotationCreate = forwardRef((props, ref) => {
         name_in_arabic: selectedProducts[i].name_in_arabic,
         quantity: parseFloat(selectedProducts[i].quantity),
         unit_price: parseFloat(selectedProducts[i].unit_price),
-        purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
+        purchase_unit_price: parseFloat(
+          selectedProducts[i].purchase_unit_price
+        ),
         unit: selectedProducts[i].unit,
         part_number: selectedProducts[i].part_number,
       });
@@ -599,8 +601,9 @@ const QuotationCreate = forwardRef((props, ref) => {
     formData.discount_percent = parseFloat(formData.discount_percent);
     formData.vat_percent = parseFloat(formData.vat_percent);
 
-    if (cookies.get('store_id')) {
-      formData.store_id = cookies.get('store_id');
+
+    if (cookies.get("store_id")) {
+      formData.store_id = cookies.get("store_id");
     }
 
     console.log("formData.discount:", formData.discount);
@@ -612,11 +615,10 @@ const QuotationCreate = forwardRef((props, ref) => {
       method = "PUT";
     }
 
-
     const requestOptions = {
       method: method,
       headers: {
-        'Accept': 'application/json',
+        Accept: "application/json",
         "Content-Type": "application/json",
         Authorization: cookies.get("access_token"),
       },
@@ -680,7 +682,6 @@ const QuotationCreate = forwardRef((props, ref) => {
       return;
     }
 
-
     errors.product_id = "";
     if (!product) {
       errors.product_id = "Invalid Product";
@@ -697,13 +698,15 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     let alreadyAdded = false;
     let index = -1;
-    let quantity = 0.00;
-    product.quantity = 1.00;
+    let quantity = 0.0;
+    product.quantity = 1.0;
 
     if (isProductAdded(product.id)) {
       alreadyAdded = true;
       index = getProductIndex(product.id);
-      quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+      quantity = parseFloat(
+        selectedProducts[index].quantity + product.quantity
+      );
     } else {
       quantity = parseFloat(product.quantity);
     }
@@ -738,7 +741,6 @@ const QuotationCreate = forwardRef((props, ref) => {
       }
 
       selectedProducts.push(item);
-
     }
     console.log("selectedProducts:", selectedProducts);
     setSelectedProducts([...selectedProducts]);
@@ -767,7 +769,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   let [totalPrice, setTotalPrice] = useState(0.0);
 
   function findTotalPrice() {
-    totalPrice = 0.00;
+    totalPrice = 0.0;
     for (var i = 0; i < selectedProducts.length; i++) {
       totalPrice +=
         parseFloat(selectedProducts[i].unit_price) *
@@ -777,32 +779,46 @@ const QuotationCreate = forwardRef((props, ref) => {
     setTotalPrice(totalPrice);
   }
 
-  let [vatPrice, setVatPrice] = useState(0.00);
+  let [deliveryDays, setDeliveryDays] = useState(7);
+  let [validityDays, setValidityDays] = useState(2);
+  let [vatPrice, setVatPrice] = useState(0.0);
 
   function findVatPrice() {
-    vatPrice = 0.00;
+    vatPrice = 0.0;
     if (totalPrice > 0) {
-      vatPrice = (parseFloat((parseFloat(formData.vat_percent) / 100)) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount))).toFixed(2);;
+      vatPrice = (
+        parseFloat(parseFloat(formData.vat_percent) / 100) *
+        (parseFloat(totalPrice) +
+          parseFloat(formData.shipping_handling_fees) -
+          parseFloat(formData.discount))
+      ).toFixed(2);
       console.log("vatPrice:", vatPrice);
     }
     setVatPrice(vatPrice);
   }
 
-  let [netTotal, setNetTotal] = useState(0.00);
+  let [netTotal, setNetTotal] = useState(0.0);
 
   function findNetTotal() {
-    netTotal = 0.00;
+    netTotal = 0.0;
     if (totalPrice > 0) {
-      netTotal = (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice)).toFixed(2);
+      netTotal = (
+        parseFloat(totalPrice) +
+        parseFloat(formData.shipping_handling_fees) -
+        parseFloat(formData.discount) +
+        parseFloat(vatPrice)
+      ).toFixed(2);
     }
     setNetTotal(netTotal);
   }
 
-  let [discountPercent, setDiscountPercent] = useState(0.00);
+  let [discountPercent, setDiscountPercent] = useState(0.0);
 
   function findDiscountPercent() {
     if (formData.discount >= 0 && totalPrice > 0) {
-      discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
+      discountPercent = parseFloat(
+        parseFloat(formData.discount / totalPrice) * 100
+      ).toFixed(2);
       setDiscountPercent(discountPercent);
       formData.discount_percent = discountPercent;
       setFormData({ ...formData });
@@ -811,11 +827,12 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   function findDiscount() {
     if (formData.discount_percent >= 0 && totalPrice > 0) {
-      formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100)).toFixed(2);
+      formData.discount = parseFloat(
+        totalPrice * parseFloat(formData.discount_percent / 100)
+      ).toFixed(2);
       setFormData({ ...formData });
     }
   }
-
 
   function reCalculate() {
     findTotalPrice();
@@ -838,7 +855,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     CustomerCreateFormRef.current.open();
   }
 
-
   const ProductCreateFormRef = useRef();
   function openProductCreateForm() {
     ProductCreateFormRef.current.open();
@@ -853,12 +869,10 @@ const QuotationCreate = forwardRef((props, ref) => {
     UserCreateFormRef.current.open();
   }
 
-
   const SignatureCreateFormRef = useRef();
   function openSignatureCreateForm() {
     SignatureCreateFormRef.current.open();
   }
-
 
   const ProductDetailsViewRef = useRef();
   function openProductDetailsView(id) {
@@ -880,21 +894,50 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   return (
     <>
-      <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
-      <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
+      <ProductView
+        ref={ProductDetailsViewRef}
+        openUpdateForm={openProductUpdateForm}
+        openCreateForm={openProductCreateForm}
+      />
+      <ProductCreate
+        ref={ProductCreateFormRef}
+        showToastMessage={props.showToastMessage}
+        openDetailsView={openProductDetailsView}
+      />
 
       <QuotationPreview ref={PreviewRef} />
 
-      <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
-      <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
-      <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
-      <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+      <StoreCreate
+        ref={StoreCreateFormRef}
+        showToastMessage={props.showToastMessage}
+      />
+      <CustomerCreate
+        ref={CustomerCreateFormRef}
+        showToastMessage={props.showToastMessage}
+      />
+      <UserCreate
+        ref={UserCreateFormRef}
+        showToastMessage={props.showToastMessage}
+      />
+      <SignatureCreate
+        ref={SignatureCreateFormRef}
+        showToastMessage={props.showToastMessage}
+      />
+      <Modal
+        show={show}
+        size="xl"
+        fullscreen
+        onHide={handleClose}
+        animation={false}
+        backdrop="static"
+        scrollable={true}
+      >
         <Modal.Header>
           <Modal.Title>
-            {formData.id ? "Update Quotation #" + formData.code : "Create New Quotation"}
+            {formData.id
+              ? "Update Quotation #" + formData.code
+              : "Create New Quotation"}
           </Modal.Title>
-
 
           <div className="col align-self-end text-end">
             <Button variant="primary" onClick={openPreview}>
@@ -905,27 +948,33 @@ const QuotationCreate = forwardRef((props, ref) => {
               <i className="bi bi-display"></i> Preview
             </Button>
             &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
-            {formData.id ? <Button variant="primary" onClick={() => {
-              handleClose();
-              props.openDetailsView(formData.id);
-            }}>
-              <i className="bi bi-eye"></i> View Detail
-            </Button> : ""}
+            {formData.id ? (
+              <Button
+                variant="primary"
+                onClick={() => {
+                  handleClose();
+                  props.openDetailsView(formData.id);
+                }}
+              >
+                <i className="bi bi-eye"></i> View Detail
+              </Button>
+            ) : (
+              ""
+            )}
             &nbsp;&nbsp;
-            <Button variant="primary" onClick={handleCreate} >
-              {isProcessing ?
-                <Spinner
-                  as="span"
-                  animation="border"
-                  size="sm"
-                  role="status"
-                  aria-hidden={true}
-                /> + " Creating..."
-
-                : ""
-              }
+            <Button variant="primary" onClick={handleCreate}>
+              {isProcessing
+                ? (
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden={true}
+                  />
+                ) + " Creating..."
+                : ""}
               {formData.id ? "Update" : "Create"}
-
             </Button>
             <button
               type="button"
@@ -937,53 +986,66 @@ const QuotationCreate = forwardRef((props, ref) => {
         </Modal.Header>
         <Modal.Body>
           <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-            {!cookies.get('store_name') ? <div className="col-md-6">
-              <label className="form-label">Store*</label>
+            {!cookies.get("store_name") ? (
+              <div className="col-md-6">
+                <label className="form-label">Store*</label>
 
-              <div className="input-group mb-3">
-                <Typeahead
-                  id="store_id"
-                  labelKey="name"
-                  isLoading={isStoresLoading}
-                  isInvalid={errors.store_id ? true : false}
-                  onChange={(selectedItems) => {
-                    errors.store_id = "";
-                    setErrors(errors);
-                    if (selectedItems.length === 0) {
-                      errors.store_id = "Invalid Store selected";
+                <div className="input-group mb-3">
+                  <Typeahead
+                    id="store_id"
+                    labelKey="name"
+                    isLoading={isStoresLoading}
+                    isInvalid={errors.store_id ? true : false}
+                    onChange={(selectedItems) => {
+                      errors.store_id = "";
                       setErrors(errors);
-                      formData.store_id = "";
+                      if (selectedItems.length === 0) {
+                        errors.store_id = "Invalid Store selected";
+                        setErrors(errors);
+                        formData.store_id = "";
+                        setFormData({ ...formData });
+                        setSelectedStores([]);
+                        return;
+                      }
+                      formData.store_id = selectedItems[0].id;
                       setFormData({ ...formData });
-                      setSelectedStores([]);
-                      return;
-                    }
-                    formData.store_id = selectedItems[0].id;
-                    setFormData({ ...formData });
-                    setSelectedStores(selectedItems);
-                    //SetPriceOfAllProducts(selectedItems[0].id);
-                  }}
-                  options={storeOptions}
-                  placeholder="Select Store"
-                  selected={selectedStores}
-                  highlightOnlyResult={true}
-                  onInputChange={(searchTerm, e) => {
-                    suggestStores(searchTerm);
-                  }}
-                />
+                      setSelectedStores(selectedItems);
+                      //SetPriceOfAllProducts(selectedItems[0].id);
+                    }}
+                    options={storeOptions}
+                    placeholder="Select Store"
+                    selected={selectedStores}
+                    highlightOnlyResult={true}
+                    onInputChange={(searchTerm, e) => {
+                      suggestStores(searchTerm);
+                    }}
+                  />
 
-                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                <div style={{ color: "red" }}>
-                  <i className="bi x-lg"> </i>
-                  {errors.store_id}
-                </div>
-                {formData.store_id && !errors.store_id && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
+                  <Button
+                    hide={true.toString()}
+                    onClick={openStoreCreateForm}
+                    className="btn btn-outline-secondary btn-primary btn-sm"
+                    type="button"
+                    id="button-addon1"
+                  >
+                    {" "}
+                    <i className="bi bi-plus-lg"></i> New
+                  </Button>
+                  <div style={{ color: "red" }}>
+                    <i className="bi x-lg"> </i>
+                    {errors.store_id}
                   </div>
-                )}
+                  {formData.store_id && !errors.store_id && (
+                    <div style={{ color: "green" }}>
+                      <i className="bi bi-check-lg"> </i>
+                      Looks good!
+                    </div>
+                  )}
+                </div>
               </div>
-            </div> : ""}
+            ) : (
+              ""
+            )}
             <div className="col-md-6">
               <label className="form-label">Customer*</label>
 
@@ -1016,7 +1078,16 @@ const QuotationCreate = forwardRef((props, ref) => {
                     suggestCustomers(searchTerm);
                   }}
                 />
-                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                <Button
+                  hide={true.toString()}
+                  onClick={openCustomerCreateForm}
+                  className="btn btn-outline-secondary btn-primary btn-sm"
+                  type="button"
+                  id="button-addon1"
+                >
+                  {" "}
+                  <i className="bi bi-plus-lg"></i> New
+                </Button>
                 {errors.customer_id && (
                   <div style={{ color: "red" }}>
                     <i className="bi bi-x-lg"> </i>
@@ -1042,7 +1113,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                   placeholder="Scan Barcode"
                   className="form-control barcode"
                   value={formData.barcode}
-                  onChange={event => getProductByBarCode(event.target.value)} />
+                  onChange={(event) => getProductByBarCode(event.target.value)}
+                />
                 {errors.bar_code && (
                   <div style={{ color: "red" }}>
                     <i className="bi bi-x-lg"> </i>
@@ -1080,7 +1152,6 @@ const QuotationCreate = forwardRef((props, ref) => {
 
                   if (formData.store_id) {
                     addProduct(selectedItems[0]);
-
                   }
                   setOpenProductSearchResult(false);
                 }}
@@ -1092,7 +1163,16 @@ const QuotationCreate = forwardRef((props, ref) => {
                   suggestProducts(searchTerm);
                 }}
               />
-              <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+              <Button
+                hide={true.toString()}
+                onClick={openProductCreateForm}
+                className="btn btn-outline-secondary btn-primary btn-sm"
+                type="button"
+                id="button-addon1"
+              >
+                {" "}
+                <i className="bi bi-plus-lg"></i> New
+              </Button>
               {errors.product_id ? (
                 <div style={{ color: "red" }}>
                   <i className="bi bi-x-lg"> </i>
@@ -1109,155 +1189,206 @@ const QuotationCreate = forwardRef((props, ref) => {
                 )}
             </div>
 
-            <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>
+            <div
+              className="table-responsive"
+              style={{
+                overflowX: "auto",
+                maxHeight: "400px",
+                overflowY: "auto",
+              }}
+            >
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
                     <th style={{ width: "3%" }}>Remove</th>
                     <th style={{ width: "5%" }}>SI No.</th>
                     <th style={{ width: "10%" }}>Part No.</th>
-                    <th style={{ width: "34%" }} className="text-start">Name</th>
+                    <th style={{ width: "34%" }} className="text-start">
+                      Name
+                    </th>
                     <th style={{ width: "11%" }}>Qty</th>
-                    <th style={{ width: "11%" }} >Purchase Unit Price</th>
+                    <th style={{ width: "11%" }}>Purchase Unit Price</th>
                     <th style={{ width: "11%" }}>Unit Price</th>
                     <th style={{ width: "15%" }}>Price</th>
-
                   </tr>
                 </thead>
                 <tbody>
-                  {selectedProducts.map((product, index) => (
-                    <tr key={index} className="text-center">
-                      <td>
-                        <div
-                          style={{ color: "red", cursor: "pointer" }}
+                  {selectedProducts
+                    .map((product, index) => (
+                      <tr key={index} className="text-center">
+                        <td>
+                          <div
+                            style={{ color: "red", cursor: "pointer" }}
+                            onClick={() => {
+                              removeProduct(product);
+                            }}
+                          >
+                            <i className="bi bi-x-lg"> </i>
+                          </div>
+                        </td>
+                        <td>{index + 1}</td>
+                        <td>{product.part_number}</td>
+                        <td
+                          style={{
+                            textDecoration: "underline",
+                            color: "blue",
+                            cursor: "pointer",
+                          }}
+                          className="text-start"
                           onClick={() => {
-                            removeProduct(product);
+                            openProductDetailsView(product.product_id);
+                            console.log("okk,id:", product.product_id);
                           }}
                         >
-                          <i className="bi bi-x-lg"> </i>
-                        </div>
-                      </td>
-                      <td>{index + 1}</td>
-                      <td>{product.part_number}</td>
-                      <td style={{
-                        textDecoration: "underline",
-                        color: "blue",
-                        cursor: "pointer",
-                      }}
-                        className="text-start"
-                        onClick={() => {
-                          openProductDetailsView(product.product_id);
-                          console.log("okk,id:", product.product_id);
-                        }}>{product.name}
-                      </td>
-                      <td style={{ width: "155px" }}>
-
-                        <div className="input-group mb-3">
-                          <input type="number" value={product.quantity} className="form-control"
-
-                            placeholder="Quantity" onChange={(e) => {
-                              errors["quantity_" + index] = "";
-                              setErrors({ ...errors });
-                              if (!e.target.value) {
-                                errors["quantity_" + index] = "Invalid Quantity";
-                                selectedProducts[index].quantity = e.target.value;
-                                setSelectedProducts([...selectedProducts]);
+                          {product.name}
+                        </td>
+                        <td style={{ width: "155px" }}>
+                          <div className="input-group mb-3">
+                            <input
+                              type="number"
+                              value={product.quantity}
+                              className="form-control"
+                              placeholder="Quantity"
+                              onChange={(e) => {
+                                errors["quantity_" + index] = "";
                                 setErrors({ ...errors });
-                                console.log("errors:", errors);
-                                return;
-                              }
+                                if (!e.target.value) {
+                                  errors["quantity_" + index] =
+                                    "Invalid Quantity";
+                                  selectedProducts[index].quantity =
+                                    e.target.value;
+                                  setSelectedProducts([...selectedProducts]);
+                                  setErrors({ ...errors });
+                                  console.log("errors:", errors);
+                                  return;
+                                }
 
-                              if (parseFloat(e.target.value) === 0) {
-                                errors["quantity_" + index] = "Quantity should be > 0";
-                                selectedProducts[index].quantity = e.target.value;
+                                if (parseFloat(e.target.value) === 0) {
+                                  errors["quantity_" + index] =
+                                    "Quantity should be > 0";
+                                  selectedProducts[index].quantity =
+                                    e.target.value;
+                                  setSelectedProducts([...selectedProducts]);
+                                  setErrors({ ...errors });
+                                  console.log("errors:", errors);
+                                  return;
+                                }
+
+                                product.quantity = parseFloat(e.target.value);
+                                reCalculate();
+
+                                selectedProducts[index].quantity = parseFloat(
+                                  e.target.value
+                                );
+                                console.log(
+                                  "selectedProducts[index].quantity:",
+                                  selectedProducts[index].quantity
+                                );
                                 setSelectedProducts([...selectedProducts]);
-                                setErrors({ ...errors });
-                                console.log("errors:", errors);
-                                return;
-                              }
-
-                              product.quantity = parseFloat(e.target.value);
-                              reCalculate();
-
-                              selectedProducts[index].quantity = parseFloat(e.target.value);
-                              console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
-                              setSelectedProducts([...selectedProducts]);
-                              reCalculate();
-
-                            }} />
-                          <span className="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
-                        </div>
-                        {errors["quantity_" + index] && (
-                          <div style={{ color: "red" }}>
-                            <i className="bi bi-x-lg"> </i>
-                            {errors["quantity_" + index]}
+                                reCalculate();
+                              }}
+                            />
+                            <span
+                              className="input-group-text"
+                              id="basic-addon2"
+                            >
+                              {" "}
+                              {selectedProducts[index].unit
+                                ? selectedProducts[index].unit
+                                : "Units"}
+                            </span>
                           </div>
-                        )}
-
-                      </td>
-                      <td style={{ width: "150px" }}>
-                        {product.purchase_unit_price ? <NumberFormat
-                          value={(product.purchase_unit_price).toFixed(2)}
-                          displayType={"text"}
-                          thousandSeparator={true}
-                          suffix={" SAR"}
-                          renderText={(value, props) => value}
-                        /> : ""}
-                      </td>
-                      <td style={{ width: "180px" }}>
-
-                        <div className="input-group mb-3">
-                          <input type="number" value={product.unit_price} className="form-control"
-
-                            placeholder="Unit Price" onChange={(e) => {
-                              errors["unit_price_" + index] = "";
-                              setErrors({ ...errors });
-                              if (!e.target.value) {
-                                errors["unit_price_" + index] = "Invalid Unit Price";
-                                selectedProducts[index].unit_price = parseFloat(e.target.value);
-                                setSelectedProducts([...selectedProducts]);
+                          {errors["quantity_" + index] && (
+                            <div style={{ color: "red" }}>
+                              <i className="bi bi-x-lg"> </i>
+                              {errors["quantity_" + index]}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{ width: "150px" }}>
+                          {product.purchase_unit_price ? (
+                            <NumberFormat
+                              value={product.purchase_unit_price.toFixed(2)}
+                              displayType={"text"}
+                              thousandSeparator={true}
+                              suffix={" SAR"}
+                              renderText={(value, props) => value}
+                            />
+                          ) : (
+                            ""
+                          )}
+                        </td>
+                        <td style={{ width: "180px" }}>
+                          <div className="input-group mb-3">
+                            <input
+                              type="number"
+                              value={product.unit_price}
+                              className="form-control"
+                              placeholder="Unit Price"
+                              onChange={(e) => {
+                                errors["unit_price_" + index] = "";
                                 setErrors({ ...errors });
-                                console.log("errors:", errors);
-                                return;
-                              }
+                                if (!e.target.value) {
+                                  errors["unit_price_" + index] =
+                                    "Invalid Unit Price";
+                                  selectedProducts[index].unit_price =
+                                    parseFloat(e.target.value);
+                                  setSelectedProducts([...selectedProducts]);
+                                  setErrors({ ...errors });
+                                  console.log("errors:", errors);
+                                  return;
+                                }
 
-                              if (parseFloat(e.target.value) === 0) {
-                                errors["unit_price_" + index] = "Unit Price shoudl be > 0";
-                                selectedProducts[index].unit_price = parseFloat(e.target.value);
+                                if (parseFloat(e.target.value) === 0) {
+                                  errors["unit_price_" + index] =
+                                    "Unit Price shoudl be > 0";
+                                  selectedProducts[index].unit_price =
+                                    parseFloat(e.target.value);
+                                  setSelectedProducts([...selectedProducts]);
+                                  setErrors({ ...errors });
+                                  console.log("errors:", errors);
+                                  return;
+                                }
+
+                                selectedProducts[index].unit_price = parseFloat(
+                                  e.target.value
+                                );
+                                console.log(
+                                  "selectedProducts[index].unit_price:",
+                                  selectedProducts[index].unit_price
+                                );
                                 setSelectedProducts([...selectedProducts]);
-                                setErrors({ ...errors });
-                                console.log("errors:", errors);
-                                return;
-                              }
-
-                              selectedProducts[index].unit_price = parseFloat(e.target.value);
-                              console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
-                              setSelectedProducts([...selectedProducts]);
-                              reCalculate();
-
-                            }} />
-                          <span className="input-group-text" id="basic-addon2">SAR</span>
-                        </div>
-                        {errors["unit_price_" + index] && (
-                          <div style={{ color: "red" }}>
-                            <i className="bi bi-x-lg"> </i>
-                            {errors["unit_price_" + index]}
-
+                                reCalculate();
+                              }}
+                            />
+                            <span
+                              className="input-group-text"
+                              id="basic-addon2"
+                            >
+                              SAR
+                            </span>
                           </div>
-                        )}
-                      </td>
-                      <td className="text-end">
-                        <NumberFormat
-                          value={(product.unit_price * product.quantity).toFixed(2)}
-                          displayType={"text"}
-                          thousandSeparator={true}
-                          suffix={" SAR"}
-                          renderText={(value, props) => value}
-                        />
-                      </td>
-
-                    </tr>
-                  )).reverse()}
+                          {errors["unit_price_" + index] && (
+                            <div style={{ color: "red" }}>
+                              <i className="bi bi-x-lg"> </i>
+                              {errors["unit_price_" + index]}
+                            </div>
+                          )}
+                        </td>
+                        <td className="text-end">
+                          <NumberFormat
+                            value={(
+                              product.unit_price * product.quantity
+                            ).toFixed(2)}
+                            displayType={"text"}
+                            thousandSeparator={true}
+                            suffix={" SAR"}
+                            renderText={(value, props) => value}
+                          />
+                        </td>
+                      </tr>
+                    ))
+                    .reverse()}
                 </tbody>
               </table>
             </div>
@@ -1265,10 +1396,10 @@ const QuotationCreate = forwardRef((props, ref) => {
               <table className="table table-striped table-sm table-bordered">
                 <tbody>
                   <tr>
-
-
-                    <th colSpan="8" className="text-end">Total</th>
-                    <td className="text-end" style={{ width: "200px" }} >
+                    <th colSpan="8" className="text-end">
+                      Total
+                    </th>
+                    <td className="text-end" style={{ width: "200px" }}>
                       <NumberFormat
                         value={totalPrice}
                         displayType={"text"}
@@ -1283,41 +1414,54 @@ const QuotationCreate = forwardRef((props, ref) => {
                       Shipping & Handling Fees
                     </th>
                     <td className="text-end">
-                      <input type="number" style={{ width: "150px" }} className="text-start" value={formData.shipping_handling_fees} onChange={(e) => {
+                      <input
+                        type="number"
+                        style={{ width: "150px" }}
+                        className="text-start"
+                        value={formData.shipping_handling_fees}
+                        onChange={(e) => {
+                          if (parseFloat(e.target.value) === 0) {
+                            formData.shipping_handling_fees = parseFloat(
+                              e.target.value
+                            );
+                            setFormData({ ...formData });
+                            errors["shipping_handling_fees"] = "";
+                            setErrors({ ...errors });
+                            reCalculate();
+                            return;
+                          }
 
-                        if (parseFloat(e.target.value) === 0) {
-                          formData.shipping_handling_fees = parseFloat(e.target.value);
-                          setFormData({ ...formData });
+                          if (parseFloat(e.target.value) < 0) {
+                            formData.shipping_handling_fees = parseFloat(
+                              e.target.value
+                            );
+                            setFormData({ ...formData });
+                            errors["shipping_handling_fees"] =
+                              "Shipping / Handling Fees should be > 0";
+                            setErrors({ ...errors });
+                            reCalculate();
+                            return;
+                          }
+
+                          if (!e.target.value) {
+                            formData.shipping_handling_fees = "";
+                            errors["shipping_handling_fees"] =
+                              "Invalid Shipping / Handling Fees";
+                            setFormData({ ...formData });
+                            setErrors({ ...errors });
+                            return;
+                          }
+
                           errors["shipping_handling_fees"] = "";
                           setErrors({ ...errors });
-                          reCalculate();
-                          return;
-                        }
 
-                        if (parseFloat(e.target.value) < 0) {
-                          formData.shipping_handling_fees = parseFloat(e.target.value);
+                          formData.shipping_handling_fees = parseFloat(
+                            e.target.value
+                          );
                           setFormData({ ...formData });
-                          errors["shipping_handling_fees"] = "Shipping / Handling Fees should be > 0";
-                          setErrors({ ...errors });
                           reCalculate();
-                          return;
-                        }
-
-                        if (!e.target.value) {
-                          formData.shipping_handling_fees = "";
-                          errors["shipping_handling_fees"] = "Invalid Shipping / Handling Fees";
-                          setFormData({ ...formData });
-                          setErrors({ ...errors });
-                          return;
-                        }
-
-                        errors["shipping_handling_fees"] = "";
-                        setErrors({ ...errors });
-
-                        formData.shipping_handling_fees = parseFloat(e.target.value);
-                        setFormData({ ...formData });
-                        reCalculate();
-                      }} />
+                        }}
+                      />
                       {" SAR"}
                       {errors.shipping_handling_fees && (
                         <div style={{ color: "red" }}>
@@ -1328,44 +1472,60 @@ const QuotationCreate = forwardRef((props, ref) => {
                   </tr>
                   <tr>
                     <th colSpan="8" className="text-end">
-                      Discount  <input type="number" style={{ width: "50px" }} className="text-start" value={formData.discount_percent} onChange={(e) => {
-                        formData.is_discount_percent = true;
-                        if (parseFloat(e.target.value) === 0) {
-                          formData.discount_percent = parseFloat(e.target.value);
-                          setFormData({ ...formData });
+                      Discount{" "}
+                      <input
+                        type="number"
+                        style={{ width: "50px" }}
+                        className="text-start"
+                        value={formData.discount_percent}
+                        onChange={(e) => {
+                          formData.is_discount_percent = true;
+                          if (parseFloat(e.target.value) === 0) {
+                            formData.discount_percent = parseFloat(
+                              e.target.value
+                            );
+                            setFormData({ ...formData });
+                            errors["discount_percent"] = "";
+                            setErrors({ ...errors });
+                            reCalculate();
+                            return;
+                          }
+
+                          if (parseFloat(e.target.value) < 0) {
+                            formData.discount_percent = parseFloat(
+                              e.target.value
+                            );
+                            formData.discount = 0.0;
+                            setFormData({ ...formData });
+                            errors["discount_percent"] =
+                              "Discount percent should be >= 0";
+                            setErrors({ ...errors });
+                            reCalculate();
+                            return;
+                          }
+
+                          if (!e.target.value) {
+                            formData.discount_percent = "";
+                            formData.discount = 0.0;
+                            errors["discount_percent"] =
+                              "Invalid Discount Percent";
+                            setFormData({ ...formData });
+                            setErrors({ ...errors });
+                            return;
+                          }
+
                           errors["discount_percent"] = "";
+                          errors["discount"] = "";
                           setErrors({ ...errors });
-                          reCalculate();
-                          return;
-                        }
 
-                        if (parseFloat(e.target.value) < 0) {
-                          formData.discount_percent = parseFloat(e.target.value);
-                          formData.discount = 0.00;
+                          formData.discount_percent = parseFloat(
+                            e.target.value
+                          );
                           setFormData({ ...formData });
-                          errors["discount_percent"] = "Discount percent should be >= 0";
-                          setErrors({ ...errors });
                           reCalculate();
-                          return;
-                        }
-
-                        if (!e.target.value) {
-                          formData.discount_percent = "";
-                          formData.discount = 0.00;
-                          errors["discount_percent"] = "Invalid Discount Percent";
-                          setFormData({ ...formData });
-                          setErrors({ ...errors });
-                          return;
-                        }
-
-                        errors["discount_percent"] = "";
-                        errors["discount"] = "";
-                        setErrors({ ...errors });
-
-                        formData.discount_percent = parseFloat(e.target.value);
-                        setFormData({ ...formData });
-                        reCalculate();
-                      }} />{"%"}
+                        }}
+                      />
+                      {"%"}
                       {errors.discount_percent && (
                         <div style={{ color: "red" }}>
                           {errors.discount_percent}
@@ -1373,99 +1533,110 @@ const QuotationCreate = forwardRef((props, ref) => {
                       )}
                     </th>
                     <td className="text-end">
-                      <input type="number" style={{ width: "150px" }} className="text-start" value={formData.discount} onChange={(e) => {
-                        formData.is_discount_percent = false;
-                        if (parseFloat(e.target.value) === 0) {
-                          formData.discount = parseFloat(e.target.value);
-                          setFormData({ ...formData });
+                      <input
+                        type="number"
+                        style={{ width: "150px" }}
+                        className="text-start"
+                        value={formData.discount}
+                        onChange={(e) => {
+                          formData.is_discount_percent = false;
+                          if (parseFloat(e.target.value) === 0) {
+                            formData.discount = parseFloat(e.target.value);
+                            setFormData({ ...formData });
+                            errors["discount"] = "";
+                            setErrors({ ...errors });
+                            reCalculate();
+                            return;
+                          }
+
+                          if (parseFloat(e.target.value) < 0) {
+                            formData.discount = parseFloat(e.target.value);
+                            formData.discount_percent = 0.0;
+                            setFormData({ ...formData });
+                            errors["discount"] = "Discount should be >= 0";
+                            setErrors({ ...errors });
+                            reCalculate();
+                            return;
+                          }
+
+                          if (!e.target.value) {
+                            formData.discount = "";
+                            formData.discount_percent = 0.0;
+                            errors["discount"] = "Invalid Discount";
+                            setFormData({ ...formData });
+                            reCalculate();
+                            setErrors({ ...errors });
+                            return;
+                          }
+
                           errors["discount"] = "";
+                          errors["discount_percent"] = "";
                           setErrors({ ...errors });
-                          reCalculate();
-                          return;
-                        }
 
-                        if (parseFloat(e.target.value) < 0) {
                           formData.discount = parseFloat(e.target.value);
-                          formData.discount_percent = 0.00;
-                          setFormData({ ...formData });
-                          errors["discount"] = "Discount should be >= 0";
-                          setErrors({ ...errors });
-                          reCalculate();
-                          return;
-                        }
-
-                        if (!e.target.value) {
-                          formData.discount = "";
-                          formData.discount_percent = 0.00;
-                          errors["discount"] = "Invalid Discount";
                           setFormData({ ...formData });
                           reCalculate();
-                          setErrors({ ...errors });
-                          return;
-                        }
-
-                        errors["discount"] = "";
-                        errors["discount_percent"] = "";
-                        setErrors({ ...errors });
-
-                        formData.discount = parseFloat(e.target.value);
-                        setFormData({ ...formData });
-                        reCalculate();
-                      }} />
+                        }}
+                      />
                       {" SAR"}
                       {errors.discount && (
-                        <div style={{ color: "red" }}>
-                          {errors.discount}
-                        </div>
+                        <div style={{ color: "red" }}>{errors.discount}</div>
                       )}
                     </td>
                   </tr>
                   <tr>
+                    <th colSpan="8" className="text-end">
+                      {" "}
+                      VAT{" "}
+                      <input
+                        type="number"
+                        className="text-center"
+                        style={{ width: "50px" }}
+                        value={formData.vat_percent}
+                        onChange={(e) => {
+                          console.log("Inside onchange vat percent");
+                          if (parseFloat(e.target.value) === 0) {
+                            formData.vat_percent = parseFloat(e.target.value);
+                            setFormData({ ...formData });
+                            errors["vat_percent"] = "";
+                            setErrors({ ...errors });
+                            reCalculate();
+                            return;
+                          }
+                          if (parseFloat(e.target.value) < 0) {
+                            formData.vat_percent = parseFloat(e.target.value);
+                            vatPrice = 0.0;
+                            setVatPrice(vatPrice);
+                            setFormData({ ...formData });
+                            errors["vat_percent"] =
+                              "Vat percent should be >= 0";
+                            setErrors({ ...errors });
+                            reCalculate();
+                            return;
+                          }
 
-                    <th colSpan="8" className="text-end"> VAT  <input type="number" className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
-                      console.log("Inside onchange vat percent");
-                      if (parseFloat(e.target.value) === 0) {
-                        formData.vat_percent = parseFloat(e.target.value);
-                        setFormData({ ...formData });
-                        errors["vat_percent"] = "";
-                        setErrors({ ...errors });
-                        reCalculate();
-                        return;
-                      }
-                      if (parseFloat(e.target.value) < 0) {
-                        formData.vat_percent = parseFloat(e.target.value);
-                        vatPrice = 0.00;
-                        setVatPrice(vatPrice);
-                        setFormData({ ...formData });
-                        errors["vat_percent"] = "Vat percent should be >= 0";
-                        setErrors({ ...errors });
-                        reCalculate();
-                        return;
-                      }
+                          if (!e.target.value) {
+                            formData.vat_percent = "";
+                            vatPrice = 0.0;
+                            setVatPrice(vatPrice);
+                            //formData.discount_percent = 0.00;
+                            errors["vat_percent"] = "Invalid vat percent";
+                            setFormData({ ...formData });
+                            setErrors({ ...errors });
+                            return;
+                          }
+                          errors["vat_percent"] = "";
+                          setErrors({ ...errors });
 
-
-                      if (!e.target.value) {
-                        formData.vat_percent = "";
-                        vatPrice = 0.00;
-                        setVatPrice(vatPrice);
-                        //formData.discount_percent = 0.00;
-                        errors["vat_percent"] = "Invalid vat percent";
-                        setFormData({ ...formData });
-                        setErrors({ ...errors });
-                        return;
-                      }
-                      errors["vat_percent"] = "";
-                      setErrors({ ...errors });
-
-                      formData.vat_percent = e.target.value;
-                      reCalculate();
-                      setFormData({ ...formData });
-                      console.log(formData);
-                    }} />{"%"}
+                          formData.vat_percent = e.target.value;
+                          reCalculate();
+                          setFormData({ ...formData });
+                          console.log(formData);
+                        }}
+                      />
+                      {"%"}
                       {errors.vat_percent && (
-                        <div style={{ color: "red" }}>
-                          {errors.vat_percent}
-                        </div>
+                        <div style={{ color: "red" }}>{errors.vat_percent}</div>
                       )}
                     </th>
                     <td className="text-end">
@@ -1479,8 +1650,9 @@ const QuotationCreate = forwardRef((props, ref) => {
                     </td>
                   </tr>
                   <tr>
-
-                    <th colSpan="8" className="text-end">Net Total</th>
+                    <th colSpan="8" className="text-end">
+                      Net Total
+                    </th>
                     <th className="text-end">
                       <NumberFormat
                         value={netTotal}
@@ -1494,7 +1666,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                 </tbody>
               </table>
             </div>
-
 
             <div className="col-md-6">
               <label className="form-label">Status*</label>
@@ -1544,61 +1715,179 @@ const QuotationCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="col-md-6">
-                            <label className="form-label">Date*</label>
+              <label className="form-label">Date*</label>
 
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="date_str"
-                                    selected={formData.date_str ? new Date(formData.date_str) : null}
-                                    value={formData.date_str ? format(
-                                        new Date(formData.date_str),
-                                        "MMMM d, yyyy h:mm aa"
-                                    ) : null}
-                                    className="form-control"
-                                    dateFormat="MMMM d, yyyy h:mm aa"
-                                    showTimeSelect
-                                    timeIntervals="1"
-                                    onChange={(value) => {
-                                        console.log("Value", value);
-                                        formData.date_str = value;
-                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
+              <div className="input-group mb-3">
+                <DatePicker
+                  id="date_str"
+                  selected={
+                    formData.date_str ? new Date(formData.date_str) : null
+                  }
+                  value={
+                    formData.date_str
+                      ? format(
+                        new Date(formData.date_str),
+                        "MMMM d, yyyy h:mm aa"
+                      )
+                      : null
+                  }
+                  className="form-control"
+                  dateFormat="MMMM d, yyyy h:mm aa"
+                  showTimeSelect
+                  timeIntervals="1"
+                  onChange={(value) => {
+                    console.log("Value", value);
+                    formData.date_str = value;
+                    // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                    setFormData({ ...formData });
+                  }}
+                />
 
-                                {errors.date_str && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.date_str}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                {errors.date_str && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.date_str}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <label className="form-label">Validity (# of Days)*</label>
+
+              <div className="input-group mb-3">
+                <input
+                  type="number"
+                  className="text-center"
+                  style={{ width: "50px" }}
+                  value={formData.validity_days}
+                  onChange={(e) => {
+                    console.log("Inside onchange validity days");
+                    if (!e.target.value) {
+                      formData.validity_days = null;
+                      errors["validity_days"] = "Validity days are required";
+                      setFormData({ ...formData });
+                      setErrors({ ...errors });
+                      return;
+                    }
+
+                    if (parseInt(e.target.value) <= 0) {
+                      formData.validity_days = parseInt(e.target.value);
+                      setValidityDays(validityDays);
+                      setFormData({ ...formData });
+                      errors["validity_days"] =
+                        "Validity days should be > 0";
+                      setErrors({ ...errors });
+                      return;
+                    }
+
+                    errors["validity_days"] = "";
+                    setErrors({ ...errors });
+
+                    formData.validity_days = parseInt(e.target.value);
+                    setFormData({ ...formData });
+
+                    validityDays = formData.validity_days;
+                    setValidityDays(formData.validity_days);
+                    console.log(formData);
+                  }}
+                />
+
+                {errors.validity_days && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.validity_days}
+                  </div>
+                )}
+
+                {formData.validity_days > 0 && formData.validity_day && !errors.validity_days && (
+                  <div style={{ color: "green" }}>
+                    <i className="bi bi-check-lg"> </i>
+                    Looks good!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <label className="form-label">Delivery (# of Days)*</label>
+
+              <div className="input-group mb-3">
+                <input
+                  type="number"
+                  className="text-center"
+                  style={{ width: "50px" }}
+                  value={formData.delivery_days}
+                  onChange={(e) => {
+                    console.log("Inside onchange delivery days");
+                    if (!e.target.value) {
+                      formData.delivery_days = null;
+                      errors["delivery_days"] = "Delivery days are required";
+                      setFormData({ ...formData });
+                      setErrors({ ...errors });
+                      return;
+                    }
+
+                    if (parseInt(e.target.value) <= 0) {
+                      formData.delivery_days = parseInt(e.target.value);
+                      setDeliveryDays(deliveryDays);
+                      setFormData({ ...formData });
+                      errors["delivery_days"] =
+                        "Delivery days should be > 0";
+                      setErrors({ ...errors });
+                      return;
+                    }
+
+                    errors["delivery_days"] = "";
+                    setErrors({ ...errors });
+
+                    formData.delivery_days = parseInt(e.target.value);
+                    setFormData({ ...formData });
+
+                    deliveryDays = formData.delivery_days;
+                    setDeliveryDays(formData.delivery_days);
+                    console.log(formData);
+                  }}
+                />
+
+                {errors.delivery_days && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.delivery_days}
+                  </div>
+                )}
+                {formData.delivery_days > 0 && formData.delivery_days && !errors.delivery_days && (
+                  <div style={{ color: "green" }}>
+                    <i className="bi bi-check-lg"> </i>
+                    Looks good!
+                  </div>
+                )}
+              </div>
+            </div>
 
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>
                 Close
               </Button>
-              <Button variant="primary" onClick={handleCreate} >
-                {isProcessing ?
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden={true}
-                  /> + " Processing..."
-
-                  : formData.id ? "Update" : "Create"
-                }
+              <Button variant="primary" onClick={handleCreate}>
+                {isProcessing
+                  ? (
+                    <Spinner
+                      as="span"
+                      animation="border"
+                      size="sm"
+                      role="status"
+                      aria-hidden={true}
+                    />
+                  ) + " Processing..."
+                  : formData.id
+                    ? "Update"
+                    : "Create"}
               </Button>
             </Modal.Footer>
           </form>
         </Modal.Body>
-
       </Modal>
-
-
     </>
   );
 });

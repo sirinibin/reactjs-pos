@@ -324,7 +324,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
-                                            In Words بكلمات:
+                                            بكلمات:
                                         </th>
                                         <th
                                             colSpan="5"
@@ -336,9 +336,197 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 style={{ marginBottom: "0px" }}
                                             >
                                                 <li>{n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}</li>
+                                            </ul>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                            In Words
+                                        </th>
+                                        <th
+                                            colSpan="5"
+                                            style={{ padding: "2px" }}
+
+                                        >
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{ marginBottom: "0px" }}
+                                            >
                                                 <li>{n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}</li>
                                             </ul>
                                         </th>
+                                    </tr>
+                                    <tr>
+                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                            صلاحية:
+                                        </th>
+                                        {props.model.validity_days ? <th
+                                            colSpan="1"
+                                            style={{ padding: "2px" }}
+
+                                        >
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{ marginBottom: "0px" }}
+                                            >
+                                                <li style={{ color: "red" }}>{props.model.validity_days + " أيام"}</li>
+                                            </ul>
+                                        </th> : ""}
+                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                            توصيل:
+                                        </th>
+                                        {props.model.delivery_days ? <th
+                                            colSpan="3"
+                                            style={{ padding: "2px" }}
+
+                                        >
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{ marginBottom: "0px" }}
+                                            >
+                                                <li>{"خلال " + props.model.delivery_days + " أيام من تاريخ الدفع"}</li>
+                                            </ul>
+                                        </th> : ""}
+
+                                    </tr>
+                                    <tr>
+                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                            Validity
+                                        </th>
+                                        {props.model.validity_days ? <th
+                                            colSpan="1"
+                                            style={{ padding: "2px" }}
+
+                                        >
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{ marginBottom: "0px" }}
+                                            >
+                                                <li style={{ color: "red" }}>{props.model.validity_days + " days"}</li>
+                                            </ul>
+                                        </th> : ""}
+
+                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                            Delivery
+                                        </th>
+                                        {props.model.delivery_days ? <th
+                                            colSpan="3"
+                                            style={{ padding: "2px" }}
+
+                                        >
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{ marginBottom: "0px" }}
+                                            >
+                                                <li>{"Within " + props.model.delivery_days + " days from the date of payment"}</li>
+                                            </ul>
+                                        </th> : ""}
+                                    </tr>
+                                    <tr >
+                                        <td colSpan="6" style={{padding:"0px"}}>
+
+                                            <table
+                                                className="table table-bordered"
+                                                style={{ borderRadius: "6px" }}
+                                            >
+                                              
+
+                                                <thead style={{ fontSize: "3mm" }}>
+                                                    <tr >
+                                                        <th  colSpan="5" className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                            <ul
+                                                                className="list-unstyled"
+                                                                style={{
+                                                                    height: "15px"
+                                                                }}
+                                                            >
+                                                                <li>تفاصيل الحساب البنكي</li>
+                                                                <li>Bank Account details</li>
+                                                            </ul>
+                                                        </th>
+                                                    </tr>
+                                                    <tr >
+                                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                            <ul
+                                                                className="list-unstyled"
+                                                                style={{
+                                                                    height: "15px"
+                                                                }}
+                                                            >
+                                                                <li>اسم البنك</li>
+                                                                <li>Bank Name</li>
+                                                            </ul>
+                                                        </th>
+                                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                            <ul
+                                                                className="list-unstyled"
+                                                                style={{
+                                                                    height: "15px"
+                                                                }}
+                                                            >
+                                                                <li>رقم العميل</li>
+                                                                <li>Customer No.</li>
+                                                            </ul>
+                                                        </th>
+                                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                            <ul
+                                                                className="list-unstyled"
+                                                                style={{
+                                                                    height: "15px"
+                                                                }}
+                                                            >
+                                                                <li>رقم الحساب المصرفي الدولي</li>
+                                                                <li>IBAN</li>
+                                                            </ul>
+                                                        </th>
+                                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                            <ul
+                                                                className="list-unstyled"
+                                                                style={{
+                                                                    height: "15px"
+                                                                }}
+                                                            >
+                                                                <li>إسم الحساب</li>
+                                                                <li>Account name</li>
+                                                            </ul>
+                                                        </th>
+                                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                            <ul
+                                                                className="list-unstyled"
+                                                                style={{
+                                                                    height: "15px"
+                                                                }}
+                                                            >
+                                                                <li>رقم حساب</li>
+                                                                <li>Account No.</li>
+                                                            </ul>
+                                                        </th>
+                                                      
+                                                    </tr>
+                                                </thead>
+                                                <tbody style={{ fontSize: "3mm" }} >
+                                                  <tr>
+                                                    <td>
+                                                        NATIONAL COMMERCIAL BANK(NCB)
+                                                    </td>
+                                                    <td>
+                                                        57560905
+                                                    </td>
+                                                    <td>
+                                                        SA7510000014600000922202
+                                                    </td>
+                                                    <td>
+                                                       GULF UNION OZONE CO.
+                                                    </td>
+                                                    <td>
+                                                        14600000922202
+                                                    </td>
+                                                  </tr>
+                                                </tbody>
+                                                
+                                            </table>
+
+                                        </td>
                                     </tr>
                                 </tfoot>
                             </table>
