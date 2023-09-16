@@ -1802,7 +1802,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   </div>
                 )}
 
-                {formData.validity_days > 0 && formData.validity_day && !errors.validity_days && (
+               {formData.validity_days > 0 && formData.validity_days && !errors.validity_days && (
                   <div style={{ color: "green" }}>
                     <i className="bi bi-check-lg"> </i>
                     Looks good!
