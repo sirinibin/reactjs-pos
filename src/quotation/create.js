@@ -126,6 +126,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     status: "created",
     price_type: "retail",
     is_discount_percent: false,
+    validity_days:2,
+    delivery_days:7,
   });
 
   //Store Auto Suggestion
@@ -216,8 +218,8 @@ const QuotationCreate = forwardRef((props, ref) => {
           delivered_by_signature_id: quotation.delivered_by_signature_id,
           is_discount_percent: quotation.is_discount_percent,
           shipping_handling_fees: quotation.shipping_handling_fees,
-          delivery_days: quotation.delivery_days,
-          validity_days: quotation.validity_days,
+          delivery_days: quotation.delivery_days?quotation.delivery_days:7,
+          validity_days: quotation.validity_days?quotation.validity_days:2,
         };
         formData.date_str = data.result.date;
 
