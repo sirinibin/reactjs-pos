@@ -6,12 +6,13 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge } from "react-bootstrap";
+import { Button, Spinner, Badge,Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
 import SalesReturnPaymentCreate from "./../sales_return_payment/create.js";
 import SalesReturnPaymentDetailsView from "./../sales_return_payment/view.js";
+import SalesReturnPaymentIndex from "./../sales_return_payment/index.js";
 
 
 import ReactExport from 'react-data-export';
@@ -25,6 +26,10 @@ function SalesReturnIndex(props) {
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
+    let [totalPaidSalesReturn, setTotalPaidSalesReturn] = useState(0.00);
+    let [totalUnPaidSalesReturn, setTotalUnPaidSalesReturn] = useState(0.00);
+    let [totalCashSalesReturn, setTotalCashSalesReturn] = useState(0.00);
+    let [totalBankAccountSalesReturn, setTotalBankAccountSalesReturn] = useState(0.00);
 
     //list
     const [salesreturnList, setSalesReturnList] = useState([]);
@@ -610,6 +615,10 @@ function SalesReturnIndex(props) {
             setSelectedCustomers(values);
         } else if (field === "status") {
             setSelectedStatusList(values);
+        } else if (field === "payment_status") {
+            setSelectedPaymentStatusList(values);
+        } else if (field === "payment_methods") {
+            setSelectedPaymentMethodList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -636,7 +645,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,loss,order_code";
+            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,loss,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -704,6 +713,18 @@ function SalesReturnIndex(props) {
                 totalDiscount = data.meta.discount;
                 setTotalDiscount(totalDiscount);
 
+                totalPaidSalesReturn = data.meta.paid_sales_return;
+                setTotalPaidSalesReturn(totalPaidSalesReturn);
+
+                totalUnPaidSalesReturn = data.meta.unpaid_sales_return;
+                setTotalUnPaidSalesReturn(totalUnPaidSalesReturn);
+
+                totalCashSalesReturn = data.meta.cash_sales_return;
+                setTotalCashSalesReturn(totalCashSalesReturn);
+
+                totalBankAccountSalesReturn = data.meta.bank_account_sales_return;
+                setTotalBankAccountSalesReturn(totalBankAccountSalesReturn);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -759,6 +780,51 @@ function SalesReturnIndex(props) {
     let [loss, setLoss] = useState(0.00);
 
 
+    let [sortOrder, setSortOrder] = useState("-");
+    const paymentStatusOptions = [
+        {
+            id: "paid",
+            name: "Paid",
+        },
+        {
+            id: "not_paid",
+            name: "Not Paid",
+        },
+        {
+            id: "paid_partially",
+            name: "Paid partially",
+        },
+    ];
+    const paymentMethodOptions = [
+        {
+            id: "cash",
+            name: "cash",
+        },
+        {
+            id: "bank_account",
+            name: "Bank Account / Debit / Credit card",
+        },
+    ];
+    const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
+    const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+
+    const [selectedSalesReturn, setSelectedSalesReturn] = useState({});
+    let [showSalesReturnPaymentHistory, setShowSalesReturnPaymentHistory] = useState(false);
+
+    function openPaymentsDialogue(salesReturn) {
+        setSelectedSalesReturn(salesReturn);
+        showSalesReturnPaymentHistory = true;
+        setShowSalesReturnPaymentHistory(true);
+    }
+
+    function handlePaymentHistoryClose() {
+        showSalesReturnPaymentHistory = false;
+        setShowSalesReturnPaymentHistory(false);
+        //list();
+    }
+
+    const SalesReturnPaymentListRef = useRef();
+
     return (
         <>
             <SalesReturnCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
@@ -775,6 +841,50 @@ function SalesReturnIndex(props) {
                             Sales Return: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalSalesReturn}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Paid Sales Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalPaidSalesReturn.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h4 className="text-end">
+                            Cash Sales Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalCashSalesReturn.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4>
+                        <h4 className="text-end">
+                            Bank Account Sales Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalBankAccountSalesReturn.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4>
+                        <h1 className="text-end">
+                            Credit Sales Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalUnPaidSalesReturn.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -1059,6 +1169,65 @@ function SalesReturnIndex(props) {
                                                     </b>
                                                 </th>
 
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("total_payment_paid");
+                                                        }}
+                                                    >
+                                                        Payment Paid
+                                                        {sortField === "total_payment_paid" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "total_payment_paid" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("balance_amount");
+                                                        }}
+                                                    >
+                                                        Balance
+                                                        {sortField === "balance_amount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "balance_amount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payments_count");
+                                                        }}
+                                                    >
+                                                        No.of Payments
+                                                        {sortField === "payments_count" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "payments_count" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <b
                                                         style={{
@@ -1137,6 +1306,8 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1144,14 +1315,33 @@ function SalesReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("status");
+                                                            sort("payment_status");
                                                         }}
                                                     >
-                                                        Status
-                                                        {sortField === "status" && sortSalesReturn === "-" ? (
+                                                        Payment Status
+                                                        {sortField === "payment_status" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "status" && sortSalesReturn === "" ? (
+                                                        {sortField === "payment_status" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payment_methods");
+                                                        }}
+                                                    >
+                                                        Payment Methods
+                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_methods" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -1276,6 +1466,36 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="total_payment_paid"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("total_payment_paid", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="balance_amount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="payments_count"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("payments_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
@@ -1336,19 +1556,37 @@ function SalesReturnIndex(props) {
                                                         multiple
                                                     />
                                                 </th>
+
                                                 <th>
                                                     <Typeahead
-                                                        id="status"
+                                                        id="payment_status"
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
-                                                                "status",
+                                                                "payment_status",
                                                                 selectedItems
                                                             );
                                                         }}
-                                                        options={statusOptions}
-                                                        placeholder="Select Status"
-                                                        selected={selectedStatusList}
+                                                        options={paymentStatusOptions}
+                                                        placeholder="Select Payment Status"
+                                                        selected={selectedPaymentStatusList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="payment_methods"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_methods",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentMethodOptions}
+                                                        placeholder="Select payment methods"
+                                                        selected={selectedPaymentMethodList}
                                                         highlightOnlyResult={true}
                                                         multiple
                                                     />
@@ -1437,14 +1675,47 @@ function SalesReturnIndex(props) {
                                                             )}
                                                         </td>
                                                         <td>{salesreturn.net_total} SAR</td>
+                                                        <td>
+                                                            <Button variant="link" onClick={() => {
+                                                                openPaymentsDialogue(salesreturn);
+                                                            }}>
+                                                                {salesreturn.total_payment_paid?.toFixed(2)}
+                                                            </Button>
+                                                        </td>
+                                                        <td>{salesreturn.balance_amount?.toFixed(2)}</td>
+                                                        <td>
+                                                            <Button variant="link" onClick={() => {
+                                                                openPaymentsDialogue(salesreturn);
+                                                            }}>
+                                                                {salesreturn.payments_count}
+                                                            </Button>
+                                                        </td>
                                                         {cookies.get('admin') === "true" ? <td>{salesreturn.net_profit.toFixed(2)} SAR</td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{salesreturn.loss ? salesreturn.loss.toFixed(2) : 0.00} SAR</td> : ""}
                                                         <td>{salesreturn.created_by_name}</td>
                                                         <td>{salesreturn.customer_name}</td>
+
                                                         <td>
-                                                            <span className="badge bg-success">
-                                                                {salesreturn.status}
-                                                            </span>
+                                                            {salesreturn.payment_status == "paid" ?
+                                                                <span className="badge bg-success">
+                                                                    Paid
+                                                                </span> : ""}
+                                                            {salesreturn.payment_status == "paid_partially" ?
+                                                                <span className="badge bg-warning">
+                                                                    Paid Partially
+                                                                </span> : ""}
+                                                            {salesreturn.payment_status == "not_paid" ?
+                                                                <span className="badge bg-danger">
+                                                                    Not Paid
+                                                                </span> : ""}
+                                                        </td>
+                                                        <td>
+
+                                                            {salesreturn.payment_methods &&
+                                                                salesreturn.payment_methods.map((name) => (
+                                                                    <span className="badge bg-info">{name}</span>
+                                                                ))}
+
                                                         </td>
                                                         <td>
                                                             {format(
@@ -1513,6 +1784,25 @@ function SalesReturnIndex(props) {
                     </div>
                 </div>
             </div>
+
+            <Modal show={showSalesReturnPaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}>
+                <Modal.Header>
+                    <Modal.Title>Payment history of Sales Return #{selectedSalesReturn.code}</Modal.Title>
+
+                    <div className="col align-self-end text-end">
+                        <button
+                            type="button"
+                            className="btn-close"
+                            onClick={handlePaymentHistoryClose}
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <SalesReturnPaymentIndex ref={SalesReturnPaymentListRef} showToastMessage={props.showToastMessage} salesReturn={selectedSalesReturn} refreshSalesReturnList={list} />
+                </Modal.Body>
+            </Modal>
         </>
     );
 }

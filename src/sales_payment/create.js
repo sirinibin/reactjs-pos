@@ -15,7 +15,7 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
             order = order;
             setOrder({ ...order });
             formData = {
-                method: "cash",
+                method: "",
             };
 
             formData.date_str = new Date();
@@ -433,16 +433,23 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                         }}
                                         className="form-control"
                                     >
+                                        <option value="">Select</option>
                                         <option value="cash">Cash</option>
                                         <option value="bank_account">Bank Account / Debit / Credit Card</option>
                                     </select>
-                                    {errors.method && (
-                                        <div style={{ color: "red" }}>
-                                            <i className="bi bi-x-lg"> </i>
-                                            {errors.method}
-                                        </div>
-                                    )}
+
                                 </div>
+                                {errors.method && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.method}
+                                    </div>
+                                )}
+                                {formData.method && !errors.method && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
                             </div>
 
                         </div>

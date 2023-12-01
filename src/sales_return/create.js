@@ -32,7 +32,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "received",
                 payment_status: "paid",
-                payment_method: "cash",
+                payment_method: "",
                 price_type: "retail"
             };
             if (cookies.get("user_id")) {
@@ -258,7 +258,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "received",
         payment_status: "paid",
-        payment_method: "cash",
+        payment_method: "",
         price_type: "retail",
     });
 
@@ -1028,13 +1028,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
+                                    <option value="">Select</option>
                                     <option value="cash">Cash</option>
                                     <option value="bank_account">Bank Account / Debit / Credit Card</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
                                         {errors.payment_method}
+                                    </div>
+                                )}
+                                {formData.payment_method && !errors.payment_method && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
                                     </div>
                                 )}
                             </div>

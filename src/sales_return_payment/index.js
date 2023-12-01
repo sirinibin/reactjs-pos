@@ -116,7 +116,24 @@ function SalesReturnPaymentIndex(props) {
         d = new Date(d.toUTCString());
 
         value = format(d, "MMM dd yyyy");
-        if (field === "created_at") {
+        if (field === "date_str") {
+            setDateValue(value);
+            setFromDateValue("");
+            setToDateValue("");
+            searchParams["from_date"] = "";
+            searchParams["to_date"] = "";
+            searchParams[field] = value;
+        } else if (field === "from_date") {
+            setFromDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "to_date") {
+            setToDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "created_at") {
             setCreatedAtValue(value);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
@@ -168,9 +185,13 @@ function SalesReturnPaymentIndex(props) {
             },
         };
         let Select =
-            "select=id,amount,method,store_name,sales_return_code,sales_return_id,order_id,order_code,created_by_name,created_at";
+            "select=id,date,amount,method,store_name,sales_return_code,sales_return_id,order_id,order_code,created_by_name,created_at";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
+        }
+
+        if (props.salesReturn) {
+            searchParams.sales_return_id = props.salesReturn.id;
         }
 
         const d = new Date();
@@ -265,9 +286,22 @@ function SalesReturnPaymentIndex(props) {
 
     let [totalPayments, setTotalPayments] = useState(0.00);
 
+    function openCreateForm() {
+        console.log("props.salesReturn:", props.salesReturn);
+        CreateFormRef.current.open("", props.salesReturn);
+    }
+
+    //Date filter
+    const [showDateRange, setShowDateRange] = useState(false);
+    const [dateValue, setDateValue] = useState("");
+    const [fromDateValue, setFromDateValue] = useState("");
+    const [toDateValue, setToDateValue] = useState("");
+
+    let [sortOrder, setSortOrder] = useState("-");
+
     return (
         <>
-            <SalesReturnPaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <SalesReturnPaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} refreshSalesReturnList={props.refreshSalesReturnList ? props.refreshSalesReturnList : ''} />
             <SalesReturnPaymentView ref={DetailsViewRef} openUpdateForm={openUpdateForm} />
 
             <div className="container-fluid p-0">
@@ -292,7 +326,20 @@ function SalesReturnPaymentIndex(props) {
                     <div className="col">
                         <h1 className="h3">Sales Return Payments</h1>
                     </div>
+
+                    <div className="col text-end">
+                        <Button
+                            hide={true.toString()}
+                            variant="primary"
+                            className="btn btn-primary mb-3"
+                            onClick={openCreateForm}
+                        >
+                            <i className="bi bi-plus-lg"></i> Create
+                        </Button>
+                    </div>
                 </div>
+
+
 
                 <div className="row">
                     <div className="col-12">
@@ -445,6 +492,25 @@ function SalesReturnPaymentIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("date");
+                                                        }}
+                                                    >
+                                                        Date
+                                                        {sortField === "date" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-down"></i>
+                                                        ) : null}
+                                                        {sortField === "date" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("amount");
                                                         }}
                                                     >
@@ -531,6 +597,71 @@ function SalesReturnPaymentIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
+                                                </th>
+                                                <th>
+                                                    <DatePicker
+                                                        id="date_str"
+                                                        value={dateValue}
+                                                        selected={selectedDate}
+                                                        className="form-control"
+                                                        dateFormat="MMM dd yyyy"
+                                                        onChange={(date) => {
+                                                            if (!date) {
+                                                                setDateValue("");
+                                                                searchByDateField("date_str", "");
+                                                                return;
+                                                            }
+                                                            searchByDateField("date_str", date);
+                                                        }}
+                                                    />
+                                                    <small
+                                                        style={{
+                                                            color: "blue",
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={(e) => setShowDateRange(!showDateRange)}
+                                                    >
+                                                        {showDateRange ? "Less.." : "More.."}
+                                                    </small>
+                                                    <br />
+
+                                                    {showDateRange ? (
+                                                        <span className="text-left">
+                                                            From:{" "}
+                                                            <DatePicker
+                                                                id="from_date"
+                                                                value={fromDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setFromDateValue("");
+                                                                        searchByDateField("from_date", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("from_date", date);
+                                                                }}
+                                                            />
+                                                            To:{" "}
+                                                            <DatePicker
+                                                                id="to_date"
+                                                                value={toDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setToDateValue("");
+                                                                        searchByDateField("to_date", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("to_date", date);
+                                                                }}
+                                                            />
+                                                        </span>
+                                                    ) : null}
                                                 </th>
                                                 <th>
                                                     <input
@@ -647,6 +778,9 @@ function SalesReturnPaymentIndex(props) {
                                                 salesreturnpaymentList.map((salesreturnpayment) => (
                                                     <tr key={salesreturnpayment.id}>
                                                         <td>{salesreturnpayment.sales_return_code}</td>
+                                                        <td>
+                                                            {salesreturnpayment.date ? format(new Date(salesreturnpayment.date), "MMM dd yyyy h:mma") : ""}
+                                                        </td>
                                                         <td>{salesreturnpayment.amount.toFixed(2) + " SAR"}</td>
                                                         <td>{salesreturnpayment.method}</td>
                                                         <td>{salesreturnpayment.created_by_name}</td>
