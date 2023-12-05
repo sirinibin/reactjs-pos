@@ -1328,7 +1328,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             sort("total_payment_received");
                                                         }}
                                                     >
-                                                        Payment Received
+                                                        Amount Paid
                                                         {sortField === "total_payment_received" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}

@@ -4,6 +4,8 @@ import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import PurchasePaymentView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
+import DatePicker from "react-datepicker";
+import { format } from "date-fns";
 
 
 const PurchasePaymentCreate = forwardRef((props, ref) => {
@@ -13,14 +15,18 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
             purchase = purchase;
             setPurchase({ ...purchase });
             formData = {
-                method: "cash",
+                method: "",
             };
+
+            formData.date_str = new Date();
+
             if (purchase) {
                 formData.purchase_id = purchase.id;
                 formData.purchase_code = purchase.code;
                 formData.store_id = purchase.store_id;
 
             }
+
             setFormData(formData);
             selectedParentCategories = [];
             setSelectedParentCategories(selectedParentCategories);
@@ -118,6 +124,7 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 formData = data.result;
+                formData.date_str = data.result.date;
                 console.log("formData:", formData);
 
                 setFormData({ ...formData });
@@ -155,7 +162,7 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
         }
 
         if (formData.amount <= 0) {
-            errors["amount"] = "Amount should be > 0:";
+            errors["amount"] = "Amount should be > 0";
             setErrors({ ...errors });
             return;
         }
@@ -166,6 +173,7 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
+
 
         const requestOptions = {
             method: method,
@@ -205,7 +213,11 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
                 if (props.refreshList) {
                     props.refreshList();
                 }
+
                 handleClose();
+                if (props.refreshPurchaseList) {
+                    props.refreshPurchaseList();
+                }
                 props.openDetailsView(data.result.id);
             })
             .catch((error) => {
@@ -354,40 +366,90 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-3">
-                            <label className="form-label">Payment method*</label>
+                        <div className="col-md-6">
+                            <label className="form-label">Date*</label>
 
                             <div className="input-group mb-3">
-                                <select
-                                    value={formData.method}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange payment method");
-                                        if (!e.target.value) {
-                                            errors["method"] = "Invalid Payment Method";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["method"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.method = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
+                                <DatePicker
+                                    id="date_str"
+                                    selected={formData.date_str ? new Date(formData.date_str) : null}
+                                    value={formData.date_str ? format(
+                                        new Date(formData.date_str),
+                                        "MMMM d, yyyy h:mm aa"
+                                    ) : null}
                                     className="form-control"
-                                >
-                                    <option value="cash">Cash</option>
-                                    <option value="bank_account">Bank Account / Debit / Credit Card</option>
-                                </select>
-                                {errors.method && (
+                                    dateFormat="MMMM d, yyyy h:mm aa"
+                                    showTimeSelect
+                                    timeIntervals="1"
+                                    onChange={(value) => {
+                                        console.log("Value", value);
+                                        formData.date_str = value;
+                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+
+                                {errors.date_str && (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>
-                                        {errors.method}
+                                        {errors.date_str}
                                     </div>
                                 )}
                             </div>
+
                         </div>
+
+
+                        <div className="row">
+                            <div className="col-md-3">
+                                <label className="form-label">Payment method*</label>
+
+                                <div className="input-group mb-3" >
+                                    <select
+                                        value={formData.method}
+                                        onChange={(e) => {
+                                            console.log("Inside onchange payment method");
+                                            if (!e.target.value) {
+                                                errors["method"] = "Invalid Payment Method";
+                                                setErrors({ ...errors });
+                                                formData.method="";
+                                                setFormData({ ...formData });
+                                                return;
+                                            }
+
+                                            errors["method"] = "";
+                                            setErrors({ ...errors });
+
+                                            formData.method = e.target.value;
+                                            setFormData({ ...formData });
+                                            console.log(formData);
+                                        }}
+                                        className="form-control"
+                                    >
+                                        <option value="">Select</option>
+                                        <option value="cash">Cash</option>
+                                        <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                    </select>
+                                    {errors.method && (
+                                        <div style={{ color: "red" }}>
+                                            {errors.method}
+                                        </div>
+                                    )}
+                                    {formData.method && !errors.method && (
+                                        <div style={{ color: "green" }}>
+                                            <i className="bi bi-check-lg"> </i>
+                                            Looks good!
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="row  g-5">
+                            <div className="col-md-3">
+                            </div>
+                        </div>
+
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close

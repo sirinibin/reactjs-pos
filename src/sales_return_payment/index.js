@@ -328,14 +328,14 @@ function SalesReturnPaymentIndex(props) {
                     </div>
 
                     <div className="col text-end">
-                        <Button
+                        {props.salesReturn ? <Button
                             hide={true.toString()}
                             variant="primary"
                             className="btn btn-primary mb-3"
                             onClick={openCreateForm}
                         >
                             <i className="bi bi-plus-lg"></i> Create
-                        </Button>
+                        </Button> : ""}
                     </div>
                 </div>
 

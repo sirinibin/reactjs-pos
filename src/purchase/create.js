@@ -49,7 +49,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 date_str: new Date(),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "delivered",
-                payment_method: "cash",
+                payment_method: "",
                 payment_status: "paid",
 
             };
@@ -617,6 +617,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
+
+        
+        errors["payment_method"] = "";
+        setErrors({ ...errors });
+        if (formData.payment_status != "not_paid" && !formData.payment_method) {
+            errors["payment_method"] = "Payment method is required";
+            setErrors({ ...errors });
+            return;
+        }
+        
 
 
 
@@ -1673,8 +1683,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         console.log("Inside onchange payment method");
                                         if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Method";
+                                            errors["status"] = "Payment Method is required";
                                             setErrors({ ...errors });
+                                            formData.payment_method = "";
+                                            setFormData({ ...formData });
                                             return;
                                         }
 
@@ -1687,6 +1699,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
+                                    <option value="">Select</option>
                                     <option value="cash">Cash</option>
                                     <option value="bank_account">Bank Account  / Debit / Credit Card</option>
                                 </select>

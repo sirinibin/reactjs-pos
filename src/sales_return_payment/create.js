@@ -427,6 +427,8 @@ const SalesReturnPaymentCreate = forwardRef((props, ref) => {
                                             console.log("Inside onchange payment method");
                                             if (!e.target.value) {
                                                 errors["method"] = "Invalid Payment Method";
+                                                formData.method="";
+                                                setFormData({ ...formData });
                                                 setErrors({ ...errors });
                                                 return;
                                             }

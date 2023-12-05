@@ -6,7 +6,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge } from "react-bootstrap";
+import { Button, Spinner, Badge,Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import PurchaseReturnCreate from "./../purchase_return/create.js";
 import NumberFormat from "react-number-format";
@@ -16,6 +16,7 @@ import PurchaseCashDiscountDetailsView from "./../purchase_cash_discount/view.js
 
 import PurchasePaymentCreate from "./../purchase_payment/create.js";
 import PurchasePaymentDetailsView from "./../purchase_payment/view.js";
+import PurchasePaymentIndex from "./../purchase_payment/index.js";
 
 
 import ReactExport from 'react-data-export';
@@ -73,6 +74,32 @@ function PurchaseIndex(props) {
     //Created By User Auto Suggestion
     const [userOptions, setUserOptions] = useState([]);
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
+
+    const paymentStatusOptions = [
+        {
+            id: "paid",
+            name: "Paid",
+        },
+        {
+            id: "not_paid",
+            name: "Not Paid",
+        },
+        {
+            id: "paid_partially",
+            name: "Paid partially",
+        },
+    ];
+    const paymentMethodOptions = [
+        {
+            id: "cash",
+            name: "cash",
+        },
+        {
+            id: "bank_account",
+            name: "Bank Account / Debit / Credit card",
+        },
+    ];
+
 
     //Status Auto Suggestion
     const statusOptions = [
@@ -810,6 +837,9 @@ function PurchaseIndex(props) {
         list();
     }
 
+    const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
+    const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
@@ -817,6 +847,10 @@ function PurchaseIndex(props) {
             setSelectedVendors(values);
         } else if (field === "status") {
             setSelectedStatusList(values);
+        } else if (field === "payment_status") {
+            setSelectedPaymentStatusList(values);
+        } else if (field === "payment_methods") {
+            setSelectedPaymentMethodList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -831,6 +865,11 @@ function PurchaseIndex(props) {
         list();
     }
 
+    let [totalPaidPurchase, setTotalPaidPurchase] = useState(0.00);
+    let [totalUnPaidPurchase, setTotalUnPaidPurchase] = useState(0.00);
+    let [totalCashPurchase, setTotalCashPurchase] = useState(0.00);
+    let [totalBankAccountPurchase, setTotalBankAccountPurchase] = useState(0.00);
+
     function list() {
         excelData = [];
         setExcelData(excelData);
@@ -842,7 +881,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit";
+            "select=id,code,date,net_total,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_method,payment_methods,payment_status,balance_amount";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -913,6 +952,19 @@ function PurchaseIndex(props) {
 
                 netWholesaleProfit = data.meta.net_wholesale_profit;
                 setNetWholesaleProfit(netWholesaleProfit);
+
+                totalPaidPurchase = data.meta.paid_purchase;
+                setTotalPaidPurchase(totalPaidPurchase);
+
+                totalUnPaidPurchase = data.meta.unpaid_purchase;
+                setTotalUnPaidPurchase(totalUnPaidPurchase);
+
+                totalCashPurchase = data.meta.cash_purchase;
+                setTotalCashPurchase(totalCashPurchase);
+
+                totalBankAccountPurchase = data.meta.bank_account_purchase
+                setTotalBankAccountPurchase(totalBankAccountPurchase);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -990,6 +1042,24 @@ function PurchaseIndex(props) {
         PurchasePaymentCreateRef.current.open(id);
     }
 
+    const [selectedPurchase, setSelectedPurchase] = useState({});
+    let [showPurchasePaymentHistory, setShowPurchasePaymentHistory] = useState(false);
+
+    function openPaymentsDialogue(purchase) {
+        setSelectedPurchase(purchase);
+        showPurchasePaymentHistory = true;
+        setShowPurchasePaymentHistory(true);
+    }
+
+    function handlePaymentHistoryClose() {
+        showPurchasePaymentHistory = false;
+        setShowPurchasePaymentHistory(false);
+        //list();
+    }
+
+
+    const PurchasePaymentListRef = useRef();
+
     return (
         <>
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
@@ -1007,9 +1077,53 @@ function PurchaseIndex(props) {
 
                     <div className="col">
                         <h1 className="text-end">
-                            Purchases: <Badge bg="secondary">
+                            Purchase: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPurchase}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Paid Purchase: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalPaidPurchase.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h4 className="text-end">
+                            Cash Purchase: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalCashPurchase.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4>
+                        <h4 className="text-end">
+                            Bank Account Purchase: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalBankAccountPurchase.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4>
+                        <h1 className="text-end">
+                            Credit Purchase: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalUnPaidPurchase.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -1330,6 +1444,63 @@ function PurchaseIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("total_payment_paid");
+                                                        }}
+                                                    >
+                                                        Amount Paid
+                                                        {sortField === "total_payment_paid" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "total_payment_paid" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("balance_amount");
+                                                        }}
+                                                    >
+                                                        Balance
+                                                        {sortField === "balance_amount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "balance_amount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payments_count");
+                                                        }}
+                                                    >
+                                                        No.of Payments
+                                                        {sortField === "payments_count" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "payments_count" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("discount");
                                                         }}
                                                     >
@@ -1402,6 +1573,47 @@ function PurchaseIndex(props) {
                                                             ) : null}
                                                         </b>
                                                     </th> : ""}
+
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payment_status");
+                                                        }}
+                                                    >
+                                                        Payment Status
+                                                        {sortField === "payment_status" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_status" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payment_methods");
+                                                        }}
+                                                    >
+                                                        Payment Methods
+                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_methods" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1422,25 +1634,7 @@ function PurchaseIndex(props) {
                                                     </b>
                                                 </th>
 
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("status");
-                                                        }}
-                                                    >
-                                                        Status
-                                                        {sortField === "status" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "status" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1603,6 +1797,36 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
+                                                        id="total_payment_paid"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("total_payment_paid", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="balance_amount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="payments_count"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("payments_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
                                                         id="discount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("discount", e.target.value)
@@ -1643,6 +1867,42 @@ function PurchaseIndex(props) {
                                                             className="form-control"
                                                         />
                                                     </th> : ""}
+
+                                                <th>
+                                                    <Typeahead
+                                                        id="payment_status"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_status",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentStatusOptions}
+                                                        placeholder="Select Payment Status"
+                                                        selected={selectedPaymentStatusList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="payment_methods"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_methods",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentMethodOptions}
+                                                        placeholder="Select payment methods"
+                                                        selected={selectedPaymentMethodList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -1664,23 +1924,7 @@ function PurchaseIndex(props) {
                                                     />
                                                 </th>
 
-                                                <th>
-                                                    <Typeahead
-                                                        id="status"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "status",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={statusOptions}
-                                                        placeholder="Select Status"
-                                                        selected={selectedStatusList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <DatePicker
                                                         id="created_at"
@@ -1839,6 +2083,21 @@ function PurchaseIndex(props) {
                                                             />
                                                         </td>
                                                         <td>
+                                                            <Button variant="link" onClick={() => {
+                                                                openPaymentsDialogue(purchase);
+                                                            }}>
+                                                                {purchase.total_payment_paid?.toFixed(2)}
+                                                            </Button>
+                                                        </td>
+                                                        <td>{purchase.balance_amount?.toFixed(2)}</td>
+                                                        <td>
+                                                            <Button variant="link" onClick={() => {
+                                                                openPaymentsDialogue(purchase);
+                                                            }}>
+                                                                {purchase.payments_count}
+                                                            </Button>
+                                                        </td>
+                                                        <td>
                                                             <NumberFormat
                                                                 value={purchase.discount}
                                                                 displayType={"text"}
@@ -1879,13 +2138,27 @@ function PurchaseIndex(props) {
                                                             </td>
                                                             : ""}
 
-                                                        <td>{purchase.created_by_name}</td>
-
                                                         <td>
-                                                            <span className="badge bg-success">
-                                                                {purchase.status}
-                                                            </span>
+                                                            {purchase.payment_status == "paid" ?
+                                                                <span className="badge bg-success">
+                                                                    Paid
+                                                                </span> : ""}
+                                                            {purchase.payment_status == "paid_partially" ?
+                                                                <span className="badge bg-warning">
+                                                                    Paid Partially
+                                                                </span> : ""}
+                                                            {purchase.payment_status == "not_paid" ?
+                                                                <span className="badge bg-danger">
+                                                                    Not Paid
+                                                                </span> : ""}
                                                         </td>
+                                                        <td>
+                                                            {purchase.payment_methods &&
+                                                                purchase.payment_methods.map((name) => (
+                                                                    <span className="badge bg-info">{name}</span>
+                                                                ))}
+                                                        </td>
+                                                        <td>{purchase.created_by_name}</td>
                                                         <td>
                                                             {format(
                                                                 new Date(purchase.created_at),
@@ -1991,6 +2264,25 @@ function PurchaseIndex(props) {
                     </div>
                 </div>
             </div>
+
+            <Modal show={showPurchasePaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}>
+                <Modal.Header>
+                    <Modal.Title>Payment history of Purchase #{selectedPurchase.code}</Modal.Title>
+
+                    <div className="col align-self-end text-end">
+                        <button
+                            type="button"
+                            className="btn-close"
+                            onClick={handlePaymentHistoryClose}
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <PurchasePaymentIndex ref={PurchasePaymentListRef} showToastMessage={props.showToastMessage} purchase={selectedPurchase} refreshPurchaseList={list} />
+                </Modal.Body>
+            </Modal>
         </>
     );
 }

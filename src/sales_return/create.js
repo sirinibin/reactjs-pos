@@ -427,6 +427,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             return;
         }
 
+        errors["payment_method"] = "";
+        setErrors({ ...errors });
+        if (formData.payment_status != "not_paid" && !formData.payment_method) {
+            errors["payment_method"] = "Payment method is required";
+            setErrors({ ...errors });
+            return;
+        }
+
 
         if (!formData.discountValue && formData.discountValue !== 0) {
             errors["discount"] = "Invalid Discount";

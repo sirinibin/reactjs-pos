@@ -1179,7 +1179,7 @@ function SalesReturnIndex(props) {
                                                             sort("total_payment_paid");
                                                         }}
                                                     >
-                                                        Payment Paid
+                                                        Amount paid
                                                         {sortField === "total_payment_paid" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}

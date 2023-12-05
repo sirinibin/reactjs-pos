@@ -421,6 +421,8 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                             if (!e.target.value) {
                                                 errors["method"] = "Invalid Payment Method";
                                                 setErrors({ ...errors });
+                                                formData.method="";
+                                                setFormData({ ...formData });
                                                 return;
                                             }
 

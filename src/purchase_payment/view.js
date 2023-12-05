@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Table, Button } from 'react-bootstrap';
 import Cookies from "universal-cookie";
+import { format } from "date-fns";
 
 const PurchasePaymentView = forwardRef((props, ref) => {
 
@@ -62,7 +63,7 @@ const PurchasePaymentView = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of Purchase Payment  of Order #{model.order_code} </Modal.Title>
+                <Modal.Title>Details of Payment of Purchase #{model.purchase_code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {
@@ -91,12 +92,13 @@ const PurchasePaymentView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
-                            <th>Order ID:</th><td> {model.order_code}</td>
+                            <th>Purchase ID:</th><td> {model.purchase_code}</td>
                             <th>Amount:</th><td> {model.amount}</td>
                             <th>Payment Method:</th><td> {model.method}</td>
                             <th>Store Name:</th><td> {model.store_name}</td>
                         </tr>
                         <tr>
+                            <th>Date :</th><td>  {model.date ? format(new Date(model.date), "MMM dd yyyy h:mma") : ""} </td>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Created At:</th><td> {model.created_at}</td>
                             <th>Updated At:</th><td> {model.updated_at}</td>

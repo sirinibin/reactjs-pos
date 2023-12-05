@@ -168,9 +168,13 @@ function PurchasePaymentIndex(props) {
             },
         };
         let Select =
-            "select=id,amount,method,store_name,purchase_code,purchase_id,created_by_name,created_at";
+            "select=id,date,amount,method,store_name,purchase_code,purchase_id,created_by_name,created_at";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
+        }
+
+        if (props.purchase) {
+            searchParams.purchase_id = props.purchase.id;
         }
 
         const d = new Date();
@@ -264,13 +268,82 @@ function PurchasePaymentIndex(props) {
     const CreateFormRef = useRef();
 
     let [totalPayments, setTotalPayments] = useState(0.00);
+    let [sortOrder, setSortOrder] = useState("-");
+
+    //Date filter
+    const [showDateRange, setShowDateRange] = useState(false);
+    const [dateValue, setDateValue] = useState("");
+    const [fromDateValue, setFromDateValue] = useState("");
+    const [toDateValue, setToDateValue] = useState("");
+
+    function searchByDateField(field, value) {
+        if (!value) {
+            page = 1;
+            searchParams[field] = "";
+            setPage(page);
+            list();
+            return;
+        }
+
+        let d = new Date(value);
+        d = new Date(d.toUTCString());
+
+        value = format(d, "MMM dd yyyy");
+        if (field === "date_str") {
+            setDateValue(value);
+            setFromDateValue("");
+            setToDateValue("");
+            searchParams["from_date"] = "";
+            searchParams["to_date"] = "";
+            searchParams[field] = value;
+        } else if (field === "from_date") {
+            setFromDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "to_date") {
+            setToDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "created_at") {
+            setCreatedAtValue(value);
+            setCreatedAtFromValue("");
+            setCreatedAtToValue("");
+            searchParams["created_at_from"] = "";
+            searchParams["created_at_to"] = "";
+            searchParams[field] = value;
+        }
+        if (field === "created_at_from") {
+            setCreatedAtFromValue(value);
+            setCreatedAtValue("");
+            searchParams["created_at"] = "";
+            searchParams[field] = value;
+        } else if (field === "created_at_to") {
+            setCreatedAtToValue(value);
+            setCreatedAtValue("");
+            searchParams["created_at"] = "";
+            searchParams[field] = value;
+        }
+
+        page = 1;
+        setPage(page);
+
+        list();
+    }
+
+    function openCreateForm() {
+        console.log("props.purchase:", props.purchase);
+        CreateFormRef.current.open("", props.purchase);
+    }
 
     return (
         <>
-            <PurchasePaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <PurchasePaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} refreshPurchaseList={props.refreshPurchaseList ? props.refreshPurchaseList : ''} />
             <PurchasePaymentView ref={DetailsViewRef} openUpdateForm={openUpdateForm} />
 
             <div className="container-fluid p-0">
+
                 <div className="row">
 
                     <div className="col">
@@ -288,11 +361,26 @@ function PurchasePaymentIndex(props) {
                     </div>
                 </div>
                 <div className="row">
+                   
 
-                    <div className="col">
-                        <h1 className="h3">Purchase Payments</h1>
-                    </div>
+                        <div className="col">
+                            <h1 className="h3">Purchase Payments</h1>
+                        </div>
+
+                        <div className="col text-end">
+                            {props.purchase?<Button
+                                hide={true.toString()}
+                                variant="primary"
+                                className="btn btn-primary mb-3"
+                                onClick={openCreateForm}
+                            >
+                                <i className="bi bi-plus-lg"></i> Create
+                            </Button>:""}
+                        </div>
+                    
                 </div>
+
+
 
                 <div className="row">
                     <div className="col-12">
@@ -445,6 +533,25 @@ function PurchasePaymentIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("date");
+                                                        }}
+                                                    >
+                                                        Date
+                                                        {sortField === "date" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-down"></i>
+                                                        ) : null}
+                                                        {sortField === "date" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("amount");
                                                         }}
                                                     >
@@ -531,6 +638,71 @@ function PurchasePaymentIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
+                                                </th>
+                                                <th>
+                                                    <DatePicker
+                                                        id="date_str"
+                                                        value={dateValue}
+                                                        selected={selectedDate}
+                                                        className="form-control"
+                                                        dateFormat="MMM dd yyyy"
+                                                        onChange={(date) => {
+                                                            if (!date) {
+                                                                setDateValue("");
+                                                                searchByDateField("date_str", "");
+                                                                return;
+                                                            }
+                                                            searchByDateField("date_str", date);
+                                                        }}
+                                                    />
+                                                    <small
+                                                        style={{
+                                                            color: "blue",
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={(e) => setShowDateRange(!showDateRange)}
+                                                    >
+                                                        {showDateRange ? "Less.." : "More.."}
+                                                    </small>
+                                                    <br />
+
+                                                    {showDateRange ? (
+                                                        <span className="text-left">
+                                                            From:{" "}
+                                                            <DatePicker
+                                                                id="from_date"
+                                                                value={fromDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setFromDateValue("");
+                                                                        searchByDateField("from_date", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("from_date", date);
+                                                                }}
+                                                            />
+                                                            To:{" "}
+                                                            <DatePicker
+                                                                id="to_date"
+                                                                value={toDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setToDateValue("");
+                                                                        searchByDateField("to_date", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("to_date", date);
+                                                                }}
+                                                            />
+                                                        </span>
+                                                    ) : null}
                                                 </th>
                                                 <th>
                                                     <input
@@ -647,6 +819,9 @@ function PurchasePaymentIndex(props) {
                                                 purchasepaymentList.map((purchasepayment) => (
                                                     <tr key={purchasepayment.id}>
                                                         <td>{purchasepayment.purchase_code}</td>
+                                                        <td>
+                                                            {purchasepayment.date ? format(new Date(purchasepayment.date), "MMM dd yyyy h:mma") : ""}
+                                                        </td>
                                                         <td>{purchasepayment.amount.toFixed(2) + " SAR"}</td>
                                                         <td>{purchasepayment.method}</td>
                                                         <td>{purchasepayment.created_by_name}</td>
