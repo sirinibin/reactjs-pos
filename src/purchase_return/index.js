@@ -6,12 +6,13 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge } from "react-bootstrap";
+import { Button, Spinner, Badge,Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
 import PurchaseReturnPaymentCreate from "./../purchase_return_payment/create.js";
 import PurchaseReturnPaymentDetailsView from "./../purchase_return_payment/view.js";
+import PurchaseReturnPaymentIndex from "./../purchase_return_payment/index.js";
 
 import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
@@ -599,6 +600,9 @@ function PurchaseReturnIndex(props) {
         list();
     }
 
+    const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
+    const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
@@ -606,6 +610,10 @@ function PurchaseReturnIndex(props) {
             setSelectedVendors(values);
         } else if (field === "status") {
             setSelectedStatusList(values);
+        } else if (field === "payment_status") {
+            setSelectedPaymentStatusList(values);
+        } else if (field === "payment_methods") {
+            setSelectedPaymentMethodList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -620,6 +628,11 @@ function PurchaseReturnIndex(props) {
         list();
     }
 
+    let [totalPaidPurchaseReturn, setTotalPaidPurchaseReturn] = useState(0.00);
+    let [totalUnPaidPurchaseReturn, setTotalUnPaidPurchaseReturn] = useState(0.00);
+    let [totalCashPurchaseReturn, setTotalCashPurchaseReturn] = useState(0.00);
+    let [totalBankAccountPurchaseReturn, setTotalBankAccountPurchaseReturn] = useState(0.00);
+
     function list() {
         excelData = [];
         setExcelData(excelData);
@@ -631,7 +644,7 @@ function PurchaseReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,purchase_code,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at";
+            "select=id,code,purchase_code,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_method,payment_methods,payment_status,balance_amount,store_id";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -693,6 +706,18 @@ function PurchaseReturnIndex(props) {
                 totalDiscount = data.meta.discount;
                 setTotalDiscount(totalDiscount);
 
+                totalPaidPurchaseReturn = data.meta.paid_purchase_return;
+                setTotalPaidPurchaseReturn(totalPaidPurchaseReturn);
+
+                totalUnPaidPurchaseReturn = data.meta.unpaid_purchase_return;
+                setTotalUnPaidPurchaseReturn(totalUnPaidPurchaseReturn);
+
+                totalCashPurchaseReturn = data.meta.cash_purchase_return;
+                setTotalCashPurchaseReturn(totalCashPurchaseReturn);
+
+                totalBankAccountPurchaseReturn = data.meta.bank_account_purchase_return
+                setTotalBankAccountPurchaseReturn(totalBankAccountPurchaseReturn);
+
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -748,6 +773,49 @@ function PurchaseReturnIndex(props) {
         PurchaseReturnPaymentCreateRef.current.open(id);
     }
 
+    const [selectedPurchaseReturn, setSelectedPurchaseReturn] = useState({});
+    let [showPurchaseReturnPaymentHistory, setShowPurchaseReturnPaymentHistory] = useState(false);
+
+    function openPaymentsDialogue(purchaseReturn) {
+        setSelectedPurchaseReturn(purchaseReturn);
+        showPurchaseReturnPaymentHistory = true;
+        setShowPurchaseReturnPaymentHistory(true);
+    }
+
+    function handlePaymentHistoryClose() {
+        showPurchaseReturnPaymentHistory = false;
+        setShowPurchaseReturnPaymentHistory(false);
+        //list();
+    }
+
+
+    const PurchaseReturnPaymentListRef = useRef();
+
+    const paymentStatusOptions = [
+        {
+            id: "paid",
+            name: "Paid",
+        },
+        {
+            id: "not_paid",
+            name: "Not Paid",
+        },
+        {
+            id: "paid_partially",
+            name: "Paid partially",
+        },
+    ];
+    const paymentMethodOptions = [
+        {
+            id: "cash",
+            name: "cash",
+        },
+        {
+            id: "bank_account",
+            name: "Bank Account / Debit / Credit card",
+        },
+    ];
+
     return (
         <>
             <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
@@ -764,6 +832,50 @@ function PurchaseReturnIndex(props) {
                             Purchase Return: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPurchaseReturn}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Paid Purchase Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalPaidPurchaseReturn?.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h4 className="text-end">
+                            Cash Purchase Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalCashPurchaseReturn.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4>
+                        <h4 className="text-end">
+                            Bank Account Purchase Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalBankAccountPurchaseReturn.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4>
+                        <h1 className="text-end">
+                            Credit Purchase Return: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalUnPaidPurchaseReturn.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -1069,15 +1181,53 @@ function PurchaseReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("created_by");
+                                                            sort("total_payment_paid");
                                                         }}
                                                     >
-                                                        Created By
-                                                        {sortField === "created_by" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        Amount Paid
+                                                        {sortField === "total_payment_paid" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
-                                                        {sortField === "created_by" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        {sortField === "total_payment_paid" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("balance_amount");
+                                                        }}
+                                                    >
+                                                        Balance
+                                                        {sortField === "balance_amount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "balance_amount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payments_count");
+                                                        }}
+                                                    >
+                                                        No.of Payments
+                                                        {sortField === "payments_count" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "payments_count" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -1089,14 +1239,52 @@ function PurchaseReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("status");
+                                                            sort("payment_status");
                                                         }}
                                                     >
-                                                        Status
-                                                        {sortField === "status" && sortOrder === "-" ? (
+                                                        Payment Status
+                                                        {sortField === "payment_status" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "status" && sortOrder === "" ? (
+                                                        {sortField === "payment_status" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payment_methods");
+                                                        }}
+                                                    >
+                                                        Payment Methods
+                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_methods" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("created_by");
+                                                        }}
+                                                    >
+                                                        Created By
+                                                        {sortField === "created_by" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "created_by" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -1252,6 +1440,70 @@ function PurchaseReturnIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
+                                                    <input
+                                                        type="text"
+                                                        id="total_payment_paid"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("total_payment_paid", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="balance_amount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="payments_count"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("payments_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="payment_status"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_status",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentStatusOptions}
+                                                        placeholder="Select Payment Status"
+                                                        selected={selectedPaymentStatusList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="payment_methods"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_methods",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentMethodOptions}
+                                                        placeholder="Select payment methods"
+                                                        selected={selectedPaymentMethodList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
@@ -1268,24 +1520,6 @@ function PurchaseReturnIndex(props) {
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
-                                                        multiple
-                                                    />
-                                                </th>
-
-                                                <th>
-                                                    <Typeahead
-                                                        id="status"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "status",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={statusOptions}
-                                                        placeholder="Select Status"
-                                                        selected={selectedStatusList}
-                                                        highlightOnlyResult={true}
                                                         multiple
                                                     />
                                                 </th>
@@ -1375,13 +1609,42 @@ function PurchaseReturnIndex(props) {
                                                             )}
                                                         </td>
                                                         <td>{purchasereturn.net_total} SAR</td>
-                                                        <td>{purchasereturn.created_by_name}</td>
-
                                                         <td>
-                                                            <span className="badge bg-success">
-                                                                {purchasereturn.status}
-                                                            </span>
+                                                            <Button variant="link" onClick={() => {
+                                                                openPaymentsDialogue(purchasereturn);
+                                                            }}>
+                                                                {purchasereturn.total_payment_paid?.toFixed(2)}
+                                                            </Button>
                                                         </td>
+                                                        <td>{purchasereturn.balance_amount?.toFixed(2)}</td>
+                                                        <td>
+                                                            <Button variant="link" onClick={() => {
+                                                                openPaymentsDialogue(purchasereturn);
+                                                            }}>
+                                                                {purchasereturn.payments_count}
+                                                            </Button>
+                                                        </td>
+                                                        <td>
+                                                            {purchasereturn.payment_status == "paid" ?
+                                                                <span className="badge bg-success">
+                                                                    Paid
+                                                                </span> : ""}
+                                                            {purchasereturn.payment_status == "paid_partially" ?
+                                                                <span className="badge bg-warning">
+                                                                    Paid Partially
+                                                                </span> : ""}
+                                                            {purchasereturn.payment_status == "not_paid" ?
+                                                                <span className="badge bg-danger">
+                                                                    Not Paid
+                                                                </span> : ""}
+                                                        </td>
+                                                        <td>
+                                                            {purchasereturn.payment_methods &&
+                                                                purchasereturn.payment_methods.map((name) => (
+                                                                    <span className="badge bg-info">{name}</span>
+                                                                ))}
+                                                        </td>
+                                                        <td>{purchasereturn.created_by_name}</td>
                                                         <td>
                                                             {format(
                                                                 new Date(purchasereturn.created_at),
@@ -1457,6 +1720,25 @@ function PurchaseReturnIndex(props) {
                     </div>
                 </div>
             </div>
+
+            <Modal show={showPurchaseReturnPaymentHistory} size="lg" onHide={handlePaymentHistoryClose} animation={false} scrollable={true}>
+                <Modal.Header>
+                    <Modal.Title>Payment history of Purchase return #{selectedPurchaseReturn.code}</Modal.Title>
+
+                    <div className="col align-self-end text-end">
+                        <button
+                            type="button"
+                            className="btn-close"
+                            onClick={handlePaymentHistoryClose}
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <PurchaseReturnPaymentIndex ref={PurchaseReturnPaymentListRef} showToastMessage={props.showToastMessage} purchaseReturn={selectedPurchaseReturn} refreshPurchaseReturnList={list} />
+                </Modal.Body>
+            </Modal>
         </>
     );
 }

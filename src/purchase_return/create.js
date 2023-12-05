@@ -40,10 +40,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 is_discount_percent: false,
                 date_str: new Date(),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
-                status: "purchase_returned",
                 payment_status: "paid",
-                payment_method: "cash",
+                payment_method: "",
             };
+
+            setFormData({ ...formData });
+
             if (cookies.get("user_id")) {
                 selectedPurchaseReturnedByUsers = [{
                     id: cookies.get("user_id"),
@@ -113,7 +115,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         //   date_str: format(new Date(), "MMM dd yyyy"),
         date_str: new Date(),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
-        status: "purchase_returned",
+        payment_status: "paid",
+        payment_method: "",
     });
 
 
@@ -175,7 +178,27 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 let purchaseReturn = data.result;
-                formData = purchaseReturn;
+               // formData = purchaseReturn;
+
+                formData = {
+                    id: purchaseReturn.id,
+                    code: purchaseReturn.code,
+                    store_id: purchaseReturn.store_id,
+                    vendor_id: purchaseReturn.vendor_id,
+                    date_str: purchaseReturn.date,
+                    // date: purchase.date,
+                    vat_percent: purchaseReturn.vat_percent,
+                    discount: purchaseReturn.discount,
+                    discount_percent: purchaseReturn.discount_percent,
+                    status: purchaseReturn.status,
+                    order_placed_by: purchaseReturn.order_placed_by,
+                    order_placed_by_signature_id: purchaseReturn.order_placed_by_signature_id,
+                    is_discount_percent: purchaseReturn.is_discount_percent,
+                    partial_payment_amount: purchaseReturn.partial_payment_amount,
+                    payment_method: purchaseReturn.payment_method,
+                    payment_status: purchaseReturn.payment_status,
+                    shipping_handling_fees: purchaseReturn.shipping_handling_fees,
+                };
 
                 /*
                 formData = {
@@ -204,9 +227,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     formData.discountValue = formData.discount;
                 }
 
-                formData.status = "purchase_returned";
 
                 setFormData({ ...formData });
+
                 console.log("formData1.status:", formData.status);
 
 
@@ -284,6 +307,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     purchase_returned_by_signature_id: purchase.order_placed_by_signature_id,
                     is_discount_percent: purchase.is_discount_percent,
                     discount_percent: purchase.discount_percent,
+                    payment_status: "paid",
+                    payment_method: "",
                 };
 
                 //formData.discount = (purchase.discount - purchase.return_discount);
@@ -297,7 +322,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 formData.discountValue = 0;
 
-                formData.status = "purchase_returned";
+                //formData.status = "purchase_returned";
 
                 setFormData({ ...formData });
                 console.log("formData1.status:", formData.status);
@@ -414,7 +439,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }
 
     function handleCreate(event) {
-        console.log("formData.status:" + formData.status);
+        console.log("formData:", formData);
+        console.log("formData.payment_status:" + formData.payment_status);
         event.preventDefault();
         console.log("Inside handle Create");
         console.log("selectedProducts:", selectedProducts);
@@ -457,6 +483,15 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
+
+        errors["payment_method"] = "";
+        setErrors({ ...errors });
+        if (!formData.id && formData.payment_status != "not_paid" && !formData.payment_method) {
+            errors["payment_method"] = "Payment method is required";
+            setErrors({ ...errors });
+            return;
+        }
+
 
 
 
@@ -1107,60 +1142,22 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                             </div>
 
                         </div>
-                        <div className="col-md-6">
-                            <label className="form-label">Status*</label>
-
-                            <div className="input-group mb-3">
-                                <select
-                                    onChange={(e) => {
-                                        console.log("Inside onchange status");
-                                        if (!e.target.value) {
-                                            errors["status"] = "Invalid Status";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["status"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.status = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="purchase_returned">Purchase Returned</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="cancelled">Cancelled</option>
-                                    <option value="dispatched">Dispatched</option>
-                                </select>
-                                {errors.status && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.status}
-                                    </div>
-                                )}
-                                {formData.status && !errors.status && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
 
-                        <div className="col-md-2">
+                        {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment method*</label>
 
                             <div className="input-group mb-3">
                                 <select
                                     value={formData.payment_method}
+                                    disabled={formData.payment_status == "not_paid" ? "disabled" : ""}
                                     onChange={(e) => {
                                         console.log("Inside onchange payment method");
                                         if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Method";
+                                            errors["status"] = "Payment Method is required";
                                             setErrors({ ...errors });
+                                            formData.payment_method = "";
+                                            setFormData({ ...formData });
                                             return;
                                         }
 
@@ -1173,8 +1170,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
+                                    <option value="">Select</option>
                                     <option value="cash">Cash</option>
-                                    <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                    <option value="bank_account">Bank Account  / Debit / Credit Card</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
@@ -1183,9 +1181,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
 
-                        <div className="col-md-2">
+                        {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment Status*</label>
 
                             <div className="input-group mb-3">
@@ -1194,8 +1192,10 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         console.log("Inside onchange payment Status");
                                         if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Status";
+                                            errors["status"] = "Payment status is required12";
                                             setErrors({ ...errors });
+                                            formData.payment_status = "";
+                                            setFormData({ ...formData });
                                             return;
                                         }
 
@@ -1207,6 +1207,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                             formData.partial_payment_amount = 0.00;
                                         }
                                         setFormData({ ...formData });
+
+
+                                        if (formData.payment_status == "not_paid") {
+                                            formData.payment_method = "";
+                                            setFormData({ ...formData });
+                                        }
+
                                         console.log(formData);
                                     }}
                                     className="form-control"
@@ -1222,7 +1229,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div> : ""}
 
 
                         {formData.payment_status === "paid_partially" ? <div className="col-md-3">
