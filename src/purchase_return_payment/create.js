@@ -26,7 +26,6 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
 
                 formData.purchase_id = purchasereturn.purchase_id;
                 formData.purchase_code = purchasereturn.purchase_code;
-
                 formData.store_id = purchasereturn.store_id;
 
             }
@@ -176,6 +175,7 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
             method = "PUT";
         }
 
+        
         if (!formData.amount) {
             errors["amount"] = "Amount is required";
             setErrors({ ...errors });
@@ -187,6 +187,7 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
+    
 
 
         if (formData.amount > purchasereturn.net_total) {

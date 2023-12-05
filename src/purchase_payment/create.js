@@ -24,7 +24,6 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
                 formData.purchase_id = purchase.id;
                 formData.purchase_code = purchase.code;
                 formData.store_id = purchase.store_id;
-
             }
 
             setFormData(formData);
@@ -159,6 +158,12 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
         if (formData.id) {
             endPoint = "/v1/purchase-payment/" + formData.id;
             method = "PUT";
+        }
+
+        if (!formData.amount) {
+            errors["amount"] = "Amount is required";
+            setErrors({ ...errors });
+            return;
         }
 
         if (formData.amount <= 0) {
