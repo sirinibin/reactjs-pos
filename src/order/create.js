@@ -52,7 +52,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log("formData.store_id:", formData.store_id);
             }
 
-            formData.id=undefined;
+            formData.id = undefined;
             formData.discount = 0.00;
             formData.discount_percent = 0.00;
             formData.shipping_handling_fees = 0.00;
@@ -610,7 +610,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         errors["payment_method"] = "";
         setErrors({ ...errors });
-        if (formData.payment_status != "not_paid" && !formData.payment_method) {
+        if (!formData.id && formData.payment_status != "not_paid" && !formData.payment_method) {
             errors["payment_method"] = "Payment method is required";
             setErrors({ ...errors });
             return;
@@ -977,8 +977,8 @@ const OrderCreate = forwardRef((props, ref) => {
                     <div className="col align-self-end text-end">
                         <OrderPreview />
                         <Button variant="primary" onClick={handleCreate}>
-                                {isProcessing ? formData.id?"Updating....":"Creating..": formData.id?"Update":"Create"
-                                }
+                            {isProcessing ? formData.id ? "Updating...." : "Creating.." : formData.id ? "Update" : "Create"
+                            }
                         </Button>
 
                         <button
@@ -1725,7 +1725,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
                                 */}
-                     
+
 
                         {/*  
                         <div className="col-md-6">
@@ -1847,11 +1847,13 @@ const OrderCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <select
                                     value={formData.payment_method}
+                                    disabled={formData.payment_status == "not_paid" ? "disabled" : ""}
                                     onChange={(e) => {
-                                        console.log("Inside onchange payment method");
                                         if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Method";
+                                            errors["payment_method"] = "Payment method is required";
                                             setErrors({ ...errors });
+                                            formData.payment_method = "";
+                                            setFormData({ ...formData });
                                             return;
                                         }
 
@@ -1875,7 +1877,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>:""}
+                        </div> : ""}
 
                         {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment Status*</label>
@@ -1886,7 +1888,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         console.log("Inside onchange payment Status");
                                         if (!e.target.value) {
-                                            errors["payment_status"] = "Invalid Payment Status";
+                                            errors["payment_status"] = "Payment status is required";
                                             formData.payment_status = "";
                                             setFormData({ ...formData });
                                             setErrors({ ...errors });
@@ -1901,6 +1903,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                             formData.partial_payment_amount = 0.00;
                                         }
                                         setFormData({ ...formData });
+
+                                        if (formData.payment_status == "not_paid") {
+                                            formData.payment_method = "";
+                                            setFormData({ ...formData });
+                                        }
+
                                         console.log(formData);
                                     }}
                                     className="form-control"
@@ -2032,7 +2040,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 Close
                             </Button>
                             <Button variant="primary" onClick={handleCreate}>
-                                {isProcessing ? formData.id?"Updating....":"Creating..": formData.id?"Update":"Create"
+                                {isProcessing ? formData.id ? "Updating...." : "Creating.." : formData.id ? "Update" : "Create"
                                 }
                             </Button>
                         </Modal.Footer>

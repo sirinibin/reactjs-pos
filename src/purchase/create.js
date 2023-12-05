@@ -599,6 +599,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             return;
         }
 
+
         if (formData.payment_status === "paid_partially" && !formData.partial_payment_amount && formData.partial_payment_amount !== 0) {
             errors["partial_payment_amount"] = "Invalid partial payment amount";
             setErrors({ ...errors });
@@ -612,21 +613,24 @@ const PurchaseCreate = forwardRef((props, ref) => {
             return;
         }
 
+
+
         if (formData.payment_status === "paid_partially" && formData.partial_payment_amount >= netTotal) {
             errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
             setErrors({ ...errors });
             return;
         }
 
-        
+
         errors["payment_method"] = "";
         setErrors({ ...errors });
-        if (formData.payment_status != "not_paid" && !formData.payment_method) {
+        if (!formData.id && formData.payment_status != "not_paid" && !formData.payment_method) {
             errors["payment_method"] = "Payment method is required";
             setErrors({ ...errors });
             return;
         }
-        
+
+  
 
 
 
@@ -678,8 +682,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
             body: JSON.stringify(formData),
         };
-
-        console.log("formData:", formData);
 
         setProcessing(true);
         fetch(endPoint, requestOptions)
@@ -1680,6 +1682,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <select
                                     value={formData.payment_method}
+                                    disabled={formData.payment_status == "not_paid" ? "disabled" : ""}
                                     onChange={(e) => {
                                         console.log("Inside onchange payment method");
                                         if (!e.target.value) {
@@ -1721,8 +1724,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         console.log("Inside onchange payment Status");
                                         if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Status";
+                                            errors["status"] = "Payment status is required";
                                             setErrors({ ...errors });
+                                            formData.payment_status = "";
+                                            setFormData({ ...formData });
                                             return;
                                         }
 
@@ -1734,6 +1739,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             formData.partial_payment_amount = 0.00;
                                         }
                                         setFormData({ ...formData });
+
+
+                                        if (formData.payment_status == "not_paid") {
+                                            formData.payment_method = "";
+                                            setFormData({ ...formData });
+                                        }
+
                                         console.log(formData);
                                     }}
                                     className="form-control"

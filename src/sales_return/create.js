@@ -429,7 +429,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         errors["payment_method"] = "";
         setErrors({ ...errors });
-        if (formData.payment_status != "not_paid" && !formData.payment_method) {
+        if (!formData.id && formData.payment_status != "not_paid" && !formData.payment_method) {
             errors["payment_method"] = "Payment method is required";
             setErrors({ ...errors });
             return;
@@ -968,57 +968,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-4">
-                            <label className="form-label">Status*</label>
-
-                            <div className="input-group mb-3">
-                                <select
-                                    value={formData.status}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange status");
-                                        if (!e.target.value) {
-                                            errors["status"] = "Invalid Status";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["status"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.status = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="received">Received</option>
-                                    <option value="salesreturn_placed">Sales Return Placed</option>
-                                    <option value="pending">Pending</option>
-                                    <option value="cancelled">Cancelled</option>
-                                    <option value="dispatched">Dispatched</option>
-                                </select>
-                                {errors.status && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.status}
-                                    </div>
-                                )}
-                                {formData.status && !errors.status && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-
                         <div className="col-md-2">
                             <label className="form-label">Payment method*</label>
 
                             <div className="input-group mb-3">
                                 <select
                                     value={formData.payment_method}
+                                    disabled={formData.payment_status == "not_paid" ? "disabled" : ""}
                                     onChange={(e) => {
                                         console.log("Inside onchange payment method");
                                         if (!e.target.value) {
@@ -1063,8 +1019,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         console.log("Inside onchange payment Status");
                                         if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Status";
+                                            errors["status"] = "Payment status is required";
                                             setErrors({ ...errors });
+                                            formData.payment_status = "";
+                                            setFormData({ ...formData });
                                             return;
                                         }
 
@@ -1076,6 +1034,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             formData.partial_payment_amount = 0.00;
                                         }
                                         setFormData({ ...formData });
+
+                                        if (formData.payment_status == "not_paid") {
+                                            formData.payment_method = "";
+                                            setFormData({ ...formData });
+                                        }
+
                                         console.log(formData);
                                     }}
                                     className="form-control"
