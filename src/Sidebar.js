@@ -12,7 +12,6 @@ function Sidebar(props) {
     const [appState, ChangeState] = useState({
         activeTab: '',
         tabs: [
-            'analytics',
             'sales',
             'sales cash discounts',
             'sales payments',
@@ -32,6 +31,7 @@ function Sidebar(props) {
             'product category',
             'expense category',
             'expenses',
+            'analytics',
             'customer deposits',
             'customer withdrawals',
             'capitals',
@@ -74,94 +74,86 @@ function Sidebar(props) {
                 <li onClick={() => {
                     toggleActive(appState.tabs[0]);
                 }} className={toggleActiveStyles(appState.tabs[0])}>
-                    <Link to="/dashboard/analytics" className="sidebar-link">
-                        <i className="bi bi-graph-up" />
-                        <span className="align-middle">Dashboard</span>
-                    </Link>
-                </li>
-                <li onClick={() => {
-                    toggleActive(appState.tabs[1]);
-                }} className={toggleActiveStyles(appState.tabs[1])}>
                     <Link to="/dashboard/sales" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Sales</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[2]);
-                }} className={toggleActiveStyles(appState.tabs[2])}>
+                    toggleActive(appState.tabs[1]);
+                }} className={toggleActiveStyles(appState.tabs[1])}>
                     <Link to="/dashboard/sales-cash-discounts" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Sales Cash Discounts</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[3]);
-                }} className={toggleActiveStyles(appState.tabs[3])}>
+                    toggleActive(appState.tabs[2]);
+                }} className={toggleActiveStyles(appState.tabs[2])}>
                     <Link to="/dashboard/sales-payments" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Sales Payments</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[4]);
-                }} className={toggleActiveStyles(appState.tabs[4])}>
+                    toggleActive(appState.tabs[3]);
+                }} className={toggleActiveStyles(appState.tabs[3])}>
                     <Link to="/dashboard/salesreturn" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Sales Return</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[5]);
-                }} className={toggleActiveStyles(appState.tabs[5])}>
+                    toggleActive(appState.tabs[4]);
+                }} className={toggleActiveStyles(appState.tabs[4])}>
                     <Link to="/dashboard/sales-return-payments" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Sales Return Payments</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[6]);
-                }} className={toggleActiveStyles(appState.tabs[6])}>
+                    toggleActive(appState.tabs[5]);
+                }} className={toggleActiveStyles(appState.tabs[5])}>
                     <Link to="/dashboard/purchases" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Purchases</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[7]);
-                }} className={toggleActiveStyles(appState.tabs[7])}>
+                    toggleActive(appState.tabs[6]);
+                }} className={toggleActiveStyles(appState.tabs[6])}>
                     <Link to="/dashboard/purchase-cash-discounts" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Purchase Cash Discounts</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[8]);
-                }} className={toggleActiveStyles(appState.tabs[8])}>
+                    toggleActive(appState.tabs[7]);
+                }} className={toggleActiveStyles(appState.tabs[7])}>
                     <Link to="/dashboard/purchase-payments" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Purchase Payments</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[9]);
-                }} className={toggleActiveStyles(appState.tabs[9])}>
+                    toggleActive(appState.tabs[8]);
+                }} className={toggleActiveStyles(appState.tabs[8])}>
                     <Link to="/dashboard/purchasereturn" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Purchase Return</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[10]);
-                }} className={toggleActiveStyles(appState.tabs[10])}>
+                    toggleActive(appState.tabs[9]);
+                }} className={toggleActiveStyles(appState.tabs[9])}>
                     <Link to="/dashboard/purchase-return-payments" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Purchase Return Payments</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[11]);
-                }} className={toggleActiveStyles(appState.tabs[11])} >
+                    toggleActive(appState.tabs[10]);
+                }} className={toggleActiveStyles(appState.tabs[10])} >
                     <Link to="/dashboard/delivery-notes" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
                         <span className="align-middle">Delivery Notes</span>
@@ -169,8 +161,8 @@ function Sidebar(props) {
                 </li>
 
                 <li onClick={() => {
-                    toggleActive(appState.tabs[12]);
-                }} className={toggleActiveStyles(appState.tabs[12])} >
+                    toggleActive(appState.tabs[11]);
+                }} className={toggleActiveStyles(appState.tabs[11])} >
                     <Link to="/dashboard/quotations" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
                         <span className="align-middle">Quotations</span>
@@ -178,59 +170,67 @@ function Sidebar(props) {
                 </li>
 
                 <li onClick={() => {
-                    toggleActive(appState.tabs[13]);
-                }} className={toggleActiveStyles(appState.tabs[13])}>
+                    toggleActive(appState.tabs[12]);
+                }} className={toggleActiveStyles(appState.tabs[12])}>
                     <Link to="/dashboard/vendors" className="sidebar-link">
                         <i className="bi bi-shop" />
                         <span className="align-middle">Vendors/Suppliers</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[14]);
-                }} className={toggleActiveStyles(appState.tabs[14])}>
+                    toggleActive(appState.tabs[13]);
+                }} className={toggleActiveStyles(appState.tabs[13])}>
                     <Link to="/dashboard/stores" className="sidebar-link">
                         <i className="bi bi-shop" />
                         <span className="align-middle">Stores</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[15]);
-                }} className={toggleActiveStyles(appState.tabs[15])}>
+                    toggleActive(appState.tabs[14]);
+                }} className={toggleActiveStyles(appState.tabs[14])}>
                     <Link to="/dashboard/customers" className="sidebar-link">
                         <i className="bi bi-people" />
                         <span className="align-middle">Customers</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[16]);
-                }} className={toggleActiveStyles(appState.tabs[16])}>
+                    toggleActive(appState.tabs[15]);
+                }} className={toggleActiveStyles(appState.tabs[15])}>
                     <Link to="/dashboard/products" className="sidebar-link">
                         <i className="bi bi-cart" />
                         <span className="align-middle">Products</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[17]);
-                }} className={toggleActiveStyles(appState.tabs[17])}>
+                    toggleActive(appState.tabs[16]);
+                }} className={toggleActiveStyles(appState.tabs[16])}>
                     <Link to="/dashboard/product_category" className="sidebar-link">
                         <i className="bi bi-diagram-3" />
                         <span className="align-middle">Product Category</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[18]);
-                }} className={toggleActiveStyles(appState.tabs[18])}>
+                    toggleActive(appState.tabs[17]);
+                }} className={toggleActiveStyles(appState.tabs[17])}>
                     <Link to="/dashboard/expense_category" className="sidebar-link">
                         <i className="bi bi-diagram-3" />
                         <span className="align-middle">Expense Category</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[19]);
-                }} className={toggleActiveStyles(appState.tabs[19])}>
+                    toggleActive(appState.tabs[18]);
+                }} className={toggleActiveStyles(appState.tabs[18])}>
                     <Link to="/dashboard/expenses" className="sidebar-link">
                         <i className="bi bi-diagram-3" />
                         <span className="align-middle">Expenses</span>
+                    </Link>
+                </li>
+                <li onClick={() => {
+                    toggleActive(appState.tabs[19]);
+                }} className={toggleActiveStyles(appState.tabs[19])}>
+                    <Link to="/dashboard/analytics" className="sidebar-link">
+                        <i className="bi bi-graph-up" />
+                        <span className="align-middle">Dashboard</span>
                     </Link>
                 </li>
                 <li onClick={() => {
