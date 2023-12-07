@@ -6,7 +6,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge,Modal } from "react-bootstrap";
+import { Button, Spinner, Badge, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import PurchaseReturnCreate from "./../purchase_return/create.js";
 import NumberFormat from "react-number-format";
@@ -1501,6 +1501,44 @@ function PurchaseIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("payment_status");
+                                                        }}
+                                                    >
+                                                        Payment Status
+                                                        {sortField === "payment_status" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_status" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payment_methods");
+                                                        }}
+                                                    >
+                                                        Payment Methods
+                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_methods" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("discount");
                                                         }}
                                                     >
@@ -1575,44 +1613,7 @@ function PurchaseIndex(props) {
                                                     </th> : ""}
 
 
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_status");
-                                                        }}
-                                                    >
-                                                        Payment Status
-                                                        {sortField === "payment_status" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_status" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_methods");
-                                                        }}
-                                                    >
-                                                        Payment Methods
-                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_methods" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
 
                                                 <th>
                                                     <b
@@ -1825,6 +1826,41 @@ function PurchaseIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
+                                                    <Typeahead
+                                                        id="payment_status"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_status",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentStatusOptions}
+                                                        placeholder="Select Payment Status"
+                                                        selected={selectedPaymentStatusList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="payment_methods"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_methods",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentMethodOptions}
+                                                        placeholder="Select payment methods"
+                                                        selected={selectedPaymentMethodList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="discount"
@@ -1868,40 +1904,6 @@ function PurchaseIndex(props) {
                                                         />
                                                     </th> : ""}
 
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_status"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_status",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentStatusOptions}
-                                                        placeholder="Select Payment Status"
-                                                        selected={selectedPaymentStatusList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_methods"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_methods",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentMethodOptions}
-                                                        placeholder="Select payment methods"
-                                                        selected={selectedPaymentMethodList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
 
                                                 <th>
                                                     <Typeahead
@@ -2098,6 +2100,26 @@ function PurchaseIndex(props) {
                                                             </Button>
                                                         </td>
                                                         <td>
+                                                            {purchase.payment_status == "paid" ?
+                                                                <span className="badge bg-success">
+                                                                    Paid
+                                                                </span> : ""}
+                                                            {purchase.payment_status == "paid_partially" ?
+                                                                <span className="badge bg-warning">
+                                                                    Paid Partially
+                                                                </span> : ""}
+                                                            {purchase.payment_status == "not_paid" ?
+                                                                <span className="badge bg-danger">
+                                                                    Not Paid
+                                                                </span> : ""}
+                                                        </td>
+                                                        <td>
+                                                            {purchase.payment_methods &&
+                                                                purchase.payment_methods.map((name) => (
+                                                                    <span className="badge bg-info">{name}</span>
+                                                                ))}
+                                                        </td>
+                                                        <td>
                                                             <NumberFormat
                                                                 value={purchase.discount}
                                                                 displayType={"text"}
@@ -2138,26 +2160,7 @@ function PurchaseIndex(props) {
                                                             </td>
                                                             : ""}
 
-                                                        <td>
-                                                            {purchase.payment_status == "paid" ?
-                                                                <span className="badge bg-success">
-                                                                    Paid
-                                                                </span> : ""}
-                                                            {purchase.payment_status == "paid_partially" ?
-                                                                <span className="badge bg-warning">
-                                                                    Paid Partially
-                                                                </span> : ""}
-                                                            {purchase.payment_status == "not_paid" ?
-                                                                <span className="badge bg-danger">
-                                                                    Not Paid
-                                                                </span> : ""}
-                                                        </td>
-                                                        <td>
-                                                            {purchase.payment_methods &&
-                                                                purchase.payment_methods.map((name) => (
-                                                                    <span className="badge bg-info">{name}</span>
-                                                                ))}
-                                                        </td>
+
                                                         <td>{purchase.created_by_name}</td>
                                                         <td>
                                                             {format(

@@ -1226,6 +1226,44 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payment_status");
+                                                        }}
+                                                    >
+                                                        Payment Status
+                                                        {sortField === "payment_status" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_status" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payment_methods");
+                                                        }}
+                                                    >
+                                                        Payment Methods
+                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_methods" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
 
 
                                                 {cookies.get('admin') === "true" ? <th>
@@ -1308,44 +1346,7 @@ function SalesReturnIndex(props) {
                                                 </th>
 
 
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_status");
-                                                        }}
-                                                    >
-                                                        Payment Status
-                                                        {sortField === "payment_status" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_status" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_methods");
-                                                        }}
-                                                    >
-                                                        Payment Methods
-                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_methods" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+                                              
                                                 <th>
                                                     <b
                                                         style={{
@@ -1496,6 +1497,40 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="payment_status"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_status",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentStatusOptions}
+                                                        placeholder="Select Payment Status"
+                                                        selected={selectedPaymentStatusList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="payment_methods"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_methods",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentMethodOptions}
+                                                        placeholder="Select payment methods"
+                                                        selected={selectedPaymentMethodList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
@@ -1557,40 +1592,7 @@ function SalesReturnIndex(props) {
                                                     />
                                                 </th>
 
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_status"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_status",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentStatusOptions}
-                                                        placeholder="Select Payment Status"
-                                                        selected={selectedPaymentStatusList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_methods"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_methods",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentMethodOptions}
-                                                        placeholder="Select payment methods"
-                                                        selected={selectedPaymentMethodList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
+                                               
                                                 <th>
                                                     <DatePicker
                                                         id="created_at"
@@ -1690,11 +1692,6 @@ function SalesReturnIndex(props) {
                                                                 {salesreturn.payments_count}
                                                             </Button>
                                                         </td>
-                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.net_profit.toFixed(2)} SAR</td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.loss ? salesreturn.loss.toFixed(2) : 0.00} SAR</td> : ""}
-                                                        <td>{salesreturn.created_by_name}</td>
-                                                        <td>{salesreturn.customer_name}</td>
-
                                                         <td>
                                                             {salesreturn.payment_status == "paid" ?
                                                                 <span className="badge bg-success">
@@ -1717,6 +1714,10 @@ function SalesReturnIndex(props) {
                                                                 ))}
 
                                                         </td>
+                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.net_profit.toFixed(2)} SAR</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.loss ? salesreturn.loss.toFixed(2) : 0.00} SAR</td> : ""}
+                                                        <td>{salesreturn.created_by_name}</td>
+                                                        <td>{salesreturn.customer_name}</td>
                                                         <td>
                                                             {format(
                                                                 new Date(salesreturn.created_at),

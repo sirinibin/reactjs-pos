@@ -1382,6 +1382,44 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("payment_status");
+                                                        }}
+                                                    >
+                                                        Payment Status
+                                                        {sortField === "payment_status" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_status" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("payment_methods");
+                                                        }}
+                                                    >
+                                                        Payment Methods
+                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_methods" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("discount");
                                                         }}
                                                     >
@@ -1491,44 +1529,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     </b>
                                                 </th>
 
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_status");
-                                                        }}
-                                                    >
-                                                        Payment Status
-                                                        {sortField === "payment_status" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_status" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("payment_methods");
-                                                        }}
-                                                    >
-                                                        Payment Methods
-                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "payment_methods" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1692,6 +1693,40 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     />
                                                 </th>
                                                 <th>
+                                                    <Typeahead
+                                                        id="payment_status"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_status",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentStatusOptions}
+                                                        placeholder="Select Payment Status"
+                                                        selected={selectedPaymentStatusList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="payment_methods"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "payment_methods",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={paymentMethodOptions}
+                                                        placeholder="Select payment methods"
+                                                        selected={selectedPaymentMethodList}
+                                                        highlightOnlyResult={true}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="discount"
@@ -1771,40 +1806,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         multiple
                                                     />
                                                 </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_status"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_status",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentStatusOptions}
-                                                        placeholder="Select Payment Status"
-                                                        selected={selectedPaymentStatusList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="payment_methods"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "payment_methods",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={paymentMethodOptions}
-                                                        placeholder="Select payment methods"
-                                                        selected={selectedPaymentMethodList}
-                                                        highlightOnlyResult={true}
-                                                        multiple
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <DatePicker
                                                         id="created_at"
@@ -1921,12 +1923,6 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 {order.payments_count}
                                                             </Button>
                                                         </td>
-                                                        <td>{order.discount.toFixed(2)} SAR</td>
-                                                        <td>{order.discount_percent.toFixed(2)} %</td>
-                                                        {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td> : ""}
-                                                        <td>{order.created_by_name}</td>
-                                                        <td>{order.customer_name}</td>
                                                         <td>
                                                             {order.payment_status == "paid" ?
                                                                 <span className="badge bg-success">
@@ -1949,6 +1945,12 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 ))}
 
                                                         </td>
+                                                        <td>{order.discount.toFixed(2)} SAR</td>
+                                                        <td>{order.discount_percent.toFixed(2)} %</td>
+                                                        {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td> : ""}
+                                                        <td>{order.created_by_name}</td>
+                                                        <td>{order.customer_name}</td>
                                                         <td>
                                                             {format(
                                                                 new Date(order.created_at),
