@@ -1330,7 +1330,7 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("stores.quotation_quantity");
+                                                            sort("stores.delivery_note_quantity");
                                                         }}
                                                     >
                                                         Delivery note quantity
