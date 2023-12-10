@@ -1713,7 +1713,7 @@ function ProductIndex(props) {
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("delivery_not_count", e.target.value)
+                                                            searchByFieldValue("delivery_note_count", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1722,7 +1722,7 @@ function ProductIndex(props) {
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("delivery_quantity", e.target.value)
+                                                            searchByFieldValue("delivery_note_quantity", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
