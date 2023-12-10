@@ -672,6 +672,7 @@ function ProductIndex(props) {
                                         <thead>
                                             <tr className="text-center">
 
+                                            <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1386,6 +1387,7 @@ function ProductIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                            <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1820,6 +1822,84 @@ function ProductIndex(props) {
                                             {productList &&
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
+                                                         <td>
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(product.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openDetailsView(product.id);
+                                                            }}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                            &nbsp;  &nbsp;
+
+                                                            <button
+                                                                className="btn btn-outline-secondary dropdown-toggle"
+                                                                type="button"
+                                                                data-bs-toggle="dropdown"
+                                                                aria-expanded="false"
+                                                            ></button>
+                                                            <ul className="dropdown-menu">
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openSalesHistory(product);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Sales History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openPurchaseHistory(product);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Purchase History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openSalesReturnHistory(product);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Sales Return History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openPurchaseReturnHistory(product);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Purchase Return History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openQuotationHistory(product);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Quotation History
+                                                                    </button>
+                                                                </li>
+                                                                <li>
+                                                                    <button className="dropdown-item" onClick={() => {
+                                                                        openDeliveryNoteHistory(product);
+                                                                    }}>
+                                                                        <i className="bi bi-clock-history"></i>
+                                                                        &nbsp;
+                                                                        Delivert Note History
+                                                                    </button>
+                                                                </li>
+                                                            </ul>
+
+                                                        </td>
                                                         <td>{product.part_number}</td>
                                                         <td>{product.name + " / " + product.name_in_arabic}</td>
                                                         <td>{product.ean_12}</td>
