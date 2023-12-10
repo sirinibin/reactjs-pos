@@ -190,6 +190,12 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                 totalSalesReturn = data.meta.total_sales_return;
                 setTotalSalesReturn(totalSalesReturn);
 
+                totalProfit = data.meta.total_profit;
+                setTotalProfit(totalProfit);
+
+                totalLoss = data.meta.total_loss;
+                setTotalLoss(totalLoss);
+
                 totalVatReturn = data.meta.total_vat_return;
                 setTotalVatReturn(totalVatReturn);
 
@@ -242,6 +248,9 @@ const SalesReturnHistory = forwardRef((props, ref) => {
     }
 
 
+    let [totalProfit, setTotalProfit] = useState(0.00);
+    let [totalLoss, setTotalLoss] = useState(0.00);
+
 
     return (
         <>
@@ -276,6 +285,28 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                         />
                                     </Badge>
                                 </h1>
+                                {cookies.get('admin') === "true" ? <h1 className="text-end">
+                                    Net Profit: <Badge bg="secondary">
+                                        <NumberFormat
+                                            value={totalProfit}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </Badge>
+                                </h1> : ""}
+                                {cookies.get('admin') === "true" ? <h1 className="text-end">
+                                    Loss: <Badge bg="secondary">
+                                        <NumberFormat
+                                            value={totalLoss}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" SAR"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </Badge>
+                                </h1> : ""}
                                 <h1 className="text-end">
                                     VAT Returned: <Badge bg="secondary">
                                         <NumberFormat
@@ -600,6 +631,48 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
+
+                                                        {cookies.get('admin') === "true" ?
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("profit");
+                                                                    }}
+                                                                >
+                                                                    Profit
+                                                                    {sortField === "profit" && sortProduct === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "profit" && sortProduct === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+
+
+                                                            </th> : ""}
+                                                        {cookies.get('admin') === "true" ? <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("loss");
+                                                                }}
+                                                            >
+                                                                Loss
+                                                                {sortField === "loss" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "loss" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th> : ""}
                                                     </tr>
                                                 </thead>
 
@@ -741,6 +814,28 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                 className="form-control"
                                                             />
                                                         </th>
+                                                        {cookies.get('admin') === "true" ?
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    id="profit"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("profit", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th> : ""}
+                                                        {cookies.get('admin') === "true" ?
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    id="loss"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("loss", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th> : ""}
                                                     </tr>
                                                 </thead>
 
@@ -778,6 +873,8 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                 <td>{history.price.toFixed(2) + " SAR"}</td>
                                                                 <td>{history.vat_price.toFixed(2) + " SAR  (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " SAR"}</td>
+                                                                {cookies.get('admin') === "true" ? <td>{history.profit.toFixed(2) + " SAR"}</td> : ""}
+                                                                {cookies.get('admin') === "true" ? <td>{history.loss.toFixed(2) + " SAR"}</td> : ""}
                                                                 {/* <td>   
                                                         <button
                                                             className="btn btn-outline-secondary dropdown-toggle"
