@@ -167,7 +167,12 @@ function VendorIndex(props) {
             },
         };
         let Select =
-            "select=id,name,created_by_name,created_at";
+            "select=id,name,created_by_name,created_at,stores";
+
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
@@ -408,6 +413,7 @@ function VendorIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
+                                                <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -423,6 +429,348 @@ function VendorIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "name" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_count");
+                                                        }}
+                                                    >
+                                                        Purchase count
+                                                        {sortField === "stores.purchase_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_amount");
+                                                        }}
+                                                    >
+                                                        Purchase amount
+                                                        {sortField === "stores.purchase_amount" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_amount" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_paid_amount");
+                                                        }}
+                                                    >
+                                                        Purchase paid amount
+                                                        {sortField === "stores.purchase_paid_amount" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_paid_amount" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_balance_amount");
+                                                        }}
+                                                    >
+                                                        Purchase balance amount
+                                                        {sortField === "stores.purchase_balance_amount" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_balance_amount" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_retail_profit");
+                                                        }}
+                                                    >
+                                                        Purchase expected retail profit
+                                                        {sortField === "stores.purchase_retail_profit" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_retail_profit" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_retail_loss");
+                                                        }}
+                                                    >
+                                                        Purchase expected retail loss
+                                                        {sortField === "stores.purchase_retail_loss" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_retail_loss" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_wholesale_profit");
+                                                        }}
+                                                    >
+                                                        Purchase expected wholesale profit
+                                                        {sortField === "stores.purchase_wholesale_profit" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_wholesale_profit" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_wholesale_loss");
+                                                        }}
+                                                    >
+                                                        Purchase expected wholesale loss
+                                                        {sortField === "stores.purchase_wholesale_loss" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_wholesale_loss" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_paid_count");
+                                                        }}
+                                                    >
+                                                        Purchase paid count
+                                                        {sortField === "stores.purchase_paid_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_paid_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_not_paid_count");
+                                                        }}
+                                                    >
+                                                        Purchase unpaid count
+                                                        {sortField === "stores.purchase_not_paid_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_not_paid_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_paid_partially_count");
+                                                        }}
+                                                    >
+                                                        Purchase paid partially count
+                                                        {sortField === "stores.purchase_paid_partially_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_paid_partially_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_return_count");
+                                                        }}
+                                                    >
+                                                        Purchase return count
+                                                        {sortField === "stores.purchase_return_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_return_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_return_amount");
+                                                        }}
+                                                    >
+                                                        Purchase return amount
+                                                        {sortField === "stores.purchase_return_amount" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_return_amount" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_return_paid_amount");
+                                                        }}
+                                                    >
+                                                        Purchase return paid amount
+                                                        {sortField === "stores.purchase_return_paid_amount" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_return_paid_amount" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_return_balance_amount");
+                                                        }}
+                                                    >
+                                                        Purchase return balance amount
+                                                        {sortField === "stores.purchase_return_balance_amount" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_return_balance_amount" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_return_paid_count");
+                                                        }}
+                                                    >
+                                                        Purchase return paid count
+                                                        {sortField === "stores.purchase_return_paid_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_return_paid_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_return_not_paid_count");
+                                                        }}
+                                                    >
+                                                        Purchase return unpaid count
+                                                        {sortField === "stores.purchase_return_not_paid_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_return_not_paid_count" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("stores.purchase_return_paid_partially_count");
+                                                        }}
+                                                    >
+                                                        Purchase return paid partially count
+                                                        {sortField === "stores.purchase_return_paid_partially_count" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "stores.purchase_return_paid_partially_count" && sortVendor === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -471,12 +819,175 @@ function VendorIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
                                                         id="name"
                                                         onChange={(e) =>
                                                             searchByFieldValue("name", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_paid_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_retail_profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_retail_loss", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_wholesale_profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_wholesale_loss", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_paid_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_not_paid_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_paid_partially_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_return_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_return_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_return_paid_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_return_balance_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_return_paid_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_return_not_paid_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("purchase_return_paid_partially_count", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -576,7 +1087,219 @@ function VendorIndex(props) {
                                             {vendorList &&
                                                 vendorList.map((vendor) => (
                                                     <tr key={vendor.id}>
+                                                        <td>
+
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(vendor.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openDetailsView(vendor.id);
+                                                            }}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                        </td>
                                                         <td>{vendor.name}</td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_count}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_count}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_amount?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_paid_amount?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_paid_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_balance_amount?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_balance_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_retail_profit?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_retail_profit?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_retail_loss?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_retail_loss?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_wholesale_profit?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_wholesale_profit?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_wholesale_loss?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_wholesale_loss?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_paid_count}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_paid_count}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_not_paid_count}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_not_paid_count}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_paid_partially_count}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_paid_partially_count}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_return_count}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_return_count}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_return_amount?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_return_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_return_paid_amount?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_return_paid_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_return_balance_amount?.toFixed(2)}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_return_balance_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_return_paid_count}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_return_paid_count}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_return_not_paid_count}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_return_not_paid_count}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
+                                                        <td>
+                                                            {vendor.stores && vendor.stores.map((store) => {
+                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                                    return (
+                                                                        <b>{store.purchase_return_paid_partially_count}</b>
+                                                                    );
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{store.purchase_return_paid_partially_count}</b> {"@" + store.store_name}</li>);
+                                                                }
+                                                            })}
+                                                        </td>
                                                         <td>{vendor.created_by_name}</td>
                                                         <td>
                                                             {format(
