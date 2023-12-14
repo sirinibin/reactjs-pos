@@ -1906,6 +1906,7 @@ function ProductIndex(props) {
                                                         <td>{product.rack}</td>
                                                         <td>
                                                             {product.stores && product.stores.map((store) => {
+                                                                
                                                                 if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{store.purchase_unit_price?.toFixed(2)}</b>
