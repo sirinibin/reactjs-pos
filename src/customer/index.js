@@ -1315,255 +1315,255 @@ function CustomerIndex(props) {
                                                         <td>{customer.name}</td>
                                                         <td>{customer.email}</td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_count}</b>
+                                                                        <b>{customer.stores[key].sales_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_amount?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_paid_amount?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_paid_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_paid_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_paid_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_balance_amount?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_balance_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_balance_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_balance_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_profit?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_profit?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_profit?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_profit?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_loss?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_loss?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_loss?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_loss?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_paid_count}</b>
+                                                                        <b>{customer.stores[key].sales_paid_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_paid_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_not_paid_count}</b>
+                                                                        <b>{customer.stores[key].sales_not_paid_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_not_paid_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_not_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_paid_partially_count}</b>
+                                                                        <b>{customer.stores[key].sales_paid_partially_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_paid_partially_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_paid_partially_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_return_count}</b>
+                                                                        <b>{customer.stores[key].sales_return_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_return_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_return_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_return_amount?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_return_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_return_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_return_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_return_paid_amount?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_return_paid_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_return_paid_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_return_paid_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_return_balance_amount?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_return_balance_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_return_balance_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_return_balance_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_return_profit?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_return_profit?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_return_profit?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_return_profit?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_return_loss?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].sales_return_loss?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_return_loss?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_return_loss?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_return_paid_count}</b>
+                                                                        <b>{customer.stores[key].sales_return_paid_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_return_paid_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_return_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_return_not_paid_count}</b>
+                                                                        <b>{customer.stores[key].sales_return_not_paid_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_return_not_paid_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_return_not_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.sales_return_paid_partially_count}</b>
+                                                                        <b>{customer.stores[key].sales_return_paid_partially_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.sales_return_paid_partially_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].sales_return_paid_partially_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.quotation_count}</b>
+                                                                        <b>{customer.stores[key].quotation_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.quotation_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].quotation_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.quotation_amount?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].quotation_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.quotation_amount?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].quotation_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.quotation_profit?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].quotation_profit?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.quotation_profit?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].quotation_profit?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.quotation_loss?.toFixed(2)}</b>
+                                                                        <b>{customer.stores[key].quotation_loss?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.quotation_loss?.toFixed(2)}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].quotation_loss?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
                                                         <td>
-                                                            {customer.stores && customer.stores.map((store) => {
-                                                                if (cookies.get("store_id") && store.store_id == cookies.get("store_id")) {
+                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                                if (cookies.get("store_id") && customer.stores[key].store_id == cookies.get("store_id")) {
                                                                     return (
-                                                                        <b>{store.delivery_note_count}</b>
+                                                                        <b>{customer.stores[key].delivery_note_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{store.delivery_note_count}</b> {"@" + store.store_name}</li>);
+                                                                    return (<li><b>{customer.stores[key].delivery_note_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                 }
                                                             })}
                                                         </td>
