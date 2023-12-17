@@ -427,7 +427,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,item_code,bar_code,part_number,name,stores,unit,part_number,name_in_arabic";
+        let Select = "select=id,item_code,bar_code,part_number,name,unit,part_number,name_in_arabic,product_stores";
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200",
@@ -766,11 +766,18 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
+        /*
         let productStore = GetProductUnitPriceInStore(
             formData.store_id,
             product.stores
         );
-        product.unit_price = productStore.retail_unit_price;
+        */
+        // product.unit_price = productStore.retail_unit_price;
+
+        if (product.product_stores[formData.store_id]) {
+            product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+        }
+
 
         errors.unit_price = "";
         if (!product.unit_price) {
@@ -797,7 +804,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
         errors.quantity = "";
 
-        let stock = GetProductStockInStore(formData.store_id, product.stores);
+        //let stock = GetProductStockInStore(formData.store_id, product.stores);
+        let stock = 0;
+
+        if (product.product_stores[formData.store_id]) {
+            stock = product.product_stores[formData.store_id].stock;
+        }
+
         if (stock < quantity) {
             if (index === false) {
                 index = selectedProducts.length;
@@ -819,7 +832,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 part_number: product.part_number,
                 name: product.name,
                 quantity: product.quantity,
-                stores: product.stores,
+                product_stores: product.product_stores,
                 unit_price: parseFloat(product.unit_price).toFixed(2),
                 unit: product.unit,
             });
@@ -1018,10 +1031,13 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setSelectedStores([...selectedItems]);
 
                                         if (formData.store_id) {
-                                            if (selectedProduct[0] && selectedProduct[0].stores && selectedProduct[0].quantity) {
+                                            if (selectedProduct[0] && selectedProduct[0].product_stores && selectedProduct[0].quantity) {
                                                 let stock = 0;
-                                                if (selectedProduct[0].stores) {
-                                                    stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stores);
+                                                if (selectedProduct[0].product_stores) {
+                                                    //stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stores);
+                                                    if (selectedProduct[0].product_stores[formData.store_id]) {
+                                                        stock = selectedProduct[0].product_stores[formData.store_id].stock
+                                                    }
                                                 }
 
                                                 if (stock < parseFloat(selectedProduct[0].quantity)) {
@@ -1033,9 +1049,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                     setErrors({ ...errors });
                                                 }
-                                            } else if (selectedProduct[0] && selectedProduct[0].stores) {
+                                            } else if (selectedProduct[0] && selectedProduct[0].product_stores) {
                                                 let stock = 0;
-                                                stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stores);
+                                                //stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stores);
+                                                if (selectedProduct[0].product_stores[formData.store_id]) {
+                                                    stock = selectedProduct[0].product_stores[formData.store_id].stock
+                                                }
+
                                                 if (stock === 0) {
                                                     if (selectedStores[0]) {
                                                         errors["product_id"] = "This product is not available in store: " + selectedStores[0].name;
@@ -1047,10 +1067,17 @@ const OrderCreate = forwardRef((props, ref) => {
                                             }
 
                                             if (selectedProduct[0]) {
+                                                /*
                                                 selectedProduct[0].unit_price = GetProductUnitPriceInStore(
                                                     formData.store_id,
                                                     selectedProduct[0].stores
                                                 );
+                                                */
+                                                if (selectedProduct[0].product_stores[formData.store_id]) {
+                                                    selectedProduct[0].unit_price = selectedProduct[0].product_stores[formData.store_id].retail_unit_price;
+                                                }
+
+
                                                 if (!selectedProduct[0].quantity) {
                                                     selectedProduct[0].quantity = 1;
                                                 }
@@ -1282,11 +1309,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                             let stock = 0;
-                                                            if (selectedProducts[index].stores) {
-                                                                stock = GetProductStockInStore(formData.store_id, selectedProducts[index].stores);
+                                                            if (selectedProducts[index].product_stores) {
+                                                                stock = selectedProducts[index].product_stores[formData.store_id]?.stock;
+                                                                // stock = GetProductStockInStore(formData.store_id, selectedProducts[index].stores);
                                                             }
 
-                                                            if (stock < parseFloat(e.target.value) && selectedProducts[index].stores) {
+                                                            if (stock < parseFloat(e.target.value) && selectedProducts[index].product_stores) {
                                                                 // errors["quantity_" + index] = " Warning: Stock is only " + stock + " in Store: " + formData.store_name + " for this product";
                                                                 errors["quantity_" + index] = " Warning: Available stock is " + stock;
                                                                 setErrors({ ...errors });

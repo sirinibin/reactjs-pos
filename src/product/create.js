@@ -19,7 +19,7 @@ const ProductCreate = forwardRef((props, ref) => {
     open(id) {
       selectedCategories = [];
       setSelectedCategories(selectedCategories);
-     
+
 
 
       formData = {
@@ -32,7 +32,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
       if (id) {
         getProduct(id);
-      }else {
+      } else {
         //getAllStores();
       }
 
@@ -147,50 +147,51 @@ const ProductCreate = forwardRef((props, ref) => {
         }
         setSelectedCategories(selectedCategories);
 
-        if (data.result.stores) {
-            console.log("data.result.stores:",data.result.stores);
-               // productStores.push(data.result.stores);
+        if (data.result.product_stores) {
+          console.log("data.result.product_stores-ok:", data.result.product_stores);
+          // productStores.push(data.result.stores);
 
-                let i=0;
-                for(let store of data.result.stores){
-                    if(productStores[i].store_id == store.store_id){
-                        productStores[i].purchase_unit_price= store.purchase_unit_price;
-                        productStores[i].wholesale_unit_price= store.wholesale_unit_price;
-                        productStores[i].retail_unit_price= store.retail_unit_price;
-                        productStores[i].stock= store.stock;
-                        i++;
-                    }
-                }
-                setProductStores([...productStores]);
-                console.log("productStores:",productStores);
+          let i = 0;
+          for (const key in data.result.product_stores) {
+            console.log("key: ", key);
+            if (productStores[i].store_id == data.result.product_stores[key].store_id) {
+              productStores[i].purchase_unit_price = data.result.product_stores[key].purchase_unit_price;
+              productStores[i].wholesale_unit_price = data.result.product_stores[key].wholesale_unit_price;
+              productStores[i].retail_unit_price = data.result.product_stores[key].retail_unit_price;
+              productStores[i].stock = data.result.product_stores[key].stock;
+              i++;
+            }
+          }
+          setProductStores([...productStores]);
+          console.log("productStores-ok:", productStores);
         }
-                /*
-            if(cookies.get('store_id')){
-                 //let stores1 = data.result.stores.filter((store)=>store.store_id==cookies.get('store_id'));
-                // let stores1 = data.result.stores;
-                if(data.result.stores.length>0){
-                    productStores= data.result.stores;
-                    setProductStores([...productStores]);
-                }
-            }else {
-                console.log("data.result.stores:",data.result.stores);
-               // productStores.push(data.result.stores);
+        /*
+    if(cookies.get('store_id')){
+         //let stores1 = data.result.stores.filter((store)=>store.store_id==cookies.get('store_id'));
+        // let stores1 = data.result.stores;
+        if(data.result.stores.length>0){
+            productStores= data.result.stores;
+            setProductStores([...productStores]);
+        }
+    }else {
+        console.log("data.result.stores:",data.result.stores);
+       // productStores.push(data.result.stores);
 
-                let i=0;
-                for(let store of data.result.stores){
-                    if(productStores[i].store_id == store.store_id){
-                        productStores[i].purchase_unit_price= store.purchase_unit_price;
-                        productStores[i].wholesale_unit_price= store.wholesale_unit_price;
-                        productStores[i].retail_unit_price= store.retail_unit_price;
-                        productStores[i].stock= store.stock;
-                        i++;
-                    }
-                }
-                setProductStores([...productStores]);
-                console.log("productStores:",productStores);
-                */
+        let i=0;
+        for(let store of data.result.stores){
+            if(productStores[i].store_id == store.store_id){
+                productStores[i].purchase_unit_price= store.purchase_unit_price;
+                productStores[i].wholesale_unit_price= store.wholesale_unit_price;
+                productStores[i].retail_unit_price= store.retail_unit_price;
+                productStores[i].stock= store.stock;
+                i++;
+            }
+        }
+        setProductStores([...productStores]);
+        console.log("productStores:",productStores);
+        */
 
-            
+
 
         formData = data.result;
         formData.name = data.result.name;
@@ -260,19 +261,19 @@ const ProductCreate = forwardRef((props, ref) => {
     stores = data.result;
     setStores(data.result);
     productStores = [];
-    for(let i=0; i<stores.length ;i++){
-        productStores.push({
-            store_id: stores[i].id,
-            store_name: stores[i].name,
-            purchase_unit_price: "",
-            retail_unit_price: "",
-            wholesale_unit_price: "",
-            stock: "",
-          });
+    for (let i = 0; i < stores.length; i++) {
+      productStores.push({
+        store_id: stores[i].id,
+        store_name: stores[i].name,
+        purchase_unit_price: "",
+        retail_unit_price: "",
+        wholesale_unit_price: "",
+        stock: "",
+      });
     }
 
     setProductStores([...productStores]);
-    console.log("productStores:",productStores);
+    console.log("productStores:", productStores);
   }
 
   async function suggestStores(searchTerm) {
@@ -333,28 +334,38 @@ const ProductCreate = forwardRef((props, ref) => {
       formData.category_id.push(selectedCategories[i].id);
     }
 
-    console.log("productStores:",productStores);
+    console.log("productStores:", productStores);
 
-   
-    let storesData =[];
-    for(let i=0;i<productStores.length;i++){
-        storesData.push({
-            "store_id": productStores[i].store_id,
-            "store_name": productStores[i].store_name,
-            "retail_unit_price": productStores[i].retail_unit_price?productStores[i].retail_unit_price:0,
-            "wholesale_unit_price": productStores[i].wholesale_unit_price?productStores[i].wholesale_unit_price:0,
-            "purchase_unit_price": productStores[i].purchase_unit_price?productStores[i].purchase_unit_price:0,
-            "stock": productStores[i].stock?productStores[i].stock:0,
-        });
+
+    let storesData = {};
+    for (let i = 0; i < productStores.length; i++) {
+      storesData[productStores[i].store_id] = {
+        "store_id": productStores[i].store_id,
+        "store_name": productStores[i].store_name,
+        "retail_unit_price": productStores[i].retail_unit_price ? productStores[i].retail_unit_price : 0,
+        "wholesale_unit_price": productStores[i].wholesale_unit_price ? productStores[i].wholesale_unit_price : 0,
+        "purchase_unit_price": productStores[i].purchase_unit_price ? productStores[i].purchase_unit_price : 0,
+        "stock": productStores[i].stock ? productStores[i].stock : 0,
+      };
+      /*
+          storesData.push({
+              "store_id": productStores[i].store_id,
+              "store_name": productStores[i].store_name,
+              "retail_unit_price": productStores[i].retail_unit_price?productStores[i].retail_unit_price:0,
+              "wholesale_unit_price": productStores[i].wholesale_unit_price?productStores[i].wholesale_unit_price:0,
+              "purchase_unit_price": productStores[i].purchase_unit_price?productStores[i].purchase_unit_price:0,
+              "stock": productStores[i].stock?productStores[i].stock:0,
+          });
+          */
     }
 
-    formData.stores = storesData;
+    formData.product_stores = storesData;
 
     if (cookies.get("store_id")) {
       formData.store_id = cookies.get("store_id");
     }
 
-    console.log("Formdata:",formData);
+    console.log("Formdata:", formData);
 
     let endPoint = "/v1/product";
     let method = "POST";
@@ -527,14 +538,14 @@ const ProductCreate = forwardRef((props, ref) => {
             <Button variant="primary" onClick={handleCreate}>
               {isProcessing
                 ? (
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      role="status"
-                      aria-hidden={true}
-                    />
-                  ) + " Creating..."
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden={true}
+                  />
+                ) + " Creating..."
                 : ""}
               {formData.id ? "Update" : "Create"}
             </Button>
@@ -796,7 +807,7 @@ const ProductCreate = forwardRef((props, ref) => {
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
-                    {!cookies.get('store_id')?<th>Store Name</th>:""}
+                    {!cookies.get('store_id') ? <th>Store Name</th> : ""}
                     <th>Purchase Unit Price</th>
                     <th>Wholesale Unit Price</th>
                     <th>Retail Unit Price</th>
@@ -805,15 +816,15 @@ const ProductCreate = forwardRef((props, ref) => {
                 </thead>
                 <tbody>
                   {stores.map((store, index) => (
-                    !cookies.get('store_id') || store.id==cookies.get('store_id')?<tr key={index} className="text-center">
-                      {!cookies.get('store_id')?<td style={{ width: "150px" }}>{store.name}</td>:""}
+                    !cookies.get('store_id') || store.id == cookies.get('store_id') ? <tr key={index} className="text-center">
+                      {!cookies.get('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
                       <td style={{ width: "150px" }}>
                         <input
                           type="number"
                           value={
-                            productStores[index]?.purchase_unit_price||productStores[index]?.purchase_unit_price==0
+                            productStores[index]?.purchase_unit_price || productStores[index]?.purchase_unit_price == 0
                               ? productStores[index]?.purchase_unit_price
-                              : ""  
+                              : ""
                           }
                           className="form-control"
                           placeholder="Purchase Unit Price"
@@ -824,17 +835,17 @@ const ProductCreate = forwardRef((props, ref) => {
                             if (!e.target.value) {
                               productStores[index].purchase_unit_price = "";
                               setProductStores([...productStores]);
-                             // setErrors({ ...errors });
+                              // setErrors({ ...errors });
                               console.log("errors:", errors);
                               return;
                             }
                             if (parseFloat(e.target.value) < 0) {
-                                productStores[index].purchase_unit_price = "";
-                                setProductStores([...productStores]);
+                              productStores[index].purchase_unit_price = "";
+                              setProductStores([...productStores]);
 
                               errors["purchase_unit_price_" + index] =
                                 "Purchase Unit Price should not be < 0";
-                                setErrors({ ...errors });
+                              setErrors({ ...errors });
                               return;
                             }
 
@@ -848,8 +859,8 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors["purchase_unit_price_" + index]}
                           </div>
                         )}
-                        {(productStores[index]?.purchase_unit_price||productStores[index]?.purchase_unit_price===0) &&
-                        !errors["purchase_unit_price_" + index] ? (
+                        {(productStores[index]?.purchase_unit_price || productStores[index]?.purchase_unit_price === 0) &&
+                          !errors["purchase_unit_price_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
                             Looks good!
@@ -860,7 +871,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         <input
                           type="number"
                           value={
-                            productStores[index]?.wholesale_unit_price||productStores[index]?.wholesale_unit_price === 0
+                            productStores[index]?.wholesale_unit_price || productStores[index]?.wholesale_unit_price === 0
                               ? productStores[index]?.wholesale_unit_price
                               : ""
                           }
@@ -877,8 +888,8 @@ const ProductCreate = forwardRef((props, ref) => {
                             }
 
                             if (parseFloat(e.target.value) < 0) {
-                                productStores[index].wholesale_unit_price = "";
-                                setProductStores([...productStores]);
+                              productStores[index].wholesale_unit_price = "";
+                              setProductStores([...productStores]);
 
                               errors["wholesale_unit_price_" + index] =
                                 "Wholesale unit price should not be < 0";
@@ -887,7 +898,7 @@ const ProductCreate = forwardRef((props, ref) => {
                             }
 
                             productStores[index].wholesale_unit_price = parseFloat(e.target.value);
-                             
+
                             setProductStores([...productStores]);
                           }}
                         />
@@ -897,8 +908,8 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors["wholesale_unit_price_" + index]}
                           </div>
                         )}
-                        {(productStores[index]?.wholesale_unit_price || productStores[index]?.wholesale_unit_price===0) &&
-                        !errors["wholesale_unit_price_" + index] ? (
+                        {(productStores[index]?.wholesale_unit_price || productStores[index]?.wholesale_unit_price === 0) &&
+                          !errors["wholesale_unit_price_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
                             Looks good!
@@ -909,7 +920,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         <input
                           type="number"
                           value={
-                            productStores[index]?.retail_unit_price||productStores[index]?.retail_unit_price===0
+                            productStores[index]?.retail_unit_price || productStores[index]?.retail_unit_price === 0
                               ? productStores[index]?.retail_unit_price
                               : ""
                           }
@@ -928,19 +939,19 @@ const ProductCreate = forwardRef((props, ref) => {
                               errors["retail_unit_price_" + index] =
                                 "Retail Unit Price should not be < 0";
                               productStores[index].retail_unit_price = "";
-                    
+
                               setProductStores([...productStores]);
                               setErrors({ ...errors });
                               console.log("errors:", errors);
                               return;
                             }
 
-                            console.log("e.target.value:",e.target.value);
+                            console.log("e.target.value:", e.target.value);
 
                             productStores[index].retail_unit_price = parseFloat(
                               e.target.value
                             );
-                            console.log("productStores[index].retail_unit_price:",productStores[index].retail_unit_price);
+                            console.log("productStores[index].retail_unit_price:", productStores[index].retail_unit_price);
                             setProductStores([...productStores]);
                           }}
                         />{" "}
@@ -950,8 +961,8 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors["retail_unit_price_" + index]}
                           </div>
                         )}
-                        {(productStores[index]?.retail_unit_price||productStores[index]?.retail_unit_price===0) &&
-                        !errors["retail_unit_price_" + index] ? (
+                        {(productStores[index]?.retail_unit_price || productStores[index]?.retail_unit_price === 0) &&
+                          !errors["retail_unit_price_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
                             Looks good!
@@ -961,9 +972,9 @@ const ProductCreate = forwardRef((props, ref) => {
 
                       <td style={{ width: "150px" }}>
                         <input
-                          value={productStores[index]?.stock || productStores[index]?.stock===0
-                              ? productStores[index].stock
-                              : ""
+                          value={productStores[index]?.stock || productStores[index]?.stock === 0
+                            ? productStores[index].stock
+                            : ""
                           }
                           type="number"
                           onChange={(e) => {
@@ -971,11 +982,11 @@ const ProductCreate = forwardRef((props, ref) => {
                             setErrors({ ...errors });
 
                             if (!e.target.value) {
-                                productStores[index].stock = "";
-                                setProductStores([...productStores]);
-                                //errors["stock_" + index] = "Invalid Stock value";
-                                //setErrors({ ...errors });
-                                return;
+                              productStores[index].stock = "";
+                              setProductStores([...productStores]);
+                              //errors["stock_" + index] = "Invalid Stock value";
+                              //setErrors({ ...errors });
+                              return;
                             }
 
                             productStores[index].stock = parseFloat(e.target.value);
@@ -990,20 +1001,20 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors["stock_" + index]}
                           </div>
                         )}
-                        {(productStores[index]?.stock||productStores[index]?.stock===0) &&
-                        !errors["stock_" + index] ? (
+                        {(productStores[index]?.stock || productStores[index]?.stock === 0) &&
+                          !errors["stock_" + index] ? (
                           <div style={{ color: "green" }}>
                             <i className="bi bi-check-lg"> </i>
                             Looks good!
                           </div>
                         ) : null}
                       </td>
-                    </tr>:''
+                    </tr> : ''
                   ))}
                 </tbody>
               </table>
             </div>
-          
+
             <div className="col-md-6">
               <label className="form-label">Image(Optional)</label>
 
@@ -1094,17 +1105,17 @@ const ProductCreate = forwardRef((props, ref) => {
               <Button variant="primary" onClick={handleCreate}>
                 {isProcessing
                   ? (
-                      <Spinner
-                        as="span"
-                        animation="bproduct"
-                        size="sm"
-                        role="status"
-                        aria-hidden={true}
-                      />
-                    ) + " Processing..."
+                    <Spinner
+                      as="span"
+                      animation="bproduct"
+                      size="sm"
+                      role="status"
+                      aria-hidden={true}
+                    />
+                  ) + " Processing..."
                   : formData.id
-                  ? "Update"
-                  : "Create"}
+                    ? "Update"
+                    : "Create"}
               </Button>
             </Modal.Footer>
           </form>

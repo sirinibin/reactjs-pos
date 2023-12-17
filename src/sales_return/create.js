@@ -257,7 +257,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         date_str: format(new Date(), "MMM dd yyyy"),
         signature_date_str: format(new Date(), "MMM dd yyyy"),
         status: "received",
-        payment_status: "paid",
+        payment_status: "",
         payment_method: "",
         price_type: "retail",
     });
@@ -1044,6 +1044,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
+                                    <option value="">Select</option>
                                     <option value="paid">Paid</option>
                                     <option value="not_paid">Not Paid</option>
                                     <option value="paid_partially">Paid Partially</option>

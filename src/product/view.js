@@ -45,14 +45,25 @@ const ProductView = forwardRef((props, ref) => {
 
     function getProductRetailPrice(product) {
         let store_id = cookies.get("store_id");
-        if (!store_id || !product.stores) {
+        if (!store_id || !product.product_stores) {
             return "";
         }
-        for (let i = 0; i < product.stores.length; i++) {
-            if (product.stores[i].store_id === store_id) {
-                return parseFloat(product.stores[i].retail_unit_price + parseFloat(product.stores[i].retail_unit_price * 0.15)).toFixed(2);
+
+        // product.product_stores[store_id].
+
+        if (product.product_stores[store_id]) {
+            return parseFloat(product.product_stores[store_id].retail_unit_price + parseFloat(product.product_stores[store_id].retail_unit_price * 0.15)).toFixed(2);
+        }
+
+
+
+        /*
+        for (let i = 0; i < product.product_stores.length; i++) {
+            if (product.product_stores[i].store_id === store_id) {
+                return parseFloat(product.product_stores[i].retail_unit_price + parseFloat(product.product_stores[i].retail_unit_price * 0.15)).toFixed(2);
             }
         }
+        */
         return "";
     }
 
@@ -378,20 +389,20 @@ const ProductView = forwardRef((props, ref) => {
                     <table className="table table-striped table-sm table-bordered">
                         <thead>
                             <tr className="text-center">
-                            {!cookies.get('store_id')?<th>Store Name</th>:""}
-                            <th>Purchase Unit Price</th>
-                            <th>Wholesale Unit Price</th>
-                            <th>Retail Unit Price</th>
-                            <th>Stock</th>
+                                {!cookies.get('store_id') ? <th>Store Name</th> : ""}
+                                <th>Purchase Unit Price</th>
+                                <th>Wholesale Unit Price</th>
+                                <th>Retail Unit Price</th>
+                                <th>Stock</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {model.stores && model.stores.map((store, index) => (
-                                !cookies.get('store_id') || store.store_id==cookies.get('store_id')?<tr key={index} className="text-center">
-                                    {!cookies.get('store_id')?<td>{store.store_name}</td>:""}
+                            {model.product_stores && Object.keys(model.product_stores).map((key, index) => {
+                                return (<tr key={index} className="text-center">
+                                    {!cookies.get('store_id') ? <td>{model.product_stores[key].store_name}</td> : ""}
                                     <td>
                                         <NumberFormat
-                                            value={store.purchase_unit_price}
+                                            value={model.product_stores[key].purchase_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
@@ -400,7 +411,7 @@ const ProductView = forwardRef((props, ref) => {
                                     </td>
                                     <td>
                                         <NumberFormat
-                                            value={store.wholesale_unit_price}
+                                            value={model.product_stores[key].wholesale_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
@@ -409,17 +420,55 @@ const ProductView = forwardRef((props, ref) => {
                                     </td>
                                     <td>
                                         <NumberFormat
-                                            value={store.retail_unit_price}
+                                            value={model.product_stores[key].retail_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
                                             suffix={" SAR"}
                                         />
                                     </td>
-                                    <td>{store.stock}</td>
-                                </tr>:''
-                            ))}
+                                    <td>{model.product_stores[key].stock}</td>
+                                </tr>)
+                            })}
                         </tbody>
+                        {/*
+                        <tbody>
+                            {model.product_stores && Object.keys(model.product_stores).map((key, index) => {
+                                !cookies.get('store_id') || model.product_stores[key].store_id == cookies.get('store_id') ? <tr key={index} className="text-center">
+                                    {!cookies.get('store_id') ? <td>{model.product_stores[key].store_name}</td> : ""}
+                                    <td>
+                                        <NumberFormat
+                                            value={model.product_stores[key].purchase_unit_price}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            renderText={(value, props) => value}
+                                            suffix={" SAR"}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={model.product_stores[key].wholesale_unit_price}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            renderText={(value, props) => value}
+                                            suffix={" SAR"}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={model.product_stores[key].retail_unit_price}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            renderText={(value, props) => value}
+                                            suffix={" SAR"}
+                                        />
+                                    </td>
+                                    <td>{model.product_stores[key].stock}</td>
+                                </tr> : ''
+                            ))
+                        }
+                        </tbody>
+                    */}
                     </table>
                 </div>
                 <h4>Images</h4>
