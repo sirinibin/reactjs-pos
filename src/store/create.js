@@ -107,12 +107,12 @@ const StoreCreate = forwardRef((props, ref) => {
 
                 selectedStores = [];
                 if (storeIds && storeNames) {
-                  for (var i = 0; i < storeIds.length; i++) {
-                    selectedStores.push({
-                      id: storeIds[i],
-                      name: storeNames[i],
-                    });
-                  }
+                    for (var i = 0; i < storeIds.length; i++) {
+                        selectedStores.push({
+                            id: storeIds[i],
+                            name: storeNames[i],
+                        });
+                    }
                 }
                 setSelectedStores(selectedStores);
 
@@ -147,7 +147,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
         formData.use_products_from_store_id = [];
         for (var i = 0; i < selectedStores.length; i++) {
-          formData.use_products_from_store_id.push(selectedStores[i].id);
+            formData.use_products_from_store_id.push(selectedStores[i].id);
         }
 
 
@@ -295,11 +295,11 @@ const StoreCreate = forwardRef((props, ref) => {
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
-          .map(function (key) {
-            return `search[${key}]=${object[key]}`;
-          })
-          .join("&");
-      }
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
 
     async function suggestStores(searchTerm) {
         console.log("Inside handle suggest stores");
@@ -332,6 +332,10 @@ const StoreCreate = forwardRef((props, ref) => {
         );
         let data = await result.json();
 
+        if (formData.id) {
+            data.result = data.result.filter(store => store.id != formData.id);
+        }
+        
         setStoreOptions(data.result);
     }
 
@@ -610,49 +614,49 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-              <label className="form-label">Use products from other stores*</label>
+                            <label className="form-label">Use products from other stores*</label>
 
-              <div className="input-group mb-3">
-                <Typeahead
-                  id="use_products_from_store_id"
-                  labelKey="name"
-                  isInvalid={errors.use_products_from_store_id ? true : false}
-                  onChange={(selectedItems) => {
-                    errors.use_products_from_store_id = "";
-                    setErrors(errors);
-                    if (selectedItems.length === 0) {
-                     // errors.use_products_from_store_id = "Invalid store selected";
-                      //setErrors(errors);
-                      //setFormData({ ...formData });
-                      setSelectedStores([]);
-                      return;
-                    }
-                    //setFormData({ ...formData });
-                    setSelectedStores(selectedItems);
-                  }}
-                  options={storeOptions}
-                  placeholder="Select Stores"
-                  selected={selectedStores}
-                  highlightOnlyResult={true}
-                  onInputChange={(searchTerm, e) => {
-                    suggestStores(searchTerm);
-                  }}
-                  multiple
-                />
-                {errors.use_products_from_store_id && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.use_products_from_store_id}
-                  </div>
-                )}
-                {formData.use_products_from_store_id && !errors.use_products_from_store_id && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
-              </div>
-            </div>
+                            <div className="input-group mb-3">
+                                <Typeahead
+                                    id="use_products_from_store_id"
+                                    labelKey="name"
+                                    isInvalid={errors.use_products_from_store_id ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.use_products_from_store_id = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            // errors.use_products_from_store_id = "Invalid store selected";
+                                            //setErrors(errors);
+                                            //setFormData({ ...formData });
+                                            setSelectedStores([]);
+                                            return;
+                                        }
+                                        //setFormData({ ...formData });
+                                        setSelectedStores(selectedItems);
+                                    }}
+                                    options={storeOptions}
+                                    placeholder="Select Stores"
+                                    selected={selectedStores}
+                                    highlightOnlyResult={true}
+                                    onInputChange={(searchTerm, e) => {
+                                        suggestStores(searchTerm);
+                                    }}
+                                    multiple
+                                />
+                                {errors.use_products_from_store_id && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.use_products_from_store_id}
+                                    </div>
+                                )}
+                                {formData.use_products_from_store_id && !errors.use_products_from_store_id && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
                         <div className="col-md-6">
                             <label className="form-label">Registration Number(C.R NO.)*</label>
