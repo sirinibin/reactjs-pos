@@ -398,7 +398,7 @@ const ProductView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.product_stores && Object.keys(model.product_stores).map((key, index) => {
-                                return (<tr key={index} className="text-center">
+                                return (!cookies.get('store_id') || cookies.get('store_id') == model.product_stores[key].store_id ? <tr key={index} className="text-center">
                                     {!cookies.get('store_id') ? <td>{model.product_stores[key].store_name}</td> : ""}
                                     <td>
                                         <NumberFormat
@@ -428,7 +428,7 @@ const ProductView = forwardRef((props, ref) => {
                                         />
                                     </td>
                                     <td>{model.product_stores[key].stock}</td>
-                                </tr>)
+                                </tr> : "")
                             })}
                         </tbody>
                         {/*
