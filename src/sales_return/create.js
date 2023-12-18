@@ -31,7 +31,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 date_str: new Date(),
                 signature_date_str: format(new Date(), "MMM dd yyyy"),
                 status: "received",
-                payment_status: "paid",
+                payment_status: "",
                 payment_method: "",
                 price_type: "retail"
             };
@@ -657,16 +657,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
+                {Object.keys(errors).length > 0 ?
+                        <div>
+                            <b style={{ color: "red" }}>Fix the below errors</b>
+                            <ul>
+
+                                {errors && Object.keys(errors).map((key, index) => {
+                                    return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                })}
+                            </ul></div> : ""}
                     {selectedProducts.length === 0 && "Already Returned All sold products"}
                     {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         <h2>Select Products</h2>
-                        {errors["product_id"] && (
-                            <div style={{ color: "red" }}>
-                                <i className="bi bi-x-lg"> </i>
-                                {errors["product_id"]}
-                            </div>
-                        )}
-                        <div className="table-responsive" style={{ overflowX: "auto", height: "400px", overflowY: "scroll" }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
@@ -809,7 +812,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                                         </td>
                                         <th className="text-end">Total</th>
-                                        <td className="text-center">
+                                        <td className="text-end" style={{ width: "180px" }}>
                                             <NumberFormat
                                                 value={totalPrice}
                                                 displayType={"text"}
@@ -824,7 +827,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th colSpan="6" className="text-end">
                                             Discount(  {formData.discount_percent + "%"})
                                         </th>
-                                        <td className="text-center">
+                                        <td className="text-end">
                                             <NumberFormat
                                                 value={formData.discount}
                                                 displayType={"text"}
@@ -836,10 +839,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="5" className="text-end">
-                                            VAT
+
                                         </th>
-                                        <td className="text-center">{formData.vat_percent + "%"}</td>
-                                        <td className="text-center">
+                                        <th className="text-end"> VAT: {formData.vat_percent + "%"}</th>
+                                        <td className="text-end">
                                             <NumberFormat
                                                 value={vatPrice}
                                                 displayType={"text"}
@@ -852,7 +855,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     <tr>
                                         <td colSpan="5"></td>
                                         <th className="text-end">Net Total</th>
-                                        <th className="text-center">
+                                        <th className="text-end">
                                             <NumberFormat
                                                 value={netTotal}
                                                 displayType={"text"}
@@ -866,7 +869,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </table>
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-3">
                             <label className="form-label">Date*</label>
 
                             <div className="input-group mb-3">
@@ -888,41 +891,29 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         setFormData({ ...formData });
                                     }}
                                 />
-
-                                {errors.date_str && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.date_str}
-                                    </div>
-                                )}
-                                {formData.date_str && !errors.date_str && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.date_str && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.date_str}
+                                </div>
+                            )}
+                            {formData.date_str && !errors.date_str && (
+                                <div style={{ color: "green" }}>
+                                    <i className="bi bi-check-lg"> </i>
+                                    Looks good!
+                                </div>
+                            )}
                         </div>
 
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Discount*</label>
-                            <Form.Check
-                                type="switch"
-                                id="custom-switch"
-                                label="%"
-                                value={formData.is_discount_percent}
-                                checked={formData.is_discount_percent ? "checked" : null}
-                                onChange={(e) => {
-                                    formData.is_discount_percent = !formData.is_discount_percent;
-                                    console.log("e.target.value:", formData.is_discount_percent);
-                                    setFormData({ ...formData });
-                                    reCalculate();
-                                }}
-                            />
-                            <div className="input-group mb-3">
+
+                            <div className="input-group mb-3" >
                                 <input
                                     value={formData.discountValue}
+                                    style={{ marginRight: "10px" }}
                                     type='number'
                                     onChange={(e) => {
                                         if (parseFloat(e.target.value) === 0) {
@@ -953,19 +944,33 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     id="validationCustom02"
                                     placeholder="Discount"
                                 />
-                                {errors.discount && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.discount}
-                                    </div>
-                                )}
-                                {!errors.discount && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+                                <Form.Check
+                                    type="switch"
+                                    id="custom-switch"
+                                    label="%"
+                                    value={formData.is_discount_percent}
+                                    checked={formData.is_discount_percent ? "checked" : null}
+                                    onChange={(e) => {
+                                        formData.is_discount_percent = !formData.is_discount_percent;
+                                        console.log("e.target.value:", formData.is_discount_percent);
+                                        setFormData({ ...formData });
+                                        reCalculate();
+                                    }}
+                                />
+
                             </div>
+                            {errors.discount && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.discount}
+                                </div>
+                            )}
+                            {!errors.discount && (
+                                <div style={{ color: "green" }}>
+                                    <i className="bi bi-check-lg"> </i>
+                                    Looks good!
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-2">
@@ -978,7 +983,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         console.log("Inside onchange payment method");
                                         if (!e.target.value) {
-                                            errors["status"] = "Invalid Payment Method";
+                                            errors["status"] = "Payment method is required";
+                                            formData.payment_method = "";
+                                            setFormData({ ...formData });
                                             setErrors({ ...errors });
                                             return;
                                         }

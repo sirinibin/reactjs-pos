@@ -1003,6 +1003,16 @@ const OrderCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
+                    {Object.keys(errors).length > 0 ?
+                        <div>
+                            <b style={{ color: "red" }}>Fix the below errors</b>
+                            <ul>
+
+                                {errors && Object.keys(errors).map((key, index) => {
+                                    return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                })}
+                            </ul></div> : ""}
+
                     <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
                         {!cookies.get('store_name') ? <div className="col-md-6">
                             <label className="form-label">Store*</label>
