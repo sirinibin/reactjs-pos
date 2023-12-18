@@ -475,7 +475,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         };
 
 
-        let Select = "select=id,item_code,bar_code,part_number,name,stores,unit,part_number,name_in_arabic";
+        let Select = "select=id,item_code,bar_code,part_number,name,product_stores,unit,part_number,name_in_arabic";
         let result = await fetch(
             "/v1/product/barcode/" + formData.barcode + "?" + Select,
             requestOptions

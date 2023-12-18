@@ -485,7 +485,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     };
 
     let Select =
-      "select=id,item_code,bar_code,ean_12,part_number,name,stores,unit,part_number,name_in_arabic";
+      "select=id,item_code,bar_code,ean_12,part_number,name,product_stores,unit,part_number,name_in_arabic";
     let result = await fetch(
       "/v1/product/barcode/" + formData.barcode + "?" + Select,
       requestOptions

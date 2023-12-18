@@ -4,11 +4,15 @@ import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import StoreView from "./view.js";
 import Resizer from "react-image-file-resizer";
+import { Typeahead } from "react-bootstrap-typeahead";
 
 const StoreCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
+            selectedStores = [];
+            setSelectedStores(selectedStores);
+
             formData = { national_address: {} };
             setFormData({ national_address: {} });
             if (id) {
@@ -97,6 +101,21 @@ const StoreCreate = forwardRef((props, ref) => {
                 console.log(data);
                 let storeData = data.result;
                 storeData.logo = "";
+
+                let storeIds = data.result.use_products_from_store_id;
+                let storeNames = data.result.use_products_from_store_names;
+
+                selectedStores = [];
+                if (storeIds && storeNames) {
+                  for (var i = 0; i < storeIds.length; i++) {
+                    selectedStores.push({
+                      id: storeIds[i],
+                      name: storeNames[i],
+                    });
+                  }
+                }
+                setSelectedStores(selectedStores);
+
                 setFormData({ ...storeData });
             })
             .catch(error => {
@@ -125,6 +144,11 @@ const StoreCreate = forwardRef((props, ref) => {
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
+
+        formData.use_products_from_store_id = [];
+        for (var i = 0; i < selectedStores.length; i++) {
+          formData.use_products_from_store_id.push(selectedStores[i].id);
+        }
 
 
         if (formData.vat_percent) {
@@ -264,6 +288,51 @@ const StoreCreate = forwardRef((props, ref) => {
         return input.replace(/\d/g, function (m) {
             return persianMap[parseInt(m)];
         });
+    }
+
+    let [selectedStores, setSelectedStores] = useState([]);
+    let [storeOptions, setStoreOptions] = useState([]);
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+          .map(function (key) {
+            return `search[${key}]=${object[key]}`;
+          })
+          .join("&");
+      }
+
+    async function suggestStores(searchTerm) {
+        console.log("Inside handle suggest stores");
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            return;
+        }
+
+        var params = {
+            name: searchTerm,
+        };
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = "select=id,name";
+        let result = await fetch(
+            "/v1/store?" + Select + queryString,
+            requestOptions
+        );
+        let data = await result.json();
+
+        setStoreOptions(data.result);
     }
 
     return (
@@ -539,6 +608,51 @@ const StoreCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+
+                        <div className="col-md-6">
+              <label className="form-label">Use products from other stores*</label>
+
+              <div className="input-group mb-3">
+                <Typeahead
+                  id="use_products_from_store_id"
+                  labelKey="name"
+                  isInvalid={errors.use_products_from_store_id ? true : false}
+                  onChange={(selectedItems) => {
+                    errors.use_products_from_store_id = "";
+                    setErrors(errors);
+                    if (selectedItems.length === 0) {
+                     // errors.use_products_from_store_id = "Invalid store selected";
+                      //setErrors(errors);
+                      //setFormData({ ...formData });
+                      setSelectedStores([]);
+                      return;
+                    }
+                    //setFormData({ ...formData });
+                    setSelectedStores(selectedItems);
+                  }}
+                  options={storeOptions}
+                  placeholder="Select Stores"
+                  selected={selectedStores}
+                  highlightOnlyResult={true}
+                  onInputChange={(searchTerm, e) => {
+                    suggestStores(searchTerm);
+                  }}
+                  multiple
+                />
+                {errors.use_products_from_store_id && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.use_products_from_store_id}
+                  </div>
+                )}
+                {formData.use_products_from_store_id && !errors.use_products_from_store_id && (
+                  <div style={{ color: "green" }}>
+                    <i className="bi bi-check-lg"> </i>
+                    Looks good!
+                  </div>
+                )}
+              </div>
+            </div>
 
                         <div className="col-md-6">
                             <label className="form-label">Registration Number(C.R NO.)*</label>
