@@ -438,7 +438,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     };
 
     let Select =
-      "select=id,item_code,bar_code,name,stores,unit,part_number,name_in_arabic";
+      "select=id,item_code,bar_code,name,product_stores,unit,part_number,name_in_arabic";
     setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=200",
@@ -695,8 +695,11 @@ const QuotationCreate = forwardRef((props, ref) => {
       formData.store_id,
       product.stores
     );
-    product.unit_price = unitPrice.retail_unit_price;
-    product.purchase_unit_price = unitPrice.purchase_unit_price;
+    
+    product.unit_price = product.product_stores[formData.store_id]?.retail_unit_price;
+    product.purchase_unit_price = product.product_stores[formData.store_id]?.purchase_unit_price;
+   // product.unit_price = unitPrice.retail_unit_price;
+   // product.purchase_unit_price = unitPrice.purchase_unit_price;
 
     let alreadyAdded = false;
     let index = -1;
@@ -728,7 +731,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         part_number: product.part_number,
         name: product.name,
         quantity: product.quantity,
-        stores: product.stores,
+        product_stores: product.product_stores,
         unit: product.unit,
       };
 
