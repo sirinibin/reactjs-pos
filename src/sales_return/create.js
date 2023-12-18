@@ -659,7 +659,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 <Modal.Body>
                 {Object.keys(errors).length > 0 ?
                         <div>
-                            <b style={{ color: "red" }}>Fix the below errors</b>
                             <ul>
 
                                 {errors && Object.keys(errors).map((key, index) => {
