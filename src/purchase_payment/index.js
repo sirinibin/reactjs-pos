@@ -450,7 +450,7 @@ function PurchasePaymentIndex(props) {
                         {props.purchase ? <h4 className="text-end">
                             Balance amount: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={balanceAmount}
+                                    value={balanceAmount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
