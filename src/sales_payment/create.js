@@ -227,7 +227,7 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                 if (props.refreshSalesList) {
                     props.refreshSalesList();
                 }
-                props.openDetailsView(data.result.id);
+                //props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);

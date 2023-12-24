@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
+import { confirm } from 'react-bootstrap-confirmation';
 
 function SalesReturnPaymentIndex(props) {
 
@@ -185,7 +186,7 @@ function SalesReturnPaymentIndex(props) {
             },
         };
         let Select =
-            "select=id,date,amount,method,store_name,sales_return_code,sales_return_id,order_id,order_code,created_by_name,created_at";
+            "select=id,date,amount,method,store_name,sales_return_code,sales_return_id,order_id,order_code,created_by_name,created_at,deleted";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -244,6 +245,21 @@ function SalesReturnPaymentIndex(props) {
                 totalPayments = data.meta.total_payment;
                 setTotalPayments(totalPayments);
 
+                if (props.salesReturn && !deleted) {
+                    balanceAmount = props.salesReturn.net_total - totalPayments;
+                    setBalanceAmount(balanceAmount);
+
+                    if (balanceAmount == props.salesReturn.net_total) {
+                        paymentStatus = "not_paid";
+                        setPaymentStatus(paymentStatus);
+                    } else if (balanceAmount == 0) {
+                        paymentStatus = "paid";
+                        setPaymentStatus(paymentStatus);
+                    } else {
+                        paymentStatus = "paid_partially";
+                        setPaymentStatus(paymentStatus);
+                    }
+                }
 
             })
             .catch((error) => {
@@ -285,6 +301,8 @@ function SalesReturnPaymentIndex(props) {
     const CreateFormRef = useRef();
 
     let [totalPayments, setTotalPayments] = useState(0.00);
+    let [balanceAmount, setBalanceAmount] = useState(0.00);
+    let [paymentStatus, setPaymentStatus] = useState("");
 
     function openCreateForm() {
         console.log("props.salesReturn:", props.salesReturn);
@@ -299,6 +317,68 @@ function SalesReturnPaymentIndex(props) {
 
     let [sortOrder, setSortOrder] = useState("-");
 
+
+    const confirmDelete = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure?');
+        console.log(result);
+        if (result) {
+            deleteSalesReturnPayment(id);
+        }
+
+    };
+
+
+
+    function deleteSalesReturnPayment(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        fetch(
+            "/v1/sales-return-payment/" + id,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+
+                props.showToastMessage("Sales return payment deleted successfully!", "success");
+                if (props.refreshList) {
+                    props.refreshList();
+                }
+                //handleClose();
+                if (props.refreshSalesReturnList) {
+                    props.refreshSalesReturnList();
+                }
+
+
+                list();
+
+
+
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+    let [deleted, setDeleted] = useState(false);
+
     return (
         <>
             <SalesReturnPaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} refreshSalesReturnList={props.refreshSalesReturnList ? props.refreshSalesReturnList : ''} />
@@ -308,8 +388,21 @@ function SalesReturnPaymentIndex(props) {
                 <div className="row">
 
                     <div className="col">
+                        {paymentStatus == "paid" ?
+                            <span className="badge bg-success">
+                                Paid
+                            </span> : ""}
+                        {paymentStatus == "paid_partially" ?
+                            <span className="badge bg-warning">
+                                Paid Partially
+                            </span> : ""}
+                        {paymentStatus == "not_paid" ?
+                            <span className="badge bg-danger">
+                                Not Paid
+                            </span> : ""}
+
                         <h1 className="text-end">
-                            Total: <Badge bg="secondary">
+                            Total paid amount: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPayments}
                                     displayType={"text"}
@@ -319,6 +412,17 @@ function SalesReturnPaymentIndex(props) {
                                 />
                             </Badge>
                         </h1>
+                        {props.salesReturn ? <h4 className="text-end">
+                            Balance amount: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={balanceAmount}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4> : ""}
                     </div>
                 </div>
                 <div className="row">
@@ -583,6 +687,7 @@ function SalesReturnPaymentIndex(props) {
                                                     </b>
                                                 </th>
                                                 <th>Actions</th>
+                                                <th >Deleted</th>
                                             </tr>
                                         </thead>
 
@@ -771,6 +876,23 @@ function SalesReturnPaymentIndex(props) {
                                                     ) : null}
                                                 </th>
                                                 <th></th>
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("deleted", e.target.value);
+                                                            if (e.target.value == "1") {
+                                                                deleted = true;
+                                                                setDeleted(deleted);
+                                                            } else {
+                                                                deleted = false;
+                                                                setDeleted(deleted);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="0" SELECTED>NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="text-center">
@@ -790,17 +912,23 @@ function SalesReturnPaymentIndex(props) {
                                                                 "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
-                                                        <td>
-                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                        <td style={{ width: "110px" }}>
+                                                            <Button className="btn btn-light btn-sm" disabled={salesreturnpayment.deleted} onClick={() => {
                                                                 openUpdateForm(salesreturnpayment.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>
 
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                            <Button className="btn btn-primary btn-sm" disabled={salesreturnpayment.deleted} onClick={() => {
                                                                 openDetailsView(salesreturnpayment.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
+                                                            </Button>
+
+                                                            <Button className="btn btn-danger btn-sm" disabled={salesreturnpayment.deleted} onClick={() => {
+                                                                confirmDelete(salesreturnpayment.id);
+                                                            }}>
+                                                                <i className="bi bi-trash"></i>
                                                             </Button>
 
                                                             {/*
@@ -820,6 +948,7 @@ function SalesReturnPaymentIndex(props) {
                                                         </ul>
                                                        */}
                                                         </td>
+                                                        <td>{salesreturnpayment.deleted ? "YES" : "NO"}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>

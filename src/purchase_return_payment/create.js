@@ -238,7 +238,7 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
                 if (props.refreshPurchaseReturnList) {
                     props.refreshPurchaseReturnList();
                 }
-                props.openDetailsView(data.result.id);
+                //props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);

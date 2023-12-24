@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
+import { confirm } from 'react-bootstrap-confirmation';
 
 function SalesPaymentIndex(props) {
 
@@ -183,6 +184,8 @@ function SalesPaymentIndex(props) {
         list();
     }
 
+    let [deleted, setDeleted] = useState(false);
+
     function list() {
         const requestOptions = {
             method: "GET",
@@ -192,7 +195,7 @@ function SalesPaymentIndex(props) {
             },
         };
         let Select =
-            "select=id,date,amount,method,store_name,order_code,order_id,created_by_name,created_at";
+            "select=id,date,amount,method,store_name,order_code,order_id,created_by_name,created_at,deleted";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -244,6 +247,7 @@ function SalesPaymentIndex(props) {
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
                 setSalesPaymentList(data.result);
+                console.log("data.result:", data.result);
 
                 let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
@@ -255,6 +259,22 @@ function SalesPaymentIndex(props) {
                 totalPayments = data.meta.total_payment;
                 setTotalPayments(totalPayments);
 
+                if(props.order && !deleted){
+                    balanceAmount = props.order.net_total - totalPayments;
+                    setBalanceAmount(balanceAmount);
+    
+                    if (balanceAmount == props.order.net_total) {
+                        paymentStatus = "not_paid";
+                        setPaymentStatus(paymentStatus);
+                    } else if (balanceAmount == 0) {
+                        paymentStatus = "paid";
+                        setPaymentStatus(paymentStatus);
+                    } else {
+                        paymentStatus = "paid_partially";
+                        setPaymentStatus(paymentStatus);
+                    }
+                }
+               
 
             })
             .catch((error) => {
@@ -299,6 +319,68 @@ function SalesPaymentIndex(props) {
     }
 
     let [totalPayments, setTotalPayments] = useState(0.00);
+    let [balanceAmount, setBalanceAmount] = useState(0.00);
+    let [paymentStatus, setPaymentStatus] = useState("");
+
+
+    const confirmDelete = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure?');
+        console.log(result);
+        if (result) {
+            deleteSalesPayment(id);
+        }
+
+    };
+
+
+
+    function deleteSalesPayment(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        fetch(
+            "/v1/sales-payment/" + id,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+
+                props.showToastMessage("Sales payment deleted successfully!", "success");
+                if (props.refreshList) {
+                    props.refreshList();
+                }
+                //handleClose();
+                if (props.refreshSalesList) {
+                    props.refreshSalesList();
+                }
+
+
+                list();
+
+
+
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
 
     return (
         <>
@@ -309,8 +391,21 @@ function SalesPaymentIndex(props) {
                 <div className="row">
 
                     <div className="col">
+                        {paymentStatus == "paid" ?
+                            <span className="badge bg-success">
+                                Paid
+                            </span> : ""}
+                        {paymentStatus == "paid_partially" ?
+                            <span className="badge bg-warning">
+                                Paid Partially
+                            </span> : ""}
+                        {paymentStatus == "not_paid" ?
+                            <span className="badge bg-danger">
+                                Not Paid
+                            </span> : ""}
+
                         <h1 className="text-end">
-                            Total: <Badge bg="secondary">
+                            Total paid amount: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPayments}
                                     displayType={"text"}
@@ -320,6 +415,17 @@ function SalesPaymentIndex(props) {
                                 />
                             </Badge>
                         </h1>
+                        {props.order?<h4 className="text-end">
+                            Balance amount: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={balanceAmount}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4>:""}
                     </div>
                 </div>
                 <div className="row">
@@ -581,7 +687,8 @@ function SalesPaymentIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>Actions</th>
+                                                <th >Actions</th>
+                                                <th >Deleted</th>
                                             </tr>
                                         </thead>
 
@@ -770,6 +877,23 @@ function SalesPaymentIndex(props) {
                                                     ) : null}
                                                 </th>
                                                 <th></th>
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("deleted", e.target.value);
+                                                            if (e.target.value == "1") {
+                                                                deleted=true;
+                                                                setDeleted(deleted);
+                                                            } else {
+                                                                deleted=false;
+                                                                setDeleted(deleted);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="0" SELECTED>NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="text-center">
@@ -789,17 +913,23 @@ function SalesPaymentIndex(props) {
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
-                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                        <td style={{ width: "110px" }}>
+                                                            <Button className="btn btn-light btn-sm" disabled={salespayment.deleted} onClick={() => {
                                                                 openUpdateForm(salespayment.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>
 
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                            <Button className="btn btn-primary btn-sm" disabled={salespayment.deleted} onClick={() => {
                                                                 openDetailsView(salespayment.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
+                                                            </Button>
+
+                                                            <Button className="btn btn-danger btn-sm" disabled={salespayment.deleted} onClick={() => {
+                                                                confirmDelete(salespayment.id);
+                                                            }}>
+                                                                <i className="bi bi-trash"></i>
                                                             </Button>
 
                                                             {/*
@@ -819,6 +949,7 @@ function SalesPaymentIndex(props) {
                                                         </ul>
                                                        */}
                                                         </td>
+                                                        <td>{salespayment.deleted ? "YES" : "NO"}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>

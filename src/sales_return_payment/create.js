@@ -28,8 +28,8 @@ const SalesReturnPaymentCreate = forwardRef((props, ref) => {
                 formData.order_code = salesreturn.order_code;
 
                 formData.store_id = salesreturn.store_id;
-
             }
+            
             setFormData(formData);
             selectedParentCategories = [];
             setSelectedParentCategories(selectedParentCategories);
@@ -234,7 +234,7 @@ const SalesReturnPaymentCreate = forwardRef((props, ref) => {
                 if (props.refreshSalesReturnList) {
                     props.refreshSalesReturnList();
                 }
-                props.openDetailsView(data.result.id);
+                //props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);

@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
+import { confirm } from 'react-bootstrap-confirmation';
 
 function PurchasePaymentIndex(props) {
 
@@ -168,7 +169,7 @@ function PurchasePaymentIndex(props) {
             },
         };
         let Select =
-            "select=id,date,amount,method,store_name,purchase_code,purchase_id,created_by_name,created_at";
+            "select=id,date,amount,method,store_name,purchase_code,purchase_id,created_by_name,created_at,deleted";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -226,6 +227,22 @@ function PurchasePaymentIndex(props) {
 
                 totalPayments = data.meta.total_payment;
                 setTotalPayments(totalPayments);
+
+                if (props.purchase && !deleted) {
+                    balanceAmount = props.purchase.net_total - totalPayments;
+                    setBalanceAmount(balanceAmount);
+
+                    if (balanceAmount == props.purchase.net_total) {
+                        paymentStatus = "not_paid";
+                        setPaymentStatus(paymentStatus);
+                    } else if (balanceAmount == 0) {
+                        paymentStatus = "paid";
+                        setPaymentStatus(paymentStatus);
+                    } else {
+                        paymentStatus = "paid_partially";
+                        setPaymentStatus(paymentStatus);
+                    }
+                }
 
 
             })
@@ -337,6 +354,65 @@ function PurchasePaymentIndex(props) {
         CreateFormRef.current.open("", props.purchase);
     }
 
+    const confirmDelete = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure?');
+        console.log(result);
+        if (result) {
+            deletePurchasePayment(id);
+        }
+
+    };
+
+    let [deleted, setDeleted] = useState(false);
+
+
+
+    function deletePurchasePayment(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        fetch(
+            "/v1/purchase-payment/" + id,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+
+                props.showToastMessage("Purchase payment deleted successfully!", "success");
+                if (props.refreshList) {
+                    props.refreshList();
+                }
+                //handleClose();
+                if (props.refreshPurchaseList) {
+                    props.refreshPurchaseList();
+                }
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+    let [balanceAmount, setBalanceAmount] = useState(0.00);
+    let [paymentStatus, setPaymentStatus] = useState("");
+
     return (
         <>
             <PurchasePaymentCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} refreshPurchaseList={props.refreshPurchaseList ? props.refreshPurchaseList : ''} />
@@ -347,8 +423,21 @@ function PurchasePaymentIndex(props) {
                 <div className="row">
 
                     <div className="col">
+                        {paymentStatus == "paid" ?
+                            <span className="badge bg-success">
+                                Paid
+                            </span> : ""}
+                        {paymentStatus == "paid_partially" ?
+                            <span className="badge bg-warning">
+                                Paid Partially
+                            </span> : ""}
+                        {paymentStatus == "not_paid" ?
+                            <span className="badge bg-danger">
+                                Not Paid
+                            </span> : ""}
+
                         <h1 className="text-end">
-                            Total: <Badge bg="secondary">
+                            Total paid amount: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalPayments}
                                     displayType={"text"}
@@ -358,26 +447,37 @@ function PurchasePaymentIndex(props) {
                                 />
                             </Badge>
                         </h1>
+                        {props.purchase ? <h4 className="text-end">
+                            Balance amount: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={balanceAmount}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h4> : ""}
                     </div>
                 </div>
                 <div className="row">
-                   
 
-                        <div className="col">
-                            <h1 className="h3">Purchase Payments</h1>
-                        </div>
 
-                        <div className="col text-end">
-                            {props.purchase?<Button
-                                hide={true.toString()}
-                                variant="primary"
-                                className="btn btn-primary mb-3"
-                                onClick={openCreateForm}
-                            >
-                                <i className="bi bi-plus-lg"></i> Create
-                            </Button>:""}
-                        </div>
-                    
+                    <div className="col">
+                        <h1 className="h3">Purchase Payments</h1>
+                    </div>
+
+                    <div className="col text-end">
+                        {props.purchase ? <Button
+                            hide={true.toString()}
+                            variant="primary"
+                            className="btn btn-primary mb-3"
+                            onClick={openCreateForm}
+                        >
+                            <i className="bi bi-plus-lg"></i> Create
+                        </Button> : ""}
+                    </div>
+
                 </div>
 
 
@@ -453,6 +553,7 @@ function PurchasePaymentIndex(props) {
                                                     <option value="40">40</option>
                                                     <option value="50">50</option>
                                                     <option value="100">100</option>
+                                                    <option value="500">500</option>
                                                 </select>
                                             </>
                                         )}
@@ -624,6 +725,7 @@ function PurchasePaymentIndex(props) {
                                                     </b>
                                                 </th>
                                                 <th>Actions</th>
+                                                <th >Deleted</th>
                                             </tr>
                                         </thead>
 
@@ -812,6 +914,23 @@ function PurchasePaymentIndex(props) {
                                                     ) : null}
                                                 </th>
                                                 <th></th>
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("deleted", e.target.value)
+                                                            if (e.target.value == "1") {
+                                                                deleted=true;
+                                                                setDeleted(deleted);
+                                                            } else {
+                                                                deleted=false;
+                                                                setDeleted(deleted);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="0" SELECTED>NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
                                             </tr>
                                         </thead>
                                         <tbody className="text-center">
@@ -831,17 +950,23 @@ function PurchasePaymentIndex(props) {
                                                                 "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
-                                                        <td>
-                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                        <td style={{ width: "110px" }}>
+                                                            <Button className="btn btn-light btn-sm" disabled={purchasepayment.deleted} onClick={() => {
                                                                 openUpdateForm(purchasepayment.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>
 
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                            <Button className="btn btn-primary btn-sm" disabled={purchasepayment.deleted} onClick={() => {
                                                                 openDetailsView(purchasepayment.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
+                                                            </Button>
+
+                                                            <Button className="btn btn-danger btn-sm" disabled={purchasepayment.deleted} onClick={() => {
+                                                                confirmDelete(purchasepayment.id);
+                                                            }}>
+                                                                <i className="bi bi-trash"></i>
                                                             </Button>
 
                                                             {/*
@@ -861,6 +986,7 @@ function PurchasePaymentIndex(props) {
                                                         </ul>
                                                        */}
                                                         </td>
+                                                        <td>{purchasepayment.deleted ? "YES" : "NO"}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>
