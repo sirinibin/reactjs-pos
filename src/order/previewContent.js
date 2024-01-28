@@ -41,7 +41,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     borderRadius: "2mm",
                     padding: "20px",
                     marginTop: "10px",
-                    height: "1110px",
+                    height: "110px",
                     width: "770px"
                 }}
 
@@ -83,7 +83,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     <div className="col">
                         <u
                         ><h1 className="text-center" style={{ fontSize: "3mm" }}>
-                                TAX INVOICE / فاتورة ضريبية
+                                TAX INVOICE123 / فاتورة ضريبية
                             </h1>
                         </u>
                     </div>

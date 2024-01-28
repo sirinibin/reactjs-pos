@@ -16,6 +16,14 @@ function SalesCashDiscountIndex(props) {
 
     const selectedDate = new Date();
 
+    let [sortOrder, setSortOrder] = useState("-");
+
+    //Date filter
+    const [showDateRange, setShowDateRange] = useState(false);
+    const [dateValue, setDateValue] = useState("");
+    const [fromDateValue, setFromDateValue] = useState("");
+    const [toDateValue, setToDateValue] = useState("");
+
     //list
     const [salescashdiscountList, setSalesCashDiscountList] = useState([]);
 
@@ -116,7 +124,24 @@ function SalesCashDiscountIndex(props) {
         d = new Date(d.toUTCString());
 
         value = format(d, "MMM dd yyyy");
-        if (field === "created_at") {
+        if (field === "date_str") {
+            setDateValue(value);
+            setFromDateValue("");
+            setToDateValue("");
+            searchParams["from_date"] = "";
+            searchParams["to_date"] = "";
+            searchParams[field] = value;
+        } else if (field === "from_date") {
+            setFromDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "to_date") {
+            setToDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "created_at") {
             setCreatedAtValue(value);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
@@ -168,7 +193,7 @@ function SalesCashDiscountIndex(props) {
             },
         };
         let Select =
-            "select=id,amount,store_name,order_code,order_id,created_by_name,created_at";
+            "select=id,date,method,amount,store_name,order_code,order_id,created_by_name,created_at";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -448,6 +473,25 @@ function SalesCashDiscountIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("date");
+                                                        }}
+                                                    >
+                                                        Date
+                                                        {sortField === "date" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-down"></i>
+                                                        ) : null}
+                                                        {sortField === "date" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("amount");
                                                         }}
                                                     >
@@ -456,6 +500,26 @@ function SalesCashDiscountIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "amount" && sortSalesCashDiscount === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("method");
+                                                        }}
+                                                    >
+                                                        Payment Method
+                                                        {sortField === "method" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "method" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -516,11 +580,86 @@ function SalesCashDiscountIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
+                                                    <DatePicker
+                                                        id="date_str"
+                                                        value={dateValue}
+                                                        selected={selectedDate}
+                                                        className="form-control"
+                                                        dateFormat="MMM dd yyyy"
+                                                        onChange={(date) => {
+                                                            if (!date) {
+                                                                setDateValue("");
+                                                                searchByDateField("date_str", "");
+                                                                return;
+                                                            }
+                                                            searchByDateField("date_str", date);
+                                                        }}
+                                                    />
+                                                    <small
+                                                        style={{
+                                                            color: "blue",
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={(e) => setShowDateRange(!showDateRange)}
+                                                    >
+                                                        {showDateRange ? "Less.." : "More.."}
+                                                    </small>
+                                                    <br />
+
+                                                    {showDateRange ? (
+                                                        <span className="text-left">
+                                                            From:{" "}
+                                                            <DatePicker
+                                                                id="from_date"
+                                                                value={fromDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setFromDateValue("");
+                                                                        searchByDateField("from_date", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("from_date", date);
+                                                                }}
+                                                            />
+                                                            To:{" "}
+                                                            <DatePicker
+                                                                id="to_date"
+                                                                value={toDateValue}
+                                                                selected={selectedDate}
+                                                                className="form-control"
+                                                                dateFormat="MMM dd yyyy"
+                                                                onChange={(date) => {
+                                                                    if (!date) {
+                                                                        setToDateValue("");
+                                                                        searchByDateField("to_date", "");
+                                                                        return;
+                                                                    }
+                                                                    searchByDateField("to_date", date);
+                                                                }}
+                                                            />
+                                                        </span>
+                                                    ) : null}
+                                                </th>
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="method"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("method", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -620,7 +759,11 @@ function SalesCashDiscountIndex(props) {
                                                 salescashdiscountList.map((salescashdiscount) => (
                                                     <tr key={salescashdiscount.id}>
                                                         <td>{salescashdiscount.order_code}</td>
+                                                        <td>
+                                                            {salescashdiscount.date ? format(new Date(salescashdiscount.date), "MMM dd yyyy h:mma") : ""}
+                                                        </td>
                                                         <td>{salescashdiscount.amount.toFixed(2) + " SAR"}</td>
+                                                        <td>{salescashdiscount.method}</td>
                                                         <td>{salescashdiscount.created_by_name}</td>
                                                         <td>
                                                             {format(
