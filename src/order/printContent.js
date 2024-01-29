@@ -141,7 +141,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                     </tbody>
                 </table>
 
-                {page.lastPage ? <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: (550 + page.top) + "px", border: "solid 0px", }}>
+                {page.lastPage ? <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: (530 + page.top) + "px", border: "solid 0px", }}>
                     <tbody>
                         <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                             <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
@@ -201,27 +201,27 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </table> : ""}
 
 
-                {page.lastPage && props.model.shipping_handling_fees && props.model.shipping_handling_fees > 0 ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "480px", top: (533 + page.top) + "px" }}>
+                {page.lastPage && props.model.shipping_handling_fees && props.model.shipping_handling_fees > 0 ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "480px", top: (513 + page.top) + "px" }}>
                     {"Shipping / Handling Fees: "}
                 </h4> : ""}
 
-                {page.lastPage && props.model.shipping_handling_fees ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "686px", top: (533 + page.top) + "px" }}>
+                {page.lastPage && props.model.shipping_handling_fees ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "686px", top: (513 + page.top) + "px" }}>
                     {props.model.shipping_handling_fees.toFixed(2) + " SAR"}
                 </h4> : ""}
 
 
-                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: (595 + page.top) + "px" }}>
+                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: (565 + page.top) + "px" }}>
                     {n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}
                 </h4> : ""}
-                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "50px", top: (605 + page.top) + "px" }}>
+                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "50px", top: (580 + page.top) + "px" }}>
                     {n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}
                 </h4> : ""}
 
-                <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: (694 + page.top) + "px" }}>
+                <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: (664 + page.top) + "px" }}>
                     {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
                 </h4>
 
-                {page.lastPage ? <div style={{ position: "absolute", left: "600px", top: (680 + page.top) + "px" }} >
+                {page.lastPage ? <div style={{ position: "absolute", left: "600px", top: (670 + page.top) + "px" }} >
                     {props.model.QRImageData && <img style={{ width: "142px", height: "134px" }} src={props.model.QRImageData} alt="Invoice QR Code" />}
                 </div> : ""}
             </div >

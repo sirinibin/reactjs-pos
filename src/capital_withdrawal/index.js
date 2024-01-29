@@ -236,7 +236,7 @@ function CapitalWithdrawalIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,amount,description,withdrawn_by_user_name,created_by_name,created_at";
+            "select=id,code,date,amount,payment_method,description,withdrawn_by_user_name,created_by_name,created_at";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -348,6 +348,8 @@ function CapitalWithdrawalIndex(props) {
     function openUserDetailsView(id) {
         UserDetailsViewRef.current.open(id);
     }
+
+    let [sortOrder, setSortOrder] = useState("-");
 
     return (
         <>
@@ -602,6 +604,25 @@ function CapitalWithdrawalIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("payment_method");
+                                                        }}
+                                                    >
+                                                        Payment Method
+                                                        {sortField === "payment_method" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "payment_method" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("description");
                                                         }}
                                                     >
@@ -767,6 +788,16 @@ function CapitalWithdrawalIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
+                                                        id="method"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("payment_method", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
                                                         id="description"
                                                         onChange={(e) =>
                                                             searchByFieldValue("description", e.target.value)
@@ -896,6 +927,7 @@ function CapitalWithdrawalIndex(props) {
 
 
                                                         <td>{capitalwithdrawal.amount.toFixed(2)} SAR</td>
+                                                        <td>{capitalwithdrawal.payment_method}</td>
                                                         <td>{capitalwithdrawal.description}</td>
                                                         <td>
                                                             {capitalwithdrawal.withdrawn_by_user_name}

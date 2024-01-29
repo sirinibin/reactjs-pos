@@ -417,6 +417,14 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
+                {Object.keys(errors).length > 0 ?
+                        <div>
+                            <ul>
+
+                                {errors && Object.keys(errors).map((key, index) => {
+                                    return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                })}
+                            </ul></div> : ""}
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         {!cookies.get('store_name') ? <div className="col-md-6">
                             <label className="form-label">Store*</label>
