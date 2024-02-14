@@ -61,7 +61,7 @@ function LedgerIndex(props) {
 
     //Search params
     const [searchParams, setSearchParams] = useState({});
-    let [sortField, setSortField] = useState("created_at");
+    let [sortField, setSortField] = useState("journals.date");
     let [sortLedger, setSortLedger] = useState("-");
 
     function ObjectToSearchQueryParams(object) {
