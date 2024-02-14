@@ -60,6 +60,8 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.status = "delivered";
             formData.payment_method = "";
             formData.payment_status = "";
+            formData.code = "";
+            formData.net_total = 0.00;
             formData.date_str = new Date();
             if (id) {
                 getOrder(id);
@@ -602,7 +604,7 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        if (formData.payment_status === "paid_partially" && formData.partial_payment_amount >= netTotal) {
+        if (!formData.id && formData.payment_status === "paid_partially" && formData.partial_payment_amount >= netTotal) {
             errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
             setErrors({ ...errors });
             return;
@@ -615,6 +617,7 @@ const OrderCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
+
 
         if (!formData.discount && formData.discount !== 0) {
             errors["discount"] = "Invalid discount";
@@ -646,6 +649,7 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.discount_percent = parseFloat(formData.discount_percent);
         formData.vat_percent = parseFloat(formData.vat_percent);
         formData.partial_payment_amount = parseFloat(formData.partial_payment_amount);
+        formData.net_total = parseFloat(netTotal);
 
         if (cookies.get('store_id')) {
             formData.store_id = cookies.get('store_id');
@@ -1906,6 +1910,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     <option value="">Select</option>
                                     <option value="cash">Cash</option>
                                     <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                    <option value="customer_account">Customer Account</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
@@ -1915,7 +1920,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div> : ""}
-
                         {!formData.id ? <div className="col-md-2">
                             <label className="form-label">Payment Status*</label>
 
@@ -1983,7 +1987,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         formData.partial_payment_amount = parseFloat(e.target.value);
                                         errors["partial_payment_amount"] = "";
 
-                                        if (formData.partial_payment_amount >= netTotal) {
+                                        if (!formData.id && formData.partial_payment_amount >= netTotal) {
                                             errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
                                             setErrors({ ...errors });
                                             return;

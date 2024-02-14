@@ -4,6 +4,7 @@ import {
     Switch,
     Route,
 } from "react-router-dom";
+import PostingIndex from './posting/index.js';
 import QuotationIndex from './quotation/index.js';
 import DeliveryNoteIndex from './delivery_note/index.js';
 import OrderIndex from './order/index.js';
@@ -33,6 +34,8 @@ import CustomerWithdrawalIndex from './customer_withdrawal/index.js';
 import CapitalIndex from './capital/index.js';
 import CapitalWithdrawalIndex from './capital_withdrawal/index.js';
 import DividentIndex from './divident/index.js';
+import LedgerIndex from './ledger/index.js';
+import AccountIndex from './account/index.js';
 
 import UserIndex from './user/index.js';
 import SignatureIndex from './signature/index.js';
@@ -460,6 +463,42 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <SignatureIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/ledger">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <LedgerIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/accounts">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <AccountIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/postings">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <PostingIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>

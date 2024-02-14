@@ -195,7 +195,7 @@ function SalesPaymentIndex(props) {
             },
         };
         let Select =
-            "select=id,date,amount,method,store_name,order_code,order_id,created_by_name,created_at,deleted";
+            "select=id,date,amount,method,pay_from_account,store_name,order_code,order_id,created_by_name,created_at,deleted";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -648,6 +648,25 @@ function SalesPaymentIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("pay_from_account");
+                                                        }}
+                                                    >
+                                                        Paid from account
+                                                        {sortField === "pay_from_account" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "pay_from_account" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
 
                                                 <th>
                                                     <b
@@ -790,6 +809,16 @@ function SalesPaymentIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
+                                                    <input
+                                                        type="text"
+                                                        id="pay_from_account"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("pay_from_account", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
@@ -906,6 +935,7 @@ function SalesPaymentIndex(props) {
                                                         </td>
                                                         <td>{salespayment.amount.toFixed(2) + " SAR"}</td>
                                                         <td>{salespayment.method}</td>
+                                                        <td>{salespayment.pay_from_account}</td>
                                                         <td>{salespayment.created_by_name}</td>
                                                         <td>
                                                             {format(

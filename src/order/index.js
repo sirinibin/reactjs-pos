@@ -588,6 +588,10 @@ const OrderIndex = forwardRef((props, ref) => {
             id: "bank_account",
             name: "Bank Account / Debit / Credit card",
         },
+        {
+            id: "customer_account",
+            name: "Customer account",
+        },
     ];
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
 

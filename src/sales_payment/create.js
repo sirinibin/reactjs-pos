@@ -421,7 +421,7 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                             if (!e.target.value) {
                                                 errors["method"] = "Invalid Payment Method";
                                                 setErrors({ ...errors });
-                                                formData.method="";
+                                                formData.method = "";
                                                 setFormData({ ...formData });
                                                 return;
                                             }
@@ -438,6 +438,7 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                         <option value="">Select</option>
                                         <option value="cash">Cash</option>
                                         <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                        <option value="customer_account">Customer Account</option>
                                     </select>
 
                                 </div>
@@ -453,7 +454,6 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-
                         </div>
 
                         <div className="row  g-5">

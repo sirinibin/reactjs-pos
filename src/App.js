@@ -128,6 +128,18 @@ function App() {
           <Dashboard />
         </Route>
 
+        <Route path="/dashboard/ledger">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/accounts">
+          <Dashboard />
+        </Route>
+
+        <Route path="/dashboard/postings">
+          <Dashboard />
+        </Route>
+
         <Route path="/">
           <Login />
         </Route>

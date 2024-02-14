@@ -37,6 +37,8 @@ function Sidebar(props) {
             'capitals',
             'capital withdrawals',
             'dividents',
+            'ledger',
+            'accounts',
             'users',
             'signatures'
         ],
@@ -276,14 +278,30 @@ function Sidebar(props) {
                 {cookies.get('admin') === "true" ? <li onClick={() => {
                     toggleActive(appState.tabs[25]);
                 }} className={toggleActiveStyles(appState.tabs[25])}>
+                    <Link to="/dashboard/ledger" className="sidebar-link">
+                        <i className="bi bi-file-earmark-text" />
+                        <span className="align-middle">Ledger</span>
+                    </Link>
+                </li> : ""}
+                {cookies.get('admin') === "true" ? <li onClick={() => {
+                    toggleActive(appState.tabs[26]);
+                }} className={toggleActiveStyles(appState.tabs[26])}>
+                    <Link to="/dashboard/accounts" className="sidebar-link">
+                        <i className="bi bi-file-person" />
+                        <span className="align-middle">Accounts & Trial balances</span>
+                    </Link>
+                </li> : ""}
+                {cookies.get('admin') === "true" ? <li onClick={() => {
+                    toggleActive(appState.tabs[27]);
+                }} className={toggleActiveStyles(appState.tabs[27])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>
                     </Link>
                 </li> : ""}
                 <li onClick={() => {
-                    toggleActive(appState.tabs[26]);
-                }} className={toggleActiveStyles(appState.tabs[26])}>
+                    toggleActive(appState.tabs[28]);
+                }} className={toggleActiveStyles(appState.tabs[28])}>
                     <Link to="/dashboard/signatures" className="sidebar-link">
                         <i className="bi bi-fingerprint" />
                         <span className="align-middle">Signatures</span>

@@ -95,6 +95,7 @@ const SalesPaymentView = forwardRef((props, ref) => {
                             <th>Order ID:</th><td> {model.order_code}</td>
                             <th>Amount:</th><td> {model.amount}</td>
                             <th>Payment Method:</th><td> {model.method}</td>
+                            <th>Payment from Account:</th><td> {model.pay_from_account}</td>
                             <th>Store Name:</th><td> {model.store_name}</td>
                         </tr>
                         <tr>
