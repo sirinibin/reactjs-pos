@@ -907,7 +907,7 @@ function PostingIndex(props) {
                                                                         <td colSpan={2} style={{ border: "solid 0px" }}>
                                                                             <td style={{ border: "solid 0px", borderRight: "solid 0px", paddingLeft: "5px" }}>
                                                                                 <td style={{ textAlign: "left", border: "solid 0px", minWidth: "162px" }}>
-                                                                                    {post.debit_or_credit == "debit" ? "To " + post.account_name + " A/c  Dr." : ""}
+                                                                                    {post.debit_or_credit == "debit" ? "To " + post.account_name + " A/c #"+post.account_number+" Dr." : ""}
                                                                                 </td>
                                                                                 <td style={{ textAlign: "right", border: "solid 0px", minWidth: "140px" }}>
                                                                                     {post.debit ? post.debit : ""}
@@ -915,7 +915,7 @@ function PostingIndex(props) {
                                                                             </td>
                                                                             <td style={{ border: "solid 0px", paddingLeft: "5px", borderLeft: "solid 1px" }}>
                                                                                 <td style={{ textAlign: "left", border: "solid 0px", minWidth: "193px" }}>
-                                                                                    {post.debit_or_credit == "credit" ? "By " + post.account_name + " A/c  Cr." : ""}
+                                                                                    {post.debit_or_credit == "credit" ? "By " + post.account_name + " A/c #"+post.account_number+"  Cr." : ""}
                                                                                 </td>
                                                                                 <td style={{ textAlign: "right", border: "solid 0px", minWidth: "105px" }}>
                                                                                     {post.credit ? post.credit : ""}

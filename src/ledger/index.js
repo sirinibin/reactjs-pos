@@ -887,11 +887,11 @@ function LedgerIndex(props) {
                                                                             <Button variant="link" onClick={() => {
                                                                                 openBalanceSheetDialogue(journal.account_id);
                                                                             }}>
-                                                                                {journal.debit_or_credit == "credit" ? "     To " + journal.account_name + " A/c  Cr." : "" + journal.account_name + " A/c Dr."}
+                                                                                {journal.debit_or_credit == "credit" ? "     To " + journal.account_name + " A/c #"+journal.account_number+"  Cr." : "" + journal.account_name + " A/c #"+journal.account_number+" Dr."}
                                                                             </Button>
                                                                         </td>
-                                                                        <td style={{ border: "solid 1px", minWidth: "135px", maxWidth: "135px" }}>{journal.debit_or_credit == "debit" ? journal.debit : ""}</td>
-                                                                        <td style={{ border: "solid 1px", minWidth: "130px", maxWidth: "130px" }}>{journal.debit_or_credit == "credit" ? journal.credit : ""}</td>
+                                                                        <td style={{ border: "solid 1px", minWidth: "165px",  }}>{journal.debit_or_credit == "debit" ? journal.debit : ""}</td>
+                                                                        <td style={{ border: "solid 1px", minWidth: "160px",  }}>{journal.debit_or_credit == "credit" ? journal.credit : ""}</td>
                                                                     </tr>))}
 
 
