@@ -137,6 +137,8 @@ function PostingIndex(props) {
     }
 
     const [selectedAccounts, setSelectedAccounts] = useState([]);
+    const [selectedDebitAccounts, setSelectedDebitAccounts] = useState([]);
+    const [selectedCreditAccounts, setSelectedCreditAccounts] = useState([]);
 
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
@@ -145,6 +147,10 @@ function PostingIndex(props) {
             setSelectedExpenseCategories(values);
         } else if (field === "account_id") {
             setSelectedAccounts(values);
+        }else if (field === "debit_account_id") {
+            setSelectedDebitAccounts(values);
+        }else if (field === "credit_account_id") {
+            setSelectedCreditAccounts(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -392,7 +398,7 @@ function PostingIndex(props) {
                                 <div className="row">
                                     {totalItems === 0 && (
                                         <div className="col">
-                                            <p className="text-start">No Expense to display</p>
+                                            <p className="text-start">No postings to display</p>
                                         </div>
                                     )}
                                 </div>
@@ -551,15 +557,7 @@ function PostingIndex(props) {
                                                             <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
-
-
-
-
-
-
-
-
+                                                </th> 
 
                                                 <th>
                                                     <b
@@ -692,7 +690,7 @@ function PostingIndex(props) {
                                                 </th>
                                                     */}
 
-                                                <th style={{ width: "190px" }}>
+                                                <th style={{ width: "80px" }}>
                                                     <DatePicker
                                                         id="date_str"
                                                         value={dateValue}
@@ -764,27 +762,69 @@ function PostingIndex(props) {
                                                     ) : null}
                                                 </th>
 
-                                                <th style={{ minWidth: "130px" }}>
+                                              
+                                                <th style={{ width: "130px" }}>
+                                                    <Typeahead
+                                                        id="account_id"
+                                                        labelKey="search_label"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "debit_account_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={accountOptions}
+                                                        placeholder="Debit A/c name / acc no. / phone"
+                                                        selected={selectedDebitAccounts}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestAccounts(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                    <br/>
+     
                                                     <input
                                                         type="text"
                                                         id="debit"
+                                                        placeholder="Debit amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("debit", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th style={{ minWidth: "130px" }}>
+                                                <th style={{ width: "130px" }}>
+                                                <Typeahead
+                                                        id="account_id"
+                                                        labelKey="search_label"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "credit_account_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={accountOptions}
+                                                        placeholder="Credit A/c name / acc no. / phone"
+                                                        selected={selectedCreditAccounts}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestAccounts(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                    <br/>
                                                     <input
                                                         type="text"
                                                         id="credit"
+                                                        placeholder="Credit amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("credit", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th >
+                                                <th  style={{ width: "80px" }}>
                                                     <select className="form-control" onChange={(e) =>
                                                         searchByFieldValue("reference_model", e.target.value)
                                                     }>
@@ -795,7 +835,7 @@ function PostingIndex(props) {
                                                     </select>
 
                                                 </th>
-                                                <th style={{ width: "110px" }}>
+                                                <th style={{ width: "80px" }}>
                                                     <input
                                                         type="text"
                                                         id="reference_code"
