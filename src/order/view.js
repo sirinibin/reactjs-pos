@@ -100,7 +100,7 @@ const OrderView = forwardRef((props, ref) => {
         let Select =
             "select=id,amount,method,store_name,order_code,order_id,created_by_name,created_at";
         if (cookies.get("store_id")) {
-           // searchParams.store_id = cookies.get("store_id");
+            // searchParams.store_id = cookies.get("store_id");
         }
         searchParams["order_id"] = order_id;
         setSearchParams(searchParams);
@@ -112,7 +112,7 @@ const OrderView = forwardRef((props, ref) => {
         fetch(
             "/v1/sales-payment?" +
             Select +
-            queryParams+"&limit=100",
+            queryParams + "&limit=100",
             requestOptions
         )
             .then(async (response) => {
@@ -232,6 +232,246 @@ const OrderView = forwardRef((props, ref) => {
                 </div>
             </Modal.Header>
             <Modal.Body>
+
+
+                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                    <table className="table table-striped table-sm table-bordered">
+                        <thead>
+                            <tr className="text-center">
+                                <th>SI No.</th>
+                                <th>Part No.</th>
+                                <th>Name</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Price</th>
+                                <th>Qty Returned</th>
+                                {cookies.get('admin') === "true" ? <th>Purchase Unit Price</th> : ""}
+                                {cookies.get('admin') === "true" ? <th>Purchase Price</th> : ""}
+                                {cookies.get('admin') === "true" ? <th>Profit</th> : ""}
+                                {cookies.get('admin') === "true" ? <th>Loss</th> : ""}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {model.products && model.products.map((product, index) => (
+                                <tr key={product.item_code} className="text-center">
+                                    <td>{index + 1}</td>
+                                    <td>{product.part_number}</td>
+                                    <td>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
+                                    <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
+                                    <td className="text-end">
+                                        <NumberFormat
+                                            value={product.unit_price?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td className="text-end">
+                                        <NumberFormat
+                                            value={(product.unit_price * product.quantity).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>{product.quantity_returned}  {product.unit ? product.unit : ""} </td>
+                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                        <NumberFormat
+                                            value={product.purchase_unit_price?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                        <NumberFormat
+                                            value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                        <NumberFormat
+                                            value={product.profit?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                                    {cookies.get('admin') === "true" ? <td>
+                                        <NumberFormat
+                                            value={product.loss?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                                </tr>
+                            ))}
+                            <tr>
+                                <td colSpan="4"></td>
+
+                                <th className="text-end">Total</th>
+                                <td className="text-end">
+                                    {model.total ? <NumberFormat
+                                        value={model.total.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    /> : "0.00 "}
+                                </td>
+                                <td colSpan="3" ></td>
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-center">
+                                        <NumberFormat
+                                            value={model.profit?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                                {cookies.get('admin') === "true" ? <td className="text-center">
+                                    <NumberFormat
+                                        value={model.loss?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td> : ""}
+                            </tr>
+                            <tr>
+                                <th colSpan="5" className="text-end">
+                                    Shipping / Handling Fees
+                                </th>
+                                <td className="text-end">
+                                    {model.shipping_handling_fees ? <NumberFormat
+                                        value={model.shipping_handling_fees.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    /> : "0.00 "}
+                                </td>
+                                <td colSpan="3"></td>
+                                <td colSpan="1" className="text-end">0.00</td>
+                                <td colSpan="1" className="text-end">0.00</td>
+                            </tr>
+                            <tr>
+                                <th colSpan="5" className="text-end">
+                                    Discount
+                                </th>
+                                <td className="text-end">
+                                    {model.discount ? <NumberFormat
+                                        value={model.discount?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    /> : "0.00 "    }
+                                </td>
+                                <td colSpan="3"></td>
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-end">
+                                        <NumberFormat
+                                            value={(model.discount - model.return_discount).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td> : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-end">
+                                        0.00
+                                    </td> : ""}
+                            </tr>
+                            <tr>
+                                <th colSpan="4" className="text-end">
+
+                                </th>
+                                <th className="text-end">VAT {model.vat_percent + "%"}</th>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.vat_price?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td colSpan="3"></td>
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-end">0.00 </td>
+                                    : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <td className="text-end">0.00</td>
+                                    : ""}
+                            </tr>
+                            <tr>
+                                <td colSpan="4"></td>
+                                <th className="text-end">Net Total</th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.net_total?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={""}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th colSpan={3} className="text-end">Cash discount</th>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.cash_discount?.toFixed(2)}
+                                        displayType={"text"}
+                                        suffix={""}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-end">0.00</td>
+                            </tr>
+                            <tr>
+                                <td colSpan="6"></td>
+                                {cookies.get('admin') === "true" ?
+                                    <th colSpan="3" className="text-end">Net Profit / Loss</th>
+                                    : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <th className="text-end">
+                                        <NumberFormat
+                                            value={model.net_profit?.toFixed(2)}
+                                            displayType={"text"}
+                                            suffix={""}
+                                            thousandSeparator={true}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </th>
+                                    : ""}
+                                {cookies.get('admin') === "true" ?
+                                    <th className="text-end">
+                                        <NumberFormat
+                                            value={model.loss?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={""}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </th> : ""}
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <Table striped bordered hover responsive="xl">
                     <tbody>
                         <tr>
@@ -242,7 +482,7 @@ const OrderView = forwardRef((props, ref) => {
                         <tr>
                             <th>Date:</th><td> {model.date_str}</td>
                             <th>VAT %:</th><td> {model.vat_percent}%</td>
-                            <th>Discount :</th><td> {model.discount} SAR</td>
+                            <th>Discount :</th><td> {model.discount} </td>
                             <th>Discount %:</th><td> {model.discount_percent}</td>
                         </tr>
                         <tr>
@@ -258,8 +498,8 @@ const OrderView = forwardRef((props, ref) => {
                         <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
-                            {cookies.get('admin') === "true" ? <th>Profit:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.profit} SAR</td> : ""}
-                            {cookies.get('admin') === "true" ? <th>Loss:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.loss} SAR</td> : ""}
+                            {cookies.get('admin') === "true" ? <th>Profit:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.profit} </td> : ""}
+                            {cookies.get('admin') === "true" ? <th>Loss:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.loss} </td> : ""}
                         </tr>
                         <tr>
                             {salesCashDiscountList.length > 0 ?
@@ -286,7 +526,7 @@ const OrderView = forwardRef((props, ref) => {
                                                 {salesCashDiscountList &&
                                                     salesCashDiscountList.map((salescashdiscount) => (
                                                         <tr key={salescashdiscount.id}>
-                                                            <td>{salescashdiscount.amount.toFixed(2) + " SAR"}</td>
+                                                            <td>{salescashdiscount.amount.toFixed(2) + " "}</td>
                                                             <td>{salescashdiscount.created_by_name}</td>
                                                             <td>
                                                                 {format(
@@ -345,234 +585,6 @@ const OrderView = forwardRef((props, ref) => {
                         </tr>
                     </tbody>
                 </Table>
-
-                <div className="table-responsive" style={{ overflowX: "auto" }}>
-                    <table className="table table-striped table-sm table-bordered">
-                        <thead>
-                            <tr className="text-center">
-                                <th>SI No.</th>
-                                <th>Part No.</th>
-                                <th>Name</th>
-                                <th>Qty</th>
-                                <th>Unit Price</th>
-                                <th>Price</th>
-                                <th>Qty Returned</th>
-                                {cookies.get('admin') === "true" ? <th>Purchase Unit Price</th> : ""}
-                                {cookies.get('admin') === "true" ? <th>Purchase Price</th> : ""}
-                                {cookies.get('admin') === "true" ? <th>Profit</th> : ""}
-                                {cookies.get('admin') === "true" ? <th>Loss</th> : ""}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {model.products && model.products.map((product, index) => (
-                                <tr key={product.item_code} className="text-center">
-                                    <td>{index + 1}</td>
-                                    <td>{product.part_number}</td>
-                                    <td>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
-                                    <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
-                                    <td>
-                                        <NumberFormat
-                                            value={product.unit_price}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={(product.unit_price * product.quantity).toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td>{product.quantity_returned}  {product.unit ? product.unit : ""} </td>
-                                    {cookies.get('admin') === "true" ? <td>
-                                        <NumberFormat
-                                            value={product.purchase_unit_price}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td>
-                                        <NumberFormat
-                                            value={(product.purchase_unit_price * product.quantity).toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td>
-                                        <NumberFormat
-                                            value={product.profit}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td>
-                                        <NumberFormat
-                                            value={product.loss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                </tr>
-                            ))}
-                            <tr>
-                                <td colSpan="4"></td>
-
-                                <th className="text-end">Total</th>
-                                <td className="text-end">
-                                    {model.total ? <NumberFormat
-                                        value={model.total.toFixed(2)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    /> : "0.00 SAR"}
-                                </td>
-                                <td colSpan="3" ></td>
-                                {cookies.get('admin') === "true" ?
-                                    <td className="text-center">
-                                        <NumberFormat
-                                            value={model.profit?.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {cookies.get('admin') === "true" ? <td className="text-center">
-                                    <NumberFormat
-                                        value={model.loss?.toFixed(2)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td> : ""}
-                            </tr>
-                            <tr>
-                                <th colSpan="5" className="text-end">
-                                    Shipping / Handling Fees
-                                </th>
-                                <td className="text-end">
-                                    {model.shipping_handling_fees ? <NumberFormat
-                                        value={model.shipping_handling_fees.toFixed(2)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    /> : "0.00 SAR"}
-                                </td>
-                                <td colSpan="3"></td>
-                            </tr>
-                            <tr>
-                                <th colSpan="5" className="text-end">
-                                    Discount
-                                </th>
-                                <td className="text-end">
-                                    {model.discount ? <NumberFormat
-                                        value={model.discount.toFixed(2)}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    /> : "0.00 SAR"}
-                                </td>
-                                <td colSpan="3"></td>
-                                {cookies.get('admin') === "true" ?
-                                    <td className="text-center">
-                                        <NumberFormat
-                                            value={(model.discount - model.return_discount).toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {cookies.get('admin') === "true" ?
-                                    <td className="text-center">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                            </tr>
-                            <tr>
-                                <th colSpan="4" className="text-end">
-
-                                </th>
-                                <th className="text-end">VAT {model.vat_percent + "%"}</th>
-                                <td className="text-end">
-                                    <NumberFormat
-                                        value={model.vat_price}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                                <td colSpan="3"></td>
-                                {cookies.get('admin') === "true" ?
-                                    <td className="text-center">0.00 SAR</td>
-                                    : ""}
-                                {cookies.get('admin') === "true" ?
-                                    <td className="text-center">0.00 SAR</td>
-                                    : ""}
-                            </tr>
-                            <tr>
-                                <td colSpan="4"></td>
-                                <th className="text-end">Net Total</th>
-                                <th className="text-end">
-                                    <NumberFormat
-                                        value={model.net_total}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </th>
-                                {cookies.get('admin') === "true" ?
-                                    <th colSpan="3" className="text-end">Net Profit / Loss</th>
-                                    : ""}
-                                {cookies.get('admin') === "true" ?
-                                    <th className="text-center">
-                                        <NumberFormat
-                                            value={model.net_profit}
-                                            displayType={"text"}
-                                            suffix={" SAR"}
-                                            thousandSeparator={true}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th>
-                                    : ""}
-                                {cookies.get('admin') === "true" ?
-                                    <th className="text-center">
-                                        <NumberFormat
-                                            value={model.loss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th> : ""}
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
 
                 {/*
                     <form className="row g-3 needs-validation" >

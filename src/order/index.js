@@ -613,6 +613,7 @@ const OrderIndex = forwardRef((props, ref) => {
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
+    let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
     let [totalPaidSales, setTotalPaidSales] = useState(0.00);
     let [totalUnPaidSales, setTotalUnPaidSales] = useState(0.00);
     let [totalCashSales, setTotalCashSales] = useState(0.00);
@@ -800,7 +801,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_profit,store_id,total";
+            "select=id,code,date,net_total,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_profit,store_id,total";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -872,6 +873,9 @@ const OrderIndex = forwardRef((props, ref) => {
 
                 totalDiscount = data.meta.discount;
                 setTotalDiscount(totalDiscount);
+
+                totalCashDiscount = data.meta.cash_discount;
+                setTotalCashDiscount(totalCashDiscount);
 
                 totalPaidSales = data.meta.paid_sales;
                 setTotalPaidSales(totalPaidSales);
@@ -1056,7 +1060,18 @@ const OrderIndex = forwardRef((props, ref) => {
                             </Badge>
                         </h1>
                         <h1 className="text-end">
-                            Discounts: <Badge bg="secondary">
+                            Cash Discounts: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalCashDiscount.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Sales Discounts: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalDiscount.toFixed(2)}
                                     displayType={"text"}
@@ -1066,6 +1081,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                 />
                             </Badge>
                         </h1>
+                       
                         <h1 className="text-end">
                             Shipping/Handling fees: <Badge bg="secondary">
                                 <NumberFormat
@@ -1329,6 +1345,25 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("cash_discount");
+                                                        }}
+                                                    >
+                                                        Cash Discount
+                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "cash_discount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("total_payment_received");
                                                         }}
                                                     >
@@ -1427,7 +1462,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             sort("discount");
                                                         }}
                                                     >
-                                                        Discount
+                                                        Sales Discount
                                                         {sortField === "discount" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
@@ -1446,7 +1481,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             sort("discount_percent");
                                                         }}
                                                     >
-                                                        Discount %
+                                                        Sales Discount %
                                                         {sortField === "discount_percent" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
@@ -1662,6 +1697,16 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         id="net_total"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_total", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="cash_discount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("cash_discount", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1912,6 +1957,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             {format(new Date(order.date), "MMM dd yyyy h:mma")}
                                                         </td>
                                                         <td>{order.net_total?.toFixed(2)}</td>
+                                                        <td>{order.cash_discount?.toFixed(2)}</td>
                                                         <td>
                                                             <Button variant="link" onClick={() => {
                                                                 openOrderPaymentsDialogue(order);
