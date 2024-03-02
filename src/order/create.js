@@ -913,7 +913,8 @@ const OrderCreate = forwardRef((props, ref) => {
                 parseFloat(selectedProducts[i].unit_price) *
                 parseFloat(selectedProducts[i].quantity);
         }
-        totalPrice = totalPrice.toFixed(2);
+       // totalPrice = totalPrice.toFixed(2);
+       // totalPrice = Math.round(totalPrice * 100) / 100;
         setTotalPrice(totalPrice);
     }
 
@@ -922,7 +923,7 @@ const OrderCreate = forwardRef((props, ref) => {
     function findVatPrice() {
         vatPrice = 0.00;
         if (totalPrice > 0) {
-            vatPrice = (parseFloat((parseFloat(formData.vat_percent) / 100)) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount))).toFixed(2);;
+            vatPrice = (parseFloat((parseFloat(formData.vat_percent) / 100)) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount)));
             console.log("vatPrice:", vatPrice);
         }
         setVatPrice(vatPrice);
@@ -930,11 +931,21 @@ const OrderCreate = forwardRef((props, ref) => {
 
     let [netTotal, setNetTotal] = useState(0.00);
 
+    function RoundFloat(val, precision) {
+        var ratio = Math.pow(10, precision);
+        return Math.round(val * ratio) / ratio;
+    }
+
     function findNetTotal() {
         netTotal = 0.00;
         if (totalPrice > 0) {
-            netTotal = (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice)).toFixed(2);
+            netTotal = (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice));
+            netTotal = parseFloat(netTotal);
         }
+        console.log("before rounding netTotal:", netTotal);
+        //netTotal = RoundFloat(netTotal,2);
+        netTotal = Math.round(netTotal * 100) / 100;
+        console.log("after rounding netTotal:", netTotal);
         setNetTotal(netTotal);
 
         if (!formData.id) {
@@ -960,7 +971,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function findDiscountPercent() {
         if (formData.discount >= 0 && totalPrice > 0) {
-            discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100).toFixed(2);
+            discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100);
             setDiscountPercent(discountPercent);
             formData.discount_percent = discountPercent;
             setFormData({ ...formData });
@@ -969,7 +980,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function findDiscount() {
         if (formData.discount_percent >= 0 && totalPrice > 0) {
-            formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100)).toFixed(2);
+            formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100));
             setFormData({ ...formData });
         }
     }
@@ -1628,7 +1639,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th colSpan="8" className="text-end">Total</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
-                                                value={totalPrice}
+                                                value={totalPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" SAR"}
@@ -1828,7 +1839,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </th>
                                         <td className="text-end">
                                             <NumberFormat
-                                                value={vatPrice}
+                                                value={vatPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" SAR"}
