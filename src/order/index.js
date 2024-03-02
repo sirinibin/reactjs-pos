@@ -1959,19 +1959,25 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td>{order.net_total?.toFixed(2)}</td>
                                                         <td>{order.cash_discount?.toFixed(2)}</td>
                                                         <td>
+                                                        {order.total_payment_received?.toFixed(2)}
+                                                            {/*
                                                             <Button variant="link" onClick={() => {
                                                                 openOrderPaymentsDialogue(order);
                                                             }}>
                                                                 {order.total_payment_received?.toFixed(2)}
                                                             </Button>
+                                                        */}
                                                         </td>
                                                         <td>{order.balance_amount?.toFixed(2)}</td>
                                                         <td>
+                                                        {order.payments_count}
+                                                            {/*
                                                             <Button variant="link" onClick={() => {
                                                                 openOrderPaymentsDialogue(order);
                                                             }}>
                                                                 {order.payments_count}
                                                             </Button>
+                                                        */}
                                                         </td>
                                                         <td>
                                                             {order.payment_status == "paid" ?
