@@ -1852,7 +1852,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th colSpan="8" className="text-end">Net Total</th>
                                         <th className="text-end">
                                             <NumberFormat
-                                                value={netTotal}
+                                                value={netTotal?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" SAR"}

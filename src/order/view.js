@@ -304,7 +304,7 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td>
+                                    {cookies.get('admin') === "true" ? <td className="text-end">
                                         <NumberFormat
                                             value={product.loss?.toFixed(2)}
                                             displayType={"text"}
@@ -330,7 +330,7 @@ const OrderView = forwardRef((props, ref) => {
                                 </td>
                                 <td colSpan="3" ></td>
                                 {cookies.get('admin') === "true" ?
-                                    <td className="text-center">
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={model.profit?.toFixed(2)}
                                             displayType={"text"}
@@ -339,7 +339,7 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                {cookies.get('admin') === "true" ? <td className="text-center">
+                                {cookies.get('admin') === "true" ? <td className="text-end">
                                     <NumberFormat
                                         value={model.loss?.toFixed(2)}
                                         displayType={"text"}
