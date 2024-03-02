@@ -772,11 +772,13 @@ function SalesCashDiscountIndex(props) {
                                                             )}
                                                         </td>
                                                         <td>
+                                                            {/*
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(salescashdiscount.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>
+                                                        */}
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                 openDetailsView(salescashdiscount.id);
