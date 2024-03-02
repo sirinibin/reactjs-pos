@@ -2050,7 +2050,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 <i className="bi bi-arrow-left"></i> Return
                                                             </button>
 
-                                                            <button
+                                
+                                                            {/*<button
                                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                                 type="button"
                                                                 data-bs-toggle="dropdown"
@@ -2058,6 +2059,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             ></button>
                                                             <ul className="dropdown-menu">
 
+                                                                
                                                                 <li>
                                                                     <button className="dropdown-item" onClick={() => {
                                                                         openSalesCashDiscountCreateForm(order);
@@ -2077,7 +2079,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     </button>
                                                                 </li>
 
-                                                            </ul>
+                                                                </ul>*/}
                                                         </td>
                                                     </tr>
                                                 ))}
