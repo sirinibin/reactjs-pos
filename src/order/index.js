@@ -801,7 +801,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_profit,store_id,total";
+            "select=id,code,date,net_total,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -862,7 +862,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 netProfit = data.meta.net_profit;
                 setNetProfit(netProfit);
 
-                loss = data.meta.loss;
+                loss = data.meta.net_loss;
                 setLoss(loss);
 
                 vatPrice = data.meta.vat_price;
@@ -940,7 +940,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
     const SalesReturnCreateRef = useRef();
     function openSalesReturnForm(id) {
-        SalesReturnCreateRef.current.open(id);
+        SalesReturnCreateRef.current.open(undefined,id);
     }
 
     const CreateFormRef = useRef();
@@ -1516,14 +1516,14 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("loss");
+                                                            sort("net_loss");
                                                         }}
                                                     >
-                                                        Loss
-                                                        {sortField === "loss" && sortOrder === "-" ? (
+                                                        Net Loss
+                                                        {sortField === "net_loss" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
-                                                        {sortField === "loss" && sortOrder === "" ? (
+                                                        {sortField === "net_loss" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
@@ -1808,9 +1808,9 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
-                                                        id="loss"
+                                                        id="net_loss"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("loss", e.target.value)
+                                                            searchByFieldValue("net_loss", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -2003,8 +2003,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         </td>
                                                         <td>{order.discount.toFixed(2)} SAR</td>
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
-                                                        {cookies.get('admin') === "true" ? <td>{order.net_profit.toFixed(2)} SAR</td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{order.loss ? order.loss.toFixed(2) : 0.00} SAR</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{order.net_profit?.toFixed(2)} SAR</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{order.net_loss ?.toFixed(2)} SAR</td> : ""}
                                                         <td>{order.created_by_name}</td>
                                                         <td>{order.customer_name}</td>
                                                         <td>

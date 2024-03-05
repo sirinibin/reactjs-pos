@@ -460,7 +460,7 @@ const OrderView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <th className="text-end">
                                         <NumberFormat
-                                            value={model.loss?.toFixed(2)}
+                                            value={model.net_loss?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={""}

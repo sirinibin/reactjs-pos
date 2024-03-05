@@ -598,6 +598,10 @@ const OrderCreate = forwardRef((props, ref) => {
         event.preventDefault();
         let haveErrors = false;
 
+        if(!formData.cash_discount){
+            formData.cash_discount = 0.00;
+        }
+
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
             formData.products.push({
@@ -974,6 +978,7 @@ const OrderCreate = forwardRef((props, ref) => {
             discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100);
             setDiscountPercent(discountPercent);
             formData.discount_percent = discountPercent;
+            //formData.discount_percent = Math.round(formData.discount_percent * 100) / 100;
             setFormData({ ...formData });
         }
     }
@@ -981,6 +986,7 @@ const OrderCreate = forwardRef((props, ref) => {
     function findDiscount() {
         if (formData.discount_percent >= 0 && totalPrice > 0) {
             formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100));
+           // formData.discount = parseFloat(formData.discount.toFixed(2));
             setFormData({ ...formData });
         }
     }
@@ -2105,21 +2111,18 @@ const OrderCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
                                 */}
-
                         <div className="col-md-2">
                             <label className="form-label">Cash discount</label>
                             <input type='number' value={formData.cash_discount} className="form-control "
                                 onChange={(e) => {
                                     errors["cash_discount"] = "";
                                     setErrors({ ...errors });
-
                                     if (!e.target.value) {
                                         formData.cash_discount = e.target.value;
                                         setFormData({ ...formData });
                                         validatePaymentAmounts();
                                         return;
                                     }
-
                                     formData.cash_discount = parseFloat(e.target.value);
                                     if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
                                         errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toString();
@@ -2132,7 +2135,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                     console.log(formData);
                                 }}
                             />
-
                             {errors.cash_discount && (
                                 <div style={{ color: "red" }}>
                                     <i className="bi bi-x-lg"> </i>
@@ -2140,6 +2142,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
+
                         <div className="col-md-8">
                             <label className="form-label">Payments Received</label>
 

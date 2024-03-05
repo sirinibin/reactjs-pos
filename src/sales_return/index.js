@@ -6,7 +6,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge,Modal } from "react-bootstrap";
+import { Button, Spinner, Badge, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
@@ -26,6 +26,7 @@ function SalesReturnIndex(props) {
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
+    let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
     let [totalPaidSalesReturn, setTotalPaidSalesReturn] = useState(0.00);
     let [totalUnPaidSalesReturn, setTotalUnPaidSalesReturn] = useState(0.00);
     let [totalCashSalesReturn, setTotalCashSalesReturn] = useState(0.00);
@@ -645,7 +646,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,loss,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,net_loss,cash_discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -704,7 +705,7 @@ function SalesReturnIndex(props) {
                 netProfit = data.meta.net_profit;
                 setNetProfit(netProfit);
 
-                loss = data.meta.loss;
+                loss = data.meta.net_loss;
                 setLoss(loss);
 
                 vatPrice = data.meta.vat_price;
@@ -712,6 +713,9 @@ function SalesReturnIndex(props) {
 
                 totalDiscount = data.meta.discount;
                 setTotalDiscount(totalDiscount);
+
+                totalCashDiscount = data.meta.cash_discount;
+                setTotalCashDiscount(totalCashDiscount);
 
                 totalPaidSalesReturn = data.meta.paid_sales_return;
                 setTotalPaidSalesReturn(totalPaidSalesReturn);
@@ -759,7 +763,7 @@ function SalesReturnIndex(props) {
         DetailsViewRef.current.open(id);
     }
 
-    const CreateFormRef = useRef();
+
 
     //Sales Return Payments
     const SalesReturnPaymentCreateRef = useRef();
@@ -821,6 +825,11 @@ function SalesReturnIndex(props) {
         showSalesReturnPaymentHistory = false;
         setShowSalesReturnPaymentHistory(false);
         //list();
+    }
+
+    const CreateFormRef = useRef();
+    function openUpdateForm(id) {
+        CreateFormRef.current.open(id);
     }
 
     const SalesReturnPaymentListRef = useRef();
@@ -893,7 +902,7 @@ function SalesReturnIndex(props) {
                             </Badge>
                         </h1>
                         {cookies.get('admin') === "true" ? <h1 className="text-end">
-                            Net Profit Return: <Badge bg="secondary">
+                            Net Profit: <Badge bg="secondary">
                                 <NumberFormat
                                     value={netProfit}
                                     displayType={"text"}
@@ -904,7 +913,7 @@ function SalesReturnIndex(props) {
                             </Badge>
                         </h1> : ""}
                         {cookies.get('admin') === "true" ? <h1 className="text-end">
-                            Loss Return: <Badge bg="secondary">
+                            Net Loss: <Badge bg="secondary">
                                 <NumberFormat
                                     value={loss}
                                     displayType={"text"}
@@ -915,9 +924,20 @@ function SalesReturnIndex(props) {
                             </Badge>
                         </h1> : ""}
                         <h1 className="text-end">
-                            Discount Retun: <Badge bg="secondary">
+                            Sales Return Discount: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalDiscount.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Cash Discount: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalCashDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" SAR"}
@@ -1168,7 +1188,25 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("cash_discount");
+                                                        }}
+                                                    >
+                                                        Cash Discount
+                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "cash_discount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1292,14 +1330,14 @@ function SalesReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("loss");
+                                                            sort("net_loss");
                                                         }}
                                                     >
-                                                        Loss
-                                                        {sortField === "loss" && sortSalesReturn === "-" ? (
+                                                        Net Loss
+                                                        {sortField === "net_loss" && sortSalesReturn === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
-                                                        {sortField === "loss" && sortSalesReturn === "" ? (
+                                                        {sortField === "net_loss" && sortSalesReturn === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
@@ -1346,7 +1384,7 @@ function SalesReturnIndex(props) {
                                                 </th>
 
 
-                                              
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1470,6 +1508,16 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
+                                                        id="cash_discount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("cash_discount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
                                                         id="total_payment_paid"
                                                         onChange={(e) =>
                                                             searchByFieldValue("total_payment_paid", e.target.value)
@@ -1544,9 +1592,9 @@ function SalesReturnIndex(props) {
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
-                                                        id="loss"
+                                                        id="net_loss"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("loss", e.target.value)
+                                                            searchByFieldValue("net_loss", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1592,7 +1640,7 @@ function SalesReturnIndex(props) {
                                                     />
                                                 </th>
 
-                                               
+
                                                 <th>
                                                     <DatePicker
                                                         id="created_at"
@@ -1677,20 +1725,27 @@ function SalesReturnIndex(props) {
                                                             )}
                                                         </td>
                                                         <td>{salesreturn.net_total} SAR</td>
+                                                        <td>{salesreturn.cash_discount?.toFixed(2)}</td>
                                                         <td>
+                                                            {salesreturn.total_payment_paid?.toFixed(2)}
+                                                            {/*
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(salesreturn);
                                                             }}>
                                                                 {salesreturn.total_payment_paid?.toFixed(2)}
                                                             </Button>
+                                                        */}
                                                         </td>
                                                         <td>{salesreturn.balance_amount?.toFixed(2)}</td>
                                                         <td>
+                                                            {salesreturn.payments_count}
+                                                            {/*
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(salesreturn);
                                                             }}>
                                                                 {salesreturn.payments_count}
                                                             </Button>
+                                                        */}
                                                         </td>
                                                         <td>
                                                             {salesreturn.payment_status == "paid" ?
@@ -1714,8 +1769,8 @@ function SalesReturnIndex(props) {
                                                                 ))}
 
                                                         </td>
-                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.net_profit.toFixed(2)} SAR</td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.loss ? salesreturn.loss.toFixed(2) : 0.00} SAR</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.net_profit?.toFixed(2)}</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.net_loss?.toFixed(2)}</td> : ""}
                                                         <td>{salesreturn.created_by_name}</td>
                                                         <td>{salesreturn.customer_name}</td>
                                                         <td>
@@ -1730,12 +1785,20 @@ function SalesReturnIndex(props) {
                                                           <SalesReturnView id={salesreturn.id} showViewButton={{true}} show={false} />
                                                         */}
 
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(salesreturn.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+
+
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                 openDetailsView(salesreturn.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
 
+                                                            {/*
                                                             <button
                                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                                 type="button"
@@ -1753,6 +1816,7 @@ function SalesReturnIndex(props) {
                                                                     </button>
                                                                 </li>
                                                             </ul>
+                                                                */}
                                                         </td>
                                                     </tr>
                                                 ))}
