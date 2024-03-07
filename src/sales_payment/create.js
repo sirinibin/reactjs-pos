@@ -419,14 +419,14 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                         onChange={(e) => {
                                             console.log("Inside onchange payment method");
                                             if (!e.target.value) {
-                                                errors["method"] = "Invalid Payment Method";
+                                                errors["payment_method"] = "Invalid Payment Method";
                                                 setErrors({ ...errors });
                                                 formData.method = "";
                                                 setFormData({ ...formData });
                                                 return;
                                             }
 
-                                            errors["method"] = "";
+                                            errors["payment_method"] = "";
                                             setErrors({ ...errors });
 
                                             formData.method = e.target.value;
@@ -442,12 +442,12 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                     </select>
 
                                 </div>
-                                {errors.method && (
+                                {errors.payment_method && (
                                     <div style={{ color: "red" }}>
-                                        {errors.method}
+                                        {errors.payment_method}
                                     </div>
                                 )}
-                                {formData.method && !errors.method && (
+                                {formData.payment_method && !errors.payment_method && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
                                         Looks good!

@@ -252,7 +252,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 formData.is_discount_percent = true;
                 console.log("order.discount_percent:", order.discount_percent);
                 formData.discount_percent = order.discount_percent;
-                formData.cash_discount = order.cash_discount
+                formData.cash_discount = parseFloat(order.cash_discount-order.return_cash_discount);
                 // formData.discount = (order.discount - order.return_discount);
 
                 // formData.discount_percent = order.discount_percent;

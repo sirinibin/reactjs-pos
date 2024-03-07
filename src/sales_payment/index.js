@@ -260,10 +260,10 @@ function SalesPaymentIndex(props) {
                 setTotalPayments(totalPayments);
 
                 if(props.order && !deleted){
-                    balanceAmount = props.order.net_total - totalPayments;
+                    balanceAmount = (props.order.net_total-props.order.cash_discount) - totalPayments;
                     setBalanceAmount(balanceAmount);
     
-                    if (balanceAmount == props.order.net_total) {
+                    if (balanceAmount == (props.order.net_total-props.order.cash_discount)) {
                         paymentStatus = "not_paid";
                         setPaymentStatus(paymentStatus);
                     } else if (balanceAmount == 0) {
