@@ -927,7 +927,10 @@ const OrderCreate = forwardRef((props, ref) => {
     function findVatPrice() {
         vatPrice = 0.00;
         if (totalPrice > 0) {
-            vatPrice = (parseFloat((parseFloat(formData.vat_percent) / 100)) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount)));
+            console.log("formData.vat_percent:",formData.vat_percent);
+            //(35.8 / 100) * 10000;
+             
+             vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
             console.log("vatPrice:", vatPrice);
         }
         setVatPrice(vatPrice);
@@ -943,12 +946,16 @@ const OrderCreate = forwardRef((props, ref) => {
     function findNetTotal() {
         netTotal = 0.00;
         if (totalPrice > 0) {
+            console.log("totalPrice:",totalPrice)
+            console.log("formData.discount:",formData.discount)
+            console.log("vatPrice:",vatPrice);
+
             netTotal = (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice));
             netTotal = parseFloat(netTotal);
         }
         console.log("before rounding netTotal:", netTotal);
-        //netTotal = RoundFloat(netTotal,2);
-        netTotal = Math.round(netTotal * 100) / 100;
+       // netTotal = RoundFloat(netTotal,2);
+       // netTotal = Math.round(netTotal * 100) / 100;
         console.log("after rounding netTotal:", netTotal);
         setNetTotal(netTotal);
 
@@ -1078,6 +1085,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     function validatePaymentAmounts() {
+        console.log("validatePaymentAmount: netTotal:",netTotal)
         let haveErrors = false;
         if (!netTotal) {
             return true;
@@ -1134,6 +1142,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     maxAllowedAmount = 0;
                 }
 
+                /*
                 if (maxAllowedAmount === 0) {
                     errors["payment_amount_" + key] = "Total amount should not exceed " + (netTotal - formData.cash_discount).toFixed(2).toString() + ", Please delete this payment";
                     setErrors({ ...errors });
@@ -1143,6 +1152,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
+                */
             }
         }
 
