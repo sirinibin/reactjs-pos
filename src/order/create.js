@@ -1142,7 +1142,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     maxAllowedAmount = 0;
                 }
 
-                /*
+                
                 if (maxAllowedAmount === 0) {
                     errors["payment_amount_" + key] = "Total amount should not exceed " + (netTotal - formData.cash_discount).toFixed(2).toString() + ", Please delete this payment";
                     setErrors({ ...errors });
@@ -1152,7 +1152,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
-                */
+                
             }
         }
 
