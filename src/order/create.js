@@ -900,12 +900,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function removeProduct(product) {
         const index = selectedProducts.indexOf(product);
-        if(product.quantity_returned>0){
+        if (product.quantity_returned > 0) {
             errors["product_" + index] = "This product cannot be removed as it is returned, Note: Please remove the product from sales return and try again"
             setErrors({ ...errors });
             return;
         }
-       
+
         if (index > -1) {
             selectedProducts.splice(index, 1);
         }
@@ -1082,16 +1082,16 @@ const OrderCreate = forwardRef((props, ref) => {
 
         totalPaymentAmount = totalPayment;
         setTotalPaymentAmount(totalPaymentAmount);
-        console.log("totalPayment:",totalPayment)
+        console.log("totalPayment:", totalPayment)
         balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(formData.cash_discount.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
         setBalanceAmount(balanceAmount);
 
-        if (balanceAmount === (netTotal - formData.cash_discount)) {
+        if (parseFloat(balanceAmount.toFixed(2)) === (parseFloat(netTotal.toFixed(2)) - parseFloat(formData.cash_discount.toFixed(2)))) {
             paymentStatus = "not_paid"
-        } else if (parseFloat(balanceAmount.toFixed(2)) > 0) {
-            paymentStatus = "paid_partially"
         } else if (parseFloat(balanceAmount.toFixed(2)) === 0) {
             paymentStatus = "paid"
+        } else if (parseFloat(balanceAmount.toFixed(2)) > 0) {
+            paymentStatus = "paid_partially"
         }
 
         setPaymentStatus(paymentStatus);
@@ -1559,9 +1559,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 onClick={() => {
                                                     openProductDetailsView(product.product_id);
                                                 }}>
-                                                    {product.name}
+                                                {product.name}
 
-                                                    {errors["product_" + index] && (
+                                                {errors["product_" + index] && (
                                                     <div style={{ color: "red" }}>
                                                         {errors["product_" + index]}
                                                     </div>
@@ -2193,25 +2193,25 @@ const OrderCreate = forwardRef((props, ref) => {
                             <label className="form-label">Payments Received</label>
 
                             <div class="table-responsive" style={{ maxWidth: "900px" }}>
-                                <Button variant="secondary" style={{ alignContent: "right",marginBottom:"10px" }} onClick={addNewPayment}>
+                                <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
                                     Create new payment
                                 </Button>
                                 <table class="table table-striped table-sm table-bordered">
-                                {formData.payments_input&&formData.payments_input.length>0&&
-                                    <thead>
-                                        <th>
-                                            Date
-                                        </th>
-                                        <th>
-                                            Amount
-                                        </th>
-                                        <th>
-                                            Payment method
-                                        </th>
-                                        <th>
-                                            Action
-                                        </th>
-                                    </thead>}
+                                    {formData.payments_input && formData.payments_input.length > 0 &&
+                                        <thead>
+                                            <th>
+                                                Date
+                                            </th>
+                                            <th>
+                                                Amount
+                                            </th>
+                                            <th>
+                                                Payment method
+                                            </th>
+                                            <th>
+                                                Action
+                                            </th>
+                                        </thead>}
                                     <tbody>
                                         {formData.payments_input &&
                                             formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
@@ -2350,19 +2350,19 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {balanceAmount?.toFixed(2)}</b>
                                             </td>
                                             <td colSpan={1}>
-                                                <b>Payment status: </b> 
+                                                <b>Payment status: </b>
                                                 {paymentStatus == "paid" ?
-                                                                <span className="badge bg-success">
-                                                                    Paid
-                                                                </span> : ""}
-                                                            {paymentStatus == "paid_partially" ?
-                                                                <span className="badge bg-warning">
-                                                                    Paid Partially
-                                                                </span> : ""}
-                                                            {paymentStatus == "not_paid" ?
-                                                                <span className="badge bg-danger">
-                                                                    Not Paid
-                                                                </span> : ""}
+                                                    <span className="badge bg-success">
+                                                        Paid
+                                                    </span> : ""}
+                                                {paymentStatus == "paid_partially" ?
+                                                    <span className="badge bg-warning">
+                                                        Paid Partially
+                                                    </span> : ""}
+                                                {paymentStatus == "not_paid" ?
+                                                    <span className="badge bg-danger">
+                                                        Not Paid
+                                                    </span> : ""}
                                             </td>
                                         </tr>
                                     </tbody>
