@@ -1082,7 +1082,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
         totalPaymentAmount = totalPayment;
         setTotalPaymentAmount(totalPaymentAmount);
-        balanceAmount = (netTotal - formData.cash_discount) - parseFloat(totalPayment.toFixed(2));
+        console.log("totalPayment:",totalPayment)
+        balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(formData.cash_discount.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
         setBalanceAmount(balanceAmount);
 
         if (balanceAmount === (netTotal - formData.cash_discount)) {
