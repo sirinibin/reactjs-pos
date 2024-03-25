@@ -20,6 +20,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
         open(id, orderId) {
 
+
+            errors={};
+            setErrors({ ...errors });
+
             formData = {
                 order_id: orderId,
                 vat_percent: 15.0,
@@ -691,7 +695,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 "method": "",
                 "deleted": false,
             }];
-            formData.payments_input[0].amount = parseFloat(netTotal);
+
+            if(netTotal>0){
+                formData.payments_input[0].amount = parseFloat(netTotal);
+                if(formData.cash_discount){
+                    formData.payments_input[0].amount =  formData.payments_input[0].amount - parseFloat(formData.cash_discount);
+                }
+                formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
+            }
+          
         }
         setFormData({ ...formData });
         validatePaymentAmounts();
@@ -818,13 +830,33 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }
 
 
-    function getTotalPayments() {
+    let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
+    let [balanceAmount, setBalanceAmount] = useState(0.00);
+    let [paymentStatus, setPaymentStatus] = useState("");
+
+    function findTotalPayments() {
         let totalPayment = 0.00;
         for (var i = 0; i < formData.payments_input?.length; i++) {
             if (formData.payments_input[i].amount && !formData.payments_input[i].deleted) {
                 totalPayment += formData.payments_input[i].amount;
             }
         }
+
+        totalPaymentAmount = totalPayment;
+        setTotalPaymentAmount(totalPaymentAmount);
+        balanceAmount = (netTotal - formData.cash_discount) - totalPayment;
+        setBalanceAmount(balanceAmount);
+
+        if (balanceAmount === (netTotal - formData.cash_discount)) {
+            paymentStatus = "not_paid"
+        } else if (parseFloat(balanceAmount.toFixed(2)) > 0) {
+            paymentStatus = "paid_partially"
+        } else if (parseFloat(balanceAmount.toFixed(2)) === 0) {
+            paymentStatus = "paid"
+        }
+
+        setPaymentStatus(paymentStatus);
+
         return totalPayment;
     }
 
@@ -841,7 +873,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             return false;
         }
 
-        let totalPayment = getTotalPayments();
+        let totalPayment = findTotalPayments();
         // errors["payment_date"] = [];
         //errors["payment_method"] = [];
         //errors["payment_amount"] = [];
@@ -1572,12 +1604,31 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     </td>
                                                 </tr>
                                             ))}
-                                        <tr>
+                                       <tr>
                                             <td class="text-end">
                                                 <b>Total</b>
                                             </td>
-                                            <td><b>{getTotalPayments()}</b></td>
-                                            <td colSpan={2}></td>
+                                            <td><b style={{ marginLeft: "14px" }}>{totalPaymentAmount?.toFixed(2)}</b>
+
+                                            </td>
+                                            <td>
+                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {balanceAmount?.toFixed(2)}</b>
+                                            </td>
+                                            <td colSpan={1}>
+                                                <b>Payment status: </b> 
+                                                {paymentStatus == "paid" ?
+                                                                <span className="badge bg-success">
+                                                                    Paid
+                                                                </span> : ""}
+                                                            {paymentStatus == "paid_partially" ?
+                                                                <span className="badge bg-warning">
+                                                                    Paid Partially
+                                                                </span> : ""}
+                                                            {paymentStatus == "not_paid" ?
+                                                                <span className="badge bg-danger">
+                                                                    Not Paid
+                                                                </span> : ""}
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>

@@ -598,7 +598,7 @@ const OrderCreate = forwardRef((props, ref) => {
         event.preventDefault();
         let haveErrors = false;
 
-        if(!formData.cash_discount){
+        if (!formData.cash_discount) {
             formData.cash_discount = 0.00;
         }
 
@@ -900,6 +900,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function removeProduct(product) {
         const index = selectedProducts.indexOf(product);
+        if(product.quantity_returned>0){
+            errors["product_" + index] = "This product cannot be removed as it is returned, Note: Please remove the product from sales return and try again"
+            setErrors({ ...errors });
+            return;
+        }
+       
         if (index > -1) {
             selectedProducts.splice(index, 1);
         }
@@ -917,8 +923,8 @@ const OrderCreate = forwardRef((props, ref) => {
                 parseFloat(selectedProducts[i].unit_price) *
                 parseFloat(selectedProducts[i].quantity);
         }
-       // totalPrice = totalPrice.toFixed(2);
-       // totalPrice = Math.round(totalPrice * 100) / 100;
+        // totalPrice = totalPrice.toFixed(2);
+        // totalPrice = Math.round(totalPrice * 100) / 100;
         setTotalPrice(totalPrice);
     }
 
@@ -927,10 +933,10 @@ const OrderCreate = forwardRef((props, ref) => {
     function findVatPrice() {
         vatPrice = 0.00;
         if (totalPrice > 0) {
-            console.log("formData.vat_percent:",formData.vat_percent);
+            console.log("formData.vat_percent:", formData.vat_percent);
             //(35.8 / 100) * 10000;
-             
-             vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
+
+            vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
             console.log("vatPrice:", vatPrice);
         }
         setVatPrice(vatPrice);
@@ -946,16 +952,16 @@ const OrderCreate = forwardRef((props, ref) => {
     function findNetTotal() {
         netTotal = 0.00;
         if (totalPrice > 0) {
-            console.log("totalPrice:",totalPrice)
-            console.log("formData.discount:",formData.discount)
-            console.log("vatPrice:",vatPrice);
+            console.log("totalPrice:", totalPrice)
+            console.log("formData.discount:", formData.discount)
+            console.log("vatPrice:", vatPrice);
 
             netTotal = (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice));
             netTotal = parseFloat(netTotal);
         }
         console.log("before rounding netTotal:", netTotal);
-       // netTotal = RoundFloat(netTotal,2);
-       // netTotal = Math.round(netTotal * 100) / 100;
+        // netTotal = RoundFloat(netTotal,2);
+        // netTotal = Math.round(netTotal * 100) / 100;
         console.log("after rounding netTotal:", netTotal);
         setNetTotal(netTotal);
 
@@ -993,7 +999,7 @@ const OrderCreate = forwardRef((props, ref) => {
     function findDiscount() {
         if (formData.discount_percent >= 0 && totalPrice > 0) {
             formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100));
-           // formData.discount = parseFloat(formData.discount.toFixed(2));
+            // formData.discount = parseFloat(formData.discount.toFixed(2));
             setFormData({ ...formData });
         }
     }
@@ -1066,15 +1072,37 @@ const OrderCreate = forwardRef((props, ref) => {
         //validatePaymentAmounts((formData.payments_input.filter(payment => !payment.deleted).length - 1));
     }
 
-    function getTotalPayments() {
+    function findTotalPayments() {
         let totalPayment = 0.00;
         for (var i = 0; i < formData.payments_input?.length; i++) {
             if (formData.payments_input[i].amount && !formData.payments_input[i].deleted) {
                 totalPayment += formData.payments_input[i].amount;
             }
         }
+
+        totalPaymentAmount = totalPayment;
+        setTotalPaymentAmount(totalPaymentAmount);
+        balanceAmount = (netTotal - formData.cash_discount) - totalPayment;
+        setBalanceAmount(balanceAmount);
+
+        if (balanceAmount === (netTotal - formData.cash_discount)) {
+            paymentStatus = "not_paid"
+        } else if (parseFloat(balanceAmount.toFixed(2)) > 0) {
+            paymentStatus = "paid_partially"
+        } else if (parseFloat(balanceAmount.toFixed(2)) === 0) {
+            paymentStatus = "paid"
+        }
+
+        setPaymentStatus(paymentStatus);
+
         return totalPayment;
     }
+
+    let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
+    let [balanceAmount, setBalanceAmount] = useState(0.00);
+    let [paymentStatus, setPaymentStatus] = useState("");
+
+
 
     function removePayment(key) {
         formData.payments_input.splice(key, 1);
@@ -1085,7 +1113,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     function validatePaymentAmounts() {
-        console.log("validatePaymentAmount: netTotal:",netTotal)
+        console.log("validatePaymentAmount: netTotal:", netTotal)
         let haveErrors = false;
         if (!netTotal) {
             return true;
@@ -1098,7 +1126,7 @@ const OrderCreate = forwardRef((props, ref) => {
             return false;
         }
 
-        let totalPayment = getTotalPayments();
+        let totalPayment = findTotalPayments();
         // errors["payment_date"] = [];
         //errors["payment_method"] = [];
         //errors["payment_amount"] = [];
@@ -1142,7 +1170,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     maxAllowedAmount = 0;
                 }
 
-                
+
                 if (maxAllowedAmount === 0) {
                     errors["payment_amount_" + key] = "Total amount should not exceed " + (netTotal - formData.cash_discount).toFixed(2).toString() + ", Please delete this payment";
                     setErrors({ ...errors });
@@ -1152,7 +1180,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     setErrors({ ...errors });
                     haveErrors = true;
                 }
-                
+
             }
         }
 
@@ -1529,7 +1557,14 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 className="text-start"
                                                 onClick={() => {
                                                     openProductDetailsView(product.product_id);
-                                                }}>{product.name}
+                                                }}>
+                                                    {product.name}
+
+                                                    {errors["product_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["product_" + index]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td >
 
@@ -2157,10 +2192,11 @@ const OrderCreate = forwardRef((props, ref) => {
                             <label className="form-label">Payments Received</label>
 
                             <div class="table-responsive" style={{ maxWidth: "900px" }}>
-                                <Button variant="secondary" style={{ alignContent: "right" }} onClick={addNewPayment}>
+                                <Button variant="secondary" style={{ alignContent: "right",marginBottom:"10px" }} onClick={addNewPayment}>
                                     Create new payment
                                 </Button>
                                 <table class="table table-striped table-sm table-bordered">
+                                {formData.payments_input&&formData.payments_input.length>0&&
                                     <thead>
                                         <th>
                                             Date
@@ -2174,7 +2210,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th>
                                             Action
                                         </th>
-                                    </thead>
+                                    </thead>}
                                     <tbody>
                                         {formData.payments_input &&
                                             formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
@@ -2306,8 +2342,27 @@ const OrderCreate = forwardRef((props, ref) => {
                                             <td class="text-end">
                                                 <b>Total</b>
                                             </td>
-                                            <td><b>{getTotalPayments()}</b></td>
-                                            <td colSpan={2}></td>
+                                            <td><b style={{ marginLeft: "14px" }}>{totalPaymentAmount?.toFixed(2)}</b>
+
+                                            </td>
+                                            <td>
+                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {balanceAmount?.toFixed(2)}</b>
+                                            </td>
+                                            <td colSpan={1}>
+                                                <b>Payment status: </b> 
+                                                {paymentStatus == "paid" ?
+                                                                <span className="badge bg-success">
+                                                                    Paid
+                                                                </span> : ""}
+                                                            {paymentStatus == "paid_partially" ?
+                                                                <span className="badge bg-warning">
+                                                                    Paid Partially
+                                                                </span> : ""}
+                                                            {paymentStatus == "not_paid" ?
+                                                                <span className="badge bg-danger">
+                                                                    Not Paid
+                                                                </span> : ""}
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
