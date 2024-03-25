@@ -697,11 +697,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             }];
 
             if(netTotal>0){
-                formData.payments_input[0].amount = parseFloat(netTotal);
+                formData.payments_input[0].amount = parseFloat(netTotal.toFixed(2));
+
                 if(formData.cash_discount){
-                    formData.payments_input[0].amount =  formData.payments_input[0].amount - parseFloat(formData.cash_discount);
+                    formData.payments_input[0].amount =  formData.payments_input[0].amount - parseFloat(formData.cash_discount.toFixed(2));
                 }
-                formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
+                //formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
             }
           
         }

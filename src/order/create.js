@@ -972,7 +972,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 "method": "",
                 "deleted": false,
             }];
-            formData.payments_input[0].amount = parseFloat(netTotal);
+            formData.payments_input[0].amount = parseFloat(netTotal.toFixed(2));
         }
 
         /*
