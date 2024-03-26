@@ -966,10 +966,15 @@ const OrderCreate = forwardRef((props, ref) => {
         setNetTotal(netTotal);
 
         if (!formData.id) {
+            let method="";
+            if(formData.payments_input[0]){
+              method = formData.payments_input[0].method;
+            }
+
             formData.payments_input = [{
                 "date_str": formData.date_str,
                 "amount": 0.00,
-                "method": "",
+                "method": method,
                 "deleted": false,
             }];
             formData.payments_input[0].amount = parseFloat(netTotal.toFixed(2));
