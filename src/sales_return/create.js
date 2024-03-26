@@ -871,6 +871,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     function validatePaymentAmounts() {
         let haveErrors = false;
         if (!netTotal) {
+            removePayment(0,false);
+            totalPaymentAmount=0.0;
+            setTotalPaymentAmount(0.00);
+            balanceAmount=0.00;
+            setBalanceAmount(0.00);
+            paymentStatus="";
+            setPaymentStatus(paymentStatus);
             return true;
         }
 
@@ -964,11 +971,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         //validatePaymentAmounts((formData.payments_input.filter(payment => !payment.deleted).length - 1));
     }
 
-    function removePayment(key) {
+    function removePayment(key,validatePayments=false) {
         formData.payments_input.splice(key, 1);
         //formData.payments_input[key]["deleted"] = true;
         setFormData({ ...formData });
-        validatePaymentAmounts();
+        if(validatePayments){
+            validatePaymentAmounts();
+        }
     }
 
 

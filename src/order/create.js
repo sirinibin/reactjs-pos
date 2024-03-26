@@ -24,6 +24,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
+            errors={};
+            setErrors({ ...errors });
             selectedProducts = [];
             setSelectedProducts([]);
 
@@ -966,9 +968,9 @@ const OrderCreate = forwardRef((props, ref) => {
         setNetTotal(netTotal);
 
         if (!formData.id) {
-            let method="";
-            if(formData.payments_input[0]){
-              method = formData.payments_input[0].method;
+            let method = "";
+            if (formData.payments_input[0]) {
+                method = formData.payments_input[0].method;
             }
 
             formData.payments_input = [{
@@ -1086,6 +1088,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         totalPaymentAmount = totalPayment;
+        console.log("totalPaymentAmount:", totalPaymentAmount);
         setTotalPaymentAmount(totalPaymentAmount);
         console.log("totalPayment:", totalPayment)
         balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(formData.cash_discount.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
@@ -1110,11 +1113,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-    function removePayment(key) {
+    function removePayment(key,validatePayments=false) {
         formData.payments_input.splice(key, 1);
         //formData.payments_input[key]["deleted"] = true;
         setFormData({ ...formData });
-        validatePaymentAmounts();
+        if(validatePayments){
+            validatePaymentAmounts();
+        }
     }
 
 
@@ -1122,6 +1127,13 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("validatePaymentAmount: netTotal:", netTotal)
         let haveErrors = false;
         if (!netTotal) {
+            removePayment(0,false);
+            totalPaymentAmount=0.0;
+            setTotalPaymentAmount(0.00);
+            balanceAmount=0.00;
+            setBalanceAmount(0.00);
+            paymentStatus="";
+            setPaymentStatus(paymentStatus);
             return true;
         }
 
@@ -1133,6 +1145,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         let totalPayment = findTotalPayments();
+      
         // errors["payment_date"] = [];
         //errors["payment_method"] = [];
         //errors["payment_amount"] = [];
