@@ -1132,6 +1132,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function validatePaymentAmounts() {
         console.log("validatePaymentAmount: netTotal:", netTotal)
+        errors["cash_discount"] = "";
+        setErrors({ ...errors });
+        
         let haveErrors = false;
         if (!netTotal) {
             removePayment(0,false);
@@ -1143,6 +1146,7 @@ const OrderCreate = forwardRef((props, ref) => {
             setPaymentStatus(paymentStatus);
             return true;
         }
+
 
         if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
             errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toFixed(2).toString();
