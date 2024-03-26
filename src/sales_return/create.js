@@ -853,14 +853,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         setTotalPaymentAmount(totalPaymentAmount);
        // balanceAmount = (netTotal - formData.cash_discount) - totalPayment;
         balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
-
+        balanceAmount = parseFloat(balanceAmount.toFixed(2));
         setBalanceAmount(balanceAmount);
 
-        if (parseFloat(balanceAmount.toFixed(2)) === (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount).toFixed(2)))) {
+        if (balanceAmount === parseFloat((parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))).toFixed(2))) {
             paymentStatus = "not_paid"
-        } else if (parseFloat(balanceAmount.toFixed(2)) === 0) {
+        } else if (balanceAmount <= 0) {
             paymentStatus = "paid"
-        } else if (parseFloat(balanceAmount.toFixed(2)) > 0) {
+        } else if (balanceAmount > 0) {
             paymentStatus = "paid_partially"
         }
 

@@ -1099,13 +1099,14 @@ const OrderCreate = forwardRef((props, ref) => {
         setTotalPaymentAmount(totalPaymentAmount);
         console.log("totalPayment:", totalPayment)
         balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
+        balanceAmount = parseFloat(balanceAmount.toFixed(2));
         setBalanceAmount(balanceAmount);
 
-        if (parseFloat(balanceAmount.toFixed(2)) === (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2)))) {
+        if (balanceAmount === parseFloat((parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))).toFixed(2))) {
             paymentStatus = "not_paid"
-        } else if (parseFloat(balanceAmount.toFixed(2)) === 0) {
+        } else if (balanceAmount <= 0) {
             paymentStatus = "paid"
-        } else if (parseFloat(balanceAmount.toFixed(2)) > 0) {
+        } else if (balanceAmount > 0) {
             paymentStatus = "paid_partially"
         }
 
@@ -1134,7 +1135,7 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("validatePaymentAmount: netTotal:", netTotal)
         errors["cash_discount"] = "";
         setErrors({ ...errors });
-        
+
         let haveErrors = false;
         if (!netTotal) {
             removePayment(0,false);
