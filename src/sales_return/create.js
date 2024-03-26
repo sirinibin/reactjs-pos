@@ -705,8 +705,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 formData.payments_input[0].amount = parseFloat(netTotal.toFixed(2));
 
                 if(formData.cash_discount){
-                    formData.payments_input[0].amount =  formData.payments_input[0].amount - parseFloat(formData.cash_discount.toFixed(2));
+                    formData.payments_input[0].amount =  formData.payments_input[0].amount - parseFloat(formData.cash_discount?.toFixed(2));
                 }
+                formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
                 //formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
             }
           
@@ -851,11 +852,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         totalPaymentAmount = totalPayment;
         setTotalPaymentAmount(totalPaymentAmount);
        // balanceAmount = (netTotal - formData.cash_discount) - totalPayment;
-        balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(formData.cash_discount.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
+        balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
 
         setBalanceAmount(balanceAmount);
 
-        if (parseFloat(balanceAmount.toFixed(2)) === (parseFloat(netTotal.toFixed(2)) - parseFloat(formData.cash_discount.toFixed(2)))) {
+        if (parseFloat(balanceAmount.toFixed(2)) === (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount).toFixed(2)))) {
             paymentStatus = "not_paid"
         } else if (parseFloat(balanceAmount.toFixed(2)) === 0) {
             paymentStatus = "paid"
