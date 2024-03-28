@@ -962,7 +962,7 @@ const OrderCreate = forwardRef((props, ref) => {
             netTotal = parseFloat(netTotal);
         }
         console.log("before rounding netTotal:", netTotal);
-        // netTotal = RoundFloat(netTotal,2);
+         netTotal = RoundFloat(netTotal,2);
         // netTotal = Math.round(netTotal * 100) / 100;
         console.log("after rounding netTotal:", netTotal);
         setNetTotal(netTotal);
