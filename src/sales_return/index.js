@@ -1727,25 +1727,23 @@ function SalesReturnIndex(props) {
                                                         <td>{salesreturn.net_total} SAR</td>
                                                         <td>{salesreturn.cash_discount?.toFixed(2)}</td>
                                                         <td>
-                                                            {salesreturn.total_payment_paid?.toFixed(2)}
-                                                            {/*
+                                                           
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(salesreturn);
                                                             }}>
                                                                 {salesreturn.total_payment_paid?.toFixed(2)}
                                                             </Button>
-                                                        */}
+                                                    
                                                         </td>
                                                         <td>{salesreturn.balance_amount?.toFixed(2)}</td>
                                                         <td>
-                                                            {salesreturn.payments_count}
-                                                            {/*
+                                                          
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(salesreturn);
                                                             }}>
                                                                 {salesreturn.payments_count}
                                                             </Button>
-                                                        */}
+                                                    
                                                         </td>
                                                         <td>
                                                             {salesreturn.payment_status == "paid" ?

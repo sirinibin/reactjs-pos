@@ -181,11 +181,13 @@ const SalesReturnPaymentCreate = forwardRef((props, ref) => {
         }
 
 
+        /*
         if (formData.amount > salesreturn.net_total) {
             errors["amount"] = "Amount should be less than or equal to net total amount:" + salesreturn.net_total;
             setErrors({ ...errors });
             return;
         }
+        */
 
         console.log("salesreturn.order_id:", salesreturn.order_id);
 
@@ -355,11 +357,13 @@ const SalesReturnPaymentCreate = forwardRef((props, ref) => {
                                         formData.amount = parseFloat(e.target.value);
                                         errors["amount"] = "";
 
+                                        /*
                                         if (formData.amount > salesreturn.net_total) {
                                             errors["amount"] = "Amount should be less than or equal to net total amount:" + salesreturn.net_total;
                                             setErrors({ ...errors });
                                             return;
                                         }
+                                        */
                                         setErrors({ ...errors });
                                         setFormData({ ...formData });
                                         console.log(formData);

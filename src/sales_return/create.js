@@ -123,6 +123,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     // shipping_handling_fees: salesReturn.shipping_handling_fees,
                 };
 
+                if(!formData.payments_input){
+                    formData.payments_input = [];
+                }
+
                 for (var i = 0; i < formData.payments_input.length; i++) {
                     formData.payments_input[i].date_str = formData.payments_input[i].date
                 }
@@ -149,6 +153,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     //selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
                 }
 
+                console.log("selectedProducts: ",selectedProducts.length);
 
                 setSelectedProducts([...selectedProducts]);
 
@@ -928,8 +933,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 setErrors({ ...errors });
                 haveErrors = true;
             }
-
-
+            /*
             if ((formData.payments_input[key].amount || formData.payments_input[key].amount === 0) && !formData.payments_input[key].deleted) {
                 let maxAllowedAmount = (netTotal - formData.cash_discount) - (totalPayment - formData.payments_input[key].amount);
 
@@ -946,9 +950,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     errors["payment_amount_" + key] = "Amount should not be greater than " + maxAllowedAmount.toFixed(2);
                     setErrors({ ...errors });
                     haveErrors = true;
-                }
-                
+                }  
             }
+            */
         }
 
         if (haveErrors) {
@@ -983,6 +987,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         if(validatePayments){
             validatePaymentAmounts();
         }
+        findTotalPayments()
     }
 
 

@@ -179,11 +179,13 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
         }
 
 
+        /*
         if (formData.amount > order.net_total) {
             errors["amount"] = "Amount should be less than or equal to net total amount:" + order.net_total;
             setErrors({ ...errors });
             return;
         }
+        */
 
         const requestOptions = {
             method: method,
@@ -349,11 +351,14 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                                             formData.amount = parseFloat(e.target.value);
                                             errors["amount"] = "";
 
-                                            if (formData.amount > order.net_total) {
+                                            /*
+
+                                            if (formData.amount > (order.net_total-order.cash_discount)) {
                                                 errors["amount"] = "Amount should be less than or equal to net total amount:" + order.net_total;
                                                 setErrors({ ...errors });
                                                 return;
                                             }
+                                            */
                                             setErrors({ ...errors });
                                             setFormData({ ...formData });
                                             console.log(formData);

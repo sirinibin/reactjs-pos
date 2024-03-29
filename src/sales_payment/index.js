@@ -266,10 +266,10 @@ function SalesPaymentIndex(props) {
                     if (balanceAmount == (props.order.net_total-props.order.cash_discount)) {
                         paymentStatus = "not_paid";
                         setPaymentStatus(paymentStatus);
-                    } else if (balanceAmount == 0) {
+                    } else if (balanceAmount <= 0) {
                         paymentStatus = "paid";
                         setPaymentStatus(paymentStatus);
-                    } else {
+                    } else if (balanceAmount > 0){
                         paymentStatus = "paid_partially";
                         setPaymentStatus(paymentStatus);
                     }

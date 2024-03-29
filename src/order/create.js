@@ -118,7 +118,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 if (data.result.payments) {
                     console.log("data.result.payments:", data.result.payments);
                     formData.payments_input = data.result.payments;
-                    for (var i = 0; i < formData.payments_input.length; i++) {
+                    for (var i = 0; i < formData.payments_input?.length; i++) {
                         formData.payments_input[i].date_str = formData.payments_input[i].date
                     }
                 }

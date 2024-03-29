@@ -252,10 +252,10 @@ function SalesReturnPaymentIndex(props) {
                     if (balanceAmount == props.salesReturn.net_total) {
                         paymentStatus = "not_paid";
                         setPaymentStatus(paymentStatus);
-                    } else if (balanceAmount == 0) {
+                    } else if (balanceAmount <= 0) {
                         paymentStatus = "paid";
                         setPaymentStatus(paymentStatus);
-                    } else {
+                    } else if (balanceAmount > 0){
                         paymentStatus = "paid_partially";
                         setPaymentStatus(paymentStatus);
                     }
