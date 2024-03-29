@@ -75,6 +75,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }));
 
 
+
     function getSalesReturn(id) {
         console.log("inside getSalesReturn id:", id);
         const requestOptions = {
@@ -85,8 +86,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             },
         };
 
+        setProcessing(true);
+
         fetch('/v1/sales-return/' + id, requestOptions)
             .then(async response => {
+                setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -206,8 +210,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             },
         };
 
+        setProcessing(true);
         fetch('/v1/order/' + id, requestOptions)
             .then(async response => {
+                setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
 
@@ -389,7 +395,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
     //Product Auto Suggestion
-    let [selectedProducts, setSelectedProducts] = useState([]);
+    let [selectedProducts, setSelectedProducts] = useState(null);
 
     //Received By Auto Suggestion
     const [receivedByUserOptions, setReceivedByUserOptions] = useState([]);
@@ -509,7 +515,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         console.log("formData.order_id:", formData.order_id);
 
         formData.products = [];
-        for (var i = 0; i < selectedProducts.length; i++) {
+        for (var i = 0; i < selectedProducts?.length; i++) {
             if (!selectedProducts[i].selected) {
                 continue;
             }
@@ -648,7 +654,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     function findTotalPrice() {
         totalPrice = 0.00;
-        for (var i = 0; i < selectedProducts.length; i++) {
+        for (var i = 0; i < selectedProducts?.length; i++) {
             if (!selectedProducts[i].selected) {
                 continue;
             }
@@ -1042,7 +1048,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
                                 })}
                             </ul></div> : ""}
-                    {selectedProducts.length > 0 && <div className="col-md-3">
+                    {selectedProducts?.length > 0 && <div className="col-md-3">
                         <label className="form-label">Date*</label>
 
                         <div className="input-group mb-3">
@@ -1079,8 +1085,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         )}
                     </div>}
 
-                    {selectedProducts.length === 0 && "Already returned all products"}
-                    {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                    {!isProcessing&&selectedProducts?.length === 0 && "Already returned all products"}
+                    {selectedProducts?.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         <h2>Select Products</h2>
                         <div className="table-responsive" style={{ overflowX: "auto", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
