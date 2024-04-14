@@ -189,13 +189,6 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
         }
     
 
-
-        if (formData.amount > purchasereturn.net_total) {
-            errors["amount"] = "Amount should be less than or equal to net total amount:" + purchasereturn.net_total;
-            setErrors({ ...errors });
-            return;
-        }
-
         const requestOptions = {
             method: method,
             headers: {
@@ -449,6 +442,7 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
                                         <option value="">Select</option>
                                         <option value="cash">Cash</option>
                                         <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                        <option value="vendor_account">Vendor Account</option>
                                     </select>
                                     {errors.method && (
                                         <div style={{ color: "red" }}>

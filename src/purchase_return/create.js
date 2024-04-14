@@ -21,7 +21,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id, purchaseId) {
-
+            errors = {};
+            setErrors({ ...errors });
             selectedProducts = [];
             setSelectedProducts([]);
 
@@ -44,6 +45,17 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 payment_method: "",
             };
 
+            formData.payments_input = [
+                {
+                    "date_str": formData.date_str,
+                    // "amount": "",
+                    "amount": 0.00,
+                    "method": "",
+                    "deleted": false,
+                }
+            ];
+            formData.cash_discount = 0.00;
+
             setFormData({ ...formData });
 
             if (cookies.get("user_id")) {
@@ -64,6 +76,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             }
 
             if (purchaseId) {
+                reCalculate();
                 getPurchase(purchaseId);
             }
             setShow(true);
@@ -178,16 +191,18 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 let purchaseReturn = data.result;
-               // formData = purchaseReturn;
+                // formData = purchaseReturn;
 
                 formData = {
                     id: purchaseReturn.id,
                     code: purchaseReturn.code,
+                    purchase_code: purchaseReturn.purchase_code,
                     store_id: purchaseReturn.store_id,
                     vendor_id: purchaseReturn.vendor_id,
                     date_str: purchaseReturn.date,
                     // date: purchase.date,
                     vat_percent: purchaseReturn.vat_percent,
+                    cash_discount: purchaseReturn.cash_discount,
                     discount: purchaseReturn.discount,
                     discount_percent: purchaseReturn.discount_percent,
                     status: purchaseReturn.status,
@@ -200,33 +215,18 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     shipping_handling_fees: purchaseReturn.shipping_handling_fees,
                 };
 
-                /*
-                formData = {
-                    date_str: format(new Date(), "MMM dd yyyy"),
-                    signature_date_str: format(new Date(), "MMM dd yyyy"),
-                    purchase_id: purchase.id,
-                    purchase_code: purchase.code,
-                    vendor_invoice_no: purchase.vendor_invoice_no,
-                    store_id: purchase.store_id,
-                    vendor_id: purchase.vendor_id,
-                    vat_percent: purchase.vat_percent,
-                    status: purchase.status,
-                    purchase_returned_by: purchase.order_placed_by,
-                    purchase_returned_by_signature_id: purchase.order_placed_by_signature_id,
-                    is_discount_percent: purchase.is_discount_percent,
-                    discount_percent: purchase.discount_percent,
-                };
-                */
-
-                //formData.discount = (purchase.discount - purchase.return_discount);
-                // formData.discount = 0;
-
-                if (formData.is_discount_percent) {
-                    formData.discountValue = formData.discount_percent;
-                } else {
-                    formData.discountValue = formData.discount;
+                if (!formData.payments_input) {
+                    formData.payments_input = [];
                 }
 
+
+                if (data.result.payments) {
+                    console.log("data.result.payments:", data.result.payments);
+                    formData.payments_input = data.result.payments;
+                    for (var i = 0; i < formData.payments_input?.length; i++) {
+                        formData.payments_input[i].date_str = formData.payments_input[i].date
+                    }
+                }
 
                 setFormData({ ...formData });
 
@@ -239,11 +239,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 selectedProducts = [];
                 for (let i = 0; i < selectedProductsTemp.length; i++) {
+                    /*
                     if (selectedProductsTemp[i].quantity > 0) {
                         selectedProductsTemp[i].selected = true;
                     } else {
                         selectedProductsTemp[i].selected = false;
                     }
+                    */
                     selectedProducts.push(selectedProductsTemp[i]);
 
                     selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
@@ -444,60 +446,61 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         event.preventDefault();
         console.log("Inside handle Create");
         console.log("selectedProducts:", selectedProducts);
+        let haveErrors = false;
+
 
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
+            /*
             if (!selectedProducts[i].selected) {
                 continue;
                 // selectedProducts[i].quantity = 0;
-            }
+            }*/
 
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
                 quantity: parseFloat(selectedProducts[i].quantity),
                 unit: selectedProducts[i].unit,
                 purchasereturn_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
+                selected: selectedProducts[i].selected,
             });
+        }
+
+        if (!formData.cash_discount) {
+            formData.cash_discount = 0.00;
         }
 
         formData.discount = parseFloat(formData.discount);
         formData.discount_percent = parseFloat(formData.discount_percent);
+        formData.net_total = parseFloat(netTotal);
 
         formData.vat_percent = parseFloat(formData.vat_percent);
         console.log("formData.discount:", formData.discount);
 
-        if (formData.payment_status === "paid_partially" && !formData.partial_payment_amount && formData.partial_payment_amount !== 0) {
-            errors["partial_payment_amount"] = "Invalid partial payment amount";
+
+        if (!formData.discount && formData.discount !== 0) {
+            errors["discount"] = "Invalid discount";
             setErrors({ ...errors });
-            return;
+            haveErrors = true;
         }
 
-        if (formData.payment_status === "paid_partially" && formData.partial_payment_amount <= 0) {
-            errors["partial_payment_amount"] = "Partial payment should be > 0 ";
+        if (!formData.discount_percent && formData.discount_percent !== 0) {
+            errors["discount_percent"] = "Invalid discount percent";
             setErrors({ ...errors });
-            return;
+            haveErrors = true;
         }
 
-        if (formData.payment_status === "paid_partially" && formData.partial_payment_amount >= netTotal) {
-            errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
+        if (parseFloat(formData.discount_percent) > 100) {
+            errors["discount_percent"] = "Discount percent cannot be > 100";
             setErrors({ ...errors });
-            return;
+            haveErrors = true;
         }
 
         errors["payment_method"] = "";
         setErrors({ ...errors });
-        if (!formData.id && formData.payment_status != "not_paid" && !formData.payment_method) {
-            errors["payment_method"] = "Payment method is required";
-            setErrors({ ...errors });
-            return;
-        }
 
-
-
-
-        if (!formData.discountValue && formData.discountValue !== 0) {
-            errors["discount"] = "Invalid Discount";
-            setErrors({ ...errors });
+        if (haveErrors) {
+            console.log("Errors: ", errors);
             return;
         }
 
@@ -590,12 +593,53 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     let [netTotal, setNetTotal] = useState(0.00);
 
     function findNetTotal() {
+        netTotal = 0.00;
         if (totalPrice > 0) {
-            netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice)).toFixed(2);
-            setNetTotal(netTotal);
+            netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice));
+            netTotal = parseFloat(netTotal);
+        }
+        netTotal = RoundFloat(netTotal, 2);
+        // netTotal = Math.round(netTotal * 100) / 100;
+        setNetTotal(netTotal);
+
+        if (!formData.payments_input) {
+            formData.payments_input = [];
         }
 
+
+        if (!formData.id) {
+
+            let method = "";
+            if (formData.payments_input && formData.payments_input[0]) {
+                method = formData.payments_input[0].method;
+            }
+
+            formData.payments_input = [{
+                "date_str": formData.date_str,
+                "amount": 0.00,
+                "method": method,
+                "deleted": false,
+            }];
+
+            if (netTotal > 0) {
+                formData.payments_input[0].amount = parseFloat(netTotal.toFixed(2));
+                if (formData.cash_discount) {
+                    formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(formData.cash_discount?.toFixed(2));
+                }
+                formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
+            }
+        }
+
+        setFormData({ ...formData });
+        validatePaymentAmounts();
+
     }
+
+    function RoundFloat(val, precision) {
+        var ratio = Math.pow(10, precision);
+        return Math.round(val * ratio) / ratio;
+    }
+
 
     let [discountPercent, setDiscountPercent] = useState(0.00);
 
@@ -619,6 +663,26 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }
 
     function findDiscount() {
+        if (formData.discount_percent >= 0 && totalPrice > 0) {
+            formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100));
+            //formData.discount = Math.round(formData.discount * 100) / 100;
+            formData.discount = parseFloat(formData.discount.toFixed(2));
+            setFormData({ ...formData });
+        }
+    }
+
+    function findDiscountPercent() {
+        if (formData.discount >= 0 && totalPrice > 0) {
+            discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100);
+            setDiscountPercent(discountPercent);
+            formData.discount_percent = discountPercent;
+            //formData.discount_percent = Math.round(formData.discount_percent * 100) / 100;
+            setFormData({ ...formData });
+        }
+    }
+    /*
+
+    function findDiscount() {
         if (!formData.discountValue) {
             formData.discount = 0.00;
             formData.discount_percent = 0.00;
@@ -633,6 +697,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         }
         setFormData({ ...formData });
     }
+    */
 
 
     function reCalculate() {
@@ -685,6 +750,160 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         PurchaseDetailsViewRef.current.open(id);
     }
 
+    let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
+    let [balanceAmount, setBalanceAmount] = useState(0.00);
+    let [paymentStatus, setPaymentStatus] = useState("");
+
+    function findTotalPayments() {
+        console.log("Inside findTotalPayments()");
+        let totalPayment = 0.00;
+        for (var i = 0; i < formData.payments_input?.length; i++) {
+            if (formData.payments_input[i].amount && !formData.payments_input[i].deleted) {
+                totalPayment += formData.payments_input[i].amount;
+            }
+        }
+
+        totalPaymentAmount = totalPayment;
+        setTotalPaymentAmount(totalPaymentAmount);
+        // balanceAmount = (netTotal - formData.cash_discount) - totalPayment;
+        if (!formData.cash_discount) {
+            formData.cash_discount = 0.00;
+        }
+
+        balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
+        balanceAmount = parseFloat(balanceAmount.toFixed(2));
+        setBalanceAmount(balanceAmount);
+
+        if (balanceAmount === parseFloat((parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))).toFixed(2))) {
+            paymentStatus = "not_paid"
+        } else if (balanceAmount <= 0) {
+            paymentStatus = "paid"
+        } else if (balanceAmount > 0) {
+            paymentStatus = "paid_partially"
+        }
+
+        setPaymentStatus(paymentStatus);
+
+        return totalPayment;
+    }
+
+    function validatePaymentAmounts() {
+        errors["cash_discount"] = "";
+        setErrors({ ...errors });
+        let haveErrors = false;
+        if (!netTotal) {
+            //removePayment(0, false);
+            //totalPaymentAmount = 0.0;
+            //setTotalPaymentAmount(0.00);
+            //balanceAmount = 0.00;
+            //setBalanceAmount(0.00);
+            //paymentStatus = "";
+            //setPaymentStatus(paymentStatus);
+            return true;
+        }
+
+
+
+        if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
+            errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toFixed(2).toString();
+            setErrors({ ...errors });
+            haveErrors = true
+            return false;
+        }
+
+        let totalPayment = findTotalPayments();
+        // errors["payment_date"] = [];
+        //errors["payment_method"] = [];
+        //errors["payment_amount"] = [];
+        for (var key = 0; key < formData.payments_input.length; key++) {
+            errors["payment_amount_" + key] = "";
+            errors["payment_date_" + key] = "";
+            errors["payment_method_" + key] = "";
+            setErrors({ ...errors });
+
+            if (!formData.payments_input[key].amount) {
+                errors["payment_amount_" + key] = "Payment amount is required";
+                setErrors({ ...errors });
+                haveErrors = true;
+            } else if (formData.payments_input[key].amount === 0) {
+                errors["payment_amount_" + key] = "Amount should be greater than zero";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+
+            if (!formData.payments_input[key].date_str) {
+                errors["payment_date_" + key] = "Payment date is required";
+                setErrors({ ...errors });
+                haveErrors = true;
+            } else if ((new Date(formData.payments_input[key].date_str)) < (new Date(formData.date_str))) {
+                errors["payment_date_" + key] = "Payment date time should be greater than or equal to order date time";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+
+            if (!formData.payments_input[key].method) {
+                errors["payment_method_" + key] = "Payment method is required";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+            /*
+            if ((formData.payments_input[key].amount || formData.payments_input[key].amount === 0) && !formData.payments_input[key].deleted) {
+                let maxAllowedAmount = (netTotal - formData.cash_discount) - (totalPayment - formData.payments_input[key].amount);
+
+                if (maxAllowedAmount < 0) {
+                    maxAllowedAmount = 0;
+                }
+
+                
+                if (maxAllowedAmount === 0) {
+                    errors["payment_amount_" + key] = "Total amount should not exceed " + (netTotal - formData.cash_discount).toFixed(2).toString() + ", Please delete this payment";
+                    setErrors({ ...errors });
+                    haveErrors = true;
+                } else if (formData.payments_input[key].amount > parseFloat(maxAllowedAmount.toFixed(2))) {
+                    errors["payment_amount_" + key] = "Amount should not be greater than " + maxAllowedAmount.toFixed(2);
+                    setErrors({ ...errors });
+                    haveErrors = true;
+                }  
+            }
+            */
+        }
+
+        if (haveErrors) {
+            return false;
+        }
+
+        return true;
+    }
+
+    function addNewPayment() {
+        let date = new Date();
+        if (!formData.id) {
+            date = formData.date_str;
+        }
+
+        formData.payments_input.push({
+            "date_str": date,
+            // "amount": "",
+            "amount": 0.00,
+            "method": "",
+            "deleted": false,
+        });
+        setFormData({ ...formData });
+        validatePaymentAmounts();
+        //validatePaymentAmounts((formData.payments_input.filter(payment => !payment.deleted).length - 1));
+    }
+
+    function removePayment(key, validatePayments = false) {
+        formData.payments_input.splice(key, 1);
+        //formData.payments_input[key]["deleted"] = true;
+        setFormData({ ...formData });
+        if (validatePayments) {
+            validatePaymentAmounts();
+        }
+        findTotalPayments()
+    }
+
+
 
     return (
         <>
@@ -699,7 +918,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
             <PurchaseView ref={PurchaseDetailsViewRef} />
-            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Purchase Return #" + formData.code + " for purchase #" + formData.purchase_code : "Create Purchase Return" + " for purchase #" + formData.purchase_code}
@@ -741,7 +960,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                {Object.keys(errors).length > 0 ?
+                    {Object.keys(errors).length > 0 ?
                         <div>
                             <ul>
 
@@ -751,7 +970,81 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                             </ul></div> : ""}
                     {selectedProducts.length === 0 && "Already Returned All purchased products"}
 
+
                     {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Vendor Invoice No. (Optional)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["vendor_invoice_no"] = "";
+                                        setErrors({ ...errors });
+                                        formData.vendor_invoice_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="vendor_invoice_no"
+                                    placeholder="Vendor Invoice No."
+                                />
+                                {errors.vendor_invoice_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.vendor_invoice_no}
+                                    </div>
+                                )}
+                                {formData.vendor_invoice_no && !errors.rack && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <div className="col-md-3">
+                            <label className="form-label">Date*</label>
+
+                            <div className="input-group mb-3">
+                                <DatePicker
+                                    id="date_str"
+                                    selected={formData.date_str ? new Date(formData.date_str) : null}
+                                    value={formData.date_str ? format(
+                                        new Date(formData.date_str),
+                                        "MMMM d, yyyy h:mm aa"
+                                    ) : null}
+                                    className="form-control"
+                                    dateFormat="MMMM d, yyyy h:mm aa"
+                                    showTimeSelect
+                                    timeIntervals="1"
+                                    onChange={(value) => {
+                                        console.log("Value", value);
+                                        formData.date_str = value;
+                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+
+                                {errors.date_str && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.date_str}
+                                    </div>
+                                )}
+                                {formData.date_str && !errors.date_str && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
 
                         <h2>Select Products</h2>
                         {errors["product_id"] && (
@@ -760,7 +1053,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                 {errors["product_id"]}
                             </div>
                         )}
-                        <div className="table-responsive" style={{ overflowX: "auto", height: "400px", overflowY: "scroll" }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
@@ -769,7 +1062,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         <th>Part No.</th>
                                         <th>Name</th>
                                         <th>Qty</th>
-                                        <th>Purchase Return Unit Price</th>
+                                        <th>Unit Price</th>
                                         <th>Purchase Return Price</th>
                                     </tr>
                                 </thead>
@@ -780,13 +1073,14 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                 <input type="checkbox" checked={selectedProducts[index].selected} onChange={(e) => {
                                                     console.log("e.target.value:", e.target.value)
                                                     selectedProducts[index].selected = !selectedProducts[index].selected;
+                                                    /*
                                                     if (selectedProducts[index].selected === true) {
                                                         if (selectedProducts[index].quantity === 0) {
                                                             selectedProducts[index].quantity = 1;
                                                         }
                                                     } else {
                                                         selectedProducts[index].quantity = 0;
-                                                    }
+                                                    }*/
                                                     setSelectedProducts([...selectedProducts]);
                                                     reCalculate();
                                                 }} />
@@ -878,7 +1172,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                    <span className="input-group-text" id="basic-addon2">SAR</span>
+
                                                 </div>
                                                 {errors["purchasereturned_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
@@ -888,12 +1182,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                 )}
 
                                             </td>
-                                            <td>
+                                            <td className="text-end">
                                                 <NumberFormat
                                                     value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
-                                                    suffix={" SAR"}
+                                                    suffix={""}
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
@@ -908,12 +1202,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     <tr>
                                         <td colSpan="5"></td>
                                         <th className="text-end">Total</th>
-                                        <td className="text-center">
+                                        <td className="text-end" style={{ width: "180px" }}>
                                             <NumberFormat
                                                 value={totalPrice}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
@@ -921,29 +1215,73 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                                     <tr>
                                         <th colSpan="6" className="text-end">
-                                            Discount(  {formData.discount_percent + "%"})
+
+                                            Discount  <input type="number" style={{ width: "50px" }} className="text-start" value={formData.discount_percent} onChange={(e) => {
+                                                formData.is_discount_percent = true;
+                                                if (parseFloat(e.target.value) === 0) {
+                                                    formData.discount_percent = parseFloat(e.target.value);
+                                                    setFormData({ ...formData });
+                                                    errors["discount_percent"] = "";
+                                                    setErrors({ ...errors });
+                                                    reCalculate();
+                                                    return;
+                                                }
+
+                                                if (parseFloat(e.target.value) < 0) {
+                                                    formData.discount_percent = parseFloat(e.target.value);
+                                                    formData.discount = 0.00;
+                                                    setFormData({ ...formData });
+                                                    errors["discount_percent"] = "Discount percent should be >= 0";
+                                                    setErrors({ ...errors });
+                                                    reCalculate();
+                                                    return;
+                                                }
+
+                                                if (!e.target.value) {
+                                                    formData.discount_percent = "";
+                                                    formData.discount = 0.00;
+                                                    errors["discount_percent"] = "Invalid Discount Percent";
+                                                    setFormData({ ...formData });
+                                                    setErrors({ ...errors });
+                                                    return;
+                                                }
+
+                                                errors["discount_percent"] = "";
+                                                errors["discount"] = "";
+                                                setErrors({ ...errors });
+
+                                                formData.discount_percent = parseFloat(e.target.value);
+                                                setFormData({ ...formData });
+                                                reCalculate();
+                                            }} />{"%"}
+                                            {errors.discount_percent && (
+                                                <div style={{ color: "red" }}>
+                                                    {errors.discount_percent}
+                                                </div>
+                                            )}
+
                                         </th>
-                                        <td className="text-center">
+                                        <td className="text-end">
                                             <NumberFormat
                                                 value={formData.discount}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
                                     </tr>
                                     <tr>
                                         <th colSpan="5" className="text-end">
-                                            VAT
+
                                         </th>
-                                        <td className="text-center">{formData.vat_percent + "%"}</td>
-                                        <td className="text-center">
+                                        <th className="text-end">VAT: {formData.vat_percent + "%"}</th>
+                                        <td className="text-end">
                                             <NumberFormat
                                                 value={vatPrice}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
@@ -951,12 +1289,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     <tr>
                                         <td colSpan="5"></td>
                                         <th className="text-end">Net Total</th>
-                                        <th className="text-center">
+                                        <th className="text-end">
                                             <NumberFormat
                                                 value={netTotal}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>
@@ -965,320 +1303,196 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                             </table>
                         </div>
 
-
-                        <div className="col-md-6">
-                            <label className="form-label">Date*</label>
-
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="date_str"
-                                    selected={formData.date_str ? new Date(formData.date_str) : null}
-                                    value={formData.date_str ? format(
-                                        new Date(formData.date_str),
-                                        "MMMM d, yyyy h:mm aa"
-                                    ) : null}
-                                    className="form-control"
-                                    dateFormat="MMMM d, yyyy h:mm aa"
-                                    showTimeSelect
-                                    timeIntervals="1"
-                                    onChange={(value) => {
-                                        console.log("Value", value);
-                                        formData.date_str = value;
-                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-
-                                {errors.date_str && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.date_str}
-                                    </div>
-                                )}
-                                {formData.date_str && !errors.date_str && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-3">
-                            <label className="form-label">Vendor Invoice No. (Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.vendor_invoice_no ? formData.vendor_invoice_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["vendor_invoice_no"] = "";
-                                        setErrors({ ...errors });
-                                        formData.vendor_invoice_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="vendor_invoice_no"
-                                    placeholder="Vendor Invoice No."
-                                />
-                                {errors.vendor_invoice_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.vendor_invoice_no}
-                                    </div>
-                                )}
-                                {formData.vendor_invoice_no && !errors.rack && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-
-                        <div className="col-md-6">
-                            <label className="form-label">VAT %*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.vat_percent}
-                                    type='number'
-                                    onChange={(e) => {
-                                        console.log("Inside onchange vat percent");
-                                        if (isNaN(e.target.value)) {
-                                            errors["vat_percent"] = "Invalid Quantity";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["vat_percent"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.vat_percent = e.target.value;
-                                        setFormData({ ...formData });
-                                        reCalculate();
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="validationCustom01"
-                                    placeholder="VAT %"
-                                    aria-label="Select Store"
-                                    aria-describedby="button-addon1"
-                                />
-                                {errors.vat_percent && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.vat_percent}
-                                    </div>
-                                )}
-                                {formData.vat_percent && !errors.vat_percent && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label">Discount*</label>
-                            <Form.Check
-                                type="switch"
-                                id="custom-switch"
-                                label="%"
-                                value={formData.is_discount_percent}
-                                checked={formData.is_discount_percent ? "checked" : null}
+                        <div className="col-md-2">
+                            <label className="form-label">Cash discount</label>
+                            <input type='number' value={formData.cash_discount} className="form-control "
                                 onChange={(e) => {
-                                    formData.is_discount_percent = !formData.is_discount_percent;
-                                    console.log("e.target.value:", formData.is_discount_percent);
+                                    errors["cash_discount"] = "";
+                                    setErrors({ ...errors });
+                                    if (!e.target.value) {
+                                        formData.cash_discount = e.target.value;
+                                        setFormData({ ...formData });
+                                        validatePaymentAmounts();
+                                        return;
+                                    }
+                                    formData.cash_discount = parseFloat(e.target.value);
+                                    if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
+                                        errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toString();
+                                        setErrors({ ...errors });
+                                        return;
+                                    }
+
                                     setFormData({ ...formData });
-                                    reCalculate();
+                                    validatePaymentAmounts();
+                                    console.log(formData);
                                 }}
                             />
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.discountValue}
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (parseFloat(e.target.value) === 0) {
-                                            formData.discountValue = parseFloat(e.target.value);
-                                            reCalculate();
-                                            setFormData({ ...formData });
-                                            errors["discount"] = "";
-                                            setErrors({ ...errors });
+                            {errors.cash_discount && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.cash_discount}
+                                </div>
+                            )}
+                        </div>
 
-                                            return;
-                                        }
+                        <div className="col-md-8">
+                            <label className="form-label">Payments received</label>
 
-                                        if (!e.target.value) {
-                                            console.log("inside invalid");
-                                            formData.discountValue = "";
-                                            errors["discount"] = "Invalid Discount";
-                                            setFormData({ ...formData });
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
+                            <div class="table-responsive" style={{ maxWidth: "900px" }}>
+                                <Button variant="secondary" style={{ alignContent: "right" }} onClick={addNewPayment}>
+                                    Create new payment
+                                </Button>
+                                <table class="table table-striped table-sm table-bordered">
+                                    <thead>
+                                        <th>
+                                            Date
+                                        </th>
+                                        <th>
+                                            Amount
+                                        </th>
+                                        <th>
+                                            Payment method
+                                        </th>
+                                        <th>
+                                            Action
+                                        </th>
+                                    </thead>
+                                    <tbody>
+                                        {formData.payments_input &&
+                                            formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
+                                                <tr key={key}>
+                                                    <td style={{ minWidth: "220px" }}>
 
-                                        errors["discount"] = "";
-                                        setErrors({ ...errors });
+                                                        <DatePicker
+                                                            id="date_str"
+                                                            selected={formData.payments_input[key].date_str ? new Date(formData.payments_input[key].date_str) : null}
+                                                            value={formData.payments_input[key].date_str ? format(
+                                                                new Date(formData.payments_input[key].date_str),
+                                                                "MMMM d, yyyy h:mm aa"
+                                                            ) : null}
+                                                            className="form-control"
+                                                            dateFormat="MMMM d, yyyy h:mm aa"
+                                                            showTimeSelect
+                                                            timeIntervals="1"
+                                                            onChange={(value) => {
+                                                                console.log("Value", value);
+                                                                formData.payments_input[key].date_str = value;
+                                                                setFormData({ ...formData });
+                                                            }}
+                                                        />
+                                                        {errors["payment_date_" + key] && (
+                                                            <div style={{ color: "red" }}>
+                                                                <i className="bi bi-x-lg"> </i>
+                                                                {errors["payment_date_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "300px" }}>
+                                                        <input type='number' value={formData.payments_input[key].amount} className="form-control "
+                                                            onChange={(e) => {
+                                                                errors["payment_amount_" + key] = "";
+                                                                setErrors({ ...errors });
 
-                                        console.log("e.target.value:", e.target.value);
-                                        formData.discountValue = e.target.value;
+                                                                if (!e.target.value) {
+                                                                    formData.payments_input[key].amount = e.target.value;
+                                                                    setFormData({ ...formData });
+                                                                    validatePaymentAmounts();
+                                                                    return;
+                                                                }
 
-                                        reCalculate();
-                                        setFormData({ ...formData });
-                                    }}
-                                    className="form-control"
-                                    id="validationCustom02"
-                                    placeholder="Discount"
-                                    aria-label="Select Customer"
-                                    aria-describedby="button-addon2"
-                                />
-                                {errors.discount && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.discount}
-                                    </div>
-                                )}
-                                {!errors.discount && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+                                                                formData.payments_input[key].amount = parseFloat(e.target.value);
+
+                                                                validatePaymentAmounts();
+                                                                setFormData({ ...formData });
+                                                                console.log(formData);
+                                                            }}
+                                                        />
+                                                        {errors["payment_amount_" + key] && (
+                                                            <div style={{ color: "red" }}>
+                                                                <i className="bi bi-x-lg"> </i>
+                                                                {errors["payment_amount_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        <select value={formData.payments_input[key].method} className="form-control "
+                                                            onChange={(e) => {
+                                                                // errors["payment_method"] = [];
+                                                                errors["payment_method_" + key] = "";
+                                                                setErrors({ ...errors });
+
+                                                                if (!e.target.value) {
+                                                                    errors["payment_method_" + key] = "Payment method is required";
+                                                                    setErrors({ ...errors });
+
+                                                                    formData.payments_input[key].method = "";
+                                                                    setFormData({ ...formData });
+                                                                    return;
+                                                                }
+
+                                                                // errors["payment_method"] = "";
+                                                                //setErrors({ ...errors });
+
+                                                                formData.payments_input[key].method = e.target.value;
+                                                                setFormData({ ...formData });
+                                                                console.log(formData);
+                                                            }}
+                                                        >
+                                                            <option value="">Select</option>
+                                                            <option value="cash">Cash</option>
+                                                            <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                                            <option value="customer_account">Customer Account</option>
+                                                        </select>
+                                                        {errors["payment_method_" + key] && (
+                                                            <div style={{ color: "red" }}>
+                                                                <i className="bi bi-x-lg"> </i>
+                                                                {errors["payment_method_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        <Button variant="danger" onClick={(event) => {
+                                                            removePayment(key);
+                                                        }}>
+                                                            Remove
+                                                        </Button>
+
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        <tr>
+                                            <td class="text-end">
+                                                <b>Total</b>
+                                            </td>
+                                            <td><b style={{ marginLeft: "14px" }}>{totalPaymentAmount?.toFixed(2)}</b>
+
+                                            </td>
+                                            <td>
+                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {balanceAmount?.toFixed(2)}</b>
+                                            </td>
+                                            <td colSpan={1}>
+                                                <b>Payment status: </b>
+                                                {paymentStatus == "paid" ?
+                                                    <span className="badge bg-success">
+                                                        Paid
+                                                    </span> : ""}
+                                                {paymentStatus == "paid_partially" ?
+                                                    <span className="badge bg-warning">
+                                                        Paid Partially
+                                                    </span> : ""}
+                                                {paymentStatus == "not_paid" ?
+                                                    <span className="badge bg-danger">
+                                                        Not Paid
+                                                    </span> : ""}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             </div>
-
                         </div>
 
 
-                        {!formData.id ? <div className="col-md-2">
-                            <label className="form-label">Payment method*</label>
 
-                            <div className="input-group mb-3">
-                                <select
-                                    value={formData.payment_method}
-                                    disabled={formData.payment_status == "not_paid" ? "disabled" : ""}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange payment method");
-                                        if (!e.target.value) {
-                                            errors["status"] = "Payment Method is required";
-                                            setErrors({ ...errors });
-                                            formData.payment_method = "";
-                                            setFormData({ ...formData });
-                                            return;
-                                        }
-
-                                        errors["payment_method"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.payment_method = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="">Select</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="bank_account">Bank Account  / Debit / Credit Card</option>
-                                </select>
-                                {errors.payment_method && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.payment_method}
-                                    </div>
-                                )}
-                            </div>
-                        </div> : ""}
-
-                        {!formData.id ? <div className="col-md-2">
-                            <label className="form-label">Payment Status*</label>
-
-                            <div className="input-group mb-3">
-                                <select
-                                    value={formData.payment_status}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange payment Status");
-                                        if (!e.target.value) {
-                                            errors["status"] = "Payment status is required12";
-                                            setErrors({ ...errors });
-                                            formData.payment_status = "";
-                                            setFormData({ ...formData });
-                                            return;
-                                        }
-
-                                        errors["payment_status"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.payment_status = e.target.value;
-                                        if (formData.payment_status !== "paid_partially") {
-                                            formData.partial_payment_amount = 0.00;
-                                        }
-                                        setFormData({ ...formData });
-
-
-                                        if (formData.payment_status == "not_paid") {
-                                            formData.payment_method = "";
-                                            setFormData({ ...formData });
-                                        }
-
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                >
-                                    <option value="paid">Paid</option>
-                                    <option value="not_paid">Not Paid</option>
-                                    <option value="paid_partially">Paid Partially</option>
-                                </select>
-                                {errors.payment_status && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.payment_status}
-                                    </div>
-                                )}
-                            </div>
-                        </div> : ""}
-
-
-                        {formData.payment_status === "paid_partially" ? <div className="col-md-3">
-                            <label className="form-label">Patial Payment Amount*</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    type='number'
-                                    value={formData.partial_payment_amount}
-                                    onChange={(e) => {
-                                        console.log("Inside onchange vat discount");
-                                        if (!e.target.value) {
-                                            formData.partial_payment_amount = e.target.value;
-                                            errors["partial_payment_amount"] = "Invalid partial payment amount";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-                                        formData.partial_payment_amount = parseFloat(e.target.value);
-                                        errors["partial_payment_amount"] = "";
-
-                                        if (formData.partial_payment_amount >= netTotal) {
-                                            errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-                                        setErrors({ ...errors });
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="validationCustom02"
-                                    placeholder="Amount"
-                                />
-                                {errors.partial_payment_amount && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.partial_payment_amount}
-                                    </div>
-                                )}
-                            </div>
-                        </div> : ""}
 
 
                         <Modal.Footer>

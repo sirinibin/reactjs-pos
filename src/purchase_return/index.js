@@ -644,7 +644,7 @@ function PurchaseReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,purchase_code,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_method,payment_methods,payment_status,balance_amount,store_id";
+            "select=id,code,purchase_code,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_method,payment_methods,payment_status,balance_amount,store_id";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -705,6 +705,9 @@ function PurchaseReturnIndex(props) {
 
                 totalDiscount = data.meta.discount;
                 setTotalDiscount(totalDiscount);
+
+                totalCashDiscount = data.meta.cash_discount;
+                setTotalCashDiscount(totalCashDiscount);
 
                 totalPaidPurchaseReturn = data.meta.paid_purchase_return;
                 setTotalPaidPurchaseReturn(totalPaidPurchaseReturn);
@@ -816,6 +819,8 @@ function PurchaseReturnIndex(props) {
         },
     ];
 
+    let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
+
     return (
         <>
             <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
@@ -884,7 +889,18 @@ function PurchaseReturnIndex(props) {
                             </Badge>
                         </h1>
                         <h1 className="text-end">
-                            Discounts: <Badge bg="secondary">
+                            Cash Discounts: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalCashDiscount.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Purchase return Discounts: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalDiscount.toFixed(2)}
                                     displayType={"text"}
@@ -1181,6 +1197,25 @@ function PurchaseReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("cash_discount");
+                                                        }}
+                                                    >
+                                                        Cash Discount
+                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "cash_discount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("total_payment_paid");
                                                         }}
                                                     >
@@ -1442,6 +1477,16 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
+                                                        id="cash_discount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("cash_discount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
                                                         id="total_payment_paid"
                                                         onChange={(e) =>
                                                             searchByFieldValue("total_payment_paid", e.target.value)
@@ -1608,7 +1653,8 @@ function PurchaseReturnIndex(props) {
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>{purchasereturn.net_total} SAR</td>
+                                                        <td>{purchasereturn.net_total}</td>
+                                                        <td>{purchasereturn.cash_discount?.toFixed(2)}</td>
                                                         <td>
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchasereturn);

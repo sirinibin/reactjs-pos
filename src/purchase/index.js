@@ -30,6 +30,7 @@ function PurchaseIndex(props) {
     let [vatPrice, setVatPrice] = useState(0.00);
     let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
+    let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
     let [netRetailProfit, setNetRetailProfit] = useState(0.00);
     let [netWholesaleProfit, setNetWholesaleProfit] = useState(0.00);
 
@@ -881,7 +882,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_method,payment_methods,payment_status,balance_amount";
+            "select=id,code,date,net_total,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_method,payment_methods,payment_status,balance_amount";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -945,6 +946,9 @@ function PurchaseIndex(props) {
 
                 totalDiscount = data.meta.discount;
                 setTotalDiscount(totalDiscount);
+
+                totalCashDiscount = data.meta.cash_discount;
+                setTotalCashDiscount(totalCashDiscount);
 
 
                 netRetailProfit = data.meta.net_retail_profit;
@@ -1132,7 +1136,18 @@ function PurchaseIndex(props) {
                             </Badge>
                         </h1>
                         <h1 className="text-end">
-                            Discounts: <Badge bg="secondary">
+                            Cash Discounts: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalCashDiscount.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" SAR"}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Purchase Discounts: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalDiscount.toFixed(2)}
                                     displayType={"text"}
@@ -1444,6 +1459,25 @@ function PurchaseIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("cash_discount");
+                                                        }}
+                                                    >
+                                                        Cash Discount
+                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "cash_discount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("total_payment_paid");
                                                         }}
                                                     >
@@ -1542,7 +1576,7 @@ function PurchaseIndex(props) {
                                                             sort("discount");
                                                         }}
                                                     >
-                                                        Discount
+                                                        Purchase Discount
                                                         {sortField === "discount" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
@@ -1791,6 +1825,16 @@ function PurchaseIndex(props) {
                                                         id="net_total"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_total", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="cash_discount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("cash_discount", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -2084,6 +2128,7 @@ function PurchaseIndex(props) {
                                                                 renderText={(value, props) => value}
                                                             />
                                                         </td>
+                                                        <td>{purchase.cash_discount?.toFixed(2)}</td>
                                                         <td>
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchase);

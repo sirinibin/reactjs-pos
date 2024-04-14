@@ -275,7 +275,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {model.products && model.products.map((product, index) => (
+                            {model.products && model.products.filter(product => product.selected).map((product, index) => (
                                 <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>{product.part_number}</td>

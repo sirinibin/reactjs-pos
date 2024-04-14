@@ -131,8 +131,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     formData.payments_input = [];
                 }
 
-                for (var i = 0; i < formData.payments_input.length; i++) {
-                    formData.payments_input[i].date_str = formData.payments_input[i].date
+                if (data.result.payments) {
+                    console.log("data.result.payments:", data.result.payments);
+                    formData.payments_input = data.result.payments;
+                    for (var i = 0; i < formData.payments_input?.length; i++) {
+                        formData.payments_input[i].date_str = formData.payments_input[i].date
+                    }
                 }
 
 
@@ -147,11 +151,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 selectedProducts = [];
                 for (let i = 0; i < selectedProductsTemp.length; i++) {
-                    if (selectedProductsTemp[i].quantity > 0) {
-                        selectedProductsTemp[i].selected = true;
-                    } else {
-                        selectedProductsTemp[i].selected = false;
-                    }
                     selectedProducts.push(selectedProductsTemp[i]);
 
                     //selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
@@ -516,15 +515,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         formData.products = [];
         for (var i = 0; i < selectedProducts?.length; i++) {
-            if (!selectedProducts[i].selected) {
-                continue;
-            }
-
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
                 quantity: parseFloat(selectedProducts[i].quantity),
                 unit_price: parseFloat(selectedProducts[i].unit_price),
                 unit: selectedProducts[i].unit,
+                selected: selectedProducts[i].selected,
             });
         }
 
@@ -885,6 +881,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         setErrors({ ...errors });
         let haveErrors = false;
         if (!netTotal) {
+            /*
             removePayment(0,false);
             totalPaymentAmount=0.0;
             setTotalPaymentAmount(0.00);
@@ -892,6 +889,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             setBalanceAmount(0.00);
             paymentStatus="";
             setPaymentStatus(paymentStatus);
+            */
             return true;
         }
 
@@ -1381,81 +1379,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             </table>
                         </div>
 
-
-
-
-
-
-
-                        {/*
-                        <div className="col-md-2">
-                            <label className="form-label">Discount*</label>
-
-                            <div className="input-group mb-3" >
-                                <input
-                                    value={formData.discountValue}
-                                    style={{ marginRight: "10px" }}
-                                    type='number'
-                                    onChange={(e) => {
-                                        if (parseFloat(e.target.value) === 0) {
-                                            formData.discountValue = parseFloat(e.target.value);
-                                            setFormData({ ...formData });
-                                            errors["discount"] = "";
-                                            setErrors({ ...errors });
-                                            reCalculate();
-                                            return;
-                                        }
-
-                                        if (!e.target.value) {
-                                            formData.discountValue = "";
-                                            errors["discount"] = "Invalid Discount";
-                                            setFormData({ ...formData });
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        errors["discount"] = "";
-                                        setErrors({ ...errors });
-
-                                        formData.discountValue = e.target.value;
-                                        setFormData({ ...formData });
-                                        reCalculate();
-                                    }}
-                                    className="form-control"
-                                    id="validationCustom02"
-                                    placeholder="Discount"
-                                />
-                                <Form.Check
-                                    type="switch"
-                                    id="custom-switch"
-                                    label="%"
-                                    value={formData.is_discount_percent}
-                                    checked={formData.is_discount_percent ? "checked" : null}
-                                    onChange={(e) => {
-                                        formData.is_discount_percent = !formData.is_discount_percent;
-                                        console.log("e.target.value:", formData.is_discount_percent);
-                                        setFormData({ ...formData });
-                                        reCalculate();
-                                    }}
-                                />
-
-                            </div>
-                            {errors.discount && (
-                                <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
-                                    {errors.discount}
-                                </div>
-                            )}
-                            {!errors.discount && (
-                                <div style={{ color: "green" }}>
-                                    <i className="bi bi-check-lg"> </i>
-                                    Looks good!
-                                </div>
-                            )}
-                        </div>
-                            */}
-
-
                         <div className="col-md-2">
                             <label className="form-label">Cash discount</label>
                             <input type='number' value={formData.cash_discount} className="form-control "
@@ -1489,7 +1412,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-8">
-                            <label className="form-label">Payments Received</label>
+                            <label className="form-label">Payments given</label>
 
                             <div class="table-responsive" style={{ maxWidth: "900px" }}>
                                 <Button variant="secondary" style={{ alignContent: "right" }} onClick={addNewPayment}>
@@ -1530,30 +1453,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             onChange={(value) => {
                                                                 console.log("Value", value);
                                                                 formData.payments_input[key].date_str = value;
-                                                                let paymentDate = new Date(formData.payments_input[key].date_str)
-                                                                let orderDate = new Date(formData.date_str)
-
-
-                                                                let paymentYear = paymentDate.getFullYear();
-                                                                let paymentMonth = paymentDate.getMonth();
-                                                                let paymentDay = paymentDate.getDate();
-                                                                let paymentMinutes = paymentDate.getMinutes();
-                                                                var paymentHours = paymentDate.getHours();
-
-                                                                let orderYear = orderDate.getFullYear();
-                                                                let orderMonth = orderDate.getMonth();
-                                                                let orderDay = orderDate.getDate();
-                                                                let orderMinutes = orderDate.getMinutes();
-                                                                var orderHours = orderDate.getHours();
-
-                                                                if (paymentYear == orderYear
-                                                                    && paymentMonth == orderMonth
-                                                                    && paymentDay == orderDay
-                                                                    && paymentHours == orderHours
-                                                                    && paymentMinutes == orderMinutes) {
-                                                                    formData.date_str = formData.payments_input[key].date_str;
-
-                                                                }
                                                                 setFormData({ ...formData });
                                                             }}
                                                         />

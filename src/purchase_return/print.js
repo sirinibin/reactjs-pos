@@ -58,6 +58,10 @@ const PurchasePrint = forwardRef((props, ref) => {
                     });
 
                     for (let j = offset; j < totalProducts; j++) {
+                        if(!model.products[j].selected){
+                            continue;
+                        }
+
                         model.pages[i].products.push(model.products[j]);
 
                         if (model.pages[i].products.length === pageSize) {

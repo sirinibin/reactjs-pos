@@ -229,16 +229,16 @@ function PurchasePaymentIndex(props) {
                 setTotalPayments(totalPayments);
 
                 if (props.purchase && !deleted) {
-                    balanceAmount = props.purchase.net_total - totalPayments;
+                    balanceAmount = (props.purchase.net_total-props.purchase.cash_discount) - totalPayments;
                     setBalanceAmount(balanceAmount);
 
-                    if (balanceAmount == props.purchase.net_total) {
+                    if (balanceAmount == (props.purchase.net_total-props.purchase.cash_discount)) {
                         paymentStatus = "not_paid";
                         setPaymentStatus(paymentStatus);
-                    } else if (balanceAmount == 0) {
+                    } else if (balanceAmount <= 0) {
                         paymentStatus = "paid";
                         setPaymentStatus(paymentStatus);
-                    } else {
+                    } else if (balanceAmount > 0){
                         paymentStatus = "paid_partially";
                         setPaymentStatus(paymentStatus);
                     }

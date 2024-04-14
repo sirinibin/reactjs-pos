@@ -246,17 +246,18 @@ function PurchaseReturnPaymentIndex(props) {
                 totalPayments = data.meta.total_payment;
                 setTotalPayments(totalPayments);
 
+
                 if (props.purchaseReturn && !deleted) {
-                    balanceAmount = props.purchaseReturn.net_total - totalPayments;
+                    balanceAmount = (props.purchaseReturn.net_total - props.purchaseReturn.cash_discount) - totalPayments;
                     setBalanceAmount(balanceAmount);
 
-                    if (balanceAmount == props.purchaseReturn.net_total) {
+                    if (balanceAmount == (props.purchaseReturn.net_total - props.purchaseReturn.cash_discount)) {
                         paymentStatus = "not_paid";
                         setPaymentStatus(paymentStatus);
-                    } else if (balanceAmount == 0) {
+                    } else if (balanceAmount <= 0) {
                         paymentStatus = "paid";
                         setPaymentStatus(paymentStatus);
-                    } else {
+                    } else if (balanceAmount > 0) {
                         paymentStatus = "paid_partially";
                         setPaymentStatus(paymentStatus);
                     }
@@ -877,10 +878,10 @@ function PurchaseReturnPaymentIndex(props) {
                                                         onChange={(e) => {
                                                             searchByFieldValue("deleted", e.target.value)
                                                             if (e.target.value == "1") {
-                                                                deleted=true;
+                                                                deleted = true;
                                                                 setDeleted(deleted);
                                                             } else {
-                                                                deleted=false;
+                                                                deleted = false;
                                                                 setDeleted(deleted);
                                                             }
                                                         }}

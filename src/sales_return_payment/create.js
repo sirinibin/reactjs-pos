@@ -449,6 +449,7 @@ const SalesReturnPaymentCreate = forwardRef((props, ref) => {
                                         <option value="">Select</option>
                                         <option value="cash">Cash</option>
                                         <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                        <option value="customer_account">Customer Account</option>
                                     </select>
                                     {errors.method && (
                                         <div style={{ color: "red" }}>
