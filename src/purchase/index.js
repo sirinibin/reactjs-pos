@@ -1086,7 +1086,7 @@ function PurchaseIndex(props) {
                                     value={totalPurchase}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={""}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1097,7 +1097,7 @@ function PurchaseIndex(props) {
                                     value={totalPaidPurchase.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1108,7 +1108,7 @@ function PurchaseIndex(props) {
                                     value={totalCashPurchase.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1119,7 +1119,7 @@ function PurchaseIndex(props) {
                                     value={totalBankAccountPurchase.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1130,7 +1130,7 @@ function PurchaseIndex(props) {
                                     value={totalUnPaidPurchase.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1141,7 +1141,7 @@ function PurchaseIndex(props) {
                                     value={totalCashDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1152,7 +1152,7 @@ function PurchaseIndex(props) {
                                     value={totalDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1163,7 +1163,7 @@ function PurchaseIndex(props) {
                                     value={totalShippingHandlingFees.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1174,7 +1174,7 @@ function PurchaseIndex(props) {
                                     value={vatPrice.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1186,7 +1186,7 @@ function PurchaseIndex(props) {
                                         value={netRetailProfit}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </Badge>
@@ -1198,7 +1198,7 @@ function PurchaseIndex(props) {
                                         value={netWholesaleProfit}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </Badge>
@@ -2124,7 +2124,7 @@ function PurchaseIndex(props) {
                                                                 value={purchase.net_total}
                                                                 displayType={"text"}
                                                                 thousandSeparator={true}
-                                                                suffix={" SAR"}
+                                                                suffix={" "}
                                                                 renderText={(value, props) => value}
                                                             />
                                                         </td>
@@ -2169,7 +2169,7 @@ function PurchaseIndex(props) {
                                                                 value={purchase.discount}
                                                                 displayType={"text"}
                                                                 thousandSeparator={true}
-                                                                suffix={" SAR"}
+                                                                suffix={" "}
                                                                 renderText={(value, props) => value}
                                                             />
                                                         </td>
@@ -2178,7 +2178,7 @@ function PurchaseIndex(props) {
                                                                 value={purchase.vat_price}
                                                                 displayType={"text"}
                                                                 thousandSeparator={true}
-                                                                suffix={" SAR"}
+                                                                suffix={" "}
                                                                 renderText={(value, props) => value}
                                                             />
                                                         </td>
@@ -2188,7 +2188,7 @@ function PurchaseIndex(props) {
                                                                     value={purchase.net_retail_profit}
                                                                     displayType={"text"}
                                                                     thousandSeparator={true}
-                                                                    suffix={" SAR"}
+                                                                    suffix={" "}
                                                                     renderText={(value, props) => value}
                                                                 />
                                                             </td>
@@ -2199,7 +2199,7 @@ function PurchaseIndex(props) {
                                                                     value={purchase.net_wholesale_profit}
                                                                     displayType={"text"}
                                                                     thousandSeparator={true}
-                                                                    suffix={" SAR"}
+                                                                    suffix={" "}
                                                                     renderText={(value, props) => value}
                                                                 />
                                                             </td>

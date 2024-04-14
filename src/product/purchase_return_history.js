@@ -272,7 +272,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                             value={totalPurchaseReturn}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -283,7 +283,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                             value={totalVatReturn.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -776,9 +776,9 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price.toFixed(2)}</td>
-                                                                <td>{history.price.toFixed(2) + " SAR"}</td>
-                                                                <td>{history.vat_price.toFixed(2) + " SAR  (" + history.vat_percent.toFixed(2) + "%)"}</td>
-                                                                <td>{history.net_price.toFixed(2) + " SAR"}</td>
+                                                                <td>{history.price.toFixed(2) + " "}</td>
+                                                                <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
+                                                                <td>{history.net_price.toFixed(2) + " "}</td>
                                                                 {/* <td>   
                                                         <button
                                                             className="btn btn-outline-secondary dropdown-toggle"

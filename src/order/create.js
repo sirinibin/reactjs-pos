@@ -1688,7 +1688,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                    <span className="input-group-text" id="basic-addon2">SAR</span>
+                                                    <span className="input-group-text" id="basic-addon2"></span>
                                                 </div>
                                                 {errors["unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
@@ -1703,7 +1703,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     value={(product.unit_price * product.quantity).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
-                                                    suffix={" SAR"}
+                                                    suffix={" "}
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
@@ -1724,7 +1724,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 value={totalPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={" "}
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
@@ -1769,7 +1769,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 setFormData({ ...formData });
                                                 reCalculate();
                                             }} />
-                                            {" SAR"}
+                                            {" "}
                                             {errors.shipping_handling_fees && (
                                                 <div style={{ color: "red" }}>
                                                     {errors.shipping_handling_fees}
@@ -1863,7 +1863,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 setFormData({ ...formData });
                                                 reCalculate();
                                             }} />
-                                            {" SAR"}
+                                            {" "}
                                             {errors.discount && (
                                                 <div style={{ color: "red" }}>
                                                     {errors.discount}
@@ -1924,7 +1924,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 value={vatPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={" "}
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
@@ -1937,7 +1937,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 value={netTotal?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={" "}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>

@@ -839,7 +839,7 @@ function PurchaseReturnIndex(props) {
                                     value={totalPurchaseReturn}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -850,7 +850,7 @@ function PurchaseReturnIndex(props) {
                                     value={totalPaidPurchaseReturn?.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -861,7 +861,7 @@ function PurchaseReturnIndex(props) {
                                     value={totalCashPurchaseReturn.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -872,7 +872,7 @@ function PurchaseReturnIndex(props) {
                                     value={totalBankAccountPurchaseReturn.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -883,7 +883,7 @@ function PurchaseReturnIndex(props) {
                                     value={totalUnPaidPurchaseReturn.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -894,7 +894,7 @@ function PurchaseReturnIndex(props) {
                                     value={totalCashDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -905,7 +905,7 @@ function PurchaseReturnIndex(props) {
                                     value={totalDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -916,7 +916,7 @@ function PurchaseReturnIndex(props) {
                                     value={vatPrice.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>

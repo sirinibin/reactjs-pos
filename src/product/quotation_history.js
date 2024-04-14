@@ -280,7 +280,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             value={totalQuotation}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -291,7 +291,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             value={totalProfit}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -302,7 +302,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             value={totalLoss}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -313,7 +313,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             value={totalVat.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -871,11 +871,11 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price.toFixed(2)}</td>
-                                                                <td>{history.price.toFixed(2) + " SAR"}</td>
-                                                                <td>{history.vat_price.toFixed(2) + " SAR  (" + history.vat_percent.toFixed(2) + "%)"}</td>
-                                                                <td>{history.net_price.toFixed(2) + " SAR"}</td>
-                                                                {cookies.get('admin') === "true" ? <td>{history.profit.toFixed(2) + " SAR"}</td> : ""}
-                                                                {cookies.get('admin') === "true" ? <td>{history.loss.toFixed(2) + " SAR"}</td> : ""}
+                                                                <td>{history.price.toFixed(2) + " "}</td>
+                                                                <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
+                                                                <td>{history.net_price.toFixed(2) + " "}</td>
+                                                                {cookies.get('admin') === "true" ? <td>{history.profit.toFixed(2) + " "}</td> : ""}
+                                                                {cookies.get('admin') === "true" ? <td>{history.loss.toFixed(2) + " "}</td> : ""}
 
                                                                 {/* <td>   
                                                         <button

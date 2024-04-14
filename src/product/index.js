@@ -474,7 +474,7 @@ function ProductIndex(props) {
                                     value={retailStockValue}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -486,7 +486,7 @@ function ProductIndex(props) {
                                     value={wholesaleStockValue}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -498,7 +498,7 @@ function ProductIndex(props) {
                                     value={purchaseStockValue}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>

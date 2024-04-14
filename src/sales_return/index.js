@@ -852,7 +852,7 @@ function SalesReturnIndex(props) {
                                     value={totalSalesReturn}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -863,7 +863,7 @@ function SalesReturnIndex(props) {
                                     value={totalPaidSalesReturn.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -874,7 +874,7 @@ function SalesReturnIndex(props) {
                                     value={totalCashSalesReturn.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -885,7 +885,7 @@ function SalesReturnIndex(props) {
                                     value={totalBankAccountSalesReturn.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -896,7 +896,7 @@ function SalesReturnIndex(props) {
                                     value={totalUnPaidSalesReturn.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -907,7 +907,7 @@ function SalesReturnIndex(props) {
                                     value={netProfit}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -918,7 +918,7 @@ function SalesReturnIndex(props) {
                                     value={loss}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -929,7 +929,7 @@ function SalesReturnIndex(props) {
                                     value={totalDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -940,7 +940,7 @@ function SalesReturnIndex(props) {
                                     value={totalCashDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -951,7 +951,7 @@ function SalesReturnIndex(props) {
                                     value={vatPrice.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1724,7 +1724,7 @@ function SalesReturnIndex(props) {
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>{salesreturn.net_total} SAR</td>
+                                                        <td>{salesreturn.net_total} </td>
                                                         <td>{salesreturn.cash_discount?.toFixed(2)}</td>
                                                         <td>
                                                            

@@ -1559,8 +1559,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-
-                                                    <span className="input-group-text" id="basic-addon2">SAR</span>
                                                 </div>
 
                                                 {errors["purchase_unit_price_" + index] && (
@@ -1602,7 +1600,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                    <span className="input-group-text" id="basic-addon2">SAR</span>
+                                                   
                                                 </div>
 
                                                 {errors["wholesale_unit_price_" + index] && (
@@ -1645,7 +1643,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                    <span className="input-group-text" id="basic-addon2">SAR</span>
+                                                   
                                                 </div>
 
                                                 {errors["retail_unit_price_" + index] && (
@@ -1661,7 +1659,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
-                                                    suffix={" SAR"}
+                                                    suffix={""}
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
@@ -1682,7 +1680,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 value={totalPrice}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
@@ -1727,7 +1725,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 setFormData({ ...formData });
                                                 reCalculate();
                                             }} />
-                                            {" SAR"}
+                                            {""}
                                             {errors.shipping_handling_fees && (
                                                 <div style={{ color: "red" }}>
                                                     {errors.shipping_handling_fees}
@@ -1821,7 +1819,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 setFormData({ ...formData });
                                                 reCalculate();
                                             }} />
-                                            {" SAR"}
+                                            {""}
                                             {errors.discount && (
                                                 <div style={{ color: "red" }}>
                                                     {errors.discount}
@@ -1882,7 +1880,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 value={vatPrice}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
@@ -1895,7 +1893,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 value={netTotal}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>

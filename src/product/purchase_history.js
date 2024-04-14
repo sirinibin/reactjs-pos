@@ -288,7 +288,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             value={totalPurchase}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -299,7 +299,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             value={totalRetailProfit}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -310,7 +310,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             value={totalWholesaleProfit}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -321,7 +321,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             value={totalRetailLoss}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -332,7 +332,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             value={totalWholesaleLoss}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -343,7 +343,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             value={totalVat.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
@@ -964,13 +964,13 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price.toFixed(2)}</td>
-                                                                <td>{history.price.toFixed(2) + " SAR"}</td>
-                                                                <td>{history.vat_price.toFixed(2) + " SAR  (" + history.vat_percent.toFixed(2) + "%)"}</td>
-                                                                <td>{history.net_price.toFixed(2) + " SAR"}</td>
-                                                                {cookies.get('admin') === "true" ? <td>{history.retail_profit.toFixed(2) + " SAR"}</td> : ""}
-                                                                {cookies.get('admin') === "true" ? <td>{history.wholesale_profit.toFixed(2) + " SAR"}</td> : ""}
-                                                                {cookies.get('admin') === "true" ? <td>{history.retail_loss.toFixed(2) + " SAR"}</td> : ""}
-                                                                {cookies.get('admin') === "true" ? <td>{history.wholesale_loss.toFixed(2) + " SAR"}</td> : ""}
+                                                                <td>{history.price.toFixed(2) + " "}</td>
+                                                                <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
+                                                                <td>{history.net_price.toFixed(2) + " "}</td>
+                                                                {cookies.get('admin') === "true" ? <td>{history.retail_profit.toFixed(2) + " "}</td> : ""}
+                                                                {cookies.get('admin') === "true" ? <td>{history.wholesale_profit.toFixed(2) + " "}</td> : ""}
+                                                                {cookies.get('admin') === "true" ? <td>{history.retail_loss.toFixed(2) + " "}</td> : ""}
+                                                                {cookies.get('admin') === "true" ? <td>{history.wholesale_loss.toFixed(2) + " "}</td> : ""}
 
                                                                 {/* <td>   
                                                         <button

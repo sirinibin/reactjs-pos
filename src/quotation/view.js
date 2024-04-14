@@ -125,7 +125,7 @@ const QuotationView = forwardRef((props, ref) => {
                 <div className="table-responsive" style={{ overflowX: "auto" }}>
                     <table className="table table-striped table-sm table-bordered">
                         <thead>
-                            <tr className="text-center">
+                            <tr className="text-end">
                                 <th>SI No.</th>
                                 <th>Part No.</th>
                                 <th>Name</th>
@@ -140,7 +140,7 @@ const QuotationView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.products && model.products.map((product, index) => (
-                                <tr key={index} className="text-center">
+                                <tr key={index} className="text-end">
                                     <td>{index + 1}</td>
                                     <td>{product.part_number}</td>
                                     <td>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
@@ -150,7 +150,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             value={product.unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </td>
@@ -159,7 +159,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             value={(product.unit_price * product.quantity).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </td>
@@ -168,7 +168,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             value={product.purchase_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </td>
@@ -177,7 +177,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </td>
@@ -186,7 +186,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             value={product.profit}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </td>
@@ -195,7 +195,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             value={product.loss}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                             renderText={(value, props) => value}
                                         />
                                     </td>
@@ -210,17 +210,17 @@ const QuotationView = forwardRef((props, ref) => {
                                         value={model.total}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </td>
                                 <td colSpan="2" ></td>
-                                <td className="text-center">
+                                <td className="text-end">
                                     <NumberFormat
                                         value={model.profit}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </td>
@@ -229,7 +229,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         value={model.loss}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </td>
@@ -244,9 +244,9 @@ const QuotationView = forwardRef((props, ref) => {
                                         value={model.shipping_handling_fees.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
-                                    /> : "0.00 SAR"}
+                                    /> : "0.00 "}
                                 </td>
                                 <td colSpan="3"></td>
                             </tr>
@@ -260,7 +260,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         value={model.discount}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </td>
@@ -270,7 +270,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         value={(0 - model.discount)}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </td>
@@ -279,7 +279,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         value={0}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </td>
@@ -288,19 +288,19 @@ const QuotationView = forwardRef((props, ref) => {
                                 <th colSpan="4" className="text-end">
                                     VAT
                                 </th>
-                                <td className="text-center">{model.vat_percent + "%"}</td>
+                                <td className="text-end">{model.vat_percent + "%"}</td>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={model.vat_price}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </td>
                                 <td colSpan="2"></td>
-                                <td className="text-center">0 SAR</td>
-                                <td className="text-center">0 SAR</td>
+                                <td className="text-end">0 </td>
+                                <td className="text-end">0 </td>
                             </tr>
                             <tr>
                                 <td colSpan="4"></td>
@@ -310,26 +310,26 @@ const QuotationView = forwardRef((props, ref) => {
                                         value={model.net_total}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </th>
                                 <th colSpan="2" className="text-end">Net Profit</th>
-                                <th className="text-center">
+                                <th className="text-end">
                                     <NumberFormat
                                         value={model.net_profit}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </th>
-                                <th className="text-center">
+                                <th className="text-end">
                                     <NumberFormat
                                         value={model.loss}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={" "}
                                         renderText={(value, props) => value}
                                     />
                                 </th>
@@ -348,8 +348,8 @@ const QuotationView = forwardRef((props, ref) => {
                         <tr>
                             <th>Date:</th><td> {model.date_str}</td>
                             <th>VAT %:</th><td> {model.vat_percent}%</td>
-                            <th>Discount :</th><td> {model.discount} SAR</td>
-                            <th>Discount %:</th><td> {model.discount_percent} SAR</td>
+                            <th>Discount :</th><td> {model.discount} </td>
+                            <th>Discount %:</th><td> {model.discount_percent} </td>
                         </tr>
                         <tr>
                             <th>Status:</th><td> {model.status}</td>
@@ -359,8 +359,8 @@ const QuotationView = forwardRef((props, ref) => {
                         <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
-                            <th>Profit :</th><td> {model.profit} SAR</td>
-                            <th>Loss:</th><td> {model.loss} SAR</td>
+                            <th>Profit :</th><td> {model.profit} </td>
+                            <th>Loss:</th><td> {model.loss} </td>
                         </tr>
                         <tr>
                             <th>Delivery days:</th><td> {model.delivery_days}</td>

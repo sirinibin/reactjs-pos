@@ -1010,7 +1010,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={totalSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1021,7 +1021,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={totalPaidSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1032,7 +1032,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={totalCashSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1043,7 +1043,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={totalBankAccountSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1054,7 +1054,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={totalUnPaidSales.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1065,7 +1065,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={totalCashDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1076,7 +1076,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={totalDiscount.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1088,7 +1088,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={totalShippingHandlingFees.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1099,7 +1099,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={vatPrice.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1111,7 +1111,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={netProfit.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -1122,7 +1122,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     value={loss.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
-                                    suffix={" SAR"}
+                                    suffix={" "}
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
@@ -2001,10 +2001,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 ))}
 
                                                         </td>
-                                                        <td>{order.discount.toFixed(2)} SAR</td>
+                                                        <td>{order.discount.toFixed(2)} </td>
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
-                                                        {cookies.get('admin') === "true" ? <td>{order.net_profit?.toFixed(2)} SAR</td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{order.net_loss ?.toFixed(2)} SAR</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{order.net_profit?.toFixed(2)} </td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{order.net_loss ?.toFixed(2)} </td> : ""}
                                                         <td>{order.created_by_name}</td>
                                                         <td>{order.customer_name}</td>
                                                         <td>

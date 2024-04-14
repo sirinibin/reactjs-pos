@@ -178,6 +178,105 @@ const PurchaseReturnView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
 
+            <div className="table-responsive" style={{ overflowX: "auto" }}>
+                    <table className="table table-striped table-sm table-bordered">
+                        <thead>
+                            <tr className="text-end">
+                                <th>SI No.</th>
+                                <th>Part No.</th>
+                                <th>Name</th>
+                                <th>Qty</th>
+                                <th>Purchase Return Unit Price</th>
+                                <th>Purchase Return Price</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {model.products && model.products.filter(product => product.selected).map((product, index) => (
+                                <tr key={index} className="text-end">
+                                    <td>{index + 1}</td>
+                                    <td>{product.part_number}</td>
+                                    <td>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
+                                    <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.purchasereturn_unit_price}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={(product.purchasereturn_unit_price * product.quantity).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                </tr>
+                            ))}
+                            <tr>
+                                <td colSpan="4"></td>
+                                <th className="text-end">Total</th>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.total}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th colSpan="5" className="text-end">
+                                    Discount
+                                </th>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.discount}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                            </tr>
+                            <tr>
+                                <th colSpan="4" className="text-end">
+                                    
+                                </th>
+                                <td className="text-end">VAT: {model.vat_percent + "%"}</td>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.vat_price}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td colSpan="4"></td>
+                                <th className="text-end">Net Total</th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.net_total}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
                 <Table striped bordered hover responsive="xl">
                     <tbody>
                         <tr>
@@ -196,8 +295,9 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                         <tr>
                             <th>Date:</th><td> {model.date}</td>
                             <th>VAT %:</th><td> {model.vat_percent}%</td>
-                            <th>Discount :</th><td> {model.discount} SAR</td>
-                            <th>Discount %:</th><td> {model.discount_percent} SAR</td>
+                            <th>Cash Discount :</th><td> {model.cash_discount} </td>
+                            <th>Discount :</th><td> {model.discount} </td>
+                            <th>Discount %:</th><td> {model.discount_percent} </td>
                         </tr>
                         <tr>
                             <th>Status:</th><td> {model.status}</td>
@@ -239,11 +339,11 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="text-center">
+                                            <tbody className="text-end">
                                                 {purchaseReturnPaymentList &&
                                                     purchaseReturnPaymentList.map((payment) => (
                                                         <tr key={payment.id}>
-                                                            <td>{payment.amount.toFixed(2) + " SAR"}</td>
+                                                            <td>{payment.amount.toFixed(2) + " "}</td>
                                                             <td>{payment.method}</td>
                                                             <td>{payment.created_by_name}</td>
                                                             <td>
@@ -262,104 +362,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                     </tbody>
                 </Table>
 
-                <div className="table-responsive" style={{ overflowX: "auto" }}>
-                    <table className="table table-striped table-sm table-bordered">
-                        <thead>
-                            <tr className="text-center">
-                                <th>SI No.</th>
-                                <th>Part No.</th>
-                                <th>Name</th>
-                                <th>Qty</th>
-                                <th>Purchase Return Unit Price</th>
-                                <th>Purchase Return Price</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {model.products && model.products.filter(product => product.selected).map((product, index) => (
-                                <tr key={index} className="text-center">
-                                    <td>{index + 1}</td>
-                                    <td>{product.part_number}</td>
-                                    <td>{product.name}{product.name_in_arabic ? " / " + product.name_in_arabic : ""}</td>
-                                    <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
-                                    <td>
-                                        <NumberFormat
-                                            value={product.purchasereturn_unit_price}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    <td>
-                                        <NumberFormat
-                                            value={(product.purchasereturn_unit_price * product.quantity).toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" SAR"}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                </tr>
-                            ))}
-                            <tr>
-                                <td colSpan="4"></td>
-                                <th className="text-end">Total</th>
-                                <td className="text-center">
-                                    <NumberFormat
-                                        value={model.total}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <th colSpan="5" className="text-end">
-                                    Discount
-                                </th>
-                                <td className="text-center">
-                                    <NumberFormat
-                                        value={model.discount}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                            </tr>
-                            <tr>
-                                <th colSpan="4" className="text-end">
-                                    VAT
-                                </th>
-                                <td className="text-center">{model.vat_percent + "%"}</td>
-                                <td className="text-center">
-                                    <NumberFormat
-                                        value={model.vat_price}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </td>
-                            </tr>
-
-                            <tr>
-                                <td colSpan="4"></td>
-                                <th className="text-end">Net Total</th>
-                                <th className="text-center">
-                                    <NumberFormat
-                                        value={model.net_total}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" SAR"}
-                                        renderText={(value, props) => value}
-                                    />
-                                </th>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+               
 
                 {/*
                     <form className="row g-3 needs-validation" >

@@ -378,7 +378,7 @@ function QuotationIndex(props) {
                   value={totalQuotation}
                   displayType={"text"}
                   thousandSeparator={true}
-                  suffix={" SAR"}
+                  suffix={" "}
                   renderText={(value, props) => value}
                 />
               </Badge>
@@ -390,7 +390,7 @@ function QuotationIndex(props) {
                     value={profit}
                     displayType={"text"}
                     thousandSeparator={true}
-                    suffix={" SAR"}
+                    suffix={" "}
                     renderText={(value, props) => value}
                   />
                 </Badge>
@@ -402,7 +402,7 @@ function QuotationIndex(props) {
                     value={loss}
                     displayType={"text"}
                     thousandSeparator={true}
-                    suffix={" SAR"}
+                    suffix={" "}
                     renderText={(value, props) => value}
                   />
                 </Badge>
@@ -975,12 +975,12 @@ function QuotationIndex(props) {
                             <td>
                               {format(new Date(quotation.date), "MMM dd yyyy h:mma")}
                             </td>
-                            <td>{quotation.net_total} SAR</td>
+                            <td>{quotation.net_total} </td>
                             {cookies.get('admin') === "true" ?
-                              <td>{quotation.profit ? quotation.profit : 0.00} SAR</td>
+                              <td>{quotation.profit ? quotation.profit : 0.00} </td>
                               : ""}
                             {cookies.get('admin') === "true" ?
-                              <td>{quotation.loss ? quotation.loss : 0.00} SAR</td>
+                              <td>{quotation.loss ? quotation.loss : 0.00} </td>
                               : ""}
                             <td>{quotation.created_by_name}</td>
                             <td>{quotation.customer_name}</td>

@@ -406,7 +406,7 @@ const ProductView = forwardRef((props, ref) => {
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                         />
                                     </td>
                                     <td>
@@ -415,7 +415,7 @@ const ProductView = forwardRef((props, ref) => {
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                         />
                                     </td>
                                     <td>
@@ -424,7 +424,7 @@ const ProductView = forwardRef((props, ref) => {
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                         />
                                     </td>
                                     <td>{model.product_stores[key].stock}</td>
@@ -442,7 +442,7 @@ const ProductView = forwardRef((props, ref) => {
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                         />
                                     </td>
                                     <td>
@@ -451,7 +451,7 @@ const ProductView = forwardRef((props, ref) => {
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                         />
                                     </td>
                                     <td>
@@ -460,7 +460,7 @@ const ProductView = forwardRef((props, ref) => {
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             renderText={(value, props) => value}
-                                            suffix={" SAR"}
+                                            suffix={" "}
                                         />
                                     </td>
                                     <td>{model.product_stores[key].stock}</td>

@@ -1093,7 +1093,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th>Select</th>
                                         <th>SI No.</th>
                                         <th>Part No.</th>
-                                        <th>Name</th>
+                                        <th>Name</th>   
                                         <th>Qty</th>
                                         <th>Unit Price</th>
                                         <th>Price</th>
@@ -1196,7 +1196,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                    <span class="input-group-text" id="basic-addon2">SAR</span>
+                                                    <span class="input-group-text" id="basic-addon2"></span>
                                                 </div>
                                                 {errors["unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
@@ -1211,7 +1211,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     value={(product.unit_price * product.quantity).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
-                                                    suffix={" SAR"}
+                                                    suffix={" "}
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
@@ -1234,7 +1234,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 value={totalPrice}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={" "}
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
@@ -1329,7 +1329,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 setFormData({ ...formData });
                                                 reCalculate();
                                             }} />
-                                            {" SAR"}
+                                            {" "}
                                             {errors.discount && (
                                                 <div style={{ color: "red" }}>
                                                     {errors.discount}
@@ -1341,7 +1341,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 value={formData.discount}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={" "}
                                                 renderText={(value, props) => value}
                                             />
                                             */}
@@ -1357,7 +1357,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 value={vatPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={" "}
                                                 renderText={(value, props) => value}
                                             />
                                         </td>
@@ -1370,7 +1370,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 value={netTotal?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={" "}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>

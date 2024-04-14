@@ -1324,7 +1324,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                               value={product.purchase_unit_price.toFixed(2)}
                               displayType={"text"}
                               thousandSeparator={true}
-                              suffix={" SAR"}
+                              suffix={" "}
                               renderText={(value, props) => value}
                             />
                           ) : (
@@ -1378,7 +1378,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                               className="input-group-text"
                               id="basic-addon2"
                             >
-                              SAR
+                              
                             </span>
                           </div>
                           {errors["unit_price_" + index] && (
@@ -1395,7 +1395,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                             ).toFixed(2)}
                             displayType={"text"}
                             thousandSeparator={true}
-                            suffix={" SAR"}
+                            suffix={" "}
                             renderText={(value, props) => value}
                           />
                         </td>
@@ -1417,7 +1417,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                         value={totalPrice}
                         displayType={"text"}
                         thousandSeparator={true}
-                        suffix={" SAR"}
+                        suffix={" "}
                         renderText={(value, props) => value}
                       />
                     </td>
@@ -1475,7 +1475,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           reCalculate();
                         }}
                       />
-                      {" SAR"}
+                      {" "}
                       {errors.shipping_handling_fees && (
                         <div style={{ color: "red" }}>
                           {errors.shipping_handling_fees}
@@ -1591,7 +1591,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           reCalculate();
                         }}
                       />
-                      {" SAR"}
+                      {" "}
                       {errors.discount && (
                         <div style={{ color: "red" }}>{errors.discount}</div>
                       )}
@@ -1657,7 +1657,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                         value={vatPrice}
                         displayType={"text"}
                         thousandSeparator={true}
-                        suffix={" SAR"}
+                        suffix={" "}
                         renderText={(value, props) => value}
                       />
                     </td>
@@ -1671,7 +1671,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                         value={netTotal}
                         displayType={"text"}
                         thousandSeparator={true}
-                        suffix={" SAR"}
+                        suffix={" "}
                         renderText={(value, props) => value}
                       />
                     </th>
