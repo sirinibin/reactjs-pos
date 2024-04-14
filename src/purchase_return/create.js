@@ -594,10 +594,10 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
     function findNetTotal() {
         netTotal = 0.00;
-        if (totalPrice > 0) {
-            netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice));
-            netTotal = parseFloat(netTotal);
-        }
+        // if (totalPrice > 0) {
+        netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice));
+        netTotal = parseFloat(netTotal);
+        //}
         netTotal = RoundFloat(netTotal, 2);
         // netTotal = Math.round(netTotal * 100) / 100;
         setNetTotal(netTotal);
@@ -799,12 +799,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             //setBalanceAmount(0.00);
             //paymentStatus = "";
             //setPaymentStatus(paymentStatus);
-            return true;
+            //return true;
         }
 
 
 
-        if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
+        if (netTotal && formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
             errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toFixed(2).toString();
             setErrors({ ...errors });
             haveErrors = true

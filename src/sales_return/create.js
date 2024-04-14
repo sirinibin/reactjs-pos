@@ -686,10 +686,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     let [netTotal, setNetTotal] = useState(0.00);
 
     function findNetTotal() {
-        if (totalPrice > 0) {
+       // if (totalPrice > 0) {
             netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice));
             setNetTotal(netTotal);
-        }
+       // }
 
         netTotal = Math.round(netTotal * 100) / 100;
         console.log("after rounding netTotal:", netTotal);
@@ -890,12 +890,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             paymentStatus="";
             setPaymentStatus(paymentStatus);
             */
-            return true;
+           // return true;
         }
 
   
 
-        if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
+        if (netTotal&&formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
             errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toFixed(2).toString();
             setErrors({ ...errors });
             haveErrors = true
