@@ -651,6 +651,10 @@ function SalesReturnIndex(props) {
             searchParams.store_id = cookies.get("store_id");
         }
 
+        if (props.order) {
+            searchParams.order_id = props.order.id;
+        }
+
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
@@ -832,11 +836,15 @@ function SalesReturnIndex(props) {
         CreateFormRef.current.open(id);
     }
 
+    function openCreateForm() {
+        CreateFormRef.current.open(undefined, props.order.id);
+    }
+
     const SalesReturnPaymentListRef = useRef();
 
     return (
         <>
-            <SalesReturnCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+            <SalesReturnCreate ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />
             <SalesReturnView ref={DetailsViewRef} />
 
             <SalesReturnPaymentCreate ref={SalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesReturnPaymentDetailsView} />
@@ -965,6 +973,8 @@ function SalesReturnIndex(props) {
                         <h1 className="h3">Sales Returns</h1>
                     </div>
 
+
+
                     <div className="col text-end">
                         <ExcelFile filename={salesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Return Report</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={salesReturnReportFileName} />
@@ -973,6 +983,17 @@ function SalesReturnIndex(props) {
                         {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllSalesReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Return Report"}</Button> : ""}
                         &nbsp;&nbsp;
 
+
+                        <div className="col text-end">
+                            {props.order ? <Button
+                                hide={true.toString()}
+                                variant="primary"
+                                className="btn btn-primary mb-3"
+                                onClick={openCreateForm}
+                            >
+                                <i className="bi bi-plus-lg"></i> Create
+                            </Button> : ""}
+                        </div>
 
                         {/*
                         <Button
@@ -1727,23 +1748,23 @@ function SalesReturnIndex(props) {
                                                         <td>{salesreturn.net_total} </td>
                                                         <td>{salesreturn.cash_discount?.toFixed(2)}</td>
                                                         <td>
-                                                           
+
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(salesreturn);
                                                             }}>
                                                                 {salesreturn.total_payment_paid?.toFixed(2)}
                                                             </Button>
-                                                    
+
                                                         </td>
                                                         <td>{salesreturn.balance_amount?.toFixed(2)}</td>
                                                         <td>
-                                                          
+
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(salesreturn);
                                                             }}>
                                                                 {salesreturn.payments_count}
                                                             </Button>
-                                                    
+
                                                         </td>
                                                         <td>
                                                             {salesreturn.payment_status == "paid" ?

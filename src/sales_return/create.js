@@ -19,9 +19,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id, orderId) {
-
-
-            errors={};
+            errors = {};
             setErrors({ ...errors });
 
             formData = {
@@ -127,7 +125,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     // shipping_handling_fees: salesReturn.shipping_handling_fees,
                 };
 
-                if(!formData.payments_input){
+                if (!formData.payments_input) {
                     formData.payments_input = [];
                 }
 
@@ -156,7 +154,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     //selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
                 }
 
-                console.log("selectedProducts: ",selectedProducts.length);
+                console.log("selectedProducts: ", selectedProducts.length);
 
                 setSelectedProducts([...selectedProducts]);
 
@@ -266,7 +264,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 formData.is_discount_percent = true;
                 console.log("order.discount_percent:", order.discount_percent);
                 formData.discount_percent = order.discount_percent;
-                formData.cash_discount = parseFloat(order.cash_discount-order.return_cash_discount);
+                formData.cash_discount = parseFloat(order.cash_discount - order.return_cash_discount);
                 // formData.discount = (order.discount - order.return_discount);
 
                 // formData.discount_percent = order.discount_percent;
@@ -633,7 +631,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 }
                 handleClose();
 
-                openDetailsView(data.result.id);
+                if (props.refreshSalesList) {
+                    props.refreshSalesList();
+                }
+
+                //openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -686,19 +688,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     let [netTotal, setNetTotal] = useState(0.00);
 
     function findNetTotal() {
-       // if (totalPrice > 0) {
-            netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice));
-            setNetTotal(netTotal);
-       // }
+        // if (totalPrice > 0) {
+        netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice));
+        setNetTotal(netTotal);
+        // }
 
         netTotal = Math.round(netTotal * 100) / 100;
         console.log("after rounding netTotal:", netTotal);
         setNetTotal(netTotal);
 
         if (!formData.id) {
-            let method="";
-            if(formData.payments_input[0]){
-              method = formData.payments_input[0].method;
+            let method = "";
+            if (formData.payments_input[0]) {
+                method = formData.payments_input[0].method;
             }
 
             formData.payments_input = [{
@@ -708,16 +710,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 "deleted": false,
             }];
 
-            if(netTotal>0){
+            if (netTotal > 0) {
                 formData.payments_input[0].amount = parseFloat(netTotal.toFixed(2));
 
-                if(formData.cash_discount){
-                    formData.payments_input[0].amount =  formData.payments_input[0].amount - parseFloat(formData.cash_discount?.toFixed(2));
+                if (formData.cash_discount) {
+                    formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(formData.cash_discount?.toFixed(2));
                 }
                 formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
                 //formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
             }
-          
+
         }
         setFormData({ ...formData });
         validatePaymentAmounts();
@@ -858,7 +860,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         totalPaymentAmount = totalPayment;
         setTotalPaymentAmount(totalPaymentAmount);
-       // balanceAmount = (netTotal - formData.cash_discount) - totalPayment;
+        // balanceAmount = (netTotal - formData.cash_discount) - totalPayment;
         balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
         balanceAmount = parseFloat(balanceAmount.toFixed(2));
         setBalanceAmount(balanceAmount);
@@ -877,6 +879,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }
 
     function validatePaymentAmounts() {
+
+        if (selectedProducts && selectedProducts.filter(product => product.selected).length == 0) {
+            return;
+        }
+
         errors["cash_discount"] = "";
         setErrors({ ...errors });
         let haveErrors = false;
@@ -890,12 +897,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             paymentStatus="";
             setPaymentStatus(paymentStatus);
             */
-           // return true;
+            // return true;
         }
 
-  
 
-        if (netTotal&&formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
+
+        if (netTotal && formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
             errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toFixed(2).toString();
             setErrors({ ...errors });
             haveErrors = true
@@ -984,11 +991,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         //validatePaymentAmounts((formData.payments_input.filter(payment => !payment.deleted).length - 1));
     }
 
-    function removePayment(key,validatePayments=false) {
+    function removePayment(key, validatePayments = false) {
         formData.payments_input.splice(key, 1);
         //formData.payments_input[key]["deleted"] = true;
         setFormData({ ...formData });
-        if(validatePayments){
+        if (validatePayments) {
             validatePaymentAmounts();
         }
         findTotalPayments()
@@ -1014,6 +1021,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                     <div className="col align-self-end text-end">
                         <SalesReturnPreview />
+                        {selectedProducts && selectedProducts.length > 0 &&
                         <Button variant="primary" onClick={handleCreate} >
                             {isProcessing ?
                                 <Spinner
@@ -1028,7 +1036,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             }
                             {formData.id ? "Update" : "Create"}
 
-                        </Button>
+                        </Button>}
                         <button
                             type="button"
                             className="btn-close"
@@ -1083,8 +1091,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         )}
                     </div>}
 
-                    {!isProcessing&&selectedProducts?.length === 0 && "Already returned all products"}
-                    {selectedProducts?.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                    {selectedProducts && selectedProducts.length === 0 && "Already returned all products"}
+                    {selectedProducts && selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
                         <h2>Select Products</h2>
                         <div className="table-responsive" style={{ overflowX: "auto", overflowY: "scroll" }}>
                             <table className="table table-striped table-sm table-bordered">
@@ -1093,7 +1101,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th>Select</th>
                                         <th>SI No.</th>
                                         <th>Part No.</th>
-                                        <th>Name</th>   
+                                        <th>Name</th>
                                         <th>Qty</th>
                                         <th>Unit Price</th>
                                         <th>Price</th>
@@ -1536,7 +1544,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     </td>
                                                 </tr>
                                             ))}
-                                       <tr>
+                                        <tr>
                                             <td class="text-end">
                                                 <b>Total</b>
                                             </td>
@@ -1547,19 +1555,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {balanceAmount?.toFixed(2)}</b>
                                             </td>
                                             <td colSpan={1}>
-                                                <b>Payment status: </b> 
+                                                <b>Payment status: </b>
                                                 {paymentStatus == "paid" ?
-                                                                <span className="badge bg-success">
-                                                                    Paid
-                                                                </span> : ""}
-                                                            {paymentStatus == "paid_partially" ?
-                                                                <span className="badge bg-warning">
-                                                                    Paid Partially
-                                                                </span> : ""}
-                                                            {paymentStatus == "not_paid" ?
-                                                                <span className="badge bg-danger">
-                                                                    Not Paid
-                                                                </span> : ""}
+                                                    <span className="badge bg-success">
+                                                        Paid
+                                                    </span> : ""}
+                                                {paymentStatus == "paid_partially" ?
+                                                    <span className="badge bg-warning">
+                                                        Paid Partially
+                                                    </span> : ""}
+                                                {paymentStatus == "not_paid" ?
+                                                    <span className="badge bg-danger">
+                                                        Not Paid
+                                                    </span> : ""}
                                             </td>
                                         </tr>
                                     </tbody>
@@ -1571,6 +1579,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
+                            {selectedProducts && selectedProducts.length > 0 &&
                             <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
                                     <Spinner
@@ -1583,7 +1592,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                                     : formData.id ? "Update" : "Create"
                                 }
-                            </Button>
+                            </Button>}
                         </Modal.Footer>
                     </form>}
                 </Modal.Body>

@@ -133,7 +133,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     });
 
 
-    let [selectedProducts, setSelectedProducts] = useState([]);
+    let [selectedProducts, setSelectedProducts] = useState(null);
 
     //Purchase Returned By Auto Suggestion
     const [purchaseReturnedByUserOptions, setPurchaseReturnedByUserOptions] = useState([]);
@@ -549,7 +549,12 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
                 handleClose();
-                openDetailsView(data.result.id);
+
+                if (props.refreshPurchaseList) {
+                    props.refreshPurchaseList();
+                }
+
+               // openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -788,6 +793,10 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }
 
     function validatePaymentAmounts() {
+        if (selectedProducts && selectedProducts.filter(product => product.selected).length == 0) {
+            return;
+        }
+
         errors["cash_discount"] = "";
         setErrors({ ...errors });
         let haveErrors = false;
@@ -936,6 +945,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                     <div className="col align-self-end text-end">
                         <PurchaseReturnedPreview />
+                        {selectedProducts && selectedProducts.length > 0 &&
                         <Button variant="primary" className="mb-3" onClick={handleCreate} >
                             {isProcessing ?
                                 <Spinner
@@ -950,7 +960,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                             }
                             {formData.id ? "Update" : "Create"}
 
-                        </Button>
+                        </Button>}
                         <button
                             type="button"
                             className="btn-close"
@@ -968,10 +978,10 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
                                 })}
                             </ul></div> : ""}
-                    {selectedProducts.length === 0 && "Already Returned All purchased products"}
+                    {selectedProducts && selectedProducts.length === 0 && "Already Returned All purchased products"}
 
 
-                    {selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                    {selectedProducts && selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
                         <div className="col-md-3">
                             <label className="form-label">Vendor Invoice No. (Optional)</label>
@@ -1499,6 +1509,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                             <Button variant="secondary" onClick={handleClose}>
                                 Close
                             </Button>
+
+                            {selectedProducts && selectedProducts.length > 0 &&
                             <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
                                     <Spinner
@@ -1511,7 +1523,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                                     : formData.id ? "Update" : "Create"
                                 }
-                            </Button>
+                            </Button>}
                         </Modal.Footer>
                     </form>}
                 </Modal.Body>

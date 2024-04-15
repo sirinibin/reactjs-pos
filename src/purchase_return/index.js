@@ -644,9 +644,13 @@ function PurchaseReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,purchase_code,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_method,payment_methods,payment_status,balance_amount,store_id";
+            "select=id,code,purchase_code,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
+        }
+
+        if (props.purchase) {
+            searchParams.purchase_id = props.purchase.id;
         }
 
         const d = new Date();
@@ -821,9 +825,14 @@ function PurchaseReturnIndex(props) {
 
     let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
 
+    function openCreateForm() {
+        CreateFormRef.current.open(undefined, props.purchase.id);
+    }
+
+
     return (
         <>
-            <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
+            <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} refreshPurchaseList={props.refreshPurchaseList}  showToastMessage={props.showToastMessage} />
             <PurchaseReturnView ref={DetailsViewRef} />
 
             <PurchaseReturnPaymentCreate ref={PurchaseReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchaseReturnPaymentDetailsView} />
@@ -937,6 +946,17 @@ function PurchaseReturnIndex(props) {
 
                         {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchaseReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Return Report"}</Button> : ""}
                         &nbsp;&nbsp;
+
+                        <div className="col text-end">
+                            {props.purchase ? <Button
+                                hide={true.toString()}
+                                variant="primary"
+                                className="btn btn-primary mb-3"
+                                onClick={openCreateForm}
+                            >
+                                <i className="bi bi-plus-lg"></i> Create
+                            </Button> : ""}
+                        </div>
 
                         {/*
                         <Button

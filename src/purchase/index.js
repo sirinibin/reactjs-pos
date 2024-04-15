@@ -14,9 +14,8 @@ import NumberFormat from "react-number-format";
 import PurchaseCashDiscountCreate from "./../purchase_cash_discount/create.js";
 import PurchaseCashDiscountDetailsView from "./../purchase_cash_discount/view.js";
 
-import PurchasePaymentCreate from "./../purchase_payment/create.js";
-import PurchasePaymentDetailsView from "./../purchase_payment/view.js";
 import PurchasePaymentIndex from "./../purchase_payment/index.js";
+import PurchaseReturnIndex from "./../purchase_return/index.js";
 
 
 import ReactExport from 'react-data-export';
@@ -882,7 +881,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_method,payment_methods,payment_status,balance_amount";
+            "select=id,code,date,net_total,return_count,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -1032,19 +1031,6 @@ function PurchaseIndex(props) {
     }
 
     //Purchase Payments
-    const PurchasePaymentCreateRef = useRef();
-    function openPurchasePaymentCreateForm(purchase) {
-        PurchasePaymentCreateRef.current.open(undefined, purchase);
-    }
-
-    const PurchasePaymentDetailsViewRef = useRef();
-    function openPurchasePaymentDetailsView(id) {
-        PurchasePaymentDetailsViewRef.current.open(id);
-    }
-
-    function openPurchasePaymentUpdateForm(id) {
-        PurchasePaymentCreateRef.current.open(id);
-    }
 
     const [selectedPurchase, setSelectedPurchase] = useState({});
     let [showPurchasePaymentHistory, setShowPurchasePaymentHistory] = useState(false);
@@ -1064,17 +1050,25 @@ function PurchaseIndex(props) {
 
     const PurchasePaymentListRef = useRef();
 
+    let [showPurchaseReturns, setShowPurchaseReturns] = useState(false);
+    function openPurchaseReturnsDialogue(purchase) {
+        setSelectedPurchase(purchase);
+        showPurchaseReturns = true;
+        setShowPurchaseReturns(true);
+    }
+
+    function handlePurchaseReturnsClose() {
+        showPurchaseReturns = false;
+        setShowPurchaseReturns(false);
+    }
+
+    const PurchaseReturnListRef = useRef();
+
     return (
         <>
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
             <PurchaseReturnCreate ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />
-
-            <PurchaseCashDiscountCreate ref={PurchaseCashDiscountCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchaseCashDiscountDetailsView} />
-            <PurchaseCashDiscountDetailsView ref={PurchaseCashDiscountDetailsViewRef} openUpdateForm={openPurchaseCashDiscountUpdateForm} showToastMessage={props.showToastMessage} />
-
-            <PurchasePaymentCreate ref={PurchasePaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchasePaymentDetailsView} />
-            <PurchasePaymentDetailsView ref={PurchasePaymentDetailsViewRef} openUpdateForm={openPurchasePaymentUpdateForm} showToastMessage={props.showToastMessage} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -1604,6 +1598,25 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("return_count");
+                                                        }}
+                                                    >
+                                                        Returns
+                                                        {sortField === "return_count" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "return_count" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                 {cookies.get('admin') === "true" ?
                                                     <th>
                                                         <b
@@ -1924,6 +1937,16 @@ function PurchaseIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="return_count"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("return_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 {cookies.get('admin') === "true" ?
                                                     <th>
                                                         <input
@@ -2182,6 +2205,13 @@ function PurchaseIndex(props) {
                                                                 renderText={(value, props) => value}
                                                             />
                                                         </td>
+                                                        <td>
+                                                            <Button variant="link" onClick={() => {
+                                                                openPurchaseReturnsDialogue(purchase);
+                                                            }}>
+                                                                {purchase.return_count}
+                                                            </Button>
+                                                        </td>
                                                         {cookies.get('admin') === "true" ?
                                                             <td>
                                                                 <NumberFormat
@@ -2243,43 +2273,6 @@ function PurchaseIndex(props) {
                                                             >
                                                                 <i className="bi bi-arrow-left"></i> Return
                                                             </button>
-
-
-                                                            <button
-                                                                className="btn btn-default btn-sm"
-                                                                data-bs-toggle="tooltip"
-                                                                data-bs-placement="top"
-                                                                title="Download"
-                                                            >
-                                                                <i className="bi bi-download"></i>
-                                                            </button>
-
-                                                            <button
-                                                                className="btn btn-outline-secondary dropdown-toggle"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                aria-expanded="false"
-                                                            ></button>
-                                                            <ul className="dropdown-menu">
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openPurchaseCashDiscountCreateForm(purchase);
-                                                                    }}>
-                                                                        <i className="bi bi-plus"></i>
-                                                                        &nbsp;
-                                                                        Add Cash Discount
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openPurchasePaymentCreateForm(purchase);
-                                                                    }}>
-                                                                        <i className="bi bi-plus"></i>
-                                                                        &nbsp;
-                                                                        Add Payment
-                                                                    </button>
-                                                                </li>
-                                                            </ul>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -2329,6 +2322,25 @@ function PurchaseIndex(props) {
                 </Modal.Header>
                 <Modal.Body>
                     <PurchasePaymentIndex ref={PurchasePaymentListRef} showToastMessage={props.showToastMessage} purchase={selectedPurchase} refreshPurchaseList={list} />
+                </Modal.Body>
+            </Modal>
+
+            <Modal show={showPurchaseReturns} size="lg" onHide={handlePurchaseReturnsClose} animation={false} scrollable={true}>
+                <Modal.Header>
+                    <Modal.Title>Purchase Returns of Purchase Order #{selectedPurchase.code}</Modal.Title>
+
+                    <div className="col align-self-end text-end">
+                        <button
+                            type="button"
+                            className="btn-close"
+                            onClick={handlePurchaseReturnsClose}
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <PurchaseReturnIndex ref={PurchaseReturnListRef} showToastMessage={props.showToastMessage} purchase={selectedPurchase} refreshPurchaseList={list} />
                 </Modal.Body>
             </Modal>
         </>

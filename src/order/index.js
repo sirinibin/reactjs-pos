@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useRef, forwardRef } from "react";
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
-import SalesReturnCreate from "./../sales_return/create.js";
-
-import SalesCashDiscountCreate from "./../sales_cash_discount/create.js";
-import SalesCashDiscountDetailsView from "./../sales_cash_discount/view.js";
 
 import SalesPaymentIndex from "./../sales_payment/index.js";
-import SalesPaymentCreate from "./../sales_payment/create.js";
-import SalesPaymentDetailsView from "./../sales_payment/view.js";
+import SalesReturnIndex from "./../sales_return/index.js";
+import SalesReturnCreate from "./../sales_return/create.js";
 
 
 import Cookies from "universal-cookie";
@@ -801,7 +797,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total";
+            "select=id,code,date,net_total,return_count,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -918,6 +914,7 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
     let [showOrderPaymentHistory, setShowOrderPaymentHistory] = useState(false);
+    let [showOrderReturns, setShowOrderReturns] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState({});
 
     function openOrderPaymentsDialogue(order) {
@@ -926,9 +923,23 @@ const OrderIndex = forwardRef((props, ref) => {
         setShowOrderPaymentHistory(true);
     }
 
+    
+
     function handleOrderPaymentHistoryClose() {
         showOrderPaymentHistory = false;
         setShowOrderPaymentHistory(false);
+        //list();
+    }
+
+    function openOrderReturnsDialogue(order) {
+        setSelectedOrder(order);
+        showOrderReturns = true;
+        setShowOrderReturns(true);
+    }
+
+    function handleOrderReturnsClose() {
+        showOrderReturns = false;
+        setShowOrderReturns(false);
         //list();
     }
 
@@ -938,10 +949,7 @@ const OrderIndex = forwardRef((props, ref) => {
         DetailsViewRef.current.open(id);
     }
 
-    const SalesReturnCreateRef = useRef();
-    function openSalesReturnForm(id) {
-        SalesReturnCreateRef.current.open(undefined,id);
-    }
+   
 
     const CreateFormRef = useRef();
     function openCreateForm() {
@@ -967,6 +975,8 @@ const OrderIndex = forwardRef((props, ref) => {
         SalesCashDiscountCreateRef.current.open(id);
     }
 
+    const SalesReturnListRef = useRef();
+
     //Sales Payments
 
     const SalesPaymentListRef = useRef();
@@ -974,18 +984,27 @@ const OrderIndex = forwardRef((props, ref) => {
         // SalesPaymentListRef.current.open(undefined, order);
     }
 
-    const SalesPaymentCreateRef = useRef();
-    function openSalesPaymentCreateForm(order) {
-        SalesPaymentCreateRef.current.open(undefined, order);
+
+   //Sales Return
+   const SalesReturnCreateRef = useRef();
+   function openSalesReturnCreateForm(id) {
+       SalesReturnCreateRef.current.open(undefined,id);
+   }
+
+   /*
+    const SalesReturnCreateRef = useRef();
+    function openSalesReturnCreateForm(order) {
+        SalesReturnCreateRef.current.open(undefined, order);
+    }
+    */
+
+    const SalesReturnDetailsViewRef = useRef();
+    function openSalesReturnDetailsView(id) {
+        SalesReturnDetailsViewRef.current.open(id);
     }
 
-    const SalesPaymentDetailsViewRef = useRef();
-    function openSalesPaymentDetailsView(id) {
-        SalesPaymentDetailsViewRef.current.open(id);
-    }
-
-    function openSalesPaymentUpdateForm(id) {
-        SalesPaymentCreateRef.current.open(id);
+    function openSalesReturnUpdateForm(id) {
+        SalesReturnCreateRef.current.open(id);
     }
 
 
@@ -993,13 +1012,7 @@ const OrderIndex = forwardRef((props, ref) => {
         <>
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
             <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />
-            <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} />
-
-            <SalesCashDiscountCreate ref={SalesCashDiscountCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesCashDiscountDetailsView} />
-            <SalesCashDiscountDetailsView ref={SalesCashDiscountDetailsViewRef} openUpdateForm={openSalesCashDiscountUpdateForm} showToastMessage={props.showToastMessage} />
-
-            <SalesPaymentCreate ref={SalesPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesPaymentDetailsView} refreshSalesList={list} />
-            <SalesPaymentDetailsView ref={SalesPaymentDetailsViewRef} openUpdateForm={openSalesPaymentUpdateForm} showToastMessage={props.showToastMessage} />
+            <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage}  refreshSalesList={list}/>
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -1554,6 +1567,25 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("return_count");
+                                                        }}
+                                                    >
+                                                        Returns
+                                                        {sortField === "return_count" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "return_count" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("customer_name");
                                                         }}
                                                     >
@@ -1836,6 +1868,16 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     />
                                                 </th>
                                                 <th>
+                                                    <input
+                                                        type="text"
+                                                        id="return_count"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("return_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
                                                     <Typeahead
                                                         id="customer_id"
                                                         labelKey="search_label"
@@ -2006,6 +2048,16 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit?.toFixed(2)} </td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{order.net_loss ?.toFixed(2)} </td> : ""}
                                                         <td>{order.created_by_name}</td>
+                                                        <td>
+                                                       
+                                                      
+                                                       <Button variant="link" onClick={() => {
+                                                           openOrderReturnsDialogue(order);
+                                                       }}>
+                                                           {order.return_count}
+                                                       </Button>
+                                               
+                                                   </td>
                                                         <td>{order.customer_name}</td>
                                                         <td>
                                                             {format(
@@ -2044,7 +2096,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 data-bs-placement="top"
                                                                 title="Create Sales Return"
                                                                 onClick={() => {
-                                                                    openSalesReturnForm(order.id);
+                                                                    openSalesReturnCreateForm(order.id);
                                                                 }}
                                                             >
                                                                 <i className="bi bi-arrow-left"></i> Return
@@ -2130,6 +2182,25 @@ const OrderIndex = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <SalesPaymentIndex ref={SalesPaymentListRef} showToastMessage={props.showToastMessage} order={selectedOrder} refreshSalesList={list} />
+                </Modal.Body>
+            </Modal>
+
+            <Modal show={showOrderReturns} size="lg" onHide={handleOrderReturnsClose} animation={false} scrollable={true}>
+                <Modal.Header>
+                    <Modal.Title>Sales Returns of Sale Order #{selectedOrder.code}</Modal.Title>
+
+                    <div className="col align-self-end text-end">
+                        <button
+                            type="button"
+                            className="btn-close"
+                            onClick={handleOrderReturnsClose}
+                            aria-label="Close"
+                        ></button>
+
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <SalesReturnIndex ref={SalesReturnListRef} showToastMessage={props.showToastMessage} order={selectedOrder} refreshSalesList={list} />
                 </Modal.Body>
             </Modal>
 
