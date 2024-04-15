@@ -881,7 +881,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     function validatePaymentAmounts() {
 
         if (selectedProducts && selectedProducts.filter(product => product.selected).length == 0) {
-            return;
+            return true;
         }
 
         errors["cash_discount"] = "";
