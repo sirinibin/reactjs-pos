@@ -844,11 +844,11 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 errors["payment_date_" + key] = "Payment date is required";
                 setErrors({ ...errors });
                 haveErrors = true;
-            } else if ((new Date(formData.payments_input[key].date_str)) < (new Date(formData.date_str))) {
+            } /*else if ((new Date(formData.payments_input[key].date_str)) < (new Date(formData.date_str))) {
                 errors["payment_date_" + key] = "Payment date time should be greater than or equal to order date time";
                 setErrors({ ...errors });
                 haveErrors = true;
-            }
+            }*/
 
             if (!formData.payments_input[key].method) {
                 errors["payment_method_" + key] = "Payment method is required";

@@ -830,6 +830,10 @@ function PostingIndex(props) {
                                                     }>
                                                         <option value="">All</option>
                                                         <option value="sales">Sales</option>
+                                                        <option value="sales_return">Sales Return</option>
+                                                        <option value="purchase">Purchase</option>
+                                                        <option value="capital">Capital</option>
+                                                        <option value="purchase_return">Purchase Return</option>
                                                         <option value="customer_deposit">Customer deposit</option>
                                                         <option value="customer_withdrawal">Customer withdrawl</option>
                                                     </select>

@@ -767,7 +767,7 @@ function AccountIndex(props) {
                                                         <option value="expense">Expense</option>
                                                         <option value="asset">Asset</option>
                                                         <option value="liability">Liability</option>
-                                                        <option value="equity">Capital / Equity</option>
+                                                        <option value="capital">Capital</option>
                                                         <option value="revenue">Revenue</option>
                                                     </select>
                                                 </th>
@@ -799,7 +799,7 @@ function AccountIndex(props) {
                                                         <option value="">All</option>
                                                         <option value="customer">Customer</option>
                                                         <option value="vendor">Vendor</option>
-                                                        <option value="user">User</option>
+                                                        <option value="investor">Investor</option>
                                                     </select>
                                                 </th>
 
