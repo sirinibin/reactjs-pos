@@ -29,7 +29,6 @@ function Sidebar(props) {
             'customer deposits',
             'customer withdrawals',
             'capitals',
-            'capital withdrawals',
             'dividents',
             'ledger',
             'accounts',
@@ -169,7 +168,7 @@ function Sidebar(props) {
                     toggleActive(appState.tabs[12]);
                 }} className={toggleActiveStyles(appState.tabs[12])}>
                     <Link to="/dashboard/expenses" className="sidebar-link">
-                        <i className="bi bi-diagram-3" />
+                        <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Expenses</span>
                     </Link>
                 </li>
@@ -178,14 +177,14 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[13])}>
                     <Link to="/dashboard/analytics" className="sidebar-link">
                         <i className="bi bi-graph-up" />
-                        <span className="align-middle">Dashboard</span>
+                        <span className="align-middle">Analytics</span>
                     </Link>
                 </li>
                 <li onClick={() => {
                     toggleActive(appState.tabs[14]);
                 }} className={toggleActiveStyles(appState.tabs[14])}>
                     <Link to="/dashboard/customer_deposits" className="sidebar-link">
-                        <i className="bi bi-diagram-3" />
+                        <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Customer Deposits</span>
                     </Link>
                 </li>
@@ -193,61 +192,53 @@ function Sidebar(props) {
                     toggleActive(appState.tabs[15]);
                 }} className={toggleActiveStyles(appState.tabs[15])}>
                     <Link to="/dashboard/customer_withdrawals" className="sidebar-link">
-                        <i className="bi bi-diagram-3" />
-                        <span className="align-middle">Customer Withdrawals</span>
+                        <i className="bi bi-currency-dollar" />
+                        <span className="align-middle">Customer Drawings</span>
                     </Link>
                 </li>
                 <li onClick={() => {
                     toggleActive(appState.tabs[16]);
                 }} className={toggleActiveStyles(appState.tabs[16])}>
                     <Link to="/dashboard/capitals" className="sidebar-link">
-                        <i className="bi bi-diagram-3" />
-                        <span className="align-middle">Capital Investments</span>
+                        <i className="bi bi-currency-dollar" />
+                        <span className="align-middle">Capitals</span>
                     </Link>
                 </li>
                 <li onClick={() => {
                     toggleActive(appState.tabs[17]);
                 }} className={toggleActiveStyles(appState.tabs[17])}>
-                    <Link to="/dashboard/capital_withdrawals" className="sidebar-link">
-                        <i className="bi bi-diagram-3" />
-                        <span className="align-middle">Capital Withdrawals</span>
-                    </Link>
-                </li>
-                <li onClick={() => {
-                    toggleActive(appState.tabs[18]);
-                }} className={toggleActiveStyles(appState.tabs[18])}>
                     <Link to="/dashboard/dividents" className="sidebar-link">
-                        <i className="bi bi-diagram-3" />
-                        <span className="align-middle">Divident Withdrawals</span>
+                        <i className="bi bi-currency-dollar" />
+                        <span className="align-middle">Drawings</span>
                     </Link>
                 </li>
                 {cookies.get('admin') === "true" ? <li onClick={() => {
-                    toggleActive(appState.tabs[19]);
-                }} className={toggleActiveStyles(appState.tabs[19])}>
+                    toggleActive(appState.tabs[18]);
+                }} className={toggleActiveStyles(appState.tabs[18])}>
                     <Link to="/dashboard/ledger" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
                         <span className="align-middle">Ledger</span>
                     </Link>
                 </li> : ""}
                 {cookies.get('admin') === "true" ? <li onClick={() => {
-                    toggleActive(appState.tabs[20]);
-                }} className={toggleActiveStyles(appState.tabs[20])}>
+                    toggleActive(appState.tabs[19]);
+                }} className={toggleActiveStyles(appState.tabs[19])}>
                     <Link to="/dashboard/accounts" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Accounts & Trial balances</span>
                     </Link>
                 </li> : ""}
                 {cookies.get('admin') === "true" ? <li onClick={() => {
-                    toggleActive(appState.tabs[21]);
-                }} className={toggleActiveStyles(appState.tabs[21])}>
+                    toggleActive(appState.tabs[20]);
+                }} className={toggleActiveStyles(appState.tabs[20])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>
                     </Link>
                 </li> : ""}
                 <li onClick={() => {
-                    toggleActive(appState.tabs[22]);
-                }} className={toggleActiveStyles(appState.tabs[22])}>
+                    toggleActive(appState.tabs[21]);
+                }} className={toggleActiveStyles(appState.tabs[21])}>
                     <Link to="/dashboard/signatures" className="sidebar-link">
                         <i className="bi bi-fingerprint" />
                         <span className="align-middle">Signatures</span>

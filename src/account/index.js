@@ -800,6 +800,8 @@ function AccountIndex(props) {
                                                         <option value="customer">Customer</option>
                                                         <option value="vendor">Vendor</option>
                                                         <option value="investor">Investor</option>
+                                                        <option value="withdrawer">Withdrawer</option>
+                                                        <option value="expense_category">Expense Category</option>
                                                     </select>
                                                 </th>
 
