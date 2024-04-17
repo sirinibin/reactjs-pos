@@ -59,6 +59,24 @@ function LedgerIndex(props) {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    useEffect(() => {
+        moveToLastPage();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [totalPages]);
+
+
+    function moveToLastPage() {
+        if(totalPages){
+            sortField="journals.date"
+            setSortField(sortField)
+            sortLedger=""
+            setSortLedger(sortLedger)
+            page = totalPages;
+            setPage(page);
+            list();
+        }
+    }
+
     //Search params
     const [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("journals.date");

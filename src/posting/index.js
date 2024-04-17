@@ -28,8 +28,8 @@ function PostingIndex(props) {
     //pagination
     let [pageSize, setPageSize] = useState(5);
     let [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(0);
-    const [totalItems, setTotalItems] = useState(1);
+    const [totalPages, setTotalPages] = useState(null);
+    const [totalItems, setTotalItems] = useState();
     const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
     const [offset, setOffset] = useState(0);
 
@@ -57,6 +57,25 @@ function PostingIndex(props) {
         list();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    useEffect(() => {
+        moveToLastPage();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [totalPages]);
+
+
+    function moveToLastPage() {
+        if(totalPages){
+            sortField="posts.date"
+            setSortField(sortField)
+            sortPosting=""
+            setSortPosting(sortPosting)
+            page = totalPages;
+            setPage(page);
+            list();
+        }
+    }
+    
 
     //Search params
     const [searchParams, setSearchParams] = useState({});
@@ -832,8 +851,8 @@ function PostingIndex(props) {
                                                         <option value="sales">Sales</option>
                                                         <option value="sales_return">Sales Return</option>
                                                         <option value="purchase">Purchase</option>
-                                                        <option value="capital">Capital</option>
                                                         <option value="purchase_return">Purchase Return</option>
+                                                        <option value="capital">Capital</option>
                                                         <option value="customer_deposit">Customer deposit</option>
                                                         <option value="customer_withdrawal">Customer withdrawl</option>
                                                     </select>
