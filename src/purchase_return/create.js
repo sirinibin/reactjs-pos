@@ -579,19 +579,23 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 parseFloat(selectedProducts[i].purchase_unit_price) *
                 parseFloat(selectedProducts[i].quantity);
         }
-        totalPrice = totalPrice.toFixed(2);
+        // totalPrice = totalPrice.toFixed(2);
+        // totalPrice = Math.round(totalPrice * 100) / 100;
         setTotalPrice(totalPrice);
     }
 
     let [vatPrice, setVatPrice] = useState(0.00);
 
     function findVatPrice() {
+        vatPrice = 0.00;
         if (totalPrice > 0) {
-            vatPrice = ((parseFloat(formData.vat_percent) / 100) * parseFloat(totalPrice - formData.discount)).toFixed(2);;
-            console.log("vatPrice:", vatPrice);
-            setVatPrice(vatPrice);
-        }
+            console.log("formData.vat_percent:", formData.vat_percent);
+            //(35.8 / 100) * 10000;
 
+            vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(totalPrice)  - parseFloat(formData.discount));
+            console.log("vatPrice:", vatPrice);
+        }
+        setVatPrice(vatPrice);
     }
 
 
@@ -599,10 +603,10 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
     function findNetTotal() {
         netTotal = 0.00;
-        // if (totalPrice > 0) {
-        netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice));
-        netTotal = parseFloat(netTotal);
-        //}
+        if (totalPrice > 0) {
+            netTotal = (parseFloat(totalPrice) - parseFloat(formData.discount) + parseFloat(vatPrice));
+            netTotal = parseFloat(netTotal);
+        }
         netTotal = RoundFloat(netTotal, 2);
         // netTotal = Math.round(netTotal * 100) / 100;
         setNetTotal(netTotal);
