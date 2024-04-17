@@ -857,7 +857,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 parseFloat(selectedProducts[i].purchase_unit_price) *
                 parseFloat(selectedProducts[i].quantity);
         }
-        totalPrice = totalPrice.toFixed(2);
+        // totalPrice = totalPrice.toFixed(2);
+        // totalPrice = Math.round(totalPrice * 100) / 100;
         setTotalPrice(totalPrice);
     }
 
@@ -866,7 +867,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
     function findVatPrice() {
         vatPrice = 0.00;
         if (totalPrice > 0) {
-            vatPrice = (parseFloat((parseFloat(formData.vat_percent) / 100)) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount))).toFixed(2);;
+            console.log("formData.vat_percent:", formData.vat_percent);
+            //(35.8 / 100) * 10000;
+
+            vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
             console.log("vatPrice:", vatPrice);
         }
         setVatPrice(vatPrice);
@@ -907,6 +911,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }
 
         setFormData({ ...formData });
+      //  console.log(" netTotal:", netTotal);
         validatePaymentAmounts();
 
     }
