@@ -1218,7 +1218,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         <th className="text-end">Total</th>
                                         <td className="text-end" style={{ width: "180px" }}>
                                             <NumberFormat
-                                                value={totalPrice}
+                                                value={totalPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}
@@ -1292,7 +1292,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         <th className="text-end">VAT: {formData.vat_percent + "%"}</th>
                                         <td className="text-end">
                                             <NumberFormat
-                                                value={vatPrice}
+                                                value={vatPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}
@@ -1305,7 +1305,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         <th className="text-end">Net Total</th>
                                         <th className="text-end">
                                             <NumberFormat
-                                                value={netTotal}
+                                                value={netTotal?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}

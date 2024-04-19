@@ -1686,7 +1686,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         <th style={{ width: "90%" }} colSpan="8" className="text-end">Total</th>
                                         <td style={{ width: "10%" }} className="text-end">
                                             <NumberFormat
-                                                value={totalPrice}
+                                                value={totalPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}
@@ -1886,7 +1886,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         </th>
                                         <td className="text-end">
                                             <NumberFormat
-                                                value={vatPrice}
+                                                value={vatPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}
@@ -1899,7 +1899,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         <th colSpan="8" className="text-end">Net Total</th>
                                         <th className="text-end">
                                             <NumberFormat
-                                                value={netTotal}
+                                                value={netTotal?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}

@@ -1239,7 +1239,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th className="text-end">Total</th>
                                         <td className="text-end" style={{ width: "180px" }}>
                                             <NumberFormat
-                                                value={totalPrice}
+                                                value={totalPrice?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
