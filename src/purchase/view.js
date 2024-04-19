@@ -310,7 +310,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     {cookies.get('admin') === "true" ?
                                         <td>
                                             <NumberFormat
-                                                value={product.wholesale_profit}
+                                                value={product.wholesale_profit?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -321,7 +321,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     {cookies.get('admin') === "true" ?
                                         <td>
                                             <NumberFormat
-                                                value={product.retail_profit}
+                                                value={product.retail_profit?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -332,7 +332,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     {cookies.get('admin') === "true" ?
                                         <td>
                                             <NumberFormat
-                                                value={product.wholesale_loss}
+                                                value={product.wholesale_loss?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -343,7 +343,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     {cookies.get('admin') === "true" ?
                                         <td>
                                             <NumberFormat
-                                                value={product.retail_loss}
+                                                value={product.retail_loss?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -371,7 +371,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={model.wholesale_profit}
+                                            value={model.wholesale_profit?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -381,7 +381,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={model.retail_profit}
+                                            value={model.retail_profit?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -391,7 +391,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={model.wholesale_loss}
+                                            value={model.wholesale_loss?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -401,7 +401,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={model.retail_loss}
+                                            value={model.retail_loss?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
