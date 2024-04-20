@@ -78,7 +78,7 @@ const OrderIndex = forwardRef((props, ref) => {
         let invoiceCount = 0;
         for (let orderDate in groupedByDate) {
 
-            console.log("orderDate:", orderDate);
+          //  console.log("orderDate:", orderDate);
             excelData[0].data.push([{ value: "Inv Date: " + orderDate }]);
             let dayTotalBeforeVAT = 0.00;
             let dayTotalAfterVAT = 0.00;
@@ -914,7 +914,7 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
     let [showOrderPaymentHistory, setShowOrderPaymentHistory] = useState(false);
-    let [showOrderReturns, setShowOrderReturns] = useState(false);
+ 
     const [selectedOrder, setSelectedOrder] = useState({});
 
     function openOrderPaymentsDialogue(order) {
@@ -923,7 +923,7 @@ const OrderIndex = forwardRef((props, ref) => {
         setShowOrderPaymentHistory(true);
     }
 
-    
+
 
     function handleOrderPaymentHistoryClose() {
         showOrderPaymentHistory = false;
@@ -931,6 +931,7 @@ const OrderIndex = forwardRef((props, ref) => {
         //list();
     }
 
+    let [showOrderReturns, setShowOrderReturns] = useState(false);
     function openOrderReturnsDialogue(order) {
         setSelectedOrder(order);
         showOrderReturns = true;
@@ -940,7 +941,6 @@ const OrderIndex = forwardRef((props, ref) => {
     function handleOrderReturnsClose() {
         showOrderReturns = false;
         setShowOrderReturns(false);
-        //list();
     }
 
 
@@ -949,7 +949,7 @@ const OrderIndex = forwardRef((props, ref) => {
         DetailsViewRef.current.open(id);
     }
 
-   
+
 
     const CreateFormRef = useRef();
     function openCreateForm() {
@@ -985,18 +985,18 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
 
-   //Sales Return
-   const SalesReturnCreateRef = useRef();
-   function openSalesReturnCreateForm(id) {
-       SalesReturnCreateRef.current.open(undefined,id);
-   }
-
-   /*
+    //Sales Return
     const SalesReturnCreateRef = useRef();
-    function openSalesReturnCreateForm(order) {
-        SalesReturnCreateRef.current.open(undefined, order);
+    function openSalesReturnCreateForm(id) {
+        SalesReturnCreateRef.current.open(undefined, id);
     }
-    */
+
+    /*
+     const SalesReturnCreateRef = useRef();
+     function openSalesReturnCreateForm(order) {
+         SalesReturnCreateRef.current.open(undefined, order);
+     }
+     */
 
     const SalesReturnDetailsViewRef = useRef();
     function openSalesReturnDetailsView(id) {
@@ -1012,7 +1012,7 @@ const OrderIndex = forwardRef((props, ref) => {
         <>
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
             <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />
-            <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage}  refreshSalesList={list}/>
+            <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -1094,7 +1094,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                 />
                             </Badge>
                         </h1>
-                       
+
                         <h1 className="text-end">
                             Shipping/Handling fees: <Badge bg="secondary">
                                 <NumberFormat
@@ -2001,25 +2001,25 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td>{order.net_total?.toFixed(2)}</td>
                                                         <td>{order.cash_discount?.toFixed(2)}</td>
                                                         <td>
-                                            
-                                                       
+
+
                                                             <Button variant="link" onClick={() => {
                                                                 openOrderPaymentsDialogue(order);
                                                             }}>
                                                                 {order.total_payment_received?.toFixed(2)}
                                                             </Button>
-                                                    
+
                                                         </td>
                                                         <td>{order.balance_amount?.toFixed(2)}</td>
                                                         <td>
-                                                       
-                                                      
+
+
                                                             <Button variant="link" onClick={() => {
                                                                 openOrderPaymentsDialogue(order);
                                                             }}>
                                                                 {order.payments_count}
                                                             </Button>
-                                                    
+
                                                         </td>
                                                         <td>
                                                             {order.payment_status == "paid" ?
@@ -2046,18 +2046,18 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td>{order.discount.toFixed(2)} </td>
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit?.toFixed(2)} </td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{order.net_loss ?.toFixed(2)} </td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{order.net_loss?.toFixed(2)} </td> : ""}
                                                         <td>{order.created_by_name}</td>
                                                         <td>
-                                                       
-                                                      
-                                                       <Button variant="link" onClick={() => {
-                                                           openOrderReturnsDialogue(order);
-                                                       }}>
-                                                           {order.return_count}
-                                                       </Button>
-                                               
-                                                   </td>
+
+
+                                                            <Button variant="link" onClick={() => {
+                                                                openOrderReturnsDialogue(order);
+                                                            }}>
+                                                                {order.return_count}
+                                                            </Button>
+
+                                                        </td>
                                                         <td>{order.customer_name}</td>
                                                         <td>
                                                             {format(
@@ -2102,7 +2102,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 <i className="bi bi-arrow-left"></i> Return
                                                             </button>
 
-                                
+
                                                             {/*<button
                                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                                 type="button"
