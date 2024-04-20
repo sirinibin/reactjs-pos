@@ -660,7 +660,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 parseFloat(selectedProducts[i].unit_price) *
                 parseFloat(selectedProducts[i].quantity);
         }
-        totalPrice = totalPrice?.toFixed(2);
+        //totalPrice = parseFloat(totalPrice?.toFixed(2));
         setTotalPrice(totalPrice);
     }
 
