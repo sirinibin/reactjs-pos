@@ -711,12 +711,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             }];
 
             if (netTotal > 0) {
-                formData.payments_input[0].amount = parseFloat(netTotal.toFixed(2));
+                formData.payments_input[0].amount = parseFloat(netTotal?.toFixed(2));
 
                 if (formData.cash_discount) {
                     formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(formData.cash_discount?.toFixed(2));
                 }
-                formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
+                formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount?.toFixed(2));
                 //formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
             }
 
@@ -784,7 +784,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         if (formData.discount_percent >= 0 && totalPrice > 0) {
             formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100));
             //formData.discount = Math.round(formData.discount * 100) / 100;
-            formData.discount = parseFloat(formData.discount.toFixed(2));
+            formData.discount = parseFloat(formData.discount?.toFixed(2));
             setFormData({ ...formData });
         }
     }
@@ -861,11 +861,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         totalPaymentAmount = totalPayment;
         setTotalPaymentAmount(totalPaymentAmount);
         // balanceAmount = (netTotal - formData.cash_discount) - totalPayment;
-        balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
-        balanceAmount = parseFloat(balanceAmount.toFixed(2));
+        balanceAmount = (parseFloat(netTotal?.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))) - parseFloat(totalPayment?.toFixed(2));
+        balanceAmount = parseFloat(balanceAmount?.toFixed(2));
         setBalanceAmount(balanceAmount);
 
-        if (balanceAmount === parseFloat((parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))).toFixed(2))) {
+        if (balanceAmount === parseFloat((parseFloat(netTotal?.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2)))?.toFixed(2))) {
             paymentStatus = "not_paid"
         } else if (balanceAmount <= 0) {
             paymentStatus = "paid"
@@ -903,7 +903,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
         if (netTotal && formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
-            errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toFixed(2).toString();
+            errors["cash_discount"] = "Cash discount should not be >= " + netTotal?.toFixed(2).toString();
             setErrors({ ...errors });
             haveErrors = true
             return false;
@@ -1216,7 +1216,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <NumberFormat
-                                                    value={(product.unit_price * product.quantity).toFixed(2)}
+                                                    value={(product.unit_price * product.quantity)?.toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={" "}
