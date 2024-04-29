@@ -548,7 +548,7 @@ const PostingIndex = forwardRef((props, ref) => {
                             openPreview(selectedAccount);
                         }} >
                             <i className="bi bi-display"></i> 
-                            {fettingAllRecordsInProgress ? "Preparing.." : "Print Preview"}
+                            {fettingAllRecordsInProgress ? "Preparing.." : " Print Preview"}
                         </Button>
 
                         <button
