@@ -262,7 +262,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         <td></td>
                                     </tr> : ""}
 
-                                    {page.posts && page.posts.map((post, index) => (
+                                    {page.posts && page.posts.filter(post=>post.date).map((post, index) => (
                                         <tr key={index} style={{}}>
                                             <td style={{ width: "30%", height: "16px" }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
                                             <td style={{ width: "30%", alignContent: "start", borderRightWidth: "0px", }}>
