@@ -348,7 +348,7 @@ function LedgerIndex(props) {
                 setSelectedAccount(data.result);
                 showAccountBalanceSheet = true;
                 setShowAccountBalanceSheet(true);
-
+                AccountBalanceSheetRef.current.open(data.result);
 
                 //setModel({ ...model });
             })
@@ -956,24 +956,7 @@ function LedgerIndex(props) {
                 </div>
             </div>
 
-            <Modal show={showAccountBalanceSheet} size="lg" onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true}>
-                <Modal.Header>
-                    <Modal.Title>Balance sheet of {selectedAccount.name + " A/c (#" + selectedAccount.number + ")"} </Modal.Title>
-
-                    <div className="col align-self-end text-end">
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={handleAccountBalanceSheetClose}
-                            aria-label="Close"
-                        ></button>
-
-                    </div>
-                </Modal.Header>
-                <Modal.Body>
-                    <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} account={selectedAccount} refreshLedgerList={list} />
-                </Modal.Body>
-            </Modal>
+            <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage}  refreshLedgerList={list} />
         </>
     );
 }

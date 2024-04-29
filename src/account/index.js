@@ -210,7 +210,7 @@ function AccountIndex(props) {
             },
         };
         let Select =
-            "select=id,name,type,phone,number,search_label,open,balance,debit_total,credit_total,created_at,updated_at,reference_model,debit_or_credit_balance";
+            "select=id,store_id,name,type,phone,number,search_label,open,balance,debit_total,credit_total,created_at,updated_at,reference_model,debit_or_credit_balance";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -308,18 +308,17 @@ function AccountIndex(props) {
 
     let [showAccountBalanceSheet, setShowAccountBalanceSheet] = useState(false);
 
+    const AccountBalanceSheetRef = useRef();
+
     function openBalanceSheetDialogue(account) {
-        setSelectedAccount(account);
-        showAccountBalanceSheet = true;
-        setShowAccountBalanceSheet(true);
+        AccountBalanceSheetRef.current.open(account);
     }
 
     function handleAccountBalanceSheetClose() {
         showAccountBalanceSheet = false;
         setShowAccountBalanceSheet(false);
-        //list();
     }
-    const AccountBalanceSheetRef = useRef();
+    
 
     return (
         <>
@@ -1029,25 +1028,7 @@ function AccountIndex(props) {
                     </div>
                 </div>
             </div>
-
-            <Modal show={showAccountBalanceSheet} size="xl" onHide={handleAccountBalanceSheetClose} animation={false} scrollable={true}>
-                <Modal.Header>
-                    <Modal.Title>Balance sheet of {selectedAccount.name + " A/c (#" + selectedAccount.number + ")"} </Modal.Title>
-
-                    <div className="col align-self-end text-end">
-                        <button
-                            type="button"
-                            className="btn-close"
-                            onClick={handleAccountBalanceSheetClose}
-                            aria-label="Close"
-                        ></button>
-
-                    </div>
-                </Modal.Header>
-                <Modal.Body>
-                    <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} account={selectedAccount} refreshAccountList={list} />
-                </Modal.Body>
-            </Modal>
+            <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage}  refreshAccountList={list} />
         </>
     );
 }
