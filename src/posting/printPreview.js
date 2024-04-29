@@ -4,6 +4,7 @@ import BalanceSheetPrintPreviewContent from './printPreviewContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
+import { format } from "date-fns";
 
 const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
@@ -67,9 +68,9 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                         for (let k = 0; k < model.posts[j].posts.length; k++) {
                             model.pages[i].posts.push({
                                 "date": model.posts[j].posts[k].date,
-                                "debit_account": model.posts[j].posts[k].debit_or_credit === "debit" ? "To "+model.posts[j].posts[k].account_name+" A/c #"+model.posts[j].posts[k].account_number+" Dr." : "",
+                                "debit_account": model.posts[j].posts[k].debit_or_credit === "debit" ? "To " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Dr." : "",
                                 "debit_account_number": model.posts[j].posts[k].debit_or_credit === "debit" ? model.posts[j].posts[k].account_number : "",
-                                "credit_account": model.posts[j].posts[k].debit_or_credit === "credit" ? "By "+model.posts[j].posts[k].account_name+" A/c #"+model.posts[j].posts[k].account_number+" Cr." : "",
+                                "credit_account": model.posts[j].posts[k].debit_or_credit === "credit" ? "By " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Cr." : "",
                                 "credit_account_number": model.posts[j].posts[k].debit_or_credit === "credit" ? model.posts[j].posts[k].account_number : "",
                                 "debit_or_credit": model.posts[j].posts[k].debit_or_credit,
                                 "debit_amount": model.posts[j].posts[k].debit ? model.posts[j].posts[0].debit : "",
@@ -301,11 +302,27 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Sales_";
+        let filename = "";
 
-        if (model.id) {
-            filename += "_#" + model.code;
+        if (model.name) {
+            filename += model.name + "_acc" + "_#" + model.number;
         }
+
+        filename=filename.split(' ').join('_')
+
+        if (model.dateValue) {
+            filename += "_Date_" + format(new Date(model.dateValue), "MMM_dd_yyyy")
+        } else if (model.fromDateValue && model.toDateValue) {
+            filename += "_Date_" + format(new Date(model.fromDateValue), "MMM_dd_yyyy") + "_to_" + format(new Date(model.toDateValue), "MMM dd yyyy")
+        } else if (model.fromDateValue && !model.toDateValue && !model.dateValue) {
+            filename += "_Date_from_" + format(new Date(model.fromDateValue), "MMM_dd_yyyy") + "_to_present"
+        } else if (model.toDateValue && !model.fromDateValue && !model.dateValue) {
+            filename += "_Date_upto_" + format(new Date(model.toDateValue), "MMM_dd_yyyy")
+        }
+
+       
+
+        filename += ".pdf"
 
         return filename;
     }
