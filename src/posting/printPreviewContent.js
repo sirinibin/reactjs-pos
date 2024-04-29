@@ -352,7 +352,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
                                     {props.model.pages.length === (pageIndex + 1) ? <tr>
                                         <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
-                                            In Words بكلمات:
+                                            Balance In Words التوازن في الكلمات:
                                         </th>
                                         <th
                                             colSpan="6"

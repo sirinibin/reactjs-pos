@@ -248,7 +248,7 @@ const PostingIndex = forwardRef((props, ref) => {
             queryParams = "&" + queryParams;
         }
 
-        let size = 500;
+        let size = 1000;
 
         let postings = [];
         var pageNo = 1;
@@ -547,7 +547,8 @@ const PostingIndex = forwardRef((props, ref) => {
                         <Button variant="primary" onClick={() => {
                             openPreview(selectedAccount);
                         }} >
-                            <i className="bi bi-display"></i> Print Preview
+                            <i className="bi bi-display"></i> 
+                            {fettingAllRecordsInProgress ? "Preparing.." : "Print Preview"}
                         </Button>
 
                         <button
