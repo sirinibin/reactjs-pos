@@ -36,7 +36,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 }
                 */
 
-                let pageSize = 9;
+                let pageSize = 8;
                 model.pageSize = pageSize;
                 let totalPosts = model.posts.length;
                 let top = 0;
