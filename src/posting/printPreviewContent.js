@@ -40,8 +40,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     borderColor: "silver",
                     borderRadius: "2mm",
                     padding: "20px",
-                    //  marginTop: "10px",
-                    height: "120px",
+                    marginTop: "10px",
+                    height: "1110px",
                     width: "770px",
                     marginTop: (10 + page.top) + "px"
                 }}
@@ -103,9 +103,9 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                             </li>
                             <li><strong>Account Number: </strong>{props.model.number ? props.model.number : "N/A"}
                             </li>
-                            <li>
-                                <strong>Phone: </strong>{props.model.phone ? props.model.phone : "N/A"}
-                            </li>
+                            {props.model.phone ? <li>
+                                <strong>Phone: </strong>{props.model.phone}
+                            </li> : ""}
                             {props.model.dateValue ? <li>
                                 <strong>Date: </strong>{props.model.dateValue ? format(new Date(props.model.dateValue), "MMM dd yyyy") : ""}
                             </li> : ""}
@@ -113,7 +113,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 <strong>Date: </strong>{format(new Date(props.model.fromDateValue), "MMM dd yyyy") + " to " + format(new Date(props.model.toDateValue), "MMM dd yyyy")}
                             </li> : ""}
                             {props.model.fromDateValue && !props.model.toDateValue && !props.model.dateValue ? <li>
-                                <strong>Date: </strong>{format(new Date(props.model.fromDateValue), "MMM dd yyyy")+" to present"}
+                                <strong>Date: </strong>{format(new Date(props.model.fromDateValue), "MMM dd yyyy") + " to present"}
                             </li> : ""}
                             {props.model.toDateValue && !props.model.fromDateValue && !props.model.dateValue ? <li>
                                 <strong>Date: </strong>{"upto " + format(new Date(props.model.toDateValue), "MMM dd yyyy")}
@@ -135,7 +135,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 {props.model.name ? props.model.name : "غير متاح"} <strong> :إسم الحساب</strong>
                             </li>
                             <li><strong>رقم حساب: </strong>{props.model.number ? props.model.number : "غير متاح"}</li>
-                            <li> <strong>هاتف:</strong> {props.model.phone ? props.model.phone : "غير متاح"} </li>
+                            {props.model.phone ? <li> <strong>هاتف:</strong> {props.model.phone} </li> : ""}
                             {props.model.dateValue ? <li>
                                 <strong>تاريخ: </strong>{props.model.dateValue ? format(new Date(props.model.dateValue), "dd-MM-yyyy") : ""}
                             </li> : ""}
@@ -143,7 +143,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 <strong>تاريخ: </strong>{format(new Date(props.model.fromDateValue), "dd-MM-yyyy") + " - " + format(new Date(props.model.toDateValue), "dd-MM-yyyy")}
                             </li> : ""}
                             {props.model.fromDateValue && !props.model.toDateValue && !props.model.dateValue ? <li>
-                                <strong>تاريخ: </strong>{"من " + format(new Date(props.model.fromDateValue), "dd-MM-yyyy")+" لتقديم"}
+                                <strong>تاريخ: </strong>{"من " + format(new Date(props.model.fromDateValue), "dd-MM-yyyy") + " لتقديم"}
                             </li> : ""}
                             {props.model.toDateValue && !props.model.fromDateValue && !props.model.dateValue ? <li>
                                 <strong>تاريخ: </strong>{"يصل إلى " + format(new Date(props.model.toDateValue), "dd-MM-yyyy")}
@@ -176,7 +176,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                             >
                                 <thead style={{ fontSize: "3mm" }}>
                                     <tr >
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "10%" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "15%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -187,7 +187,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <li>Date</li>
                                             </ul>
                                         </th>
-                                        <th className="per3 text-center" colSpan={2} style={{ padding: "0px", width: "35%" }}>
+                                        <th className="per3 text-center" colSpan={2} style={{ padding: "0px", width: "30%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -198,7 +198,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <li>Debit</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" colSpan={2} style={{ padding: "0px", width: "35%" }}>
+                                        <th className="per68 text-center" colSpan={2} style={{ padding: "0px", width: "30%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -220,7 +220,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 <li>Type</li>
                                             </ul>
                                         </th>
-                                        <th className="per10 text-center" style={{ padding: "0px", width: "10%" }}>
+                                        <th className="per10 text-center" style={{ padding: "0px", width: "15%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -262,13 +262,13 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         <td></td>
                                     </tr> : ""}
 
-                                    {page.posts && page.posts.filter(post=>post.date).map((post, index) => (
+                                    {page.posts && page.posts.filter(post => post.date).map((post, index) => (
                                         <tr key={index} style={{}}>
-                                            <td style={{ width: "30%", height: "16px" }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
-                                            <td style={{ width: "30%", alignContent: "start", borderRightWidth: "0px", }}>
+                                            <td style={{ width: "15%", fontSize: "1.6mm", height: "10px" }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
+                                            <td className="text-start" style={{ width: "25%", alignContent: "start", borderRightWidth: "0px", fontSize: "2mm" }}>
                                                 {post.debit_account}
                                             </td>
-                                            <td className="text-end" style={{ width: "5%", border: "solid 0px" }}>
+                                            <td className="text-end" style={{ width: "5%", border: "solid 0px", fontSize: "2mm" }}>
 
                                                 <NumberFormat
                                                     value={parseFloat(post.debit_amount)?.toFixed(2)}
@@ -278,10 +278,10 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td style={{ width: "30%", alignContent: "start", borderRightWidth: "0px", }}>
+                                            <td style={{ width: "25%", alignContent: "start", borderRightWidth: "0px", fontSize: "2mm" }}>
                                                 {post.credit_account}
                                             </td>
-                                            <td className="text-end" style={{ width: "5%", border: "solid 0px" }}>
+                                            <td className="text-end" style={{ width: "5%", border: "solid 0px", fontSize: "2mm" }}>
                                                 <NumberFormat
                                                     value={parseFloat(post.credit_amount)?.toFixed(2)}
                                                     displayType={"text"}
@@ -290,8 +290,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td style={{ width: "10%" }}>{post.reference_model}</td>
-                                            <td style={{ width: "10%" }}>{post.reference_code}</td>
+                                            <td style={{ width: "10%", fontSize: "2mm" }}>{post.reference_model}</td>
+                                            <td style={{ width: "15%", fontSize: "1.6mm" }}>{post.reference_code}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -377,7 +377,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
                                             Account Manager إدارة حساب المستخدم:
                                         </th>
-                                        <th style={{ width: "30%", padding: "2px" }}> {/*props.model.delivered_by_user ? props.model.delivered_by_user.name : null*/}</th>
+                                        <th style={{ width: "30%", padding: "2px" }}> {props.userName ? props.userName : ""}{/*props.model.delivered_by_user ? props.model.delivered_by_user.name : null*/}</th>
                                         {/*
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
                                             Received By استلمت من قبل:
@@ -422,7 +422,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "3mm", height: "55px", }}>
+                {props.model.pages.length === (pageIndex + 1) ? <div className="row" style={{ fontSize: "3mm", height: "55px", }}>
                     <div className="col-md-2 text-start">
                         {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                     </div>
@@ -454,7 +454,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                             </li>
                         </ul>
                     </div>
-                </div>
+                </div> : ""}
             </div>
         ))}
     </>);

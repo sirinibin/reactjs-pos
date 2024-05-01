@@ -292,7 +292,7 @@ const QuotationPreview = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
+        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Quotation Preview</Modal.Title>
                 <div className="col align-self-end text-end">

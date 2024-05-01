@@ -40,7 +40,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                     borderColor: "silver",
                     borderRadius: "2mm",
                     padding: "20px",
-                    marginTop: "10px",
+                    marginTop: (10 + page.top) + "px",
                     height: "1110px",
                     width: "770px"
                 }}
@@ -422,18 +422,18 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             </ul>
                                         </th> : ""}
                                     </tr>
-                                    <tr >
-                                        <td colSpan="6" style={{padding:"0px"}}>
+                                    {props.model.pages.length === (pageIndex + 1) ? <tr >
+                                        <td colSpan="6" style={{ padding: "0px" }}>
 
                                             <table
                                                 className="table table-bordered"
                                                 style={{ borderRadius: "6px" }}
                                             >
-                                              
+
 
                                                 <thead style={{ fontSize: "3mm" }}>
                                                     <tr >
-                                                        <th  colSpan="5" className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                        <th colSpan="5" className="per1 text-center" style={{ padding: "0px" }}>
                                                             <ul
                                                                 className="list-unstyled"
                                                                 style={{
@@ -468,7 +468,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                                 <li>Customer No.</li>
                                                             </ul>
                                                         </th>
-                                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                        <th className="per1 text-center" style={{ padding: "0px", maxWidth: "100px" }}>
                                                             <ul
                                                                 className="list-unstyled"
                                                                 style={{
@@ -479,11 +479,11 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                                 <li>IBAN</li>
                                                             </ul>
                                                         </th>
-                                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                        <th className="per1 text-center" style={{ padding: "0px", width: "10%" }}>
                                                             <ul
                                                                 className="list-unstyled"
                                                                 style={{
-                                                                    height: "15px"
+                                                                    height: "33px"
                                                                 }}
                                                             >
                                                                 <li>إسم الحساب</li>
@@ -501,33 +501,33 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                                 <li>Account No.</li>
                                                             </ul>
                                                         </th>
-                                                      
+
                                                     </tr>
                                                 </thead>
                                                 <tbody style={{ fontSize: "3mm" }} >
-                                                  <tr>
-                                                    <td>
-                                                        NATIONAL COMMERCIAL BANK(NCB)
-                                                    </td>
-                                                    <td>
-                                                        57560905
-                                                    </td>
-                                                    <td>
-                                                        SA7510000014600000922202
-                                                    </td>
-                                                    <td>
-                                                       GULF UNION OZONE CO.
-                                                    </td>
-                                                    <td>
-                                                        14600000922202
-                                                    </td>
-                                                  </tr>
+                                                    <tr>
+                                                        <td style={{width:"5%"}}>
+                                                            NATIONAL COMMERCIAL BANK(NCB)
+                                                        </td>
+                                                        <td style={{width:"5%"}}>
+                                                            57560905
+                                                        </td>
+                                                        <td style={{maxWidth:"100px"}}>
+                                                            SA751000001 4600000922202
+                                                        </td>
+                                                        <td style={{width:"10%"}}>
+                                                            GULF UNION OZONE CO.
+                                                        </td>
+                                                        <td style={{width:"5%"}}>
+                                                            14600000922202
+                                                        </td>
+                                                    </tr>
                                                 </tbody>
-                                                
+
                                             </table>
 
                                         </td>
-                                    </tr>
+                                    </tr> : ""}
                                 </tfoot>
                             </table>
 
@@ -576,7 +576,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "3mm", height: "55px", }}>
+                {props.model.pages.length === (pageIndex + 1) ? <div className="row" style={{ fontSize: "3mm", height: "55px", }}>
                     <div className="col-md-2 text-start">
                         {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                     </div>
@@ -608,7 +608,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             </li>
                         </ul>
                     </div>
-                </div>
+                </div> : ""}
             </div>
         ))}
     </>);

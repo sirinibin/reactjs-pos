@@ -20,6 +20,12 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 }
 
                 /*
+                if (model.created_by) {
+                    getUser(model.created_by);
+                }
+                */
+
+                /*
                 if (model.reference_model==="customer") {
                     getCustomer(model.reference_id);
                 }
@@ -36,7 +42,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 }
                 */
 
-                let pageSize = 8;
+                let pageSize = 15;
                 model.pageSize = pageSize;
                 let totalPosts = model.posts.length;
                 let top = 0;
@@ -353,7 +359,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <BalanceSheetPrintPreviewContent model={model} />
+                    <BalanceSheetPrintPreviewContent model={model} userName={cookies.get("user_name")?cookies.get("user_name"):""} />
                 </div>
             </Modal.Body>
             <Modal.Footer>
