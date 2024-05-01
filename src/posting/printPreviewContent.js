@@ -371,7 +371,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 </tfoot>
                             </table>
 
-                            <table className="table table-bordered" style={{ fontSize: "3mm" }}>
+                            {props.model.pages.length === (pageIndex + 1) ? <table className="table table-bordered" style={{ fontSize: "3mm" }}>
                                 <thead>
                                     <tr>
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
@@ -418,7 +418,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
             */}
                                     </tr>
                                 </thead>
-                            </table>
+                            </table>:""}
                         </div>
                     </div>
                 </div>
