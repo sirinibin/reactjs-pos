@@ -19,7 +19,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
         let options = {
             /*weekday: 'long', */
             year: 'numeric',
-            month: 'long',
+            month: 'numeric',
             day: 'numeric',
             hour: "numeric",
             minute: "numeric",
@@ -95,7 +95,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                             <li><strong>Order: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
                             <li><strong>Order Date: </strong> {props.model.date ? format(
                                 new Date(props.model.date),
-                                "MMM dd yyyy h:mma"
+                                "yyyy-MM-dd h:mma"
                             ) : "<DATETIME>"} </li>
                             <li>
                                 <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "N/A"}

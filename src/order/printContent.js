@@ -19,7 +19,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
         let options = {
             /*weekday: 'long', */
             year: 'numeric',
-            month: 'long',
+            month: 'numeric',
             day: 'numeric',
             hour: "numeric",
             minute: "numeric",
@@ -71,7 +71,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 <h4 style={{ fontSize: "3mm", position: "absolute", left: "570px", top: (14 + page.top) + "px", border: "solid " + border + "px", }}>
                     {props.model.date ? format(
                         new Date(props.model.date),
-                        "MMM dd yyyy h:mma"
+                        "yyyy-MM-dd h:mma"
                     ) : ""}
                 </h4>
                 <h4 style={{ fontSize: "3mm", position: "absolute", left: "570px", top: (35 + page.top) + "px", border: "solid " + border + "px", }}>
