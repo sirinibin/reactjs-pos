@@ -140,7 +140,7 @@ const SalesReturnPrintContent = forwardRef((props, ref) => {
                     </tbody>
                 </table>
 
-                {page.lastPage ? <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: (510 + page.top) + "px", border: "solid 0px", }}>
+                {page.lastPage ? <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: (530 + page.top) + "px", border: "solid 0px", }}>
                     <tbody>
                         <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                             <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
@@ -200,19 +200,20 @@ const SalesReturnPrintContent = forwardRef((props, ref) => {
 
 
 
-                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: (555 + page.top) + "px" }}>
+                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: (565 + page.top) + "px" }}>
                     {n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}
                 </h4> : ""}
-                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "50px", top: (565 + page.top) + "px" }}>
+                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "50px", top: (580 + page.top) + "px" }}>
                     {n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}
                 </h4> : ""}
 
-                <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: (654 + page.top) + "px" }}>
+                <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: (664 + page.top) + "px" }}>
                     {props.model.received_by_user ? props.model.received_by_user.name : ""}
                 </h4>
 
-                {page.lastPage ? <div style={{ position: "absolute", left: "575px", top: (622 + page.top) + "px" }} >
-                    {props.model.QRImageData && <img style={{ width: "182px", height: "174px" }} src={props.model.QRImageData} alt="Invoice QR Code" />}
+                {page.lastPage ? <div style={{ position: "absolute", left: "600px", top: (670 + page.top) + "px" }} >
+                    {props.model.QRImageData && <img style={{ width: "142px", height: "134px" }} src={props.model.QRImageData} alt="Invoice QR Code" />}
+                    
                 </div> : ""}
             </div >
         ))}

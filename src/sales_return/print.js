@@ -4,6 +4,7 @@ import SalesReturnPrintContent from './printContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
+//import { generateQR } from "@zatca/qr";
 import { format } from "date-fns";
 
 const SalesReturnPrint = forwardRef((props, ref) => {
@@ -58,7 +59,7 @@ const SalesReturnPrint = forwardRef((props, ref) => {
                     });
 
                     for (let j = offset; j < totalProducts; j++) {
-                        if(!model.products[j].selected){
+                        if (!model.products[j].selected) {
                             continue;
                         }
 
@@ -69,7 +70,7 @@ const SalesReturnPrint = forwardRef((props, ref) => {
                         }
                     }
 
-                    top += 1057;
+                    top += 1066;
                     offset += pageSize;
                     if ((i + 1) === totalPages) {
                         model.pages[i].lastPage = true;
@@ -168,6 +169,8 @@ const SalesReturnPrint = forwardRef((props, ref) => {
                     "yyyy-MM-dd h:m:mma"
                 );
                 console.log("d2:", d2);
+
+                
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
@@ -177,6 +180,18 @@ const SalesReturnPrint = forwardRef((props, ref) => {
                 });
 
                 model.QRImageData = await invoice.render();
+                /*
+                const invoiceData = {
+                    sellerName: model.store_name,
+                    vatNumber: model.store.vat_no,
+                    timestamp: d2,
+                    total: model.net_total,
+                    vatTotal: model.vat_price,
+                };
+
+                model.QRImageData = await generateQR(invoiceData, { format: "buffer" });
+                */
+
                 console.log("model.QRImageData:", model.QRImageData);
 
                 setModel({ ...model });
