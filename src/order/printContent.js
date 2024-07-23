@@ -72,7 +72,12 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 <h4 style={{ fontSize: "3mm", position: "absolute", left: "570px", top: (14 + page.top) + "px", border: "solid " + border + "px", }}>
                     {props.model.date ? format(
                         new Date(props.model.date),
-                        "yyyy-MM-dd h:mma"
+                        "yyyy-MM-dd"
+                    ) : ""}
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                     {props.model.date ? format(
+                        new Date(props.model.date),
+                        "h:mma"
                     ) : ""}
                 </h4>
                 <h4 style={{ fontSize: "3mm", position: "absolute", left: "570px", top: (35 + page.top) + "px", border: "solid " + border + "px", }}>
