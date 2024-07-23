@@ -125,7 +125,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                             value={(product.unit_price).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={""}
                                             renderText={(value, props) => value}
                                         />
                                     </h4>
@@ -136,7 +136,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                             value={(product.unit_price * product.quantity).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
-                                            suffix={" SAR"}
+                                            suffix={""}
                                             renderText={(value, props) => value}
                                         />
                                     </h4>
@@ -156,7 +156,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         displayType={"text"}
                                         value={props.model.total.toFixed(2)}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={""}
                                         renderText={(value, props) => value}
                                     />
                                 
@@ -170,7 +170,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         value={props.model.vat_price.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={""}
                                         renderText={(value, props) => value}
                                     />
                                 </h4>
@@ -183,7 +183,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         value={props.model.discount.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={""}
                                         renderText={(value, props) => value}
                                     />
                                 </h4>
@@ -196,7 +196,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                         value={props.model.net_total.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
-                                        suffix={" SAR"}
+                                        suffix={""}
                                         renderText={(value, props) => value}
                                     />
                                 </h4>
@@ -212,7 +212,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </h4> : ""}
 
                 {page.lastPage && props.model.shipping_handling_fees ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "686px", top: (513 + page.top) + "px" }}>
-                    {props.model.shipping_handling_fees.toFixed(2) + " SAR"}
+                    {props.model.shipping_handling_fees.toFixed(2)}
                 </h4> : ""}
 
 
