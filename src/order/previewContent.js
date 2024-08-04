@@ -92,8 +92,8 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-start">
-                            <li><strong>Order: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                            <li><strong>Order Date: </strong> {props.model.date ? format(
+                            <li><strong>Invoice No.: </strong>{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
+                            <li><strong>Invoice Date: </strong> {props.model.date ? format(
                                 new Date(props.model.date),
                                 "yyyy-MM-dd h:mma"
                             ) : "<DATETIME>"} </li>
@@ -111,7 +111,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
 
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-end">
-                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :طلب </strong></li>
+                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :رقم الفاتورة </strong></li>
                             <li><strong>تاريخ الطلب:  </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
                             <li>
                                 <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
