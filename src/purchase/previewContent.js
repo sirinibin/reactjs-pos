@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import n2words from 'n2words'
 import QRCode from "react-qr-code";
 
-const QuotationPreviewContent = forwardRef((props, ref) => {
+const PurchasePreviewContent = forwardRef((props, ref) => {
 
     let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
     let persianMap = persianDigits.split("");
@@ -13,8 +13,6 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
         return input.replace(/\d/g, function (m) {
             return persianMap[parseInt(m)];
         });
-
-
     }
 
     function getArabicDate(engishDate) {
@@ -43,16 +41,16 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                     borderColor: "silver",
                     borderRadius: "2mm",
                     padding: "20px",
-                    marginTop: "10px",
+                    marginTop: page.top + "px",
                     height: "1110px",
                     width: "770px"
                 }}
 
             >
-                <div className="row" style={{ fontSize: "3mm" }}>
+                <div className="row" style={{ fontSize: "3.5mm" }}>
                     <div className="col">
                         <ul className="list-unstyled text-left">
-                            <li><h4 style={{ fontSize: "4mm" }}>{props.model.store ? props.model.store.name : "<STORE_NAME>"}</h4></li>
+                            <li><h4 style={{ fontSize: "3.5mm" }}>{props.model.store ? props.model.store.name : "<STORE_NAME>"}</h4></li>
                             <li>{props.model.store ? props.model.store.title : "<STORE_TITLE>"}</li>
                             {/*<!-- <li><hr /></li> --> */}
                             <li>C.R. / {props.model.store ? props.model.store.registration_number : "<STORE_CR_NO>"}</li>
@@ -61,13 +59,13 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                     </div>
                     <div className="col">
                         <div className="invoice-logo text-center">
-                            {props.model.store && props.model.store.logo ? <img width="100" height="100" src={process.env.REACT_APP_API_URL + props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
+                            {props.model.store && props.model.store.logo ? <img width="70" height="70" src={process.env.REACT_APP_API_URL + props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
                         </div>
                     </div>
                     <div className="col">
                         <ul className="list-unstyled text-end">
                             <li>
-                                <h4 style={{ fontSize: "4mm" }}>
+                                <h4 style={{ fontSize: "3.5mm" }}>
                                     <strong>
                                         {props.model.store ? props.model.store.name_in_arabic : "<STORE_NAME_ARABIC>"}
                                     </strong>
@@ -85,17 +83,17 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                 <div className="row">
                     <div className="col">
                         <u
-                        ><h1 className="text-center" style={{ fontSize: "4mm" }}>
-                                PURCHASE ORDER / أمر شراء
+                        ><h1 className="text-center" style={{ fontSize: "3mm" }}>
+                                PURCHASE TAX INVOICE / فاتورة ضريبية
                             </h1>
                         </u>
                     </div>
                 </div>
-                <div className="row table-active" style={{ fontSize: "3mm" }}>
-                    <div className="col">
+                <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
+                    <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-start">
-                            <li><strong>Purchase: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                            <li><strong>Purchase Date: </strong>
+                            <li><strong>Invoice No.: </strong>{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
+                            <li><strong>Invoice Date: </strong>
                                 {props.model.date ? format(
                                     new Date(props.model.date),
                                     "MMM dd yyyy h:mma"
@@ -108,10 +106,14 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             </li>
                         </ul>
                     </div>
-                    <div className="col">
+                    <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "20%", padding: "0px" }}>
+                        {props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "70px", height: "72px" }} alt="Invoice QR Code" /> : ""}
+                    </div>
+
+                    <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-end">
-                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong># :عملية الشراء </strong></li>
-                            <li><strong>تاريخ الشراء: </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
+                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :رقم فاتورة الشراء</strong></li>
+                            <li><strong>تاريخ فاتورة الشراء: </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
                             <li>
                                 <strong> :اسم البائع</strong>{props.model.vendor ? props.model.vendor.name_in_arabic : "<VENDOR_NAME_ARABIC>"}
                             </li>
@@ -119,7 +121,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                         </ul>
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "3mm" }}>
+                <div className="row" style={{ fontSize: "3.5mm" }}>
                     <div className="col text-start">
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </div>
@@ -139,91 +141,91 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
 
                             <table
                                 className="table table-bordered"
-                                style={{ fontSize: "3mm", borderRadius: "6px" }}
+                                style={{ borderRadius: "6px" }}
                             >
-                                <thead>
+                                <thead style={{ fontSize: "3mm" }}>
                                     <tr>
-                                        <th className="per1 text-center" style={{ padding: "0px" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    fontSize: "3mm", height: "35px", marginBottom: "0px"
+                                                    height: "15px"
                                                 }}
                                             >
                                                 <li>رقم سري</li>
                                                 <li>SI No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per3 text-center" style={{ padding: "0px" }}>
+                                        <th className="per3 text-center" style={{ padding: "0px", width: "8%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    fonSize: "3mm", height: "35px", marginBottom: "0px"
+                                                    height: "15px"
                                                 }}
                                             >
                                                 <li>رمز الصنف</li>
                                                 <li>Part No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "20%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    fontSize: "3mm", height: "35px", marginBottom: "0px"
+                                                    height: "15px"
                                                 }}
                                             >
                                                 <li>وصف</li>
                                                 <li>Description</li>
                                             </ul>
                                         </th>
-                                        <th className="per1 text-center" style={{ padding: "0px" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
-                                                style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
+                                                style={{ height: "15px" }}
                                             >
                                                 <li>كمية</li>
                                                 <li>Qty</li>
                                             </ul>
                                         </th>
-                                        <th className="per10 text-center" style={{ padding: "0px" }}>
+                                        <th className="per10 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
-                                                style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
+                                                style={{ height: "15px" }}
                                             >
                                                 <li>سعر الوحدة</li>
                                                 <li>Unit Price</li>
                                             </ul>
                                         </th>
-                                        <th className="per20 text-center" style={{ padding: "0px" }}>
+                                        <th className="per20 text-center" style={{ padding: "0px",width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
-                                                style={{ fontSize: "3mm", height: "35px", marginBottom: "0px" }}
+                                                style={{ height: "15px"}}
                                             >
-                                                <li>المبلغ الإجمالي</li>
+                                                <li>سعر</li>
                                                 <li>Price</li>
                                             </ul>
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody>
+                                <tbody style={{ fontSize: "2.7mm" }}>
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={index} className="text-center">
-                                            <td style={{ paddingBottom: "0px", marginTop: "0px" }}>{index + 1 + (pageIndex * props.model.pageSize)}</td>
-                                            <td style={{ paddingBottom: "0px", marginTop: "0px" }} >{product.part_number ? product.part_number : ""}</td>
-                                            <td style={{ paddingBottom: "0px", marginTop: "0px" }}>
+                                            <td style={{ padding: "1px", height: "16px" }}>{index + 1 + (pageIndex * props.model.pageSize)}</td>
+                                            <td style={{ padding: "1px" }} >{product.part_number ? product.part_number : ""}</td>
+                                            <td style={{ padding: "1px" }} >
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
                                             </td>
-                                            <td style={{ paddingBottom: "0px", marginTop: "0px" }}>{product.quantity.toFixed(2)}  {product.unit ? product.unit : ""}</td>
-                                            <td className="text-end" style={{ paddingBottom: "0px", marginTop: "0px" }} >
-                                                <NumberFormat
+                                            <td style={{ padding: "1px" }} >{product.quantity ? product.quantity.toFixed(2) : ""}  {product.unit ? product.unit : ""}</td>
+                                            <td className="text-end" style={{ padding: "1px" }} >
+                                                {product.purchase_unit_price ? <NumberFormat
                                                     value={product.purchase_unit_price.toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={" SAR"}
                                                     renderText={(value, props) => value}
-                                                />
+                                                /> : ""}
                                             </td>
-                                            <td style={{ paddingBottom: "0px", marginTop: "0px" }} className="text-end">
+                                            <td style={{ padding: "1px" }} className="text-end">
                                                 <NumberFormat
                                                     value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                                     displayType={"text"}
@@ -236,144 +238,95 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     ))}
                                 </tbody>
 
-                                <tfoot>
-                                    <tr>
-                                        <th colSpan="5" className="text-end" style={{ padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    fontSize: "3mm", marginBottom: "0px"
-                                                }}
-                                            >
-                                                <li>المجموع:</li>
-                                                <li>Total:</li>
-                                            </ul>
-                                        </th>
-                                        <th className="text-end" colSpan="2">
+                                <tfoot style={{ fontSize: "3mm", }}>
+                                    <tr >
+                                        <th colSpan="4" className="text-end" style={{ padding: "2px", }} ></th>
 
+                                        <th className="text-end" style={{ padding: "2px" }}>
+                                            Total المجموع:
+                                        </th>
+                                        <th className="text-end" colSpan="2" style={{ padding: "2px", }} >
                                             <NumberFormat
                                                 value={props.model.total.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
-
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="5" style={{ padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    fontSize: "3mm", marginBottom: "0px"
-                                                }}
-                                            >
-                                                <li>رسوم الشحن / المناولة:</li>
-                                                <li>Shipping / Handling Fees:</li>
-                                            </ul>
+                                        <th className="text-end" colSpan="5" style={{ padding: "2px" }}>
+
+                                            Shipping / Handling Fees   رسوم الشحن / المناولة:
                                         </th>
-                                        <th className="text-end" colSpan="2">
+                                        <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
                                                 value={props.model.shipping_handling_fees.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="5" style={{ padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    fontSize: "3mm", marginBottom: "0px"
-                                                }}
-                                            >
-                                                <li>خصم:</li>
-                                                <li>Discount:</li>
-                                            </ul>
+                                        <th className="text-end" colSpan="5" style={{ padding: "2px" }}>
+                                            Discount خصم:
+
                                         </th>
-                                        <th className="text-end" colSpan="2">
+                                        <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
                                                 value={props.model.discount.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="4" style={{ padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    fontSize: "3mm", marginBottom: "0px"
-                                                }}
-                                            >
-                                                <li>ضريبة:</li>
-                                                <li>VAT:</li>
-                                            </ul>
+                                        <th className="text-end" colSpan="4" style={{ padding: "2px" }}>
+                                            VAT ضريبة:
                                         </th>
-                                        <th className="text-center" colSpan="1">{props.model.vat_percent.toFixed(2)}%</th>
-                                        <th className="text-end" colSpan="2">
+                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }} >{props.model.vat_percent.toFixed(2)}%</th>
+                                        <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
                                                 value={props.model.vat_price.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>
                                     </tr>
+
                                     <tr>
-                                        <th className="text-end" colSpan="5" style={{ padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    fontSize: "3mm", marginBottom: "0px"
-                                                }}
-                                            >
-                                                <li>الإجمالي الصافي:</li>
-                                                <li>Net Total:</li>
-                                            </ul>
+                                        <th colSpan="5" className="text-end" style={{ padding: "2px" }}>
+                                            Net Total الإجمالي الصافي:
                                         </th>
-                                        <th className="text-end" colSpan="2">
+                                        <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
                                                 value={props.model.net_total.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th colSpan="1" className="text-end" style={{ padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    fontSize: "3mm", marginBottom: "0px"
-                                                }}
-                                            >
-                                                <li>بكلمات:</li>
-                                                <li>In Words:</li>
-                                            </ul>
+                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                            In Words بكلمات:
                                         </th>
                                         <th
                                             colSpan="5"
-                                            style={{
-                                                paddingLeft: "5px",
-                                                paddingTop: "0px",
-                                                paddingBottom: "0px"
-                                            }}
+                                            style={{ padding: "2px" }}
 
                                         >
                                             <ul
                                                 className="list-unstyled"
-                                                style={{ fontSize: "3mm", marginBottom: "0px" }}
+                                                style={{ marginBottom: "0px" }}
                                             >
                                                 <li>{n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}</li>
                                                 <li>{n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}</li>
@@ -386,88 +339,46 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             <table className="table table-bordered" style={{ fontSize: "3mm" }}>
                                 <thead>
                                     <tr>
-                                        <th className="text-end" style={{ width: "13%", padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{ fontSize: "3mm", marginBottom: "0px" }}
-                                            >
-                                                <li>وضع الطلب من قبل:</li>
-                                                <li>Order Placed By:</li>
-                                            </ul>
+                                        <th className="text-end" style={{ width: "20%", padding: "2px" }}>
+                                            Delivered By سلمت بواسطة:
                                         </th>
-                                        <th style={{ width: "37%" }}> {props.model.order_placed_by_user ? props.model.order_placed_by_user.name : null}</th>
-                                        <th className="text-end" style={{ width: "13%", padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{ fontSize: "3mm", marginBottom: "0px" }}
-                                            >
-                                                <li>استلمت من قبل:</li>
-                                                <li>Received By:</li>
-                                            </ul>
+                                        <th style={{ width: "30%", padding: "2px" }}> {props.model.order_placed_by_user ? props.model.order_placed_by_user.name : null}</th>
+                                        <th className="text-end" style={{ width: "20%", padding: "2px" }}>
+                                            Received By استلمت من قبل:
                                         </th>
-                                        <th style={{ width: "37%" }}>
+                                        <th style={{ width: "30%" }}>
 
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" style={{ padding: "0px" }}>
-                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "20px" }}>
-                                                <li>إمضاء:</li>
-                                                <li>Signature:</li>
-                                            </ul>
+                                        <th className="text-end" style={{ padding: "2px" }}>
+                                            Signature إمضاء:
                                         </th>
-                                        <th style={{ width: "37%", height: "40px" }}>
+                                        <th style={{ width: "30%", height: "30px" }}>
                                             {props.model.delivered_by_signature ?
                                                 <img alt="Signature" src={process.env.REACT_APP_API_URL + props.model.delivered_by_signature.signature + "?" + (Date.now())} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
                                                 : null}
                                         </th>
-                                        <th className="text-end" style={{ padding: "0px" }} >
-                                            <ul className="list-unstyled" style={{ fontSize: "3mm", height: "20px" }}>
-                                                <li>إمضاء:</li>
-                                                <li>Signature:</li>
-                                            </ul>
+                                        <th className="text-end" style={{ padding: "2px" }} >
+                                            Signature إمضاء:
                                         </th>
                                         <th></th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" style={{ padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    fontSize: "3mm",
-                                                    height: "20px"
-                                                }}
-                                            >
-                                                <li>تاريخ:</li>
-                                                <li>Date:</li>
-                                            </ul>
+                                        <th className="text-end" style={{ padding: "2px" }}>
+                                            Date تاريخ:
                                         </th>
-                                        <th style={{ padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    fontSize: "3mm", height: "35px", marginBottom: "0px"
-                                                }}
-                                            >
-                                                <li>{props.model.signature_date_str ? getArabicDate(props.model.signature_date_str) : ""}</li>
-                                                <li>{props.model.signature_date_str ? props.model.signature_date_str : ""}</li>
-                                            </ul>
+                                        <th style={{ padding: "2px" }} className="text-center">
+                                            {props.model.signature_date_str ? props.model.signature_date_str : ""}  {props.model.signature_date_str ? getArabicDate(props.model.signature_date_str) : ""}
                                         </th>
-                                        <th className="text-end" style={{ padding: "0px" }}>
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{
-                                                    fontSize: "3mm", marginBottom: "0px"
-                                                }}
-                                            >
-                                                <li>تاريخ:</li>
-                                                <li>Date:</li>
-                                            </ul>
+                                        <th className="text-end" style={{ padding: "2px" }}>
+                                            Date تاريخ:
                                         </th>
                                         <th></th>
                                     </tr>
                                 </thead>
                             </table>
+                           
                         </div>
                     </div>
                 </div>
@@ -510,4 +421,4 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
 
 });
 
-export default QuotationPreviewContent;
+export default PurchasePreviewContent;

@@ -40,7 +40,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     borderColor: "silver",
                     borderRadius: "2mm",
                     padding: "20px",
-                    marginTop: "10px",
+                    marginTop: page.top+"px",
                     height: "110px",
                     width: "770px"
                 }}
@@ -165,7 +165,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 }}
                                             >
                                                 <li>رقم القطعة</li>
-                                                <li>Part Number</li>
+                                                <li>Part No.</li>
                                             </ul>
                                         </th>
                                         <th className="per68 text-center" style={{ padding: "0px", width: "20%" }}>
@@ -208,8 +208,8 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                     height: "15px"
                                                 }}
                                             >
-                                                <li>المبلغ الإجمالي</li>
-                                                <li>Total Amount</li>
+                                                <li>سعر</li>
+                                                <li>Price</li>
                                             </ul>
                                         </th>
                                     </tr>
@@ -317,7 +317,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 value={props.model.net_total.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
-                                                suffix={" SAR"}
+                                                suffix={""}
                                                 renderText={(value, props) => value}
                                             />
                                         </th>

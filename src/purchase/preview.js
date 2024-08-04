@@ -1,8 +1,9 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from 'react-bootstrap';
-import QuotationPreviewContent from './previewContent.js';
+import PurchasePreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
+import { Invoice } from '@axenda/zatca';
 
 const QuotationPreview = forwardRef((props, ref) => {
 
@@ -28,7 +29,7 @@ const QuotationPreview = forwardRef((props, ref) => {
                     getSignature(model.order_placed_by_signature_id);
                 }
 
-                let pageSize = 8;
+                let pageSize = 16;
                 model.pageSize = pageSize;
                 let totalProducts = model.products.length;
                 let top = 0;
@@ -130,6 +131,18 @@ const QuotationPreview = forwardRef((props, ref) => {
 
                 let vendorData = data.result;
                 model.vendor = vendorData;
+
+                const invoice = new Invoice({
+                    sellerName: model.vendor.name,
+                    vatRegistrationNumber: model.vendor.vat_no,
+                    invoiceTimestamp: model.date,
+                    invoiceTotal: model.net_total,
+                    invoiceVatTotal: model.vat_price,
+                });
+
+                model.QRImageData = await invoice.render();
+
+
                 setModel({ ...model });
             })
             .catch(error => {
@@ -191,6 +204,8 @@ const QuotationPreview = forwardRef((props, ref) => {
                 console.log(data);
                 let storeData = data.result;
                 model.store = storeData;
+
+                
                 setModel({ ...model });
             })
             .catch(error => {
@@ -292,7 +307,7 @@ const QuotationPreview = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Quotation Preview</Modal.Title>
+                <Modal.Title>Purchase Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
                         <i className="bi bi-printer"></i> Print
@@ -309,7 +324,7 @@ const QuotationPreview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <QuotationPreviewContent model={model} />
+                    <PurchasePreviewContent model={model} />
                 </div>
             </Modal.Body>
             <Modal.Footer>
