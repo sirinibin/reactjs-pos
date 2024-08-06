@@ -221,7 +221,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                                     value={product.purchase_unit_price.toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
-                                                    suffix={" SAR"}
+                                                    suffix={""}
                                                     renderText={(value, props) => value}
                                                 /> : ""}
                                             </td>
@@ -230,7 +230,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                                     value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
-                                                    suffix={" SAR"}
+                                                    suffix={""}
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
