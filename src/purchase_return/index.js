@@ -39,7 +39,13 @@ function PurchaseReturnIndex(props) {
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
-    const selectedDate = new Date();
+    let [selectedDate, setSelectedDate] = useState(new Date());
+    let [selectedFromDate, setSelectedFromDate] = useState(new Date());
+    let [selectedToDate, setSelectedToDate] = useState(new Date());
+    let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
+    let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
+    let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
+
     let [dateValue, setDateValue] = useState("");
     const [fromDateValue, setFromDateValue] = useState("");
     const [toDateValue, setToDateValue] = useState("");
@@ -1420,12 +1426,14 @@ function PurchaseReturnIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
+                                                <div style={{ minWidth: "125px" }}>
                                                     <DatePicker
                                                         id="date_str"
                                                         value={dateValue}
                                                         selected={selectedDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
                                                                 setDateValue("");
@@ -1433,6 +1441,8 @@ function PurchaseReturnIndex(props) {
                                                                 return;
                                                             }
                                                             searchByDateField("date_str", date);
+                                                            selectedDate = date;
+                                                            setSelectedDate(date);
                                                         }}
                                                     />
                                                     <small
@@ -1453,9 +1463,10 @@ function PurchaseReturnIndex(props) {
                                                             <DatePicker
                                                                 id="from_date"
                                                                 value={fromDateValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setFromDateValue("");
@@ -1463,15 +1474,18 @@ function PurchaseReturnIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("from_date", date);
+                                                                    selectedFromDate = date;
+                                                                    setSelectedFromDate(date);
                                                                 }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="to_date"
                                                                 value={toDateValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setToDateValue("");
@@ -1479,10 +1493,13 @@ function PurchaseReturnIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("to_date", date);
+                                                                    selectedToDate = date;
+                                                                    setSelectedToDate(date);
                                                                 }}
                                                             />
                                                         </span>
                                                     ) : null}
+                                                    </div>
                                                 </th>
                                                 <th>
                                                     <input
@@ -1592,9 +1609,10 @@ function PurchaseReturnIndex(props) {
                                                     <DatePicker
                                                         id="created_at"
                                                         value={createdAtValue}
-                                                        selected={selectedDate}
+                                                        selected={selectedCreatedAtDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
                                                                 setCreatedAtValue("");
@@ -1602,6 +1620,8 @@ function PurchaseReturnIndex(props) {
                                                                 return;
                                                             }
                                                             searchByDateField("created_at", date);
+                                                            selectedCreatedAtDate = date;
+                                                            setSelectedCreatedAtDate(date);
                                                         }}
                                                     />
                                                     <small
@@ -1624,9 +1644,10 @@ function PurchaseReturnIndex(props) {
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtFromValue("");
@@ -1634,15 +1655,18 @@ function PurchaseReturnIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_from", date);
+                                                                    selectedCreatedAtFromDate = date;
+                                                                    setSelectedCreatedAtFromDate(date);
                                                                 }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtToValue("");
@@ -1650,6 +1674,8 @@ function PurchaseReturnIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_to", date);
+                                                                    selectedCreatedAtToDate = date;
+                                                                    setSelectedCreatedAtToDate(date);
                                                                 }}
                                                             />
                                                         </span>

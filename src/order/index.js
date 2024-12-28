@@ -78,7 +78,7 @@ const OrderIndex = forwardRef((props, ref) => {
         let invoiceCount = 0;
         for (let orderDate in groupedByDate) {
 
-          //  console.log("orderDate:", orderDate);
+            //  console.log("orderDate:", orderDate);
             excelData[0].data.push([{ value: "Inv Date: " + orderDate }]);
             let dayTotalBeforeVAT = 0.00;
             let dayTotalAfterVAT = 0.00;
@@ -504,8 +504,14 @@ const OrderIndex = forwardRef((props, ref) => {
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
-    const selectedDate = new Date();
-    const [dateValue, setDateValue] = useState("");
+    let [selectedDate, setSelectedDate] = useState(new Date());
+    let [selectedFromDate, setSelectedFromDate] = useState(new Date());
+    let [selectedToDate, setSelectedToDate] = useState(new Date());
+    let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
+    let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
+    let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
+
+    let [dateValue, setDateValue] = useState("");
     const [fromDateValue, setFromDateValue] = useState("");
     const [toDateValue, setToDateValue] = useState("");
 
@@ -914,7 +920,7 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
     let [showOrderPaymentHistory, setShowOrderPaymentHistory] = useState(false);
- 
+
     const [selectedOrder, setSelectedOrder] = useState({});
 
     function openOrderPaymentsDialogue(order) {
@@ -1291,7 +1297,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     )}
                                 </div>
                                 <div className="table-responsive" style={{ overflowX: "auto" }}>
-                                    <table className="table table-striped table-sm table-bordered">
+                                    <table className="table table-striped table-bordered table-sm" style={{}}>
                                         <thead>
                                             <tr className="text-center">
                                                 <th>
@@ -1331,6 +1337,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
+
+
                                                 </th>
                                                 <th>
                                                     <b
@@ -1648,7 +1656,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                         <thead>
                                             <tr className="text-center">
-                                                <th>
+                                                <th >
                                                     <input
                                                         type="text"
                                                         id="code"
@@ -1658,70 +1666,83 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <DatePicker
-                                                        id="date_str"
-                                                        value={dateValue}
-                                                        selected={selectedDate}
-                                                        className="form-control"
-                                                        dateFormat="MMM dd yyyy"
-                                                        onChange={(date) => {
-                                                            if (!date) {
-                                                                setDateValue("");
-                                                                searchByDateField("date_str", "");
-                                                                return;
-                                                            }
-                                                            searchByDateField("date_str", date);
-                                                        }}
-                                                    />
-                                                    <small
-                                                        style={{
-                                                            color: "blue",
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={(e) => setShowDateRange(!showDateRange)}
-                                                    >
-                                                        {showDateRange ? "Less.." : "More.."}
-                                                    </small>
-                                                    <br />
+                                                <th >
+                                                    <div style={{ minWidth: "125px" }}>
+                                                        <DatePicker
+                                                            id="date_str"
+                                                            value={dateValue}
+                                                            selected={selectedDate}
+                                                            className="form-control"
+                                                            dateFormat="MMM dd yyyy"
+                                                            isClearable={true}  
+                                                            onChange={(date) => {
+                                                                if (!date) {
+                                                                    setDateValue("");
+                                                                    searchByDateField("date_str", "");
+                                                                    return;
+                                                                }
+                                                                searchByDateField("date_str", date);
+                                                                selectedDate = date;
+                                                                setSelectedDate(date);
+                                                            }}
+                                                        />
+                                                        
+                                                        <br />
+                                                        <small
+                                                            style={{
+                                                                color: "blue",
+                                                                textDecoration: "underline",
+                                                                cursor: "pointer",
+                                                            }}
+                                                            onClick={(e) => setShowDateRange(!showDateRange)}
+                                                        >
+                                                            {showDateRange ? "Less.." : "More.."}
+                                                        </small>
+                                                        <br />
 
-                                                    {showDateRange ? (
-                                                        <span className="text-left">
-                                                            From:{" "}
-                                                            <DatePicker
-                                                                id="from_date"
-                                                                value={fromDateValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setFromDateValue("");
-                                                                        searchByDateField("from_date", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("from_date", date);
-                                                                }}
-                                                            />
-                                                            To:{" "}
-                                                            <DatePicker
-                                                                id="to_date"
-                                                                value={toDateValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setToDateValue("");
-                                                                        searchByDateField("to_date", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("to_date", date);
-                                                                }}
-                                                            />
-                                                        </span>
-                                                    ) : null}
+                                                        {showDateRange ? (
+                                                            <span className="text-left">
+                                                                From:{" "}
+                                                                <DatePicker
+                                                                    id="from_date"
+                                                                    value={fromDateValue}
+                                                                    selected={selectedFromDate}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    isClearable={true}  
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setFromDateValue("");
+                                                                            searchByDateField("from_date", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("from_date", date);
+                                                                        selectedFromDate = date;
+                                                                        setSelectedFromDate(date);
+                                                                    }}
+                                                                />
+                                                                To:{" "}
+                                                                <DatePicker
+                                                                    id="to_date"
+                                                                    value={toDateValue}
+                                                                    selected={selectedToDate}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    isClearable={true}  
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setToDateValue("");
+                                                                            searchByDateField("to_date", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("to_date", date);
+                                                                        selectedToDate = date;
+                                                                        setSelectedToDate(date);
+                                                                    }}
+                                                                />
+                                                            </span>
+                                                        ) : null}
+                                                    </div>
                                                 </th>
                                                 <th>
                                                     <input
@@ -1902,9 +1923,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     <DatePicker
                                                         id="created_at"
                                                         value={createdAtValue}
-                                                        selected={selectedDate}
+                                                        selected={selectedCreatedAtDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        isClearable={true}  
                                                         onChange={(date) => {
                                                             if (!date) {
                                                                 //  createdAtValue = "";
@@ -1913,6 +1935,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 return;
                                                             }
                                                             searchByDateField("created_at", date);
+                                                            selectedCreatedAtDate = date;
+                                                            setSelectedCreatedAtDate(date);
                                                         }}
                                                     />
                                                     <small
@@ -1935,9 +1959,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}  
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtFromValue("");
@@ -1945,15 +1970,18 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_from", date);
+                                                                    selectedCreatedAtFromDate = date;
+                                                                    setSelectedCreatedAtFromDate(date);
                                                                 }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}  
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtToValue("");
@@ -1961,6 +1989,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_to", date);
+                                                                    selectedCreatedAtToDate = date;
+                                                                    setSelectedCreatedAtToDate(date);
                                                                 }}
                                                             />
                                                         </span>
@@ -1995,8 +2025,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 orderList.map((order) => (
                                                     <tr key={order.code}>
                                                         <td>{order.code}</td>
-                                                        <td>
+                                                        <td >
+
                                                             {format(new Date(order.date), "MMM dd yyyy h:mma")}
+
                                                         </td>
                                                         <td>{order.net_total?.toFixed(2)}</td>
                                                         <td>{order.cash_discount?.toFixed(2)}</td>

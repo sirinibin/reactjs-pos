@@ -16,7 +16,12 @@ function ExpenseIndex(props) {
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
-    const selectedDate = new Date();
+    let [selectedDate, setSelectedDate] = useState(new Date());
+    let [selectedFromDate, setSelectedFromDate] = useState(new Date());
+    let [selectedToDate, setSelectedToDate] = useState(new Date());
+    let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
+    let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
+    let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
     const [dateValue, setDateValue] = useState("");
     const [fromDateValue, setFromDateValue] = useState("");
     const [toDateValue, setToDateValue] = useState("");
@@ -677,6 +682,7 @@ function ExpenseIndex(props) {
                                                         selected={selectedDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
                                                                 setDateValue("");
@@ -684,6 +690,8 @@ function ExpenseIndex(props) {
                                                                 return;
                                                             }
                                                             searchByDateField("date_str", date);
+                                                            selectedDate = date;
+                                                            setSelectedDate(date);
                                                         }}
                                                     />
                                                     <small
@@ -704,9 +712,10 @@ function ExpenseIndex(props) {
                                                             <DatePicker
                                                                 id="from_date"
                                                                 value={fromDateValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setFromDateValue("");
@@ -714,15 +723,18 @@ function ExpenseIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("from_date", date);
+                                                                    selectedFromDate = date;
+                                                                    setSelectedFromDate(date);
                                                                 }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="to_date"
                                                                 value={toDateValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setToDateValue("");
@@ -730,6 +742,8 @@ function ExpenseIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("to_date", date);
+                                                                    selectedToDate = date;
+                                                                    setSelectedToDate(date);
                                                                 }}
                                                             />
                                                         </span>
@@ -799,9 +813,10 @@ function ExpenseIndex(props) {
                                                     <DatePicker
                                                         id="created_at"
                                                         value={createdAtValue}
-                                                        selected={selectedDate}
+                                                        selected={selectedCreatedAtDate }
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
                                                                 setCreatedAtValue("");
@@ -809,6 +824,8 @@ function ExpenseIndex(props) {
                                                                 return;
                                                             }
                                                             searchByDateField("created_at", date);
+                                                            selectedCreatedAtDate = date;
+                                                            setSelectedCreatedAtDate(date);
                                                         }}
                                                     />
                                                     <small
@@ -831,9 +848,10 @@ function ExpenseIndex(props) {
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtFromValue("");
@@ -841,15 +859,18 @@ function ExpenseIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_from", date);
+                                                                    selectedCreatedAtFromDate = date;
+                                                                    setSelectedCreatedAtFromDate(date);
                                                                 }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtFromValue("");
@@ -857,6 +878,8 @@ function ExpenseIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_to", date);
+                                                                    selectedCreatedAtToDate = date;
+                                                                    setSelectedCreatedAtToDate(date);
                                                                 }}
                                                             />
                                                         </span>

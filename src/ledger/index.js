@@ -685,6 +685,7 @@ function LedgerIndex(props) {
                                                         selected={selectedDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
                                                                 setDateValue("");
@@ -717,6 +718,7 @@ function LedgerIndex(props) {
                                                                 selected={selectedFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setFromDateValue("");
@@ -735,6 +737,7 @@ function LedgerIndex(props) {
                                                                 selected={selectedToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setToDateValue("");

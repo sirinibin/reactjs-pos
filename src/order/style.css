@@ -8,4 +8,16 @@
   overflow: auto;
   overflow-y: auto;
 }
+
+thead th {
+  position: sticky;
+  top: 0;
+  background-color: #343a40; /* Optional: background color to prevent content overlap */
+/*  color: white; /* Text color for better visibility */
+ /* z-index: 1; /* Ensures header is above table rows */
+/*}
+.table-responsive {
+  max-height: 300px; /* Optional: limit the height of the table to enable scrolling */
+ /* overflow-y: auto; /* Enable vertical scrolling */
+/*}
 */
