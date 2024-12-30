@@ -610,6 +610,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 product_id: selectedProducts[i].product_id,
                 quantity: parseFloat(selectedProducts[i].quantity),
                 unit_price: parseFloat(selectedProducts[i].unit_price),
+                purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price) : 0,
                 unit: selectedProducts[i].unit,
             });
         }
@@ -1193,24 +1194,24 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
             if ((formData.payments_input[key].amount || formData.payments_input[key].amount === 0) && !formData.payments_input[key].deleted) {
-               /* let maxAllowedAmount = (netTotal - formData.cash_discount) - (totalPayment - formData.payments_input[key].amount);
-
-                if (maxAllowedAmount < 0) {
-                    maxAllowedAmount = 0;
-                }
-
-                /*
-                
-                if (maxAllowedAmount === 0) {
-                    errors["payment_amount_" + key] = "Total amount should not exceed " + (netTotal - formData.cash_discount).toFixed(2).toString() + ", Please delete this payment";
-                    setErrors({ ...errors });
-                    haveErrors = true;
-                } else if (formData.payments_input[key].amount > parseFloat(maxAllowedAmount.toFixed(2))) {
-                    errors["payment_amount_" + key] = "Amount should not be greater than " + maxAllowedAmount.toFixed(2);
-                    setErrors({ ...errors });
-                    haveErrors = true;
-                }
-                */
+                /* let maxAllowedAmount = (netTotal - formData.cash_discount) - (totalPayment - formData.payments_input[key].amount);
+ 
+                 if (maxAllowedAmount < 0) {
+                     maxAllowedAmount = 0;
+                 }
+ 
+                 /*
+                 
+                 if (maxAllowedAmount === 0) {
+                     errors["payment_amount_" + key] = "Total amount should not exceed " + (netTotal - formData.cash_discount).toFixed(2).toString() + ", Please delete this payment";
+                     setErrors({ ...errors });
+                     haveErrors = true;
+                 } else if (formData.payments_input[key].amount > parseFloat(maxAllowedAmount.toFixed(2))) {
+                     errors["payment_amount_" + key] = "Amount should not be greater than " + maxAllowedAmount.toFixed(2);
+                     setErrors({ ...errors });
+                     haveErrors = true;
+                 }
+                 */
 
 
             }
@@ -1276,7 +1277,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <ul>
 
                                 {errors && Object.keys(errors).map((key, index) => {
-                                    console.log("Key",key);
+                                    console.log("Key", key);
                                     if (Array.isArray(errors[key])) {
                                         return (errors[key][0] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
                                     } else {
@@ -1600,7 +1601,67 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td >{product.purchase_unit_price?product.purchase_unit_price:"Not set"}</td>
+
+                                            <td>
+
+                                                <div className="input-group mb-3">
+                                                    <input type="number" value={product.purchase_unit_price} disabled={!selectedProducts[index].can_edit} className="form-control text-end"
+
+                                                        placeholder="Purchase Unit Price" onChange={(e) => {
+                                                            errors["purchase_unit_price_" + index] = "";
+                                                            setErrors({ ...errors });
+
+                                                            if (!e.target.value) {
+                                                                //errors["purchase_unit_price_" + index] = "Invalid purchase unit price";
+                                                                selectedProducts[index].purchase_unit_price = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                //setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
+
+
+                                                            if (e.target.value === 0) {
+                                                                // errors["purchase_unit_price_" + index] = "purchase unit price should be > 0";
+                                                                selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                //setErrors({ ...errors });
+                                                                //console.log("errors:", errors);
+                                                                return;
+                                                            }
+
+
+                                                            if (e.target.value) {
+                                                                selectedProducts[index].purchase_unit_price = parseFloat(e.target.value);
+                                                                console.log("selectedProducts[index].purchase_unit_price:", selectedProducts[index].purchase_unit_price);
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                //reCalculate();
+                                                            }
+
+
+                                                        }} />
+                                                    <div
+                                                        style={{ color: "red", cursor: "pointer",marginLeft:"3px" }}
+                                                        onClick={() => {
+                                              
+                                                            selectedProducts[index].can_edit = !selectedProducts[index].can_edit;
+                                                            setSelectedProducts([...selectedProducts]);
+
+                                                        
+                                                        }}
+                                                    >
+                                                        {selectedProducts[index].can_edit?<i className="bi bi-floppy"> </i>:<i className="bi bi-pencil"> </i>}
+                                                    </div>
+                                                    {/*<span className="input-group-text" id="basic-addon2"></span>*/}
+                                                </div>
+                                                {errors["purchase_unit_price_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        <i className="bi bi-x-lg"> </i>
+                                                        {errors["purchase_unit_price_" + index]}
+                                                    </div>
+                                                )}
+
+                                            </td>
                                             <td >
 
                                                 <div className="input-group mb-3">
@@ -2208,7 +2269,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 </table>
                             </div>
                         </div>
-                      
+
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close

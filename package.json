@@ -11,7 +11,7 @@
     "arabic-digits": "^1.1.0",
     "assert": "^2.1.0",
     "bootstrap": "^5.1.1",
-    "bootstrap-icons": "^1.7.1",
+    "bootstrap-icons": "^1.11.3",
     "buffer": "^6.0.3",
     "date-fns": "^2.25.0",
     "font-awesome": "^4.7.0",
