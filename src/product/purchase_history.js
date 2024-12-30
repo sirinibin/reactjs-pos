@@ -28,7 +28,13 @@ const PurchaseHistory = forwardRef((props, ref) => {
 
     const cookies = new Cookies();
 
-    const selectedDate = new Date();
+    let [selectedDate, setSelectedDate] = useState(new Date());
+    let [selectedFromDate, setSelectedFromDate] = useState(new Date());
+    let [selectedToDate, setSelectedToDate] = useState(new Date());
+    const [showDateRange, setShowDateRange] = useState(false);
+    let [dateValue, setDateValue] = useState("");
+    const [fromDateValue, setFromDateValue] = useState("");
+    const [toDateValue, setToDateValue] = useState("");
 
     //list
     const [historyList, setHistoryList] = useState([]);
@@ -74,12 +80,43 @@ const PurchaseHistory = forwardRef((props, ref) => {
     }
 
     function searchByDateField(field, value) {
-        let d = new Date(value);
-        d = new Date(d.toUTCString());
+        if (!value) {
+            searchParams[field] = "";
+            page = 1;
+            setPage(page);
+            list();
+            return;
+        }
 
-        value = format(d, "MMM dd yyyy");
+        if (value) {
+            let d = new Date(value);
+            value = format(d, "MMM dd yyyy");
+            console.log("value2:", value);
+            console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
+        } else {
+            value = "";
+        }
 
-        if (field === "created_at") {
+
+
+        if (field === "date_str") {
+            setDateValue(value);
+            setFromDateValue("");
+            setToDateValue("");
+            searchParams["from_date"] = "";
+            searchParams["to_date"] = "";
+            searchParams[field] = value;
+        } else if (field === "from_date") {
+            setFromDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "to_date") {
+            setToDateValue(value);
+            setDateValue("");
+            searchParams["date"] = "";
+            searchParams[field] = value;
+        } else if (field === "created_at") {
             setCreatedAtValue(value);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
@@ -146,6 +183,10 @@ const PurchaseHistory = forwardRef((props, ref) => {
         if (queryParams !== "") {
             queryParams = "&" + queryParams;
         }
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        searchParams["timezone_offset"] = parseFloat(diff / 60);
 
         // console.log("queryParams:", queryParams);
         //queryParams = encodeURIComponent(queryParams);
@@ -489,14 +530,14 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
-                                                                    sort("created_at");
+                                                                    sort("date");
                                                                 }}
                                                             >
-                                                                Created At
-                                                                {sortField === "created_at" && sortProduct === "-" ? (
+                                                                Date
+                                                                {sortField === "date" && sortProduct === "-" ? (
                                                                     <i className="bi bi-sort-down"></i>
                                                                 ) : null}
-                                                                {sortField === "created_at" && sortProduct === "" ? (
+                                                                {sortField === "date" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -751,59 +792,83 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                 <thead>
                                                     <tr className="text-center">
                                                         <th>
-                                                            <DatePicker
-                                                                id="created_at"
-                                                                value={createdAtValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    if (date) {
-                                                                        searchByDateField("created_at", date);
+                                                            <div style={{ minWidth: "100px" }}>
+                                                                <DatePicker
+                                                                    id="date"
+                                                                    value={dateValue}
+                                                                    selected={selectedDate}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    isClearable={true}
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setDateValue("");
+                                                                            searchByDateField("date_str", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("date_str", date);
+                                                                        selectedDate = date;
+                                                                        setSelectedDate(date);
+
+                                                                    }}
+                                                                />
+                                                                <small
+                                                                    style={{
+                                                                        color: "blue",
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={(e) =>
+                                                                        setShowDateRange(!showDateRange)
                                                                     }
+                                                                >
+                                                                    {showDateRange ? "Less.." : "More.."}
+                                                                </small>
+                                                                <br />
 
-                                                                }}
-                                                            />
-                                                            <small
-                                                                style={{
-                                                                    color: "blue",
-                                                                    textDecoration: "underline",
-                                                                    cursor: "pointer",
-                                                                }}
-                                                                onClick={(e) =>
-                                                                    setShowCreatedAtDateRange(!showCreatedAtDateRange)
-                                                                }
-                                                            >
-                                                                {showCreatedAtDateRange ? "Less.." : "More.."}
-                                                            </small>
-                                                            <br />
-
-                                                            {showCreatedAtDateRange ? (
-                                                                <span className="text-left">
-                                                                    From:{" "}
-                                                                    <DatePicker
-                                                                        id="created_at_from"
-                                                                        value={createdAtFromValue}
-                                                                        selected={selectedDate}
-                                                                        className="form-control"
-                                                                        dateFormat="MMM dd yyyy"
-                                                                        onChange={(date) => {
-                                                                            searchByDateField("created_at_from", date);
-                                                                        }}
-                                                                    />
-                                                                    To:{" "}
-                                                                    <DatePicker
-                                                                        id="created_at_to"
-                                                                        value={createdAtToValue}
-                                                                        selected={selectedDate}
-                                                                        className="form-control"
-                                                                        dateFormat="MMM dd yyyy"
-                                                                        onChange={(date) => {
-                                                                            searchByDateField("created_at_to", date);
-                                                                        }}
-                                                                    />
-                                                                </span>
-                                                            ) : null}
+                                                                {showDateRange ? (
+                                                                    <span className="text-left">
+                                                                        From:{" "}
+                                                                        <DatePicker
+                                                                            id="date_from"
+                                                                            value={fromDateValue}
+                                                                            selected={selectedFromDate}
+                                                                            className="form-control"
+                                                                            dateFormat="MMM dd yyyy"
+                                                                            isClearable={true}
+                                                                            onChange={(date) => {
+                                                                                if (!date) {
+                                                                                    setFromDateValue("");
+                                                                                    searchByDateField("from_date", "");
+                                                                                    return;
+                                                                                }
+                                                                                searchByDateField("from_date", date);
+                                                                                selectedFromDate = date;
+                                                                                setSelectedFromDate(date);
+                                                                            }}
+                                                                        />
+                                                                        To:{" "}
+                                                                        <DatePicker
+                                                                            id="date_to"
+                                                                            value={toDateValue}
+                                                                            selected={selectedToDate}
+                                                                            isClearable={true}
+                                                                            className="form-control"
+                                                                            dateFormat="MMM dd yyyy"
+                                                                            onChange={(date) => {
+                                                                                if (!date) {
+                                                                                    setToDateValue("");
+                                                                                    searchByDateField("to_date", "");
+                                                                                    return;
+                                                                                }
+                                                                                searchByDateField("to_date", date);
+                                                                                selectedToDate = date;
+                                                                                setSelectedToDate(date);
+                                                                            }}
+                                                                        />
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
                                                         </th>
                                                         {!cookies.get("store_id") ? <th>
                                                             <input
@@ -938,10 +1003,10 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                         historyList.map((history) => (
                                                             <tr key={history.id}>
                                                                 <td>
-                                                                    {format(
-                                                                        new Date(history.created_at),
+                                                                    {history.date ? format(
+                                                                        new Date(history.date),
                                                                         "MMM dd yyyy h:mma"
-                                                                    )}
+                                                                    ) : "Not set"}
                                                                 </td>
                                                                 {!cookies.get("store_id") ? <td>{history.store_name}</td> : ""}
                                                                 <td style={{

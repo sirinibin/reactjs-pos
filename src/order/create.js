@@ -834,6 +834,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         if (product.product_stores[formData.store_id]) {
             product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+            product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
         }
 
 
@@ -893,6 +894,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 product_stores: product.product_stores,
                 unit_price: parseFloat(product.unit_price).toFixed(2),
                 unit: product.unit,
+                purchase_unit_price: parseFloat(product.purchase_unit_price).toFixed(2),
             });
         }
         setSelectedProducts([...selectedProducts]);
@@ -1557,9 +1559,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th style={{ width: "3%" }}>Remove</th>
                                         <th style={{ width: "5%" }}>SI No.</th>
                                         <th style={{ width: "10%" }}>Part No.</th>
-                                        <th style={{ width: "30%" }} className="text-start">Name</th>
-                                        <th style={{ width: "15%" }} >Qty</th>
-                                        <th style={{ width: "18%" }}>Unit Price</th>
+                                        <th style={{ width: "33%" }} className="text-start">Name</th>
+                                        <th style={{ width: "10%" }} >Purchase Unit Price</th>
+                                        <th style={{ width: "10%" }} >Qty</th>
+                                        <th style={{ width: "10%" }}>Unit Price</th>
                                         <th style={{ width: "32%" }}>Price</th>
 
                                     </tr>
@@ -1597,6 +1600,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
+                                            <td >{product.purchase_unit_price?product.purchase_unit_price:"Not set"}</td>
                                             <td >
 
                                                 <div className="input-group mb-3">
@@ -1688,7 +1692,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                    <span className="input-group-text" id="basic-addon2"></span>
+                                                    {/*<span className="input-group-text" id="basic-addon2"></span>*/}
                                                 </div>
                                                 {errors["unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>

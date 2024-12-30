@@ -4,6 +4,7 @@ import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
 import DeliveryNotePreview from './preview.js';
 import DeliveryNotePrint from './print.js';
+import { format } from "date-fns";
 
 const DeliveryNoteView = forwardRef((props, ref) => {
 
@@ -130,7 +131,12 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                             <th>Delivered by:</th><td> {model.delivered_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Date:</th><td> {model.date_str}</td>
+                            <th>Date:</th><td> 
+                            {model.date ? format(
+                                    new Date(model.date),
+                                    "MMM dd yyyy h:mma"
+                                ) : "Not set"}
+                            </td>
                             <th>Created At:</th><td> {model.created_at}</td>
                             <th>Updated At:</th><td> {model.updated_at}</td>
                         </tr>

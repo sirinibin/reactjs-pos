@@ -377,7 +377,7 @@ const OrderView = forwardRef((props, ref) => {
                                         thousandSeparator={true}
                                         suffix={" "}
                                         renderText={(value, props) => value}
-                                    /> : "0.00 "    }
+                                    /> : "0.00 "}
                                 </td>
                                 <td colSpan="3"></td>
                                 {cookies.get('admin') === "true" ?
@@ -480,7 +480,12 @@ const OrderView = forwardRef((props, ref) => {
                             <th>Delivered by:</th><td> {model.delivered_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Date:</th><td> {model.date_str}</td>
+                            <th>Date:</th><td>
+                                {model.date ? format(
+                                    new Date(model.date),
+                                    "MMM dd yyyy h:mma"
+                                ) : "Not set"}
+                            </td>
                             <th>VAT %:</th><td> {model.vat_percent}%</td>
                             <th>Discount :</th><td> {model.discount} </td>
                             <th>Discount %:</th><td> {model.discount_percent}</td>
