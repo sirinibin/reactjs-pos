@@ -23,7 +23,7 @@ jobs:
       # Step 3: Install dependencies and build
       - name: Install dependencies and build
         run: |
-          npm install --legacy-peer-deps
+          npm install
           export NODE_OPTIONS=--openssl-legacy-provider
           export DANGEROUSLY_DISABLE_HOST_CHECK=true
           export REACT_APP_API_URL=https://startpos-api-test.startuptech.uk
