@@ -243,6 +243,8 @@ const OrderView = forwardRef((props, ref) => {
                                 <th>Name</th>
                                 <th>Qty</th>
                                 <th>Unit Price</th>
+                                <th>Discount</th>
+                                <th>Discount %</th>
                                 <th>Price</th>
                                 <th>Qty Returned</th>
                                 {cookies.get('admin') === "true" ? <th>Purchase Unit Price</th> : ""}
@@ -269,7 +271,25 @@ const OrderView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={(product.unit_price * product.quantity).toFixed(2)}
+                                            value={(product.discount).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td className="text-end">
+                                        <NumberFormat
+                                            value={(product.discount_percent).toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={"%"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td className="text-end">
+                                        <NumberFormat
+                                            value={((product.unit_price * product.quantity)-product.discount).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -316,7 +336,7 @@ const OrderView = forwardRef((props, ref) => {
                                 </tr>
                             ))}
                             <tr>
-                                <td colSpan="4"></td>
+                                <td colSpan="6"></td>
 
                                 <th className="text-end">Total</th>
                                 <td className="text-end">
@@ -350,7 +370,7 @@ const OrderView = forwardRef((props, ref) => {
                                 </td> : ""}
                             </tr>
                             <tr>
-                                <th colSpan="5" className="text-end">
+                                <th colSpan="7" className="text-end">
                                     Shipping / Handling Fees
                                 </th>
                                 <td className="text-end">
@@ -367,7 +387,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <td colSpan="1" className="text-end">0.00</td>
                             </tr>
                             <tr>
-                                <th colSpan="5" className="text-end">
+                                <th colSpan="7" className="text-end">
                                     Discount
                                 </th>
                                 <td className="text-end">
@@ -396,7 +416,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td> : ""}
                             </tr>
                             <tr>
-                                <th colSpan="4" className="text-end">
+                                <th colSpan="6" className="text-end">
 
                                 </th>
                                 <th className="text-end">VAT {model.vat_percent + "%"}</th>
@@ -418,7 +438,7 @@ const OrderView = forwardRef((props, ref) => {
                                     : ""}
                             </tr>
                             <tr>
-                                <td colSpan="4"></td>
+                                <td colSpan="6"></td>
                                 <th className="text-end">Net Total</th>
                                 <th className="text-end">
                                     <NumberFormat
@@ -442,7 +462,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <td className="text-end">0.00</td>
                             </tr>
                             <tr>
-                                <td colSpan="6"></td>
+                                <td colSpan="8"></td>
                                 {cookies.get('admin') === "true" ?
                                     <th colSpan="3" className="text-end">Net Profit / Loss</th>
                                     : ""}

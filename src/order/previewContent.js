@@ -168,7 +168,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 <li>Part No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "20%" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "15%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -199,6 +199,17 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                             >
                                                 <li>سعر الوحدة</li>
                                                 <li>Unit Price</li>
+                                            </ul>
+                                        </th>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{
+                                                    height: "15px"
+                                                }}
+                                            >
+                                                <li>تخفيض</li>
+                                                <li>Discount</li>
                                             </ul>
                                         </th>
                                         <th className="per20 text-center" style={{ padding: "0px", width: "5%" }}>
@@ -232,9 +243,10 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 /> : ""}
                                             </td>
+                                            <td style={{ padding: "1px" }} className="text-end">{product.discount_percent ? "("+product.discount_percent.toFixed(2)+"%)" : ""}{product.discount ? " "+product.discount.toFixed(2) : ""} </td>
                                             <td style={{ padding: "1px" }} className="text-end">
                                                 <NumberFormat
-                                                    value={(product.unit_price * product.quantity).toFixed(2)}
+                                                    value={((product.unit_price * product.quantity)-product.discount).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={""}
@@ -247,7 +259,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
 
                                 <tfoot style={{ fontSize: "3mm", }}>
                                     <tr >
-                                        <th colSpan="4" className="text-end" style={{ padding: "2px", }} ></th>
+                                        <th colSpan="5" className="text-end" style={{ padding: "2px", }} ></th>
 
                                         <th className="text-end" style={{ padding: "2px" }}>
                                             Total المجموع:
@@ -263,7 +275,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="5" style={{ padding: "2px" }}>
+                                        <th className="text-end" colSpan="6" style={{ padding: "2px" }}>
 
                                             Shipping / Handling Fees   رسوم الشحن / المناولة:
                                         </th>
@@ -278,9 +290,8 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="5" style={{ padding: "2px" }}>
-                                            Discount خصم:
-
+                                        <th className="text-end" colSpan="6" style={{ padding: "2px" }}>
+                                            Sales Discount خصم المبيعات:
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
@@ -293,7 +304,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="4" style={{ padding: "2px" }}>
+                                        <th className="text-end" colSpan="5" style={{ padding: "2px" }}>
                                             VAT ضريبة:
                                         </th>
                                         <th className="text-end" colSpan="1" style={{ padding: "2px" }} >{props.model.vat_percent.toFixed(2)}%</th>
@@ -309,7 +320,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                     </tr>
 
                                     <tr>
-                                        <th colSpan="5" className="text-end" style={{ padding: "2px" }}>
+                                        <th colSpan="6" className="text-end" style={{ padding: "2px" }}>
                                             Net Total الإجمالي الصافي:
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
@@ -323,7 +334,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
                                             In Words بكلمات:
                                         </th>
                                         <th

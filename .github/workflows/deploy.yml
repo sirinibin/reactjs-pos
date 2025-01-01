@@ -1,0 +1,42 @@
+name: Deploy React App to AWS
+
+on:
+  push:
+    branches:
+      - master  
+      - test # Change to your production branch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 21.2.0 # Use your project's Node.js version
+
+      # Step 3: Install dependencies and build
+      - name: Install dependencies and build
+        run: |
+          npm install
+          npm run build
+
+      # Step 4: Deploy to AWS
+      - name: Deploy to AWS
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          AWS_HOST: ${{ secrets.AWS_HOST }}
+          AWS_USER: ${{ secrets.AWS_USER }}
+          AWS_PORT: ${{ secrets.AWS_PORT }}
+          AWS_DEST_PATH: ${{ secrets.AWS_DEST_PATH }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key.pem
+          chmod 600 private_key.pem
+          scp -o StrictHostKeyChecking=no -i private_key.pem -P $AWS_PORT -r build/* $AWS_USER@$AWS_HOST:$AWS_DEST_PATH
+          rm private_key.pem

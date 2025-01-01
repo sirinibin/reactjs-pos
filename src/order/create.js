@@ -611,6 +611,8 @@ const OrderCreate = forwardRef((props, ref) => {
                 quantity: parseFloat(selectedProducts[i].quantity),
                 unit_price: parseFloat(selectedProducts[i].unit_price),
                 purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price) : 0,
+                discount: selectedProducts[i].discount ? parseFloat(selectedProducts[i].discount) : 0,
+                discount_percent: selectedProducts[i].discount_percent ? parseFloat(selectedProducts[i].discount_percent) : 0,
                 unit: selectedProducts[i].unit,
             });
         }
@@ -836,6 +838,8 @@ const OrderCreate = forwardRef((props, ref) => {
         if (product.product_stores[formData.store_id]) {
             product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
             product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+            product.discount = 0.00;
+            product.discount_percent = 0.00;
         }
 
 
@@ -896,6 +900,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit_price: parseFloat(product.unit_price).toFixed(2),
                 unit: product.unit,
                 purchase_unit_price: parseFloat(product.purchase_unit_price).toFixed(2),
+                discount: product.discount,
+                discount_percent: product.discount_percent,
+
             });
         }
         setSelectedProducts([...selectedProducts]);
@@ -924,8 +931,8 @@ const OrderCreate = forwardRef((props, ref) => {
         totalPrice = 0.00;
         for (var i = 0; i < selectedProducts.length; i++) {
             totalPrice +=
-                parseFloat(selectedProducts[i].unit_price) *
-                parseFloat(selectedProducts[i].quantity);
+                (parseFloat(selectedProducts[i].unit_price) *
+                    parseFloat(selectedProducts[i].quantity)) - parseFloat(selectedProducts[i].discount);
         }
         // totalPrice = totalPrice.toFixed(2);
         // totalPrice = Math.round(totalPrice * 100) / 100;
@@ -996,6 +1003,27 @@ const OrderCreate = forwardRef((props, ref) => {
 
     let [discountPercent, setDiscountPercent] = useState(0.00);
 
+    function findProductDiscountPercent(productIndex) {
+        let price = (parseFloat(selectedProducts[productIndex].unit_price) * parseFloat(selectedProducts[productIndex].quantity));
+        if (parseFloat(selectedProducts[productIndex].discount) >= 0 && price > 0) {
+
+            let discountPercent = parseFloat(parseFloat(selectedProducts[productIndex].discount / price) * 100);
+            selectedProducts[productIndex].discount_percent = discountPercent;
+            setSelectedProducts([...selectedProducts]);
+
+        }
+    }
+
+    function findProductDiscount(productIndex) {
+        let price = (selectedProducts[productIndex].unit_price * selectedProducts[productIndex].quantity);
+
+        if (selectedProducts[productIndex].discount_percent >= 0 && price > 0) {
+            selectedProducts[productIndex].discount = parseFloat(price * parseFloat(selectedProducts[productIndex].discount_percent / 100));
+            setSelectedProducts([...selectedProducts]);
+        }
+    }
+
+
     function findDiscountPercent() {
         if (formData.discount >= 0 && totalPrice > 0) {
             discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100);
@@ -1015,7 +1043,17 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
 
-    function reCalculate() {
+    function reCalculate(productIndex) {
+        if (selectedProducts[productIndex]) {
+            if (selectedProducts[productIndex].is_discount_percent) {
+                findProductDiscount(productIndex);
+            } else {
+                findProductDiscountPercent(productIndex);
+            }
+        }
+
+
+
         findTotalPrice();
         if (formData.is_discount_percent) {
             findDiscount();
@@ -1560,10 +1598,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th style={{ width: "3%" }}>Remove</th>
                                         <th style={{ width: "5%" }}>SI No.</th>
                                         <th style={{ width: "10%" }}>Part No.</th>
-                                        <th style={{ width: "33%" }} className="text-start">Name</th>
+                                        <th style={{ width: "23%" }} className="text-start">Name</th>
                                         <th style={{ width: "10%" }} >Purchase Unit Price</th>
                                         <th style={{ width: "10%" }} >Qty</th>
                                         <th style={{ width: "10%" }}>Unit Price</th>
+                                        <th style={{ width: "10%" }}>Discount</th>
+                                        <th style={{ width: "10%" }}>Discount%</th>
                                         <th style={{ width: "32%" }}>Price</th>
 
                                     </tr>
@@ -1641,16 +1681,16 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                         }} />
                                                     <div
-                                                        style={{ color: "red", cursor: "pointer",marginLeft:"3px" }}
+                                                        style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
                                                         onClick={() => {
-                                              
+
                                                             selectedProducts[index].can_edit = !selectedProducts[index].can_edit;
                                                             setSelectedProducts([...selectedProducts]);
 
-                                                        
+
                                                         }}
                                                     >
-                                                        {selectedProducts[index].can_edit?<i className="bi bi-floppy"> </i>:<i className="bi bi-pencil"> </i>}
+                                                        {selectedProducts[index].can_edit ? <i className="bi bi-floppy"> </i> : <i className="bi bi-pencil"> </i>}
                                                     </div>
                                                     {/*<span className="input-group-text" id="basic-addon2"></span>*/}
                                                 </div>
@@ -1763,9 +1803,105 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 )}
 
                                             </td>
+                                            <td>
+                                                <div className="input-group mb-3">
+                                                    <input type="number" className="form-control text-end" value={selectedProducts[index].discount} onChange={(e) => {
+                                                        selectedProducts[index].is_discount_percent = false;
+                                                        if (parseFloat(e.target.value) === 0) {
+                                                            selectedProducts[index].discount = parseFloat(e.target.value);
+                                                            setFormData({ ...formData });
+                                                            errors["discount_" + index] = "";
+                                                            setErrors({ ...errors });
+                                                            reCalculate(index);
+                                                            return;
+                                                        }
+
+                                                        if (parseFloat(e.target.value) < 0) {
+                                                            selectedProducts[index].discount = parseFloat(e.target.value);
+                                                            selectedProducts[index].discount_percent = 0.00;
+                                                            setFormData({ ...formData });
+                                                            errors["discount_" + index] = "Discount should be >= 0";
+                                                            setErrors({ ...errors });
+                                                            reCalculate(index);
+                                                            return;
+                                                        }
+
+                                                        if (!e.target.value) {
+                                                            selectedProducts[index].discount = "";
+                                                            selectedProducts[index].discount_percent = 0.00;
+                                                            errors["discount_" + index] = "Invalid Discount";
+                                                            setFormData({ ...formData });
+                                                            reCalculate(index);
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
+
+                                                        errors["discount_" + index] = "";
+                                                        errors["discount_percent_" + index] = "";
+                                                        setErrors({ ...errors });
+
+                                                        selectedProducts[index].discount = parseFloat(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        reCalculate(index);
+                                                    }} />
+                                                </div>
+                                                {" "}
+                                                {errors["discount_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["discount_" + index]}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <div className="input-group mb-3">
+                                                    <input type="number" className="form-control text-end" value={selectedProducts[index].discount_percent} onChange={(e) => {
+                                                        selectedProducts[index].is_discount_percent = true;
+                                                        if (parseFloat(e.target.value) === 0) {
+                                                            selectedProducts[index].discount_percent = parseFloat(e.target.value);
+                                                            setFormData({ ...formData });
+                                                            errors["discount_percent_" + index] = "";
+                                                            setErrors({ ...errors });
+                                                            reCalculate(index);
+                                                            return;
+                                                        }
+
+                                                        if (parseFloat(e.target.value) < 0) {
+                                                            selectedProducts[index].discount_percent = parseFloat(e.target.value);
+                                                            selectedProducts[index].discount = 0.00;
+                                                            setFormData({ ...formData });
+                                                            errors["discount_percent_" + index] = "Discount percent should be >= 0";
+                                                            setErrors({ ...errors });
+                                                            reCalculate(index);
+                                                            return;
+                                                        }
+
+                                                        if (!e.target.value) {
+                                                            selectedProducts[index].discount_percent = "";
+                                                            selectedProducts[index].discount = 0.00;
+                                                            errors["discount_percent_" + index] = "Invalid Discount Percent";
+                                                            setFormData({ ...formData });
+                                                            setErrors({ ...errors });
+                                                            return;
+                                                        }
+
+                                                        errors["discount_percent_" + index] = "";
+                                                        errors["discount_" + index] = "";
+                                                        setErrors({ ...errors });
+
+                                                        selectedProducts[index].discount_percent = parseFloat(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        reCalculate(index);
+                                                    }} />{""}
+                                                </div>
+                                                {errors["discount_percent_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["discount_percent_" + index]}
+                                                    </div>
+                                                )}
+                                            </td>
                                             <td className="text-end" >
                                                 <NumberFormat
-                                                    value={(product.unit_price * product.quantity).toFixed(2)}
+                                                    value={((product.unit_price * product.quantity)-product.discount).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={" "}

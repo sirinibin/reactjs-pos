@@ -101,9 +101,20 @@ const OrderIndex = forwardRef((props, ref) => {
                     continue;
                 }
 
+                let totalAmountAfterDiscount = order.total + order.shipping_handling_fees - order.discount;
+                let totalAmountBeforeVat = order.total - order.discount + order.shipping_handling_fees;
+                let totalAmountAfterVat = totalAmountBeforeVat + order.vat_price;
+               
+
                 for (var j = 0; j < order.products.length; j++) {
 
                     let product = order.products[j];
+                    let gross_amount = product.unit_price * product.quantity;
+                    let vat_percent = order.vat_percent ? order.vat_percent : 15.00;
+                    let tax_amount = ((product.unit_price * product.quantity) - product.discount) * parseFloat(vat_percent / 100);
+                    let net_amount = (gross_amount - product.discount) + tax_amount;
+
+
 
                     excelData[0].data.push([
                         {
@@ -119,25 +130,25 @@ const OrderIndex = forwardRef((props, ref) => {
                             value: product.unit_price ? product.unit_price.toFixed(2) : 0.00,
                         },
                         {
-                            value: (product.unit_price * product.quantity).toFixed(2)
+                            value: gross_amount.toFixed(2)
                         },
                         {
-                            value: "0.00",
+                            value: product.discount_percent ? product.discount_percent.toFixed(2) : "0.00",
                         },
                         {
-                            value: "0.00",
+                            value: product.discount ? product.discount.toFixed(2) : "0.00",
                         },
                         {
-                            value: "15.00",
+                            value: vat_percent.toFixed(2),
                         },
                         {
-                            value: ((product.unit_price * product.quantity).toFixed(2) * 0.15).toFixed(2),
+                            value: tax_amount.toFixed(2),
                         },
                         {
-                            value: (product.unit_price * product.quantity).toFixed(2),
+                            value: net_amount.toFixed(2),
                         },
                     ]);
-                }
+                } //end for
 
                 excelData[0].data.push([
                     { value: "", },
@@ -165,23 +176,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total Amount Before VAT",
-                    }, {
-                        value: ((order.total + order.shipping_handling_fees)).toFixed(2),
-                    },
-                ]);
-
-                excelData[0].data.push([
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    {
-                        value: "Discount",
+                        value: "Sales Discount",
                     }, {
                         value: order.discount.toFixed(2),
                     },
@@ -199,9 +194,29 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "Total Amount After Discount",
                     }, {
-                        value: ((order.total + order.shipping_handling_fees) - order.discount).toFixed(2),
+                        value: totalAmountAfterDiscount.toFixed(2),
                     },
                 ]);
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Total Amount Before VAT",
+                    }, {
+                        value: totalAmountBeforeVat.toFixed(2),
+                    },
+                ]);
+
+
+
+               
 
 
                 excelData[0].data.push([
@@ -234,14 +249,14 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "Total Amount After VAT",
                     }, {
-                        value: ((order.total + order.shipping_handling_fees) - order.discount + order.vat_price).toFixed(2),
+                        value: totalAmountAfterVat.toFixed(2),
                     },
                 ]);
 
 
                 dayVAT += order.vat_price;
-                dayTotalBeforeVAT += (order.total + order.shipping_handling_fees) - order.discount;
-                dayTotalAfterVAT += (order.total + order.shipping_handling_fees) - order.discount + order.vat_price;
+                dayTotalBeforeVAT += totalAmountBeforeVat;
+                dayTotalAfterVAT += totalAmountAfterVat;
                 dayDiscount += order.discount;
                 dayShippingFees += order.shipping_handling_fees;
 
@@ -399,7 +414,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price,customer_id,customer.id,customer.vat_no";
+            "select=id,code,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price,vat_percent,customer_id,customer.id,customer.vat_no";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -1674,7 +1689,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             selected={selectedDate}
                                                             className="form-control"
                                                             dateFormat="MMM dd yyyy"
-                                                            isClearable={true}  
+                                                            isClearable={true}
                                                             onChange={(date) => {
                                                                 if (!date) {
                                                                     setDateValue("");
@@ -1686,7 +1701,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 setSelectedDate(date);
                                                             }}
                                                         />
-                                                        
+
                                                         <br />
                                                         <small
                                                             style={{
@@ -1709,7 +1724,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     selected={selectedFromDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
-                                                                    isClearable={true}  
+                                                                    isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
                                                                             setFromDateValue("");
@@ -1728,7 +1743,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     selected={selectedToDate}
                                                                     className="form-control"
                                                                     dateFormat="MMM dd yyyy"
-                                                                    isClearable={true}  
+                                                                    isClearable={true}
                                                                     onChange={(date) => {
                                                                         if (!date) {
                                                                             setToDateValue("");
@@ -1926,7 +1941,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         selected={selectedCreatedAtDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
-                                                        isClearable={true}  
+                                                        isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
                                                                 //  createdAtValue = "";
@@ -1962,7 +1977,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 selected={selectedCreatedAtFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
-                                                                isClearable={true}  
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtFromValue("");
@@ -1981,7 +1996,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 selected={selectedCreatedAtToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
-                                                                isClearable={true}  
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtToValue("");
