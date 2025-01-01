@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import Cookies from "universal-cookie";
-import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -49,10 +48,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
 
 
     //Created At filter
-    const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
-    const [createdAtValue, setCreatedAtValue] = useState("");
-    const [createdAtFromValue, setCreatedAtFromValue] = useState("");
-    const [createdAtToValue, setCreatedAtToValue] = useState("");
+
 
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
@@ -117,21 +113,20 @@ const PurchaseHistory = forwardRef((props, ref) => {
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-            setCreatedAtValue(value);
-            setCreatedAtFromValue("");
-            setCreatedAtToValue("");
+          
+           
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
-            setCreatedAtValue("");
+          
+
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
-            setCreatedAtValue("");
+           
+
             searchParams["created_at"] = "";
             searchParams[field] = value;
         }
@@ -142,24 +137,6 @@ const PurchaseHistory = forwardRef((props, ref) => {
         list();
     }
 
-    function searchByMultipleValuesField(field, values) {
-        if (field === "created_by") {
-            // setSelectedCreatedByProducts(values);
-        } else if (field === "category_id") {
-            //setSelectedProductCategories(values);
-        }
-
-        searchParams[field] = Object.values(values)
-            .map(function (model) {
-                return model.id;
-            })
-            .join(",");
-
-        page = 1;
-        setPage(page);
-
-        list();
-    }
 
     function list() {
         const requestOptions = {

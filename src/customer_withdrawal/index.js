@@ -51,9 +51,6 @@ function CustomerWithdrawalIndex(props) {
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
 
-    //Created By CustomerWithdrawal Auto Suggestion
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [selectedCustomerWithdrawalCategories, setSelectedCustomerWithdrawalCategories] = useState([]);
 
 
     useEffect(() => {
@@ -335,7 +332,7 @@ function CustomerWithdrawalIndex(props) {
         CreateFormRef.current.open();
     }
 
-    let [sortOrder, setSortOrder] = useState("-");
+    let sortOrder = "-";
 
 
 

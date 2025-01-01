@@ -104,6 +104,7 @@ function PurchasePaymentIndex(props) {
         list();
     }
 
+    /*
     function searchByDateField(field, value) {
         if (!value) {
             page = 1;
@@ -142,6 +143,7 @@ function PurchasePaymentIndex(props) {
 
         list();
     }
+    */
 
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
@@ -232,7 +234,7 @@ function PurchasePaymentIndex(props) {
                     balanceAmount = (props.purchase.net_total-props.purchase.cash_discount) - totalPayments;
                     setBalanceAmount(balanceAmount);
 
-                    if (balanceAmount == (props.purchase.net_total-props.purchase.cash_discount)) {
+                    if (balanceAmount === (props.purchase.net_total-props.purchase.cash_discount)) {
                         paymentStatus = "not_paid";
                         setPaymentStatus(paymentStatus);
                     } else if (balanceAmount <= 0) {
@@ -285,7 +287,7 @@ function PurchasePaymentIndex(props) {
     const CreateFormRef = useRef();
 
     let [totalPayments, setTotalPayments] = useState(0.00);
-    let [sortOrder, setSortOrder] = useState("-");
+    let sortOrder = "-";
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
@@ -423,15 +425,15 @@ function PurchasePaymentIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        {paymentStatus == "paid" ?
+                        {paymentStatus === "paid" ?
                             <span className="badge bg-success">
                                 Paid
                             </span> : ""}
-                        {paymentStatus == "paid_partially" ?
+                        {paymentStatus === "paid_partially" ?
                             <span className="badge bg-warning">
                                 Paid Partially
                             </span> : ""}
-                        {paymentStatus == "not_paid" ?
+                        {paymentStatus === "not_paid" ?
                             <span className="badge bg-danger">
                                 Not Paid
                             </span> : ""}
@@ -918,7 +920,7 @@ function PurchasePaymentIndex(props) {
                                                     <select
                                                         onChange={(e) => {
                                                             searchByFieldValue("deleted", e.target.value)
-                                                            if (e.target.value == "1") {
+                                                            if (e.target.value === "1") {
                                                                 deleted=true;
                                                                 setDeleted(deleted);
                                                             } else {

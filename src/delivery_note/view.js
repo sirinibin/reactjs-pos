@@ -1,7 +1,6 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
-import NumberFormat from "react-number-format";
 import DeliveryNotePreview from './preview.js';
 import DeliveryNotePrint from './print.js';
 import { format } from "date-fns";
@@ -24,11 +23,6 @@ const DeliveryNoteView = forwardRef((props, ref) => {
     let [model, setModel] = useState({});
     const cookies = new Cookies();
 
-
-    let [totalPrice, setTotalPrice] = useState(0.0);
-    let [netTotal, setNetTotal] = useState(0.00);
-    let [totalQuantity, setTotalQuantity] = useState(0);
-    let [vatPrice, setVatPrice] = useState(0.00);
 
     function getDeliveryNote(id) {
         console.log("inside get DeliveryNote");

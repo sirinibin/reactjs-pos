@@ -6,7 +6,7 @@ import React, {
   useImperativeHandle,
 } from "react";
 import QuotationPreview from "./preview.js";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button, } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
@@ -18,7 +18,6 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
-import QuotationView from "./view.js";
 import ProductView from "./../product/view.js";
 import { DebounceInput } from "react-debounce-input";
 
@@ -52,8 +51,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       selectedDeliveredByUsers = [];
       setSelectedDeliveredByUsers([]);
 
-      selectedDeliveredBySignatures = [];
-      setSelectedDeliveredBySignatures([]);
+  
 
       reCalculate();
 
@@ -107,7 +105,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     };
   }, []);
 
-  const selectedDate = new Date();
 
   //const history = useHistory();
   let [errors, setErrors] = useState({});
@@ -142,23 +139,13 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   //Product Auto Suggestion
   let [productOptions, setProductOptions] = useState([]);
-  let [selectedProduct, setSelectedProduct] = useState([]);
+  let selectedProduct = [];
   let [selectedProducts, setSelectedProducts] = useState([]);
   const [isProductsLoading, setIsProductsLoading] = useState(false);
 
   //Delivered By Auto Suggestion
-  const [deliveredByUserOptions, setDeliveredByUserOptions] = useState([]);
   let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
-  const [isDeliveredByUsersLoading, setIsDeliveredByUsersLoading] =
-    useState(false);
 
-  //Delivered By Signature Auto Suggestion
-  const [deliveredBySignatureOptions, setDeliveredBySignatureOptions] =
-    useState([]);
-  let [selectedDeliveredBySignatures, setSelectedDeliveredBySignatures] =
-    useState([]);
-  const [isDeliveredBySignaturesLoading, setIsDeliveredBySignaturesLoading] =
-    useState(false);
 
   const [show, SetShow] = useState(false);
 
@@ -254,16 +241,7 @@ const QuotationCreate = forwardRef((props, ref) => {
           },
         ];
 
-        if (quotation.delivered_by_signature_id) {
-          let selectedDeliveredBySignatures = [
-            {
-              id: quotation.delivered_by_signature_id,
-              name: quotation.delivered_by_signature_name,
-            },
-          ];
-          setSelectedDeliveredBySignatures([...selectedDeliveredBySignatures]);
-        }
-
+       
         setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
 
         setSelectedStores([...selectedStores]);
@@ -360,46 +338,6 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     setCustomerOptions(data.result);
     setIsCustomersLoading(false);
-  }
-
-  function GetProductUnitPriceInStore(storeId, productStores) {
-    if (!productStores) {
-      return "";
-    }
-
-    for (var i = 0; i < productStores.length; i++) {
-      console.log("productStores[i]:", productStores[i]);
-      console.log("store_id:", storeId);
-
-      if (productStores[i].store_id === storeId) {
-        console.log("macthed");
-        console.log(
-          "productStores[i].retail_unit_price:",
-          productStores[i].retail_unit_price
-        );
-        return productStores[i];
-      }
-    }
-    console.log("not matched");
-    return "";
-  }
-
-  function GetProductPurchaseUnitPriceInStore(storeId, unitPriceListArray) {
-    if (!unitPriceListArray) {
-      return "";
-    }
-
-    for (var i = 0; i < unitPriceListArray.length; i++) {
-      console.log("unitPriceListArray[i]:", unitPriceListArray[i]);
-      console.log("store_id:", storeId);
-
-      if (unitPriceListArray[i].store_id === storeId) {
-        return unitPriceListArray[i].purchase_unit_price;
-      } else {
-        console.log("not matched");
-      }
-    }
-    return "";
   }
 
   let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
@@ -504,79 +442,6 @@ const QuotationCreate = forwardRef((props, ref) => {
     setFormData({ ...formData });
   }
 
-  async function suggestUsers(searchTerm) {
-    console.log("Inside handle suggestUsers");
-    setDeliveredByUserOptions([]);
-
-    console.log("searchTerm:" + searchTerm);
-    if (!searchTerm) {
-      return;
-    }
-
-    var params = {
-      name: searchTerm,
-    };
-    var queryString = ObjectToSearchQueryParams(params);
-    if (queryString !== "") {
-      queryString = "&" + queryString;
-    }
-
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
-      },
-    };
-
-    let Select = "select=id,name";
-    setIsDeliveredByUsersLoading(true);
-    let result = await fetch(
-      "/v1/user?" + Select + queryString,
-      requestOptions
-    );
-    let data = await result.json();
-
-    setDeliveredByUserOptions(data.result);
-    setIsDeliveredByUsersLoading(false);
-  }
-
-  async function suggestSignatures(searchTerm) {
-    console.log("Inside handle suggestSignatures");
-    setDeliveredBySignatureOptions([]);
-
-    console.log("searchTerm:" + searchTerm);
-    if (!searchTerm) {
-      return;
-    }
-
-    var params = {
-      name: searchTerm,
-    };
-    var queryString = ObjectToSearchQueryParams(params);
-    if (queryString !== "") {
-      queryString = "&" + queryString;
-    }
-
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
-      },
-    };
-
-    let Select = "select=id,name";
-    setIsDeliveredBySignaturesLoading(true);
-    let result = await fetch(
-      "/v1/signature?" + Select + queryString,
-      requestOptions
-    );
-    let data = await result.json();
-
-    setDeliveredBySignatureOptions(data.result);
-    setIsDeliveredBySignaturesLoading(false);
-  }
 
   function handleCreate(event) {
     event.preventDefault();
@@ -691,10 +556,6 @@ const QuotationCreate = forwardRef((props, ref) => {
       return;
     }
 
-    let unitPrice = GetProductUnitPriceInStore(
-      formData.store_id,
-      product.stores
-    );
     
     product.unit_price = product.product_stores[formData.store_id]?.retail_unit_price;
     product.purchase_unit_price = product.product_stores[formData.store_id]?.purchase_unit_price;
@@ -870,14 +731,9 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   const UserCreateFormRef = useRef();
-  function openUserCreateForm() {
-    UserCreateFormRef.current.open();
-  }
 
   const SignatureCreateFormRef = useRef();
-  function openSignatureCreateForm() {
-    SignatureCreateFormRef.current.open();
-  }
+
 
   const ProductDetailsViewRef = useRef();
   function openProductDetailsView(id) {

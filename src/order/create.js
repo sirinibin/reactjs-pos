@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import OrderPreview from "./preview.js";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
@@ -11,7 +11,6 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
-import { Spinner } from "react-bootstrap";
 import OrderView from "./view.js";
 import "./style.css";
 import { DebounceInput } from 'react-debounce-input';
@@ -229,8 +228,6 @@ const OrderCreate = forwardRef((props, ref) => {
     }, []);
 
 
-    const selectedDate = new Date();
-
     //const history = useHistory();
     let [errors, setErrors] = useState({
         "payment_amount": [],
@@ -273,18 +270,9 @@ const OrderCreate = forwardRef((props, ref) => {
     const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     //Delivered By Auto Suggestion
-    let [deliveredByUserOptions, setDeliveredByUserOptions] = useState([]);
     let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
-    const [isDeliveredByUsersLoading, setIsDeliveredByUsersLoading] =
-        useState(false);
 
     //Delivered By Signature Auto Suggestion
-    const [deliveredBySignatureOptions, setDeliveredBySignatureOptions] =
-        useState([]);
-    const [selectedDeliveredBySignatures, setSelectedDeliveredBySignatures] =
-        useState([]);
-    const [isDeliveredBySignaturesLoading, setIsDeliveredBySignaturesLoading] =
-        useState(false);
 
     const [show, setShow] = useState(false);
 
@@ -381,39 +369,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
         setCustomerOptions(data.result);
         setIsCustomersLoading(false);
-    }
-
-    function GetProductUnitPriceInStore(storeId, productStores) {
-        if (!productStores) {
-            return "";
-        }
-
-        for (var i = 0; i < productStores.length; i++) {
-            console.log("productStores[i]:", productStores[i]);
-            console.log("store_id:", storeId);
-
-            if (productStores[i].store_id === storeId) {
-                console.log("macthed");
-                console.log(
-                    "productStores[i].retail_unit_price:",
-                    productStores[i].retail_unit_price
-                );
-                return productStores[i];
-                /*
-                if (formData.price_type === "retail") {
-                    return unitPriceListArray[i].retail_unit_price;
-                } else if (formData.price_type === "wholesale") {
-                    return unitPriceListArray[i].wholesale_unit_price;
-                } else if (formData.price_type === "purchase") {
-                    return unitPriceListArray[i].purchase_unit_price;
-                }
-                */
-
-            } else {
-                console.log("not matched");
-            }
-        }
-        return "";
     }
 
 
@@ -522,79 +477,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     }
 
-    async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggestUsers");
-        setDeliveredByUserOptions([]);
 
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsDeliveredByUsersLoading(true);
-        let result = await fetch(
-            "/v1/user?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setDeliveredByUserOptions(data.result);
-        setIsDeliveredByUsersLoading(false);
-    }
-
-    async function suggestSignatures(searchTerm) {
-        console.log("Inside handle suggestSignatures");
-        setDeliveredBySignatureOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsDeliveredBySignaturesLoading(true);
-        let result = await fetch(
-            "/v1/signature?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setDeliveredBySignatureOptions(data.result);
-        setIsDeliveredBySignaturesLoading(false);
-    }
 
     function handleCreate(event) {
         event.preventDefault();
@@ -798,19 +681,6 @@ const OrderCreate = forwardRef((props, ref) => {
         return false;
     }
 
-    function GetProductStockInStore(storeId, productStores) {
-        if (!productStores) {
-            return 0.0;
-        }
-
-        for (var i = 0; i < productStores.length; i++) {
-            if (productStores[i].store_id === storeId) {
-                return productStores[i].stock;
-            }
-        }
-        return 0.0;
-    }
-
     function addProduct(product) {
         console.log("Inside Add product");
         if (!formData.store_id) {
@@ -827,13 +697,6 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        /*
-        let productStore = GetProductUnitPriceInStore(
-            formData.store_id,
-            product.stores
-        );
-        */
-        // product.unit_price = productStore.retail_unit_price;
 
         if (product.product_stores[formData.store_id]) {
             product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
@@ -1086,15 +949,10 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     const UserCreateFormRef = useRef();
-    function openUserCreateForm() {
-        UserCreateFormRef.current.open();
-    }
+
 
 
     const SignatureCreateFormRef = useRef();
-    function openSignatureCreateForm() {
-        SignatureCreateFormRef.current.open();
-    }
 
 
     const ProductDetailsViewRef = useRef();
@@ -1193,7 +1051,7 @@ const OrderCreate = forwardRef((props, ref) => {
             return false;
         }
 
-        let totalPayment = findTotalPayments();
+
 
         // errors["payment_date"] = [];
         //errors["payment_method"] = [];
@@ -1389,12 +1247,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             }
 
                                             if (selectedProduct[0]) {
-                                                /*
-                                                selectedProduct[0].unit_price = GetProductUnitPriceInStore(
-                                                    formData.store_id,
-                                                    selectedProduct[0].stores
-                                                );
-                                                */
+                                              
                                                 if (selectedProduct[0].product_stores[formData.store_id]) {
                                                     selectedProduct[0].unit_price = selectedProduct[0].product_stores[formData.store_id].retail_unit_price;
                                                 }
@@ -2173,7 +2026,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setFormData({ ...formData });
                                         setSelectedDeliveredBySignatures(selectedItems);
                                     }}
-                                    options={deliveredBySignatureOptions}
+                                    options={}
                                     placeholder="Select Signature"
                                     selected={selectedDeliveredBySignatures}
                                     highlightOnlyResult={true}
@@ -2387,15 +2240,15 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td colSpan={1}>
                                                 <b>Payment status: </b>
-                                                {paymentStatus == "paid" ?
+                                                {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">
                                                         Paid
                                                     </span> : ""}
-                                                {paymentStatus == "paid_partially" ?
+                                                {paymentStatus === "paid_partially" ?
                                                     <span className="badge bg-warning">
                                                         Paid Partially
                                                     </span> : ""}
-                                                {paymentStatus == "not_paid" ?
+                                                {paymentStatus === "not_paid" ?
                                                     <span className="badge bg-danger">
                                                         Not Paid
                                                     </span> : ""}

@@ -30,10 +30,6 @@ const PurchaseReturnView = forwardRef((props, ref) => {
         setShow(false);
     };
 
-    let [totalPrice, setTotalPrice] = useState(0.0);
-    let [netTotal, setNetTotal] = useState(0.00);
-    let [totalQuantity, setTotalQuantity] = useState(0);
-    let [vatPrice, setVatPrice] = useState(0.00);
 
     let [purchaseReturnPaymentList, setPurchaseReturnPaymentList] = useState([]);
     let [totalPayments, setTotalPayments] = useState(0.00);

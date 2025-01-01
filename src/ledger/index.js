@@ -4,9 +4,8 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge,Modal } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 import PostingIndex from "./../posting/index.js";
 
 function LedgerIndex(props) {
@@ -35,23 +34,9 @@ function LedgerIndex(props) {
     const [offset, setOffset] = useState(0);
 
 
-    //Created At filter
-    const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
-    const [createdAtValue, setCreatedAtValue] = useState("");
-    const [createdAtFromValue, setCreatedAtFromValue] = useState("");
-    const [createdAtToValue, setCreatedAtToValue] = useState("");
-
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
-
-    //Created By Expense Auto Suggestion
-    const [expenseOptions, setExpenseOptions] = useState([]);
-    const [selectedCreatedByExpenses, setSelectedCreatedByExpenses] = useState([]);
-
-    //Created By Expense Auto Suggestion
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [selectedExpenseCategories, setSelectedExpenseCategories] = useState([]);
 
 
     useEffect(() => {
@@ -130,21 +115,18 @@ function LedgerIndex(props) {
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-            setCreatedAtValue(value);
-            setCreatedAtFromValue("");
-            setCreatedAtToValue("");
+           
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
-            setCreatedAtValue("");
+        
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
-            setCreatedAtValue("");
+          
+ 
             searchParams["created_at"] = "";
             searchParams[field] = value;
         }
@@ -158,11 +140,7 @@ function LedgerIndex(props) {
     const [selectedAccounts, setSelectedAccounts] = useState([]);
 
     function searchByMultipleValuesField(field, values) {
-        if (field === "created_by") {
-            setSelectedCreatedByExpenses(values);
-        } else if (field === "category_id") {
-            setSelectedExpenseCategories(values);
-        } else if (field === "account_id") {
+       if (field === "account_id") {
             setSelectedAccounts(values);
         }
 
@@ -178,7 +156,6 @@ function LedgerIndex(props) {
         list();
     }
 
-    let [totalExpenses, setTotalExpenses] = useState(0.00);
 
     function list() {
         const requestOptions = {
@@ -247,7 +224,7 @@ function LedgerIndex(props) {
                 setCurrentPageItemsCount(data.result.length);
 
                 //totalExpenses = data.meta.total;
-                //setTotalExpenses(totalExpenses);
+               
 
             })
             .catch((error) => {
@@ -313,8 +290,7 @@ function LedgerIndex(props) {
         setAccountOptions(data.result);
     }
 
-    let [showAccountBalanceSheet, setShowAccountBalanceSheet] = useState(false);
-    const [selectedAccount, setSelectedAccount] = useState({});
+
 
     function openBalanceSheetDialogue(id) {
 
@@ -345,9 +321,8 @@ function LedgerIndex(props) {
 
                 // model = data.result;
 
-                setSelectedAccount(data.result);
-                showAccountBalanceSheet = true;
-                setShowAccountBalanceSheet(true);
+    
+              
                 AccountBalanceSheetRef.current.open(data.result);
 
                 //setModel({ ...model });
@@ -358,11 +333,7 @@ function LedgerIndex(props) {
     }
 
     const AccountBalanceSheetRef = useRef();
-    function handleAccountBalanceSheetClose() {
-        showAccountBalanceSheet = false;
-        setShowAccountBalanceSheet(false);
-        //list();
-    }
+
 
     return (
         <>
@@ -829,7 +800,7 @@ function LedgerIndex(props) {
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
                                                             if (!date) {
-                                                                setCreatedAtValue("");
+                                                             
                                                                 searchByDateField("created_at", "");
                                                                 return;
                                                             }
@@ -861,7 +832,7 @@ function LedgerIndex(props) {
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
                                                                     if (!date) {
-                                                                        setCreatedAtFromValue("");
+                                                                     
                                                                         searchByDateField("created_at_from", "");
                                                                         return;
                                                                     }
@@ -877,7 +848,6 @@ function LedgerIndex(props) {
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
                                                                     if (!date) {
-                                                                        setCreatedAtFromValue("");
                                                                         searchByDateField("created_at_to", "");
                                                                         return;
                                                                     }
@@ -910,15 +880,15 @@ function LedgerIndex(props) {
                                                                 ledger.journals.map((journal) => (
                                                                     <tr key={journal.id} style={{ border: "solid 1px" }}>
                                                                         <td style={{ border: "solid 1px", minWidth: "184px" }}>{format(new Date(journal.date), "MMM dd yyyy h:mma")}</td>
-                                                                        <td style={{ border: "solid 1px", minWidth: "250px", maxWidth: "250px", textAlign: "left", paddingLeft: journal.debit_or_credit == "credit" ? "60px" : "30px" }}>
+                                                                        <td style={{ border: "solid 1px", minWidth: "250px", maxWidth: "250px", textAlign: "left", paddingLeft: journal.debit_or_credit === "credit" ? "60px" : "30px" }}>
                                                                             <Button variant="link" onClick={() => {
                                                                                 openBalanceSheetDialogue(journal.account_id);
                                                                             }}>
-                                                                                {journal.debit_or_credit == "credit" ? "     To " + journal.account_name + " A/c #"+journal.account_number+"  Cr." : "" + journal.account_name + " A/c #"+journal.account_number+" Dr."}
+                                                                                {journal.debit_or_credit === "credit" ? "     To " + journal.account_name + " A/c #"+journal.account_number+"  Cr." : "" + journal.account_name + " A/c #"+journal.account_number+" Dr."}
                                                                             </Button>
                                                                         </td>
-                                                                        <td style={{ border: "solid 1px", minWidth: "165px",  }}>{journal.debit_or_credit == "debit" ? journal.debit : ""}</td>
-                                                                        <td style={{ border: "solid 1px", minWidth: "160px",  }}>{journal.debit_or_credit == "credit" ? journal.credit : ""}</td>
+                                                                        <td style={{ border: "solid 1px", minWidth: "165px",  }}>{journal.debit_or_credit === "debit" ? journal.debit : ""}</td>
+                                                                        <td style={{ border: "solid 1px", minWidth: "160px",  }}>{journal.debit_or_credit === "credit" ? journal.credit : ""}</td>
                                                                     </tr>))}
 
 

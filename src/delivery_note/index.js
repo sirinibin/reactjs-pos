@@ -6,9 +6,8 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 
 function DeliveryNoteIndex(props) {
   const cookies = new Cookies();
@@ -29,11 +28,8 @@ function DeliveryNoteIndex(props) {
   const [offset, setOffset] = useState(0);
 
   //Date filter
-  const [showDateRange, setShowDateRange] = useState(false);
   const selectedDate = new Date();
-  let [dateValue, setDateValue] = useState("");
-  let [fromDateValue, setFromDateValue] = useState("");
-  let [toDateValue, setToDateValue] = useState("");
+
 
   //Created At filter
   const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
@@ -53,35 +49,6 @@ function DeliveryNoteIndex(props) {
   const [userOptions, setUserOptions] = useState([]);
   const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
 
-  //Status Auto Suggestion
-  const statusOptions = [
-    {
-      id: "sent",
-      name: "Sent",
-    },
-    {
-      id: "pending",
-      name: "Pending",
-    },
-    {
-      id: "accepted",
-      name: "Accepted",
-    },
-    {
-      id: "rejected",
-      name: "Rejected",
-    },
-    {
-      id: "cancelled",
-      name: "Cancelled",
-    },
-    {
-      id: "deleted",
-      name: "Deleted",
-    },
-  ];
-
-  const [selectedStatusList, setSelectedStatusList] = useState([]);
 
   useEffect(() => {
     list();
@@ -188,21 +155,15 @@ function DeliveryNoteIndex(props) {
     value = format(d, "MMM dd yyyy");
 
     if (field === "date_str") {
-      setDateValue(value);
-      setFromDateValue("");
-      setToDateValue("");
       searchParams["from_date"] = "";
       searchParams["to_date"] = "";
       searchParams[field] = value;
       console.log("Value:", value);
     } else if (field === "from_date") {
-      setFromDateValue(value);
-      setDateValue("");
+
       searchParams["date"] = "";
       searchParams[field] = value;
     } else if (field === "to_date") {
-      setToDateValue(value);
-      setDateValue("");
       searchParams["date"] = "";
       searchParams[field] = value;
     } else if (field === "created_at") {
@@ -236,9 +197,7 @@ function DeliveryNoteIndex(props) {
       setSelectedCreatedByUsers(values);
     } else if (field === "customer_id") {
       setSelectedCustomers(values);
-    } else if (field === "status") {
-      setSelectedStatusList(values);
-    }
+    } 
 
     searchParams[field] = Object.values(values)
       .map(function (model) {

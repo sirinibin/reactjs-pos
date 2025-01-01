@@ -25,11 +25,6 @@ const QuotationView = forwardRef((props, ref) => {
     const cookies = new Cookies();
 
 
-    let [totalPrice, setTotalPrice] = useState(0.0);
-    let [netTotal, setNetTotal] = useState(0.00);
-    let [totalQuantity, setTotalQuantity] = useState(0);
-    let [vatPrice, setVatPrice] = useState(0.00);
-
     function getQuotation(id) {
         console.log("inside get Quotation");
         const requestOptions = {

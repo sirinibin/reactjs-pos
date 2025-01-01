@@ -13,13 +13,14 @@ function Login() {
     const cookies = new Cookies();
 
     useEffect(() => {
+        const cookies = new Cookies();
         let at = cookies.get("access_token");
         if (at) {
             // history.push("/dashboard/quotations");
             //window.location = "/dashboard/analytics";
             window.location = "/dashboard/sales";
         }
-    },[cookies.get("admin")]);
+    },[]);
 
 
     function me() {

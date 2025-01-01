@@ -1,36 +1,12 @@
-import { React, forwardRef, useState } from "react";
-import NumberFormat from "react-number-format";
+import { React, forwardRef } from "react";
 import { format } from "date-fns";
-import n2words from 'n2words'
+
 
 const DeliveryNotePrintContent = forwardRef((props, ref) => {
 
-    let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
-    let persianMap = persianDigits.split("");
+   
 
-    function convertToPersianNumber(input) {
-        return input.replace(/\d/g, function (m) {
-            return persianMap[parseInt(m)];
-        });
-    }
-
-    function getArabicDate(engishDate) {
-        let event = new Date(engishDate);
-        let options = {
-            /*weekday: 'long', */
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: "numeric",
-            minute: "numeric",
-            second: "numeric",
-            //  timeZoneName: "short",
-        };
-        return event.toLocaleDateString('ar-EG', options)
-    }
-
-
-    let [border, setBorder] = useState("0");
+    let border = "0";
     return (<>
 
         {props.model.pages && props.model.pages.map((page, pageIndex) => (

@@ -55,8 +55,6 @@ function CapitalWithdrawalIndex(props) {
     const [selectedWithdrawnByUsers, setSelectedWithdrawnByUsers] = useState([]);
 
     //Created By CapitalWithdrawal Auto Suggestion
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [selectedCapitalWithdrawalCategories, setSelectedCapitalWithdrawalCategories] = useState([]);
 
 
     useEffect(() => {
@@ -349,7 +347,7 @@ function CapitalWithdrawalIndex(props) {
         UserDetailsViewRef.current.open(id);
     }
 
-    let [sortOrder, setSortOrder] = useState("-");
+    let sortOrder = "-";
 
     return (
         <>

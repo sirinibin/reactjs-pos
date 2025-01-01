@@ -11,9 +11,6 @@ import ReactPaginate from "react-paginate";
 import PurchaseReturnCreate from "./../purchase_return/create.js";
 import NumberFormat from "react-number-format";
 
-import PurchaseCashDiscountCreate from "./../purchase_cash_discount/create.js";
-import PurchaseCashDiscountDetailsView from "./../purchase_cash_discount/view.js";
-
 import PurchasePaymentIndex from "./../purchase_payment/index.js";
 import PurchaseReturnIndex from "./../purchase_return/index.js";
 
@@ -112,36 +109,6 @@ function PurchaseIndex(props) {
     ];
 
 
-    //Status Auto Suggestion
-    const statusOptions = [
-        {
-            id: "sent",
-            name: "Sent",
-        },
-        {
-            id: "pending",
-            name: "Pending",
-        },
-        {
-            id: "accepted",
-            name: "Accepted",
-        },
-        {
-            id: "rejected",
-            name: "Rejected",
-        },
-        {
-            id: "cancelled",
-            name: "Cancelled",
-        },
-        {
-            id: "deleted",
-            name: "Deleted",
-        },
-    ];
-
-    const [selectedStatusList, setSelectedStatusList] = useState([]);
-
     useEffect(() => {
         list();
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,22 +172,17 @@ function PurchaseIndex(props) {
         var totalAmountAfterDiscount = 0.00;
         var totalVAT = 0.00;
         var totalDiscount = 0.00;
-        var dayTotalBeforeVAT = 0.00;
-        var dayTotalAfterVAT = 0.00;
-        var dayVAT = 0.00;
 
         let invoiceCount = 0;
         for (let purchaseDate in groupedByDate) {
 
             console.log("purchaseDate:", purchaseDate);
             // excelData[0].data.push([{ value: "Inv Date: " + purchaseDate }]);
-            dayTotalBeforeVAT = 0.00;
-            dayTotalAfterVAT = 0.00;
-            dayVAT = 0.00;
 
-            for (var i = 0; i < groupedByDate[purchaseDate].length > 0; i++) {
+
+            for (var i2 = 0; i2 < groupedByDate[purchaseDate].length; i2++) {
                 invoiceCount++;
-                let purchase = groupedByDate[purchaseDate][i];
+                let purchase = groupedByDate[purchaseDate][i2];
                 let invoiceNo = purchase.vendor_invoice_no ? purchase.vendor_invoice_no + " / " + purchase.code : purchase.code;
                 let supplierVatNo = "N/A";
                 if (purchase.vendor && purchase.vendor.vat_no) {
@@ -856,8 +818,6 @@ function PurchaseIndex(props) {
             setSelectedCreatedByUsers(values);
         } else if (field === "vendor_id") {
             setSelectedVendors(values);
-        } else if (field === "status") {
-            setSelectedStatusList(values);
         } else if (field === "payment_status") {
             setSelectedPaymentStatusList(values);
         } else if (field === "payment_methods") {
@@ -1027,19 +987,6 @@ function PurchaseIndex(props) {
         PurchaseReturnCreateRef.current.open(undefined, id);
     }
 
-    const PurchaseCashDiscountCreateRef = useRef();
-    function openPurchaseCashDiscountCreateForm(order) {
-        PurchaseCashDiscountCreateRef.current.open(undefined, order);
-    }
-
-    const PurchaseCashDiscountDetailsViewRef = useRef();
-    function openPurchaseCashDiscountDetailsView(id) {
-        PurchaseCashDiscountDetailsViewRef.current.open(id);
-    }
-
-    function openPurchaseCashDiscountUpdateForm(id) {
-        PurchaseCashDiscountCreateRef.current.open(id);
-    }
 
     //Purchase Payments
 
@@ -1221,7 +1168,7 @@ function PurchaseIndex(props) {
                             <ExcelSheet dataSet={excelData} name={purchaseReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchases} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchases} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Report"}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
@@ -2209,15 +2156,15 @@ function PurchaseIndex(props) {
                                                             </Button>
                                                         </td>
                                                         <td>
-                                                            {purchase.payment_status == "paid" ?
+                                                            {purchase.payment_status === "paid" ?
                                                                 <span className="badge bg-success">
                                                                     Paid
                                                                 </span> : ""}
-                                                            {purchase.payment_status == "paid_partially" ?
+                                                            {purchase.payment_status === "paid_partially" ?
                                                                 <span className="badge bg-warning">
                                                                     Paid Partially
                                                                 </span> : ""}
-                                                            {purchase.payment_status == "not_paid" ?
+                                                            {purchase.payment_status === "not_paid" ?
                                                                 <span className="badge bg-danger">
                                                                     Not Paid
                                                                 </span> : ""}

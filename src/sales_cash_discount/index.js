@@ -16,7 +16,7 @@ function SalesCashDiscountIndex(props) {
 
     const selectedDate = new Date();
 
-    let [sortOrder, setSortOrder] = useState("-");
+    let sortOrder = "-";
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);

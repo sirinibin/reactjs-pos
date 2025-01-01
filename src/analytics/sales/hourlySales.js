@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import Cookies from "universal-cookie";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Chart } from "react-google-charts";
 
 
 
 const HourlySales = forwardRef((props, ref) => {
-    const cookies = new Cookies();
     useImperativeHandle(ref, () => ({
         init() {
             makeDateOptions();
@@ -15,7 +13,7 @@ const HourlySales = forwardRef((props, ref) => {
         }
     }));
 
-    const [yearOptions, setYearOptions] = useState([
+    const yearOptions = [
         {
             label: "2024",
             value: 2024,
@@ -36,8 +34,10 @@ const HourlySales = forwardRef((props, ref) => {
             label: "2020",
             value: 2020,
         }
-    ]);
-    const [monthOptions, setMonthOptions] = useState([
+    ];
+
+
+    const monthOptions = [
         {
             label: "JAN",
             value: 1,
@@ -86,7 +86,8 @@ const HourlySales = forwardRef((props, ref) => {
             label: "DEC",
             value: 12,
         },
-    ]);
+    ];
+
 
     let [dateOptions, setDateOptions] = useState([]);
 
@@ -177,9 +178,9 @@ const HourlySales = forwardRef((props, ref) => {
             for (const sale of props.allOrders) {
                 // console.log("Sale Month:", new Date(sale.date).getMonth() + 1);
                 // console.log("Sale Year:", new Date(sale.date).getFullYear());
-                if ((new Date(sale.date).getMonth() + 1) == hourlySalesSelectedMonth
-                    && new Date(sale.date).getFullYear() == hourlySalesSelectedYear
-                    && new Date(sale.date).getDate() == hourlySalesSelectedDate
+                if ((new Date(sale.date).getMonth() + 1) === hourlySalesSelectedMonth
+                    && new Date(sale.date).getFullYear() === hourlySalesSelectedYear
+                    && new Date(sale.date).getDate() === hourlySalesSelectedDate
                     // && new Date(sale.date).getHours() == hour
                 ) {
 
@@ -251,9 +252,9 @@ const HourlySales = forwardRef((props, ref) => {
 
         if (props.columns.expense) {
             for (const expense of props.allExpenses) {
-                if ((new Date(expense.date).getMonth() + 1) == hourlySalesSelectedMonth
-                    && new Date(expense.date).getFullYear() == hourlySalesSelectedYear
-                    && new Date(expense.date).getDate() == hourlySalesSelectedDate
+                if ((new Date(expense.date).getMonth() + 1) === hourlySalesSelectedMonth
+                    && new Date(expense.date).getFullYear() === hourlySalesSelectedYear
+                    && new Date(expense.date).getDate() === hourlySalesSelectedDate
                 ) {
 
                     let row = [new Date(expense.date)];
@@ -309,9 +310,9 @@ const HourlySales = forwardRef((props, ref) => {
 
         if (props.columns.purchase) {
             for (const purchase of props.allPurchases) {
-                if ((new Date(purchase.date).getMonth() + 1) == hourlySalesSelectedMonth
-                    && new Date(purchase.date).getFullYear() == hourlySalesSelectedYear
-                    && new Date(purchase.date).getDate() == hourlySalesSelectedDate
+                if ((new Date(purchase.date).getMonth() + 1) === hourlySalesSelectedMonth
+                    && new Date(purchase.date).getFullYear() === hourlySalesSelectedYear
+                    && new Date(purchase.date).getDate() === hourlySalesSelectedDate
                 ) {
                     let row = [new Date(purchase.date)];
 
@@ -366,9 +367,9 @@ const HourlySales = forwardRef((props, ref) => {
 
         if (props.columns.salesReturn || props.columns.salesReturnProfit || props.columns.salesReturnLoss) {
             for (const salesReturn of props.allSalesReturns) {
-                if ((new Date(salesReturn.date).getMonth() + 1) == hourlySalesSelectedMonth
-                    && new Date(salesReturn.date).getFullYear() == hourlySalesSelectedYear
-                    && new Date(salesReturn.date).getDate() == hourlySalesSelectedDate
+                if ((new Date(salesReturn.date).getMonth() + 1) === hourlySalesSelectedMonth
+                    && new Date(salesReturn.date).getFullYear() === hourlySalesSelectedYear
+                    && new Date(salesReturn.date).getDate() === hourlySalesSelectedDate
                 ) {
 
                     let row = [new Date(salesReturn.date)];
@@ -424,9 +425,9 @@ const HourlySales = forwardRef((props, ref) => {
 
         if (props.columns.purchaseReturn) {
             for (const purchaseReturn of props.allPurchaseReturns) {
-                if ((new Date(purchaseReturn.date).getMonth() + 1) == hourlySalesSelectedMonth
-                    && new Date(purchaseReturn.date).getFullYear() == hourlySalesSelectedYear
-                    && new Date(purchaseReturn.date).getDate() == hourlySalesSelectedDate
+                if ((new Date(purchaseReturn.date).getMonth() + 1) === hourlySalesSelectedMonth
+                    && new Date(purchaseReturn.date).getFullYear() === hourlySalesSelectedYear
+                    && new Date(purchaseReturn.date).getDate() === hourlySalesSelectedDate
                 ) {
 
                     let row = [new Date(purchaseReturn.date)];
@@ -485,7 +486,7 @@ const HourlySales = forwardRef((props, ref) => {
         setHourlySales(data);
     }
 
-    const [options, setOptions] = useState({
+    const options = {
         title: '',
         subtitle: '(SAR)',
         legend: { position: 'right' },
@@ -499,11 +500,7 @@ const HourlySales = forwardRef((props, ref) => {
             // 0: { curveType: "function", axis: 'Temps' },
             // 1: { curveType: "function", axis: 'Daylight' },
         },
-    });
-
-
-
-
+    };
 
     useEffect(() => {
         // getAllOrders();

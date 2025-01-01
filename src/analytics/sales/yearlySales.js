@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import Cookies from "universal-cookie";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Chart } from "react-google-charts";
 
 
 
 const YearlySales = forwardRef((props, ref) => {
-    const cookies = new Cookies();
     useImperativeHandle(ref, () => ({
         init() {
             if (props.allOrders.length > 0) {
@@ -14,25 +12,7 @@ const YearlySales = forwardRef((props, ref) => {
         }
     }));
 
-    const [yearOptions, setYearOptions] = useState([
-        {
-            label: "2024",
-            value: 2024,
-        },
-        {
-            label: "2023",
-            value: 2023,
-        },
-        {
-            label: "2022",
-            value: 2022,
-        },
-        {
-            label: "2021",
-            value: 2021,
-        },
-    ]);
-
+   
 
 
     let [yearlySales, setYearlySales] = useState([]);
@@ -219,7 +199,7 @@ const YearlySales = forwardRef((props, ref) => {
         //setYearlySales(data);
     }
 
-    const [options, setOptions] = useState({
+    const options = {
         title: 'Sales',
         subtitle: '(SAR)',
         legend: { position: 'right' },
@@ -233,7 +213,8 @@ const YearlySales = forwardRef((props, ref) => {
             // 0: { curveType: "function", axis: 'Temps' },
             // 1: { curveType: "function", axis: 'Daylight' },
         },
-    });
+    };
+   
 
 
 

@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import Cookies from "universal-cookie";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Chart } from "react-google-charts";
 
 
@@ -202,19 +201,22 @@ const Calendar = forwardRef((props, ref) => {
     }
 
 
-    const [calendarSalesOptions, setCalendarSalesOptions] = useState({
+    const calendarSalesOptions = {
         title: 'Daily Sales',
-    });
+    };
 
-    const [calendarSalesProfitOptions, setCalendarSalesProfitOptions] = useState({
+    const calendarSalesProfitOptions = {
         title: 'Daily Profit',
-    });
-    const [calendarExpenseOptions, setCalendarExpenseOptions] = useState({
+    };
+
+    const calendarExpenseOptions = {
         title: 'Daily Expenses',
-    });
-    const [calendarPurchaseOptions, setCalendarPurchaseOptions] = useState({
+    };
+
+    const calendarPurchaseOptions = {
         title: 'Daily Purchases',
-    });
+    };
+    
 
     const [calendarSalesReturnOptions, setCalendarSalesReturnOptions] = useState({
         title: 'Daily Sales Returns',

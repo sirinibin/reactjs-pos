@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
-import CustomerWithdrawalView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import Resizer from "react-image-file-resizer";
@@ -15,7 +14,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
     //Store Auto Suggestion
     let [selectedStores, setSelectedStores] = useState([]);
-    const [isStoresLoading, setIsStoresLoading] = useState(false);
+    const isStoresLoading = false;
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -81,8 +80,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
     let [storeOptions, setStoreOptions] = useState([]);
 
-    let [selectedCategories, setSelectedCategories] = useState([]);
-    let [categoryOptions, setCategoryOptions] = useState([]);
+    let selectedCategories = [];
+
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -353,11 +352,6 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         StoreCreateFormRef.current.open();
     }
 
-
-    const CustomerWithdrawalCategoryDetailsViewRef = useRef();
-    function openCustomerWithdrawalCategoryDetailsView(id) {
-        CustomerWithdrawalCategoryDetailsViewRef.current.open(id);
-    }
 
     const CustomerCreateFormRef = useRef();
     function openCustomerCreateForm() {

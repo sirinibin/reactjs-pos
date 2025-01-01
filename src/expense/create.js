@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
-import ExpenseView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import ExpenseCategoryCreate from "../expense_category/create.js";
@@ -16,7 +15,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
     //Store Auto Suggestion
     let [selectedStores, setSelectedStores] = useState([]);
-    const [isStoresLoading, setIsStoresLoading] = useState(false);
+    const isStoresLoading = false;
 
 
     useImperativeHandle(ref, () => ({

@@ -54,10 +54,6 @@ function CapitalIndex(props) {
     const [investedbyuserOptions, setInvestedByUserOptions] = useState([]);
     const [selectedInvestedByUsers, setSelectedInvestedByUsers] = useState([]);
 
-    //Created By Capital Auto Suggestion
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [selectedCapitalCategories, setSelectedCapitalCategories] = useState([]);
-
 
     useEffect(() => {
         list();
@@ -227,7 +223,8 @@ function CapitalIndex(props) {
 
     let [totalCapitals, setTotalCapitals] = useState(0.00);
 
-    let [sortOrder, setSortOrder] = useState("-");
+
+    let sortOrder = "-";
 
     function list() {
         const requestOptions = {

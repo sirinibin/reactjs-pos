@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
-import SalesPaymentView from "./view.js";
-import { Typeahead } from "react-bootstrap-typeahead";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 
@@ -12,8 +10,6 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id, order) {
-            order = order;
-            setOrder({ ...order });
             formData = {
                 method: "",
             };
@@ -39,8 +35,6 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
         },
 
     }));
-
-    let [order, setOrder] = useState({});
 
     useEffect(() => {
         const listener = event => {
@@ -72,9 +66,8 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
     const [isProcessing, setProcessing] = useState(false);
     const cookies = new Cookies();
 
-    const [parentCategoryOptions, setParentCategoryOptions] = useState([]);
+
     let [selectedParentCategories, setSelectedParentCategories] = useState([]);
-    const [isProductCategoriesLoading, setIsProductCategoriesLoading] = useState(false);
 
     //fields
     let [formData, setFormData] = useState({});
@@ -148,14 +141,6 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
             });
     }
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -163,7 +148,6 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
 
         console.log("formData.logo:", formData.logo);
 
-        setIsProductCategoriesLoading(true);
 
         let endPoint = "/v1/sales-payment";
         let method = "POST";
@@ -217,7 +201,7 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
 
                 setErrors({});
                 setProcessing(false);
-                setIsProductCategoriesLoading(false);
+
 
                 console.log("Response:");
                 console.log(data);
@@ -233,50 +217,12 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setProcessing(false);
-                setIsProductCategoriesLoading(false);
                 console.log("Inside catch");
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
                 props.showToastMessage("Error Creating SalesPayment!", "danger");
             });
-    }
-
-    async function suggestCategories(searchTerm) {
-        console.log("Inside handle suggest Categories");
-        setParentCategoryOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsProductCategoriesLoading(true);
-        let result = await fetch(
-            "/v1/sales-payment?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setParentCategoryOptions(data.result);
-        setIsProductCategoriesLoading(false);
     }
 
 

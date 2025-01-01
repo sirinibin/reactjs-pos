@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import PurchaseReturnedPreview from "./preview.js";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import VendorCreate from "../vendor/create.js";
 import ProductCreate from "../product/create.js";
 import UserCreate from "../user/create.js";
 import SignatureCreate from "../signature/create.js";
 import Cookies from "universal-cookie";
-import { Typeahead } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
@@ -29,8 +28,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             selectedPurchaseReturnedByUsers = [];
             setSelectedPurchaseReturnedByUsers([]);
 
-            selectedPurchaseReturnedBySignatures = [];
-            setSelectedPurchaseReturnedBySignatures([]);
+          
+          
 
 
             formData = {
@@ -111,7 +110,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         };
     }, []);
 
-    const selectedDate = new Date();
 
     //const history = useHistory();
     let [errors, setErrors] = useState({});
@@ -136,17 +134,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     let [selectedProducts, setSelectedProducts] = useState(null);
 
     //Purchase Returned By Auto Suggestion
-    const [purchaseReturnedByUserOptions, setPurchaseReturnedByUserOptions] = useState([]);
+   
     let [selectedPurchaseReturnedByUsers, setSelectedPurchaseReturnedByUsers] = useState([]);
-    const [isPurchaseReturnedByUsersLoading, setIsPurchaseReturnedByUsersLoading] = useState(false);
 
-    //Purchase Returned By Signature Auto Suggestion
-    const [purchaseReturnedBySignatureOptions, setPurchaseReturnedBySignatureOptions] =
-        useState([]);
-    let [selectedPurchaseReturnedBySignatures, setSelectedPurchaseReturnedBySignatures] =
-        useState([]);
-    const [isPurchaseReturnedBySignaturesLoading, setIsPurchaseReturnedBySignaturesLoading] =
-        useState(false);
 
     const [show, setShow] = useState(false);
 
@@ -358,87 +348,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             });
     }
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
-    async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggestUsers");
-        setPurchaseReturnedByUserOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsPurchaseReturnedByUsersLoading(true);
-        let result = await fetch(
-            "/v1/user?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setPurchaseReturnedByUserOptions(data.result);
-        setIsPurchaseReturnedByUsersLoading(false);
-    }
-
-    async function suggestSignatures(searchTerm) {
-        console.log("Inside handle suggestSignatures");
-        setPurchaseReturnedBySignatureOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsPurchaseReturnedBySignaturesLoading(true);
-        let result = await fetch(
-            "/v1/signature?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setPurchaseReturnedBySignatureOptions(data.result);
-        setIsPurchaseReturnedBySignaturesLoading(false);
-    }
 
     function handleCreate(event) {
         console.log("formData:", formData);
@@ -652,6 +561,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
     let [discountPercent, setDiscountPercent] = useState(0.00);
 
+    /*
     function findDiscountPercent() {
         if (!formData.discountValue) {
             formData.discount = 0.00;
@@ -669,7 +579,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             setFormData({ ...formData });
         }
 
-    }
+    }*/
 
     function findDiscount() {
         if (formData.discount_percent >= 0 && totalPrice > 0) {
@@ -721,9 +631,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }
 
     const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
-    }
+
 
     const StoreCreateFormRef = useRef();
 
@@ -739,15 +647,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     const VendorCreateFormRef = useRef();
 
     const UserCreateFormRef = useRef();
-    function openUserCreateForm() {
-        UserCreateFormRef.current.open();
-    }
 
 
     const SignatureCreateFormRef = useRef();
-    function openSignatureCreateForm() {
-        SignatureCreateFormRef.current.open();
-    }
 
     const ProductDetailsViewRef = useRef();
     function openProductDetailsView(id) {
@@ -755,9 +657,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }
 
     const PurchaseDetailsViewRef = useRef();
-    function openPurchaseDetailsView(id) {
-        PurchaseDetailsViewRef.current.open(id);
-    }
 
     let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
     let [balanceAmount, setBalanceAmount] = useState(0.00);
@@ -797,7 +696,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }
 
     function validatePaymentAmounts() {
-        if (selectedProducts && selectedProducts.filter(product => product.selected).length == 0) {
+        if (selectedProducts && selectedProducts.filter(product => product.selected).length === 0) {
             return true;
         }
 
@@ -824,7 +723,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             return false;
         }
 
-        let totalPayment = findTotalPayments();
         // errors["payment_date"] = [];
         //errors["payment_method"] = [];
         //errors["payment_amount"] = [];
@@ -934,7 +832,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Purchase Return #" + formData.code + " for purchase #" + formData.purchase_code : "Create Purchase Return" + " for purchase #" + formData.purchase_code}
+                        {formData.id ? "Update Purchase Return #" + formData.code + " for purchase #" + formData.purchase_code : "Create Purchase Return for purchase #" + formData.purchase_code}
                         {/*
                         {formData.purchase_id ? " for Purchase #" + <span style={{
                             textDecoration: "underline",
@@ -1486,15 +1384,15 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td colSpan={1}>
                                                 <b>Payment status: </b>
-                                                {paymentStatus == "paid" ?
+                                                {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">
                                                         Paid
                                                     </span> : ""}
-                                                {paymentStatus == "paid_partially" ?
+                                                {paymentStatus === "paid_partially" ?
                                                     <span className="badge bg-warning">
                                                         Paid Partially
                                                     </span> : ""}
-                                                {paymentStatus == "not_paid" ?
+                                                {paymentStatus === "not_paid" ?
                                                     <span className="badge bg-danger">
                                                         Not Paid
                                                     </span> : ""}

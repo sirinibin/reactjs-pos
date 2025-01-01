@@ -5,7 +5,6 @@ import HourlySales from "./sales/hourlySales";
 import DailySales from "./sales/dailySales";
 import MonthlySales from "./sales/monthlySales";
 import YearlySales from "./sales/yearlySales";
-import Calendar from "./sales/calendar";
 
 
 
@@ -19,10 +18,8 @@ const Analytics = forwardRef((props, ref) => {
 
 
     const [searchParams, setSearchParams] = useState({});
-    let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
-    let [sortField, setSortField] = useState("date");
-    let [sortOrder, setSortOrder] = useState("-");
-    const [isListLoading, setIsListLoading] = useState(false);
+    let sortField = "date";
+    let sortOrder = "-";
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -65,8 +62,6 @@ const Analytics = forwardRef((props, ref) => {
         var pageNo = 1;
 
         for (; true;) {
-            fettingAllRecordsInProgress = true;
-            setFettingAllRecordsInProgress(true);
             let res = await fetch(
                 "/v1/" + model + "?" +
                 Select +
@@ -92,7 +87,6 @@ const Analytics = forwardRef((props, ref) => {
                         return Promise.reject(error);
                     }
 
-                    setIsListLoading(false);
                     if (!data.result || data.result.length === 0) {
                         return [];
                     }
@@ -111,13 +105,18 @@ const Analytics = forwardRef((props, ref) => {
             records = records.concat(res);
             pageNo++;
         }
-        fettingAllRecordsInProgress = false;
-        setFettingAllRecordsInProgress(false);
 
         return records;
     }
 
-    useEffect(async () => {
+    useEffect(() => {
+       
+        fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+
+    async function fetchData() {
         let fields = "select=date,net_total,total_payment_received,balance_amount,payment_status,net_profit,loss";
         let orders = await getAllRecords("order", fields);
         fields = "select=date,amount";
@@ -158,11 +157,7 @@ const Analytics = forwardRef((props, ref) => {
         initDailyGraph();
         initMonthlyGraph();
         initYearlyGraph();
-        //initCalendarGraph();
-
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
-
+    }
 
 
 
@@ -203,19 +198,12 @@ const Analytics = forwardRef((props, ref) => {
         }
     }
 
-    const CalendarRef = useRef();
-    async function initCalendarGraph() {
-        if (CalendarRef.current) {
-            CalendarRef.current.init();
-        }
-    }
-
     let [columns, setColumns] = useState({
-        all: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false,salesReturnProfit: false,salesReturnLoss: false, purchaseReturn: false, loss: false },
-        hourly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false,salesReturnProfit: false,salesReturnLoss: false, purchaseReturn: false, loss: false },
-        daily: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false,salesReturnProfit: false,salesReturnLoss: false, purchaseReturn: false, loss: false },
-        monthly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false,salesReturnProfit: false,salesReturnLoss: false, purchaseReturn: false, loss: false },
-        yearly: { sales: true, salesProfit: false,paidSales:false,unpaidSales:false, expense: false, purchase: false, salesReturn: false, salesReturnProfit: false,salesReturnLoss: false,purchaseReturn: false, loss: false },
+        all: { sales: true, salesProfit: false, paidSales: false, unpaidSales: false, expense: false, purchase: false, salesReturn: false, salesReturnProfit: false, salesReturnLoss: false, purchaseReturn: false, loss: false },
+        hourly: { sales: true, salesProfit: false, paidSales: false, unpaidSales: false, expense: false, purchase: false, salesReturn: false, salesReturnProfit: false, salesReturnLoss: false, purchaseReturn: false, loss: false },
+        daily: { sales: true, salesProfit: false, paidSales: false, unpaidSales: false, expense: false, purchase: false, salesReturn: false, salesReturnProfit: false, salesReturnLoss: false, purchaseReturn: false, loss: false },
+        monthly: { sales: true, salesProfit: false, paidSales: false, unpaidSales: false, expense: false, purchase: false, salesReturn: false, salesReturnProfit: false, salesReturnLoss: false, purchaseReturn: false, loss: false },
+        yearly: { sales: true, salesProfit: false, paidSales: false, unpaidSales: false, expense: false, purchase: false, salesReturn: false, salesReturnProfit: false, salesReturnLoss: false, purchaseReturn: false, loss: false },
     });
 
 
@@ -234,13 +222,13 @@ const Analytics = forwardRef((props, ref) => {
                     initAllGraph();
 
                 }} />Sales Profit vs &nbsp;
-                   <input type="checkbox" checked={columns.all.paidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.all.paidSales} onChange={(e) => {
                     columns.all.paidSales = !columns.all.paidSales;
                     setColumns({ ...columns });
                     initAllGraph();
 
                 }} />Paid Sales vs &nbsp;
-                      <input type="checkbox" checked={columns.all.unpaidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.all.unpaidSales} onChange={(e) => {
                     columns.all.unpaidSales = !columns.all.unpaidSales;
                     setColumns({ ...columns });
                     initAllGraph();
@@ -264,13 +252,13 @@ const Analytics = forwardRef((props, ref) => {
                     initAllGraph();
 
                 }} />Sales Return vs &nbsp;
-                  <input type="checkbox" checked={columns.all.salesReturnProfit} onChange={(e) => {
+                <input type="checkbox" checked={columns.all.salesReturnProfit} onChange={(e) => {
                     columns.all.salesReturnProfit = !columns.all.salesReturnProfit;
                     setColumns({ ...columns });
                     initAllGraph();
 
                 }} />Sales Return Profit vs &nbsp;
-                   <input type="checkbox" checked={columns.all.salesReturnLoss} onChange={(e) => {
+                <input type="checkbox" checked={columns.all.salesReturnLoss} onChange={(e) => {
                     columns.all.salesReturnLoss = !columns.all.salesReturnLoss;
                     setColumns({ ...columns });
                     initAllGraph();
@@ -311,13 +299,13 @@ const Analytics = forwardRef((props, ref) => {
                     initHourlyGraph();
 
                 }} />Sales Profit vs &nbsp;
-                  <input type="checkbox" checked={columns.hourly.paidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.hourly.paidSales} onChange={(e) => {
                     columns.hourly.paidSales = !columns.hourly.paidSales;
                     setColumns({ ...columns });
                     initHourlyGraph();
 
                 }} />Paid Sales vs &nbsp;
-                      <input type="checkbox" checked={columns.hourly.unpaidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.hourly.unpaidSales} onChange={(e) => {
                     columns.hourly.unpaidSales = !columns.hourly.unpaidSales;
                     setColumns({ ...columns });
                     initHourlyGraph();
@@ -388,13 +376,13 @@ const Analytics = forwardRef((props, ref) => {
                     initDailyGraph();
 
                 }} />Sales Profit vs &nbsp;
-                  <input type="checkbox" checked={columns.daily.paidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.daily.paidSales} onChange={(e) => {
                     columns.daily.paidSales = !columns.daily.paidSales;
                     setColumns({ ...columns });
                     initDailyGraph();
 
                 }} />Paid Sales vs &nbsp;
-                      <input type="checkbox" checked={columns.daily.unpaidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.daily.unpaidSales} onChange={(e) => {
                     columns.daily.unpaidSales = !columns.daily.unpaidSales;
                     setColumns({ ...columns });
                     initDailyGraph();
@@ -418,7 +406,7 @@ const Analytics = forwardRef((props, ref) => {
                     initDailyGraph();
 
                 }} />Sales Return vs &nbsp;
-                 <input type="checkbox" checked={columns.daily.salesReturnProfit} onChange={(e) => {
+                <input type="checkbox" checked={columns.daily.salesReturnProfit} onChange={(e) => {
                     columns.daily.salesReturnProfit = !columns.daily.salesReturnProfit;
                     setColumns({ ...columns });
                     initDailyGraph();
@@ -465,13 +453,13 @@ const Analytics = forwardRef((props, ref) => {
                     initMonthlyGraph();
 
                 }} />Sales Profit vs &nbsp;
-                  <input type="checkbox" checked={columns.monthly.paidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.monthly.paidSales} onChange={(e) => {
                     columns.monthly.paidSales = !columns.monthly.paidSales;
                     setColumns({ ...columns });
                     initMonthlyGraph();
 
                 }} />Paid Sales vs &nbsp;
-                      <input type="checkbox" checked={columns.monthly.unpaidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.monthly.unpaidSales} onChange={(e) => {
                     columns.monthly.unpaidSales = !columns.monthly.unpaidSales;
                     setColumns({ ...columns });
                     initMonthlyGraph();
@@ -543,13 +531,13 @@ const Analytics = forwardRef((props, ref) => {
                     initYearlyGraph();
 
                 }} />Sales Profit vs &nbsp;
-                  <input type="checkbox" checked={columns.yearly.paidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.yearly.paidSales} onChange={(e) => {
                     columns.yearly.paidSales = !columns.yearly.paidSales;
                     setColumns({ ...columns });
                     initYearlyGraph();
 
                 }} />Paid Sales vs &nbsp;
-                      <input type="checkbox" checked={columns.yearly.unpaidSales} onChange={(e) => {
+                <input type="checkbox" checked={columns.yearly.unpaidSales} onChange={(e) => {
                     columns.yearly.unpaidSales = !columns.yearly.unpaidSales;
                     setColumns({ ...columns });
                     initYearlyGraph();

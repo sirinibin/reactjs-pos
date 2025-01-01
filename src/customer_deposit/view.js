@@ -1,13 +1,7 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
-import NumberFormat from "react-number-format";
-import Barcode from 'react-barcode';
-import QRCode from "react-qr-code";
-import html2canvas from 'html2canvas';
-//let ThermalPrinterEncoder = require('thermal-printer-encoder');
-import ThermalPrinterEncoder from 'thermal-printer-encoder';
-import CustomerDepositCreate from "./create.js";
+
 
 import { Button } from "react-bootstrap";
 

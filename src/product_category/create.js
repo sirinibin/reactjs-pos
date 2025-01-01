@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
-import ProductCategoryView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 
 

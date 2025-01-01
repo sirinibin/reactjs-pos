@@ -68,35 +68,7 @@ function PurchaseReturnIndex(props) {
     const [userOptions, setUserOptions] = useState([]);
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
 
-    //Status Auto Suggestion
-    const statusOptions = [
-        {
-            id: "sent",
-            name: "Sent",
-        },
-        {
-            id: "pending",
-            name: "Pending",
-        },
-        {
-            id: "accepted",
-            name: "Accepted",
-        },
-        {
-            id: "rejected",
-            name: "Rejected",
-        },
-        {
-            id: "cancelled",
-            name: "Cancelled",
-        },
-        {
-            id: "deleted",
-            name: "Deleted",
-        },
-    ];
 
-    const [selectedStatusList, setSelectedStatusList] = useState([]);
 
     useEffect(() => {
         list();
@@ -155,9 +127,9 @@ function PurchaseReturnIndex(props) {
             let dayTotal = 0.00;
             let dayTax = 0.00;
 
-            for (var i = 0; i < groupedByDate[purchaseReturnDate].length > 0; i++) {
+            for (var i2 = 0; i2 < groupedByDate[purchaseReturnDate].length; i2++) {
                 invoiceCount++;
-                let purchaseReturn = groupedByDate[purchaseReturnDate][i];
+                let purchaseReturn = groupedByDate[purchaseReturnDate][i2];
                 let invoiceNo = purchaseReturn.vendor_invoice_no ? purchaseReturn.vendor_invoice_no + " / " + purchaseReturn.code : purchaseReturn.code;
                 excelData[0].data.push([{ value: "Inv No (" + invoiceNo + ") - " + invoiceCount + " [" + purchaseReturn.vendor_name + "]" }]);
 
@@ -614,8 +586,6 @@ function PurchaseReturnIndex(props) {
             setSelectedCreatedByUsers(values);
         } else if (field === "vendor_id") {
             setSelectedVendors(values);
-        } else if (field === "status") {
-            setSelectedStatusList(values);
         } else if (field === "payment_status") {
             setSelectedPaymentStatusList(values);
         } else if (field === "payment_methods") {
@@ -950,7 +920,7 @@ function PurchaseReturnIndex(props) {
                             <ExcelSheet dataSet={excelData} name={purchaseReturnReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchaseReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Return Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchaseReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Return Report"}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <div className="col text-end">
@@ -1717,15 +1687,15 @@ function PurchaseReturnIndex(props) {
                                                             </Button>
                                                         </td>
                                                         <td>
-                                                            {purchasereturn.payment_status == "paid" ?
+                                                            {purchasereturn.payment_status === "paid" ?
                                                                 <span className="badge bg-success">
                                                                     Paid
                                                                 </span> : ""}
-                                                            {purchasereturn.payment_status == "paid_partially" ?
+                                                            {purchasereturn.payment_status === "paid_partially" ?
                                                                 <span className="badge bg-warning">
                                                                     Paid Partially
                                                                 </span> : ""}
-                                                            {purchasereturn.payment_status == "not_paid" ?
+                                                            {purchasereturn.payment_status === "not_paid" ?
                                                                 <span className="badge bg-danger">
                                                                     Not Paid
                                                                 </span> : ""}

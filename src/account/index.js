@@ -1,27 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import Cookies from "universal-cookie";
-import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge, Modal } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 import PostingIndex from "./../posting/index.js";
 
 function AccountIndex(props) {
 
     const cookies = new Cookies();
 
-    //Date filter
-    const [showDateRange, setShowDateRange] = useState(false);
-    //const selectedDate = new Date();
-    let [selectedDate, setSelectedDate] = useState(new Date());
-    let [selectedFromDate, setSelectedFromDate] = useState(new Date());
-    let [selectedToDate, setSelectedToDate] = useState(new Date());
-    const [dateValue, setDateValue] = useState("");
-    const [fromDateValue, setFromDateValue] = useState("");
-    const [toDateValue, setToDateValue] = useState("");
 
     //list
     const [accountList, setaccountList] = useState([]);
@@ -59,13 +48,7 @@ function AccountIndex(props) {
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
-    //Created By Expense Auto Suggestion
-    const [expenseOptions, setExpenseOptions] = useState([]);
-    const [selectedCreatedByExpenses, setSelectedCreatedByExpenses] = useState([]);
 
-    //Created By Expense Auto Suggestion
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [selectedExpenseCategories, setSelectedExpenseCategories] = useState([]);
 
 
     useEffect(() => {
@@ -112,20 +95,13 @@ function AccountIndex(props) {
         value = format(d, "MMM dd yyyy");
 
         if (field === "date_str") {
-            setDateValue(value);
-            setFromDateValue("");
-            setToDateValue("");
             searchParams["from_date"] = "";
             searchParams["to_date"] = "";
             searchParams[field] = value;
         } else if (field === "from_date") {
-            setFromDateValue(value);
-            setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "to_date") {
-            setToDateValue(value);
-            setDateValue("");
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
@@ -175,31 +151,7 @@ function AccountIndex(props) {
         list();
     }
 
-    const [selectedAccounts, setSelectedAccounts] = useState([]);
-    const [selectedAccount, setSelectedAccount] = useState({});
 
-    function searchByMultipleValuesField(field, values) {
-        if (field === "created_by") {
-            setSelectedCreatedByExpenses(values);
-        } else if (field === "category_id") {
-            setSelectedExpenseCategories(values);
-        } else if (field === "account_id") {
-            setSelectedAccounts(values);
-        }
-
-        searchParams[field] = Object.values(values)
-            .map(function (model) {
-                return model.id;
-            })
-            .join(",");
-
-        page = 1;
-        setPage(page);
-
-        list();
-    }
-
-    let [totalExpenses, setTotalExpenses] = useState(0.00);
 
     function list() {
         const requestOptions = {
@@ -276,7 +228,6 @@ function AccountIndex(props) {
 
 
                 //totalExpenses = data.meta.total;
-                //setTotalExpenses(totalExpenses);
 
             })
             .catch((error) => {
@@ -306,17 +257,10 @@ function AccountIndex(props) {
         list();
     }
 
-    let [showAccountBalanceSheet, setShowAccountBalanceSheet] = useState(false);
-
     const AccountBalanceSheetRef = useRef();
 
     function openBalanceSheetDialogue(account) {
         AccountBalanceSheetRef.current.open(account);
-    }
-
-    function handleAccountBalanceSheetClose() {
-        showAccountBalanceSheet = false;
-        setShowAccountBalanceSheet(false);
     }
     
 
@@ -966,8 +910,8 @@ function AccountIndex(props) {
                                                                 {account.name}
                                                             </Button>
                                                         </td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.debit_or_credit_balance == "debit_balance" ? account.balance : "0"}</td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.debit_or_credit_balance == "credit_balance" ? account.balance : "0"}</td>
+                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.debit_or_credit_balance === "debit_balance" ? account.balance : "0"}</td>
+                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.debit_or_credit_balance === "credit_balance" ? account.balance : "0"}</td>
                                                         <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.phone}</td>
                                                         <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.type}</td>
                                                         <td style={{ minWidth: "120px", maxWidth: "120px" }}>

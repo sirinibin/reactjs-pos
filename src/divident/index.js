@@ -54,9 +54,6 @@ function DividentIndex(props) {
     const [withdrawnbyuserOptions, setWithdrawnByUserOptions] = useState([]);
     const [selectedWithdrawnByUsers, setSelectedWithdrawnByUsers] = useState([]);
 
-    //Created By Divident Auto Suggestion
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [selectedDividentCategories, setSelectedDividentCategories] = useState([]);
 
 
     useEffect(() => {
@@ -349,7 +346,7 @@ function DividentIndex(props) {
         UserDetailsViewRef.current.open(id);
     }
 
-    let [sortOrder, setSortOrder] = useState("-");
+    let sortOrder = "-";
 
     return (
         <>

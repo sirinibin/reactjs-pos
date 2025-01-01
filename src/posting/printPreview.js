@@ -3,7 +3,6 @@ import { Modal, Button } from 'react-bootstrap';
 import BalanceSheetPrintPreviewContent from './printPreviewContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
-import { Invoice } from '@axenda/zatca';
 import { format } from "date-fns";
 
 const BalanceSheetPrintPreview = forwardRef((props, ref) => {
@@ -135,37 +134,6 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
     }
 
 
-    let [qrContent, setQrContent] = useState("");
-
-    function getQRCodeContents() {
-        qrContent = "";
-
-        if (model.code) {
-            qrContent += "Invoice #: " + model.code + "<br />";
-        }
-
-        if (model.store) {
-            qrContent += "Store: " + model.store.name + "<br />";
-        }
-
-        if (model.customer) {
-            qrContent += "Customer: " + model.customer.name + "<br />";
-        }
-
-
-        if (model.net_total) {
-            qrContent += "Net Total: " + model.net_total + "<br />";
-        }
-        qrContent += "Store: Test <br />";
-
-        setQrContent(qrContent);
-        model.qr_content = qrContent;
-        setModel({ ...model });
-        console.log("QR content:", model.qr_content);
-
-        return model.qr_content;
-    }
-
     function getStore(id) {
         console.log("inside get Store");
         const requestOptions = {
@@ -201,103 +169,6 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
 
 
-    function getCustomer(id) {
-        console.log("inside get Customer");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
-            },
-        };
-
-        fetch('/v1/customer/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let customerData = data.result;
-                model.customer = customerData;
-                setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
-    }
-
-    function getUser(id) {
-        console.log("inside get User(Delivered by)");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
-            },
-        };
-
-        fetch('/v1/user/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-
-                console.log("Response:");
-                console.log(data);
-                let userData = data.result;
-                model.delivered_by_user = userData;
-                setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
-    }
-
-    function getSignature(id) {
-        console.log("inside get Signature");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
-            },
-        };
-
-        fetch('/v1/signature/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let signatureData = data.result;
-                model.delivered_by_signature = signatureData;
-                setModel({ ...model });
-            })
-            .catch(error => {
-            });
-    }
-
-
 
     /*
     function print() {
@@ -311,7 +182,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
         let filename = "";
 
         if (model.name) {
-            filename += model.name + "_acc" + "_#" + model.number;
+            filename += model.name + "_acc_#" + model.number;
         }
 
         filename=filename.split(' ').join('_')

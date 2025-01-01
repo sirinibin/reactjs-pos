@@ -1,10 +1,5 @@
-import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
+import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from 'react-bootstrap';
-import Cookies from "universal-cookie";
-import NumberFormat from "react-number-format";
-import Barcode from 'react-barcode';
-import QRCode from "react-qr-code";
-import html2canvas from 'html2canvas';
 
 const ProductJson = forwardRef((props, ref) => {
 
@@ -21,27 +16,11 @@ const ProductJson = forwardRef((props, ref) => {
     let [jsonContent, setJsonContent] = useState([]);
 
 
-    let [model, setModel] = useState({});
-    const cookies = new Cookies();
-
     const [show, SetShow] = useState(false);
 
     function handleClose() {
         SetShow(false);
     };
-
-    function getProductRetailPrice(product) {
-        let store_id = cookies.get("store_id");
-        if (!store_id || !product.stores) {
-            return "";
-        }
-        for (let i = 0; i < product.stores.length; i++) {
-            if (product.stores[i].store_id === store_id) {
-                return parseFloat(product.stores[i].retail_unit_price + parseFloat(product.stores[i].retail_unit_price * 0.15)).toFixed(2);
-            }
-        }
-        return "";
-    }
 
     let [copied, setCopied] = useState(false);
 

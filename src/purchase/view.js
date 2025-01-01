@@ -39,10 +39,6 @@ const PurchaseView = forwardRef((props, ref) => {
             .join("&");
     }
 
-    let [totalPrice, setTotalPrice] = useState(0.0);
-    let [netTotal, setNetTotal] = useState(0.00);
-    let [totalQuantity, setTotalQuantity] = useState(0);
-    let [vatPrice, setVatPrice] = useState(0.00);
 
     const [searchParams, setSearchParams] = useState({});
 

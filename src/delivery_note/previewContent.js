@@ -1,8 +1,6 @@
 import { React, forwardRef } from "react";
-import NumberFormat from "react-number-format";
 import { format } from "date-fns";
-import n2words from 'n2words'
-import QRCode from "react-qr-code";
+
 
 const DeliveryNotePreviewContent = forwardRef((props, ref) => {
 

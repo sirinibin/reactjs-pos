@@ -1906,37 +1906,40 @@ function ProductIndex(props) {
                                                         <td>{product.rack}</td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{product.product_stores[key].purchase_unit_price?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].wholesale_unit_price?.toFixed(2)}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].wholesale_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].retail_unit_price?.toFixed(2)}</b>);
 
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].retail_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     if (product.product_stores[key].wholesale_unit_profit <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -1957,11 +1960,13 @@ function ProductIndex(props) {
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].wholesale_unit_profit?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
+
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     if (product.product_stores[key].wholesale_unit_profit_perc <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -1982,11 +1987,13 @@ function ProductIndex(props) {
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].wholesale_unit_profit_perc?.toFixed(2) + "%"}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
+
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     if (product.product_stores[key].retail_unit_profit <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2007,11 +2014,13 @@ function ProductIndex(props) {
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].retail_unit_profit.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
+
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     if (product.product_stores[key].retail_unit_profit_perc <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2032,15 +2041,18 @@ function ProductIndex(props) {
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].retail_unit_profit_perc?.toFixed(2) + "%"}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
+
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].stock}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].stock}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
@@ -2053,191 +2065,212 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_count}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_quantity}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_profit}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_profit}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_loss}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_loss}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return_count}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return_quantity}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return_profit}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return_profit}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                 return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return_loss}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return_loss}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_count}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_quantity}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_return_count}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_return_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_return}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_return}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_return_quantity}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_return_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].quotation_count}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].quotation_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                 return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].quotation}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].quotation}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].quotation_quantity}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].quotation_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].delivery_note_count}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].delivery_note_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].delivery_note_quantity}</b>);
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].delivery_note_quantiy}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
 

@@ -1,16 +1,13 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
-import PurchaseCashDiscountView from "./view.js";
-import { Typeahead } from "react-bootstrap-typeahead";
 
 
 const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id, purchase) {
-            purchase = purchase;
             setPurchase({ ...purchase });
             formData = {};
             if (purchase) {
@@ -65,9 +62,8 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
     const [isProcessing, setProcessing] = useState(false);
     const cookies = new Cookies();
 
-    const [parentCategoryOptions, setParentCategoryOptions] = useState([]);
+   
     let [selectedParentCategories, setSelectedParentCategories] = useState([]);
-    const [isProductCategoriesLoading, setIsProductCategoriesLoading] = useState(false);
 
     //fields
     let [formData, setFormData] = useState({});
@@ -129,14 +125,6 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
             });
     }
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -144,7 +132,6 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
 
         console.log("formData.logo:", formData.logo);
 
-        setIsProductCategoriesLoading(true);
 
         let endPoint = "/v1/purchase-cash-discount";
         let method = "POST";
@@ -196,7 +183,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
 
                 setErrors({});
                 setProcessing(false);
-                setIsProductCategoriesLoading(false);
+              
 
                 console.log("Response:");
                 console.log(data);
@@ -209,7 +196,6 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setProcessing(false);
-                setIsProductCategoriesLoading(false);
                 console.log("Inside catch");
                 console.log(error);
                 setErrors({ ...error });

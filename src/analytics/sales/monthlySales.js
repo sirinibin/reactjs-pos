@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import Cookies from "universal-cookie";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Chart } from "react-google-charts";
 
 
 
 const MonthlySales = forwardRef((props, ref) => {
-    const cookies = new Cookies();
     useImperativeHandle(ref, () => ({
         init() {
             if (props.allOrders.length > 0) {
@@ -14,7 +12,7 @@ const MonthlySales = forwardRef((props, ref) => {
         }
     }));
 
-    const [yearOptions, setYearOptions] = useState([
+    const yearOptions = [
         {
             label: "2024",
             value: 2024,
@@ -35,9 +33,9 @@ const MonthlySales = forwardRef((props, ref) => {
             label: "2020",
             value: 2020,
         }
-    ]);
-
-    const [monthOptions, setMonthOptions] = useState([
+    ];
+   
+    const monthOptions = [
         {
             label: "JAN",
             value: 1,
@@ -86,11 +84,11 @@ const MonthlySales = forwardRef((props, ref) => {
             label: "DEC",
             value: 12,
         },
-    ]);
+    ];
 
     function getMonthNameByNumber(number) {
         for (const month of monthOptions) {
-            if (month.value == number) {
+            if (month.value === number) {
                 return month.label;
             }
         }
@@ -171,7 +169,7 @@ const MonthlySales = forwardRef((props, ref) => {
                 for (const sale of props.allOrders) {
                     // console.log("Sale Month:", new Date(sale.date).getMonth() + 1);
                     // console.log("Sale Year:", new Date(sale.date).getFullYear());
-                    if ((new Date(sale.date).getMonth() + 1) == month && new Date(sale.date).getFullYear() == monthlySalesSelectedYear) {
+                    if ((new Date(sale.date).getMonth() + 1) === month && new Date(sale.date).getFullYear() === monthlySalesSelectedYear) {
                         sales += parseFloat(sale.net_total);
                         profit += parseFloat(sale.net_profit);
 
@@ -195,8 +193,8 @@ const MonthlySales = forwardRef((props, ref) => {
                 for (const expense of props.allExpenses) {
                     // console.log("Sale Month:", new Date(sale.date).getMonth() + 1);
                     // console.log("Sale Year:", new Date(sale.date).getFullYear());
-                    if ((new Date(expense.date).getMonth() + 1) == month &&
-                        new Date(expense.date).getFullYear() == monthlySalesSelectedYear) {
+                    if ((new Date(expense.date).getMonth() + 1) === month &&
+                        new Date(expense.date).getFullYear() === monthlySalesSelectedYear) {
                         totalExpense += parseFloat(expense.amount);
                     }
                 }
@@ -205,8 +203,8 @@ const MonthlySales = forwardRef((props, ref) => {
             let totalPurchase = 0.00;
             if (props.columns.purchase) {
                 for (const purchase of props.allPurchases) {
-                    if ((new Date(purchase.date).getMonth() + 1) == month &&
-                        new Date(purchase.date).getFullYear() == monthlySalesSelectedYear) {
+                    if ((new Date(purchase.date).getMonth() + 1) === month &&
+                        new Date(purchase.date).getFullYear() === monthlySalesSelectedYear) {
                         totalPurchase += parseFloat(purchase.net_total);
                     }
                 }
@@ -217,8 +215,8 @@ const MonthlySales = forwardRef((props, ref) => {
             let totalSalesReturnLoss = 0.00;
             if (props.columns.salesReturn||props.columns.salesReturnProfit||props.columns.salesReturnLoss) {
                 for (const salesReturn of props.allSalesReturns) {
-                    if ((new Date(salesReturn.date).getMonth() + 1) == month &&
-                        new Date(salesReturn.date).getFullYear() == monthlySalesSelectedYear) {
+                    if ((new Date(salesReturn.date).getMonth() + 1) === month &&
+                        new Date(salesReturn.date).getFullYear() === monthlySalesSelectedYear) {
                         totalSalesReturn += parseFloat(salesReturn.net_total);
                         totalSalesReturnProfit += parseFloat(salesReturn.net_profit);
                         totalSalesReturnLoss += parseFloat(salesReturn.loss);
@@ -229,8 +227,8 @@ const MonthlySales = forwardRef((props, ref) => {
             let totalPurchaseReturn = 0.00;
             if (props.columns.purchaseReturn) {
                 for (const purchaseReturn of props.allPurchaseReturns) {
-                    if ((new Date(purchaseReturn.date).getMonth() + 1) == month &&
-                        new Date(purchaseReturn.date).getFullYear() == monthlySalesSelectedYear) {
+                    if ((new Date(purchaseReturn.date).getMonth() + 1) === month &&
+                        new Date(purchaseReturn.date).getFullYear() === monthlySalesSelectedYear) {
                         totalPurchaseReturn += parseFloat(purchaseReturn.net_total);
                     }
                 }
@@ -294,7 +292,7 @@ const MonthlySales = forwardRef((props, ref) => {
     }
 
 
-    const [options, setOptions] = useState({
+    const options =  {
         title: 'Sales',
         subtitle: '(SAR)',
         legend: { position: 'right' },
@@ -308,7 +306,7 @@ const MonthlySales = forwardRef((props, ref) => {
             // 0: { curveType: "function", axis: 'Temps' },
             // 1: { curveType: "function", axis: 'Daylight' },
         },
-    });
+    };
 
 
 

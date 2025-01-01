@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, memo } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, memo } from "react";
 import { Chart } from "react-google-charts";
 
 
@@ -421,7 +421,7 @@ const AllSales = forwardRef((props, ref) => {
     }
 
 
-    const [salesOptions, setSalesOptions] = useState({
+    const salesOptions = {
         title: 'Sales',
         displayExactValues: true,
         // displayAnnotationsFilter: true,
@@ -437,7 +437,8 @@ const AllSales = forwardRef((props, ref) => {
             // 0: { curveType: "function", axis: 'Temps' },
             // 1: { curveType: "function", axis: 'Daylight' },
         },
-    });
+    };
+
 
     useEffect(() => {
         console.log("Inside useEffect");
@@ -445,8 +446,6 @@ const AllSales = forwardRef((props, ref) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-
-    const AllSalesRef = useRef();
 
     return (
         <>

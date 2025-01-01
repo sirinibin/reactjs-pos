@@ -1,18 +1,16 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import Cookies from "universal-cookie";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Chart } from "react-google-charts";
 
 
 
 const DailySales = forwardRef((props, ref) => {
-    const cookies = new Cookies();
     useImperativeHandle(ref, () => ({
         init() {
             makeDailyData();
         }
     }));
 
-    const [yearOptions, setYearOptions] = useState([
+    const yearOptions = [
         {
             label: "2024",
             value: 2024,
@@ -33,8 +31,9 @@ const DailySales = forwardRef((props, ref) => {
             label: "2020",
             value: 2020,
         }
-    ]);
-    const [monthOptions, setMonthOptions] = useState([
+    ];
+
+    const monthOptions = [
         {
             label: "JAN",
             value: 1,
@@ -83,7 +82,9 @@ const DailySales = forwardRef((props, ref) => {
             label: "DEC",
             value: 12,
         },
-    ]);
+    ];
+
+
 
 
     let [dailySales, setDailySales] = useState([]);
@@ -166,7 +167,7 @@ const DailySales = forwardRef((props, ref) => {
                 for (const sale of props.allOrders) {
                     // console.log("Sale Month:", new Date(sale.date).getMonth() + 1);
                     // console.log("Sale Year:", new Date(sale.date).getFullYear());
-                    if ((new Date(sale.date).getMonth() + 1) == dailySalesSelectedMonth && new Date(sale.date).getFullYear() == dailySalesSelectedYear && new Date(sale.date).getDate() == day) {
+                    if ((new Date(sale.date).getMonth() + 1) === dailySalesSelectedMonth && new Date(sale.date).getFullYear() === dailySalesSelectedYear && new Date(sale.date).getDate() === day) {
                         sales += parseFloat(sale.net_total);
                         profit += parseFloat(sale.net_profit);
                         paidSales += parseFloat(sale.total_payment_received);
@@ -186,9 +187,9 @@ const DailySales = forwardRef((props, ref) => {
             let totalExpense = 0.00;
             if (props.columns.expense) {
                 for (const expense of props.allExpenses) {
-                    if ((new Date(expense.date).getMonth() + 1) == dailySalesSelectedMonth &&
-                        new Date(expense.date).getFullYear() == dailySalesSelectedYear &&
-                        new Date(expense.date).getDate() == day) {
+                    if ((new Date(expense.date).getMonth() + 1) === dailySalesSelectedMonth &&
+                        new Date(expense.date).getFullYear() === dailySalesSelectedYear &&
+                        new Date(expense.date).getDate() === day) {
                         totalExpense += parseFloat(expense.amount);
                     }
                 }
@@ -197,9 +198,9 @@ const DailySales = forwardRef((props, ref) => {
             let totalPurchase = 0.00;
             if (props.columns.purchase) {
                 for (const purchase of props.allPurchases) {
-                    if ((new Date(purchase.date).getMonth() + 1) == dailySalesSelectedMonth &&
-                        new Date(purchase.date).getFullYear() == dailySalesSelectedYear &&
-                        new Date(purchase.date).getDate() == day) {
+                    if ((new Date(purchase.date).getMonth() + 1) === dailySalesSelectedMonth &&
+                        new Date(purchase.date).getFullYear() === dailySalesSelectedYear &&
+                        new Date(purchase.date).getDate() === day) {
                         totalPurchase += parseFloat(purchase.net_total);
                     }
                 }
@@ -210,9 +211,9 @@ const DailySales = forwardRef((props, ref) => {
             let totalSalesReturnLoss = 0.00;
             if (props.columns.salesReturn||props.columns.salesReturnProfit||props.columns.salesReturnLoss) {
                 for (const salesReturn of props.allSalesReturns) {
-                    if ((new Date(salesReturn.date).getMonth() + 1) == dailySalesSelectedMonth &&
-                        new Date(salesReturn.date).getFullYear() == dailySalesSelectedYear &&
-                        new Date(salesReturn.date).getDate() == day) {
+                    if ((new Date(salesReturn.date).getMonth() + 1) === dailySalesSelectedMonth &&
+                        new Date(salesReturn.date).getFullYear() === dailySalesSelectedYear &&
+                        new Date(salesReturn.date).getDate() === day) {
                         totalSalesReturn += parseFloat(salesReturn.net_total);
                         totalSalesReturnProfit += parseFloat(salesReturn.net_profit);
                         totalSalesReturnLoss += parseFloat(salesReturn.loss);
@@ -223,9 +224,9 @@ const DailySales = forwardRef((props, ref) => {
             let totalPurchaseReturn = 0.00;
             if (props.columns.purchaseReturn) {
                 for (const purchaseReturn of props.allPurchaseReturns) {
-                    if ((new Date(purchaseReturn.date).getMonth() + 1) == dailySalesSelectedMonth &&
-                        new Date(purchaseReturn.date).getFullYear() == dailySalesSelectedYear &&
-                        new Date(purchaseReturn.date).getDate() == day) {
+                    if ((new Date(purchaseReturn.date).getMonth() + 1) === dailySalesSelectedMonth &&
+                        new Date(purchaseReturn.date).getFullYear() === dailySalesSelectedYear &&
+                        new Date(purchaseReturn.date).getDate() === day) {
                         totalPurchaseReturn += parseFloat(purchaseReturn.net_total);
                     }
                 }
@@ -287,7 +288,7 @@ const DailySales = forwardRef((props, ref) => {
     }
 
 
-    const [options, setOptions] = useState({
+    const options = {
         title: '',
         subtitle: '(SAR)',
         legend: { position: 'right' },
@@ -301,7 +302,7 @@ const DailySales = forwardRef((props, ref) => {
             // 0: { curveType: "function", axis: 'Temps' },
             // 1: { curveType: "function", axis: 'Daylight' },
         },
-    });
+    };
 
 
     useEffect(() => {

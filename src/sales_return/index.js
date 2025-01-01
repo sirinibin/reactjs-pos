@@ -48,11 +48,10 @@ function SalesReturnIndex(props) {
     let [selectedDate, setSelectedDate] = useState(new Date());
     let [selectedFromDate, setSelectedFromDate] = useState(new Date());
     let [selectedToDate, setSelectedToDate] = useState(new Date());
-
     let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
     let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
     let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
-    
+
     const [dateValue, setDateValue] = useState("");
     const [fromDateValue, setFromDateValue] = useState("");
     const [toDateValue, setToDateValue] = useState("");
@@ -75,35 +74,6 @@ function SalesReturnIndex(props) {
     const [userOptions, setUserOptions] = useState([]);
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
 
-    //Status Auto Suggestion
-    const statusOptions = [
-        {
-            id: "sent",
-            name: "Sent",
-        },
-        {
-            id: "pending",
-            name: "Pending",
-        },
-        {
-            id: "accepted",
-            name: "Accepted",
-        },
-        {
-            id: "rejected",
-            name: "Rejected",
-        },
-        {
-            id: "cancelled",
-            name: "Cancelled",
-        },
-        {
-            id: "deleted",
-            name: "Deleted",
-        },
-    ];
-
-    const [selectedStatusList, setSelectedStatusList] = useState([]);
 
     useEffect(() => {
         list();
@@ -162,9 +132,9 @@ function SalesReturnIndex(props) {
             let dayTotal = 0.00;
             let dayTax = 0.00;
 
-            for (var i = 0; i < groupedByDate[returnDate].length > 0; i++) {
+            for (var i2 = 0; i2 < groupedByDate[returnDate].length; i2++) {
                 invoiceCount++;
-                let salesReturn = groupedByDate[returnDate][i];
+                let salesReturn = groupedByDate[returnDate][i2];
                 excelData[0].data.push([{ value: "Inv No (" + salesReturn.code + ") - " + invoiceCount + " [" + salesReturn.customer_name + "]" }]);
 
                 if (!salesReturn.products) {
@@ -621,8 +591,6 @@ function SalesReturnIndex(props) {
             setSelectedCreatedByUsers(values);
         } else if (field === "customer_id") {
             setSelectedCustomers(values);
-        } else if (field === "status") {
-            setSelectedStatusList(values);
         } else if (field === "payment_status") {
             setSelectedPaymentStatusList(values);
         } else if (field === "payment_methods") {
@@ -778,9 +746,7 @@ function SalesReturnIndex(props) {
 
     //Sales Return Payments
     const SalesReturnPaymentCreateRef = useRef();
-    function openSalesReturnPaymentCreateForm(order) {
-        SalesReturnPaymentCreateRef.current.open(undefined, order);
-    }
+
 
     const SalesReturnPaymentDetailsViewRef = useRef();
     function openSalesReturnPaymentDetailsView(id) {
@@ -795,7 +761,7 @@ function SalesReturnIndex(props) {
     let [loss, setLoss] = useState(0.00);
 
 
-    let [sortOrder, setSortOrder] = useState("-");
+    let sortOrder = "-";
     const paymentStatusOptions = [
         {
             id: "paid",
@@ -987,7 +953,7 @@ function SalesReturnIndex(props) {
                             <ExcelSheet dataSet={excelData} name={salesReturnReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllSalesReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Return Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllSalesReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Return Report"}</Button> : ""}
                         &nbsp;&nbsp;
 
 
@@ -1794,15 +1760,15 @@ function SalesReturnIndex(props) {
 
                                                         </td>
                                                         <td>
-                                                            {salesreturn.payment_status == "paid" ?
+                                                            {salesreturn.payment_status === "paid" ?
                                                                 <span className="badge bg-success">
                                                                     Paid
                                                                 </span> : ""}
-                                                            {salesreturn.payment_status == "paid_partially" ?
+                                                            {salesreturn.payment_status === "paid_partially" ?
                                                                 <span className="badge bg-warning">
                                                                     Paid Partially
                                                                 </span> : ""}
-                                                            {salesreturn.payment_status == "not_paid" ?
+                                                            {salesreturn.payment_status === "not_paid" ?
                                                                 <span className="badge bg-danger">
                                                                     Not Paid
                                                                 </span> : ""}

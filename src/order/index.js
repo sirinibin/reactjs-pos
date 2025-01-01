@@ -71,9 +71,6 @@ const OrderIndex = forwardRef((props, ref) => {
         let totalAmountBeforeVAT = 0;
         let totalAmountAfterVAT = 0;
         let totalVAT = 0;
-        let totalDiscount = 0;
-        let totalAmountAfterDiscount = 0;
-        let totalShippingFees = 0;
 
         let invoiceCount = 0;
         for (let orderDate in groupedByDate) {
@@ -83,12 +80,10 @@ const OrderIndex = forwardRef((props, ref) => {
             let dayTotalBeforeVAT = 0.00;
             let dayTotalAfterVAT = 0.00;
             let dayVAT = 0.00;
-            let dayDiscount = 0.00;
-            let dayShippingFees = 0.00;
 
-            for (var i = 0; i < groupedByDate[orderDate].length > 0; i++) {
+            for (var i2 = 0; i2 < groupedByDate[orderDate].length; i2++) {
                 invoiceCount++;
-                let order = groupedByDate[orderDate][i];
+                let order = groupedByDate[orderDate][i2];
                 excelData[0].data.push([{ value: "Inv No (" + order.code + ") - " + invoiceCount }]);
                 excelData[0].data.push([{ value: "Customer: " + order.customer_name }]);
                 if (order.customer && order.customer.vat_no) {
@@ -257,8 +252,6 @@ const OrderIndex = forwardRef((props, ref) => {
                 dayVAT += order.vat_price;
                 dayTotalBeforeVAT += totalAmountBeforeVat;
                 dayTotalAfterVAT += totalAmountAfterVat;
-                dayDiscount += order.discount;
-                dayShippingFees += order.shipping_handling_fees;
 
             }
 
@@ -548,36 +541,6 @@ const OrderIndex = forwardRef((props, ref) => {
     const [userOptions, setUserOptions] = useState([]);
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
 
-    //Status Auto Suggestion
-    const statusOptions = [
-        {
-            id: "sent",
-            name: "Sent",
-        },
-        {
-            id: "pending",
-            name: "Pending",
-        },
-        {
-            id: "accepted",
-            name: "Accepted",
-        },
-        {
-            id: "rejected",
-            name: "Rejected",
-        },
-        {
-            id: "cancelled",
-            name: "Cancelled",
-        },
-        {
-            id: "deleted",
-            name: "Deleted",
-        },
-    ];
-
-    const [selectedStatusList, setSelectedStatusList] = useState([]);
-
 
     //Payment Status Auto Suggestion
     const paymentStatusOptions = [
@@ -787,8 +750,6 @@ const OrderIndex = forwardRef((props, ref) => {
             setSelectedCreatedByUsers(values);
         } else if (field === "customer_id") {
             setSelectedCustomers(values);
-        } else if (field === "status") {
-            setSelectedStatusList(values);
         } else if (field === "payment_status") {
             setSelectedPaymentStatusList(values);
         } else if (field === "payment_methods") {
@@ -981,29 +942,15 @@ const OrderIndex = forwardRef((props, ref) => {
         CreateFormRef.current.open(id);
     }
 
-    //Cash Discounts
-    const SalesCashDiscountCreateRef = useRef();
-    function openSalesCashDiscountCreateForm(order) {
-        SalesCashDiscountCreateRef.current.open(undefined, order);
-    }
-
-    const SalesCashDiscountDetailsViewRef = useRef();
-    function openSalesCashDiscountDetailsView(id) {
-        SalesCashDiscountDetailsViewRef.current.open(id);
-    }
-
-    function openSalesCashDiscountUpdateForm(id) {
-        SalesCashDiscountCreateRef.current.open(id);
-    }
+  
+  
 
     const SalesReturnListRef = useRef();
 
     //Sales Payments
 
     const SalesPaymentListRef = useRef();
-    function openSalesPaymentList(order) {
-        // SalesPaymentListRef.current.open(undefined, order);
-    }
+  
 
 
     //Sales Return
@@ -1011,23 +958,6 @@ const OrderIndex = forwardRef((props, ref) => {
     function openSalesReturnCreateForm(id) {
         SalesReturnCreateRef.current.open(undefined, id);
     }
-
-    /*
-     const SalesReturnCreateRef = useRef();
-     function openSalesReturnCreateForm(order) {
-         SalesReturnCreateRef.current.open(undefined, order);
-     }
-     */
-
-    const SalesReturnDetailsViewRef = useRef();
-    function openSalesReturnDetailsView(id) {
-        SalesReturnDetailsViewRef.current.open(id);
-    }
-
-    function openSalesReturnUpdateForm(id) {
-        SalesReturnCreateRef.current.open(id);
-    }
-
 
     return (
         <>
@@ -1177,7 +1107,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             <ExcelSheet dataSet={excelData} name={salesReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length == 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Report"}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
@@ -2069,15 +1999,15 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                                         </td>
                                                         <td>
-                                                            {order.payment_status == "paid" ?
+                                                            {order.payment_status === "paid" ?
                                                                 <span className="badge bg-success">
                                                                     Paid
                                                                 </span> : ""}
-                                                            {order.payment_status == "paid_partially" ?
+                                                            {order.payment_status === "paid_partially" ?
                                                                 <span className="badge bg-warning">
                                                                     Paid Partially
                                                                 </span> : ""}
-                                                            {order.payment_status == "not_paid" ?
+                                                            {order.payment_status === "not_paid" ?
                                                                 <span className="badge bg-danger">
                                                                     Not Paid
                                                                 </span> : ""}

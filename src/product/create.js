@@ -8,7 +8,6 @@ import React, {
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
-import ProductView from "./view.js";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import ProductCategoryCreate from "../product_category/create.js";
@@ -84,7 +83,6 @@ const ProductCreate = forwardRef((props, ref) => {
   let [selectedImage, setSelectedImage] = useState("");
   let [productStores, setProductStores] = useState([]);
 
-  let [storeOptions, setStoreOptions] = useState([]);
 
   let [selectedCategories, setSelectedCategories] = useState([]);
   let [categoryOptions, setCategoryOptions] = useState([]);
@@ -154,7 +152,7 @@ const ProductCreate = forwardRef((props, ref) => {
           let i = 0;
           for (const key in data.result.product_stores) {
             console.log("key: ", key);
-            if (productStores[i].store_id == data.result.product_stores[key].store_id) {
+            if (productStores[i].store_id === data.result.product_stores[key].store_id) {
               productStores[i].purchase_unit_price = data.result.product_stores[key].purchase_unit_price;
               productStores[i].wholesale_unit_price = data.result.product_stores[key].wholesale_unit_price;
               productStores[i].retail_unit_price = data.result.product_stores[key].retail_unit_price;
@@ -276,39 +274,7 @@ const ProductCreate = forwardRef((props, ref) => {
     console.log("productStores:", productStores);
   }
 
-  async function suggestStores(searchTerm) {
-    console.log("Inside handle suggest Stores");
-
-    console.log("searchTerm:" + searchTerm);
-    if (!searchTerm) {
-      return;
-    }
-
-    var params = {
-      name: searchTerm,
-    };
-    var queryString = ObjectToSearchQueryParams(params);
-    if (queryString !== "") {
-      queryString = "&" + queryString;
-    }
-
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
-      },
-    };
-
-    let Select = "select=id,name";
-    let result = await fetch(
-      "/v1/store?" + Select + queryString,
-      requestOptions
-    );
-    let data = await result.json();
-
-    setStoreOptions(data.result);
-  }
+  
 
   useEffect(() => {
     let at = cookies.get("access_token");
@@ -428,41 +394,6 @@ const ProductCreate = forwardRef((props, ref) => {
       });
   }
 
-  function isStockAddedToStore(storeID) {
-    for (var i = 0; i < productStores.length; i++) {
-      if (productStores[i].store_id === storeID) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function findStockIndexByStoreID(storeID) {
-    for (var i = 0; i < productStores.length; i++) {
-      if (productStores[i].store_id === storeID) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  function isUnitPriceAddedToStore(storeID) {
-    for (var i = 0; i < productStores.length; i++) {
-      if (productStores[i].store_id === storeID) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function removeStock(productStore) {
-    const index = productStores.indexOf(productStore);
-    if (index > -1) {
-      productStores.splice(index, 1);
-    }
-    setProductStores([...productStores]);
-  }
-
 
   function getTargetDimension(
     originaleWidth,
@@ -487,10 +418,6 @@ const ProductCreate = forwardRef((props, ref) => {
     */
 
   const StoreCreateFormRef = useRef();
-  function openStoreCreateForm() {
-    StoreCreateFormRef.current.open();
-  }
-
   const ProductCategoryCreateFormRef = useRef();
   function openProductCategoryCreateForm() {
     ProductCategoryCreateFormRef.current.open();
@@ -821,13 +748,13 @@ const ProductCreate = forwardRef((props, ref) => {
                 </thead>
                 <tbody>
                   {stores.map((store, index) => (
-                    !cookies.get('store_id') || store.id == cookies.get('store_id') ? <tr key={index} className="text-center">
+                    !cookies.get('store_id') || store.id === cookies.get('store_id') ? <tr key={index} className="text-center">
                       {!cookies.get('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
                       <td style={{ width: "150px" }}>
                         <input
                           type="number"
                           value={
-                            productStores[index]?.purchase_unit_price || productStores[index]?.purchase_unit_price == 0
+                            productStores[index]?.purchase_unit_price || productStores[index]?.purchase_unit_price === 0
                               ? productStores[index]?.purchase_unit_price
                               : ""
                           }

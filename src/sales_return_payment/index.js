@@ -249,7 +249,7 @@ function SalesReturnPaymentIndex(props) {
                     balanceAmount = props.salesReturn.net_total - totalPayments;
                     setBalanceAmount(balanceAmount);
 
-                    if (balanceAmount == props.salesReturn.net_total) {
+                    if (balanceAmount === props.salesReturn.net_total) {
                         paymentStatus = "not_paid";
                         setPaymentStatus(paymentStatus);
                     } else if (balanceAmount <= 0) {
@@ -315,7 +315,8 @@ function SalesReturnPaymentIndex(props) {
     const [fromDateValue, setFromDateValue] = useState("");
     const [toDateValue, setToDateValue] = useState("");
 
-    let [sortOrder, setSortOrder] = useState("-");
+    let sortOrder = "-";
+    //let [sortOrder, setSortOrder] = useState("-");
 
 
     const confirmDelete = async (id) => {
@@ -388,15 +389,15 @@ function SalesReturnPaymentIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        {paymentStatus == "paid" ?
+                        {paymentStatus === "paid" ?
                             <span className="badge bg-success">
                                 Paid
                             </span> : ""}
-                        {paymentStatus == "paid_partially" ?
+                        {paymentStatus === "paid_partially" ?
                             <span className="badge bg-warning">
                                 Paid Partially
                             </span> : ""}
-                        {paymentStatus == "not_paid" ?
+                        {paymentStatus === "not_paid" ?
                             <span className="badge bg-danger">
                                 Not Paid
                             </span> : ""}
@@ -880,7 +881,7 @@ function SalesReturnPaymentIndex(props) {
                                                     <select
                                                         onChange={(e) => {
                                                             searchByFieldValue("deleted", e.target.value);
-                                                            if (e.target.value == "1") {
+                                                            if (e.target.value === "1") {
                                                                 deleted = true;
                                                                 setDeleted(deleted);
                                                             } else {

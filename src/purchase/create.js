@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import PurchasePreview from "./preview.js";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import VendorCreate from "./../vendor/create.js";
 import ProductCreate from "./../product/create.js";
@@ -12,9 +12,7 @@ import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
-import PurchaseView from "./view.js";
 import ProductView from "./../product/view.js";
-import { DebounceInput } from 'react-debounce-input';
 
 
 const PurchaseCreate = forwardRef((props, ref) => {
@@ -33,9 +31,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
             selectedOrderPlacedByUsers = [];
             setSelectedOrderPlacedByUsers([]);
-
-            selectedOrderPlacedBySignatures = [];
-            setSelectedOrderPlacedBySignatures([]);
 
 
             formData = {
@@ -127,8 +122,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
     });
 
 
-    const selectedDate = new Date();
-
     //const history = useHistory();
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -158,22 +151,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     //Product Auto Suggestion
     const [productOptions, setProductOptions] = useState([]);
-    let [selectedProduct, setSelectedProduct] = useState([]);
+    let selectedProduct = [];
     let [selectedProducts, setSelectedProducts] = useState([]);
     const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     //Order Placed By Auto Suggestion
-    const [orderPlacedByUserOptions, setOrderPlacedByUserOptions] = useState([]);
+
     let [selectedOrderPlacedByUsers, setSelectedOrderPlacedByUsers] = useState([]);
-    const [isOrderPlacedByUsersLoading, setIsOrderPlacedByUsersLoading] = useState(false);
 
     //Order Placed By Signature Auto Suggestion
-    const [orderPlacedBySignatureOptions, setOrderPlacedBySignatureOptions] =
-        useState([]);
-    let [selectedOrderPlacedBySignatures, setSelectedOrderPlacedBySignatures] =
-        useState([]);
-    const [isOrderPlacedBySignaturesLoading, setIsOrderPlacedBySignaturesLoading] =
-        useState(false);
 
     const [show, setShow] = useState(false);
 
@@ -278,16 +264,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     }
                 ];
 
-                if (purchase.order_placed_by_signature_id) {
-                    let selectedOrderPlacedBySignatures = [
-                        {
-                            id: purchase.order_placed_by_signature_id,
-                            name: purchase.order_placed_by_signature_name,
-                        }
-                    ];
-
-                    setSelectedOrderPlacedBySignatures([...selectedOrderPlacedBySignatures]);
-                }
+                
 
                 setSelectedOrderPlacedByUsers([...selectedOrderPlacedByUsers]);
 
@@ -387,29 +364,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setIsVendorsLoading(false);
     }
 
-    function GetProductUnitPriceInStore(storeId, productStores) {
-        console.log("Inside GetProductUnitPriceInStore");
-        if (!productStores) {
-            return "";
-        }
-        console.log("Cool")
-
-        for (var i = 0; i < productStores.length; i++) {
-            console.log("productStores[i]:", productStores[i]);
-            console.log("store_id:", storeId);
-
-            if (productStores[i].store_id === storeId) {
-                console.log("macthed");
-                console.log(
-                    "unitPrice.retail_unit_price:",
-                    productStores[i].purchase_unit_price
-                );
-                return productStores[i];
-            }
-        }
-        console.log("not matched");
-        return "";
-    }
 
     let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
@@ -469,127 +423,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setProductOptions(products);
         setIsProductsLoading(false);
     }
-
-    async function getProductByBarCode(barcode) {
-        formData.barcode = barcode;
-        setFormData({ ...formData });
-        console.log("Inside getProductByBarCode");
-        errors["bar_code"] = "";
-        setErrors({ ...errors });
-
-        console.log("barcode:" + formData.barcode);
-        if (!formData.barcode) {
-            return;
-        }
-
-        if (formData.barcode.length === 13) {
-            formData.barcode = formData.barcode.slice(0, -1);
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-
-        let Select = "select=id,item_code,bar_code,part_number,name,product_stores,unit,part_number,name_in_arabic";
-        let result = await fetch(
-            "/v1/product/barcode/" + formData.barcode + "?" + Select,
-            requestOptions
-        );
-        let data = await result.json();
-
-
-        let product = data.result;
-        if (product) {
-            addProduct(product);
-        } else {
-            errors["bar_code"] = "Invalid Barcode:" + formData.barcode
-            setErrors({ ...errors });
-        }
-
-        formData.barcode = "";
-        setFormData({ ...formData });
-
-    }
-
-    async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggestUsers");
-        setOrderPlacedByUserOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsOrderPlacedByUsersLoading(true);
-        let result = await fetch(
-            "/v1/user?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setOrderPlacedByUserOptions(data.result);
-        setIsOrderPlacedByUsersLoading(false);
-    }
-
-    async function suggestSignatures(searchTerm) {
-        console.log("Inside handle suggestSignatures");
-        setOrderPlacedBySignatureOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsOrderPlacedBySignaturesLoading(true);
-        let result = await fetch(
-            "/v1/signature?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setOrderPlacedBySignatureOptions(data.result);
-        setIsOrderPlacedBySignaturesLoading(false);
-    }
-
+    
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -732,7 +566,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             return;
         }
-        let productStore = {};
 
         if (product.product_stores) {
             /*
@@ -834,16 +667,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     function removeProduct(product) {
+     
+
+        const index = selectedProducts.indexOf(product);
+        if (index > -1) {
+            selectedProducts.splice(index, 1);
+        }
+
         if (product.quantity_returned > 0) {
             errors["product_" + index] = "This product cannot be removed as it is returned, Note: Please remove the product from purchase return and try again"
             setErrors({ ...errors });
             return;
         }
 
-        const index = selectedProducts.indexOf(product);
-        if (index > -1) {
-            selectedProducts.splice(index, 1);
-        }
         setSelectedProducts([...selectedProducts]);
         reCalculate();
     }
@@ -1138,15 +974,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     const UserCreateFormRef = useRef();
-    function openUserCreateForm() {
-        UserCreateFormRef.current.open();
-    }
+   
 
 
     const SignatureCreateFormRef = useRef();
-    function openSignatureCreateForm() {
-        SignatureCreateFormRef.current.open();
-    }
+  
 
     const ProductDetailsViewRef = useRef();
     function openProductDetailsView(id) {
@@ -2081,15 +1913,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td colSpan={1}>
                                                 <b>Payment status: </b>
-                                                {paymentStatus == "paid" ?
+                                                {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">
                                                         Paid
                                                     </span> : ""}
-                                                {paymentStatus == "paid_partially" ?
+                                                {paymentStatus === "paid_partially" ?
                                                     <span className="badge bg-warning">
                                                         Paid Partially
                                                     </span> : ""}
-                                                {paymentStatus == "not_paid" ?
+                                                {paymentStatus === "not_paid" ?
                                                     <span className="badge bg-danger">
                                                         Not Paid
                                                     </span> : ""}

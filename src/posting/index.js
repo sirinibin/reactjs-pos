@@ -4,9 +4,8 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge, Modal } from "react-bootstrap";
+import { Button, Spinner, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 import BalanceSheetPrintPreview from './printPreview.js';
 
 const PostingIndex = forwardRef((props, ref) => {
@@ -53,23 +52,10 @@ const PostingIndex = forwardRef((props, ref) => {
     const [offset, setOffset] = useState(0);
 
 
-    //Created At filter
-    const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
-    const [createdAtValue, setCreatedAtValue] = useState("");
-    const [createdAtFromValue, setCreatedAtFromValue] = useState("");
-    const [createdAtToValue, setCreatedAtToValue] = useState("");
-
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
-    //Created By Expense Auto Suggestion
-    const [expenseOptions, setExpenseOptions] = useState([]);
-    const [selectedCreatedByExpenses, setSelectedCreatedByExpenses] = useState([]);
-
-    //Created By Expense Auto Suggestion
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [selectedExpenseCategories, setSelectedExpenseCategories] = useState([]);
 
 
     useEffect(() => {
@@ -149,21 +135,20 @@ const PostingIndex = forwardRef((props, ref) => {
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-            setCreatedAtValue(value);
-            setCreatedAtFromValue("");
-            setCreatedAtToValue("");
+      
+          
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
-            setCreatedAtValue("");
+           
+          
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
-            setCreatedAtValue("");
+          
+          
             searchParams["created_at"] = "";
             searchParams[field] = value;
         }
@@ -174,17 +159,16 @@ const PostingIndex = forwardRef((props, ref) => {
         list();
     }
 
-    const [selectedAccounts, setSelectedAccounts] = useState([]);
     const [selectedDebitAccounts, setSelectedDebitAccounts] = useState([]);
     const [selectedCreditAccounts, setSelectedCreditAccounts] = useState([]);
 
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
-            setSelectedCreatedByExpenses(values);
+            //setSelectedCreatedByExpenses(values);
         } else if (field === "category_id") {
-            setSelectedExpenseCategories(values);
+            //setSelectedExpenseCategories(values);
         } else if (field === "account_id") {
-            setSelectedAccounts(values);
+            //setSelectedAccounts(values);
         } else if (field === "debit_account_id") {
             setSelectedDebitAccounts(values);
         } else if (field === "credit_account_id") {
@@ -202,8 +186,6 @@ const PostingIndex = forwardRef((props, ref) => {
 
         list();
     }
-
-    let [totalExpenses, setTotalExpenses] = useState(0.00);
 
     let [debitTotal, setDebitTotal] = useState(0.00);
     let [creditTotal, setCreditTotal] = useState(0.00);
@@ -431,7 +413,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
 
                 //totalExpenses = data.meta.total;
-                //setTotalExpenses(totalExpenses);
+              
 
             })
             .catch((error) => {
@@ -1067,7 +1049,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
                                                             if (!date) {
-                                                                setCreatedAtValue("");
+                                                               
                                                                 searchByDateField("created_at", "");
                                                                 return;
                                                             }
@@ -1099,7 +1081,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
                                                                     if (!date) {
-                                                                        setCreatedAtFromValue("");
+                                                                      
                                                                         searchByDateField("created_at_from", "");
                                                                         return;
                                                                     }
@@ -1115,7 +1097,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
                                                                     if (!date) {
-                                                                        setCreatedAtFromValue("");
+                                                                   
                                                                         searchByDateField("created_at_to", "");
                                                                         return;
                                                                     }
@@ -1159,7 +1141,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                 <td colSpan={2} style={{ border: "solid 0px" }}>
                                                                                     <td style={{ border: "solid 0px", borderRight: "solid 0px", paddingLeft: "5px" }}>
                                                                                         <td style={{ textAlign: "left", border: "solid 0px", minWidth: "162px" }}>
-                                                                                            {post.debit_or_credit == "debit" ? "To " + post.account_name + " A/c #" + post.account_number + " Dr." : ""}
+                                                                                            {post.debit_or_credit === "debit" ? "To " + post.account_name + " A/c #" + post.account_number + " Dr." : ""}
                                                                                         </td>
                                                                                         <td style={{ textAlign: "right", border: "solid 0px", minWidth: "140px" }}>
                                                                                             {post.debit ? post.debit : ""}
@@ -1167,7 +1149,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                     </td>
                                                                                     <td style={{ border: "solid 0px", paddingLeft: "5px", borderLeft: "solid 1px" }}>
                                                                                         <td style={{ textAlign: "left", border: "solid 0px", minWidth: "193px" }}>
-                                                                                            {post.debit_or_credit == "credit" ? "By " + post.account_name + " A/c #" + post.account_number + "  Cr." : ""}
+                                                                                            {post.debit_or_credit === "credit" ? "By " + post.account_name + " A/c #" + post.account_number + "  Cr." : ""}
                                                                                         </td>
                                                                                         <td style={{ textAlign: "right", border: "solid 0px", minWidth: "105px" }}>
                                                                                             {post.credit ? post.credit : ""}

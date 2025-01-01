@@ -2,12 +2,9 @@ import React, { useState, forwardRef, useImperativeHandle, useRef } from "react"
 import { Modal, Table } from 'react-bootstrap';
 import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
-import Barcode from 'react-barcode';
-import QRCode from "react-qr-code";
-import html2canvas from 'html2canvas';
+
 //let ThermalPrinterEncoder = require('thermal-printer-encoder');
 import ThermalPrinterEncoder from 'thermal-printer-encoder';
-import ProductCreate from "./create.js";
 
 import { Button } from "react-bootstrap";
 import SalesHistory from "./sales_history.js";
@@ -43,29 +40,6 @@ const ProductView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    function getProductRetailPrice(product) {
-        let store_id = cookies.get("store_id");
-        if (!store_id || !product.product_stores) {
-            return "";
-        }
-
-        // product.product_stores[store_id].
-
-        if (product.product_stores[store_id]) {
-            return parseFloat(product.product_stores[store_id].retail_unit_price + parseFloat(product.product_stores[store_id].retail_unit_price * 0.15)).toFixed(2);
-        }
-
-
-
-        /*
-        for (let i = 0; i < product.product_stores.length; i++) {
-            if (product.product_stores[i].store_id === store_id) {
-                return parseFloat(product.product_stores[i].retail_unit_price + parseFloat(product.product_stores[i].retail_unit_price * 0.15)).toFixed(2);
-            }
-        }
-        */
-        return "";
-    }
 
     function getProduct(id) {
         console.log("inside get Product");
@@ -108,9 +82,6 @@ const ProductView = forwardRef((props, ref) => {
             });
     }
 
-
-    const barcodeRef = useRef();
-    const qrcodeRef = useRef();
 
 
     function printBarCode(event) {
@@ -174,44 +145,6 @@ const ProductView = forwardRef((props, ref) => {
 
     }
 
-    function printQrCode(e) {
-
-        const opt = {
-            scale: 4
-        }
-
-        const elem = qrcodeRef.current;
-
-        html2canvas(elem, opt).then(canvas => {
-            const iframe = document.createElement('iframe')
-            iframe.name = 'printf'
-            iframe.id = 'printf'
-            iframe.height = 0;
-            iframe.width = 0;
-            document.body.appendChild(iframe)
-
-            const imgUrl = canvas.toDataURL({
-                format: 'jpeg',
-                quality: '1.0'
-            })
-
-            const style = `
-                height:20vh;
-                width:20vw;
-                position:absolute;
-                left:0:
-                top:0;
-            `;
-
-            const url = `<img style="${style}" src="${imgUrl}"/>`;
-            var newWin = window.frames["printf"];
-            newWin.document.write(`<body onload="window.print()">${url}</body>`);
-            newWin.document.close();
-
-        });
-
-    }
-
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {
         SalesHistoryRef.current.open(model);
@@ -267,45 +200,45 @@ const ProductView = forwardRef((props, ref) => {
                         </button>
                         <ul class="dropdown-menu">
                             <li>
-                                <a class="dropdown-item" onClick={() => {
+                                <div class="dropdown-item" style={{cursor: "pointer"}} onClick={() => {
                                     openSalesHistory(model);
                                 }}>
                                     <i className="bi bi-clock-history"></i> Sales History
-                                </a>
+                                </div>
                             </li>
                             <li>
-                                <a class="dropdown-item" onClick={() => {
+                                <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
                                     openPurchaseHistory(model);
                                 }}>
                                     <i className="bi bi-clock-history"></i> Purchase History
-                                </a>
+                                </div>
                             </li>
                             <li>
-                                <a class="dropdown-item" onClick={() => {
+                                <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
                                     openSalesReturnHistory(model);
                                 }}>
                                     <i className="bi bi-clock-history"></i> Sales Return History
-                                </a>
+                                </div>
                             </li>
 
                             <li>
-                                <a class="dropdown-item" onClick={() => {
+                                <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
                                     openPurchaseReturnHistory(model);
                                 }}>
                                     <i className="bi bi-clock-history"></i> Purchase Return History
-                                </a>
+                                </div>
                             </li>
-                            <li> <a class="dropdown-item" onClick={() => {
+                            <li> <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
                                 openQuotationHistory(model);
                             }}>
                                 <i className="bi bi-clock-history"></i> Quotation History
-                            </a>
+                            </div>
                             </li>
-                            <li> <a class="dropdown-item" onClick={() => {
+                            <li> <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
                                 openDeliveryNoteHistory(model);
                             }}>
                                 <i className="bi bi-clock-history"></i> Delivery Note History
-                            </a>
+                            </div>
                             </li>
                         </ul>
                     </div>
@@ -398,7 +331,7 @@ const ProductView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.product_stores && Object.keys(model.product_stores).map((key, index) => {
-                                return (!cookies.get('store_id') || cookies.get('store_id') == model.product_stores[key].store_id ? <tr key={index} className="text-center">
+                                return (!cookies.get('store_id') || cookies.get('store_id') === model.product_stores[key].store_id ? <tr key={index} className="text-center">
                                     {!cookies.get('store_id') ? <td>{model.product_stores[key].store_name}</td> : ""}
                                     <td>
                                         <NumberFormat

@@ -51,9 +51,6 @@ function CustomerDepositIndex(props) {
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
 
-    //Created By CustomerDeposit Auto Suggestion
-    const [categoryOptions, setCategoryOptions] = useState([]);
-    const [selectedCustomerDepositCategories, setSelectedCustomerDepositCategories] = useState([]);
 
 
     useEffect(() => {
@@ -224,7 +221,7 @@ function CustomerDepositIndex(props) {
 
     let [totalCustomerDeposits, setTotalCustomerDeposits] = useState(0.00);
 
-    let [sortOrder, setSortOrder] = useState("-");
+    let sortOrder = "-";
 
     function list() {
         const requestOptions = {

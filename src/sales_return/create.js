@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import SalesReturnPreview from "./preview.js";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
 import SignatureCreate from "./../signature/create.js";
 import Cookies from "universal-cookie";
-import { Typeahead } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
@@ -366,8 +365,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     // }  
     // }
 
-    const selectedDate = new Date();
-
     //const history = useHistory();
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -395,18 +392,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     let [selectedProducts, setSelectedProducts] = useState(null);
 
     //Received By Auto Suggestion
-    const [receivedByUserOptions, setReceivedByUserOptions] = useState([]);
-    let [selectedReceivedByUsers, setSelectedReceivedByUsers] = useState([]);
-    const [isReceivedByUsersLoading, setIsReceivedByUsersLoading] =
-        useState(false);
 
-    //Received By Signature Auto Suggestion
-    const [receivedBySignatureOptions, setReceivedBySignatureOptions] =
-        useState([]);
-    const [selectedReceivedBySignatures, setSelectedReceivedBySignatures] =
-        useState([]);
-    const [isReceivedBySignaturesLoading, setIsReceivedBySignaturesLoading] =
-        useState(false);
+    let [selectedReceivedByUsers, setSelectedReceivedByUsers] = useState([]);
+
 
     const [show, setShow] = useState(false);
 
@@ -423,87 +411,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     });
 
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
-    async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggestUsers");
-        setReceivedByUserOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsReceivedByUsersLoading(true);
-        let result = await fetch(
-            "/v1/user?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setReceivedByUserOptions(data.result);
-        setIsReceivedByUsersLoading(false);
-    }
-
-    async function suggestSignatures(searchTerm) {
-        console.log("Inside handle suggestSignatures");
-        setReceivedBySignatureOptions([]);
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        setIsReceivedBySignaturesLoading(true);
-        let result = await fetch(
-            "/v1/signature?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setReceivedBySignatureOptions(data.result);
-        setIsReceivedBySignaturesLoading(false);
-    }
 
     function handleCreate(event) {
         event.preventDefault();
@@ -817,9 +725,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
     const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        DetailsViewRef.current.open(id);
-    }
 
     const StoreCreateFormRef = useRef();
 
@@ -829,15 +734,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
     const UserCreateFormRef = useRef();
-    function openUserCreateForm() {
-        UserCreateFormRef.current.open();
-    }
 
 
     const SignatureCreateFormRef = useRef();
-    function openSignatureCreateForm() {
-        SignatureCreateFormRef.current.open();
-    }
+
 
 
     const ProductDetailsViewRef = useRef();
@@ -880,7 +780,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     function validatePaymentAmounts() {
 
-        if (selectedProducts && selectedProducts.filter(product => product.selected).length == 0) {
+        if (selectedProducts && selectedProducts.filter(product => product.selected).length === 0) {
             return true;
         }
 
@@ -909,7 +809,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             return false;
         }
 
-        let totalPayment = findTotalPayments();
         // errors["payment_date"] = [];
         //errors["payment_method"] = [];
         //errors["payment_amount"] = [];
@@ -1016,7 +915,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Sales Return #" + formData.code + " for sale #" + formData.order_code : "Create Sales Return" + " for sale #" + formData.order_code}
+                        {formData.id ? "Update Sales Return #" + formData.code + " for sale #" + formData.order_code : "Create Sales Return for sale #" + formData.order_code}
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
@@ -1556,15 +1455,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td colSpan={1}>
                                                 <b>Payment status: </b>
-                                                {paymentStatus == "paid" ?
+                                                {paymentStatus === "paid" ?
                                                     <span className="badge bg-success">
                                                         Paid
                                                     </span> : ""}
-                                                {paymentStatus == "paid_partially" ?
+                                                {paymentStatus === "paid_partially" ?
                                                     <span className="badge bg-warning">
                                                         Paid Partially
                                                     </span> : ""}
-                                                {paymentStatus == "not_paid" ?
+                                                {paymentStatus === "not_paid" ?
                                                     <span className="badge bg-danger">
                                                         Not Paid
                                                     </span> : ""}

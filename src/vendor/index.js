@@ -1105,200 +1105,218 @@ function VendorIndex(props) {
                                                         <td>{vendor.name}</td>
                                                         <td>
                                                             {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_paid_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_paid_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_balance_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_balance_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_retail_profit?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_retail_profit?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_retail_loss?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_retail_loss?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_wholesale_profit?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_wholesale_profit?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_wholesale_loss?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_wholesale_loss?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_paid_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_not_paid_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_not_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_paid_partially_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_paid_partially_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_return_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_return_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_paid_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_return_paid_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_balance_amount?.toFixed(2)}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_return_balance_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_paid_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_return_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_not_paid_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_return_not_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
                                                         {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
-                                                                if (cookies.get("store_id") && vendor.stores[key].store_id == cookies.get("store_id")) {
+                                                                if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_paid_partially_count}</b>
                                                                     );
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{vendor.stores[key].purchase_return_paid_partially_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                 }
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>{vendor.created_by_name}</td>
