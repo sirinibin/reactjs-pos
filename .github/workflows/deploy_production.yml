@@ -38,7 +38,7 @@ jobs:
           AWS_PORT: ${{ secrets.AWS_PORT }}
           AWS_DEST_PATH: ${{ secrets.AWS_DEST_PATH_PROD }}
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key.pem
-          chmod 600 private_key.pem
-          scp -o StrictHostKeyChecking=no -i private_key.pem -P $AWS_PORT -r build/* $AWS_USER@$AWS_HOST:$AWS_DEST_PATH
-          rm private_key.pem
+#          echo "$SSH_PRIVATE_KEY" > private_key.pem
+#          chmod 600 private_key.pem
+#          scp -o StrictHostKeyChecking=no -i private_key.pem -P $AWS_PORT -r build/* $AWS_USER@$AWS_HOST:$AWS_DEST_PATH
+#          rm private_key.pem
