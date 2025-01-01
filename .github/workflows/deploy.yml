@@ -3,7 +3,6 @@ name: Deploy React App to AWS
 on:
   push:
     branches:
-      - master  
       - test # Change to your production branch
 
 jobs:
@@ -25,6 +24,7 @@ jobs:
       - name: Install dependencies and build
         run: |
           npm install
+          export REACT_APP_API_URL=https://startpos-api-test.startuptech.uk
           npm run build
 
       # Step 4: Deploy to AWS
