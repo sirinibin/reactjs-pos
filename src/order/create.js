@@ -793,9 +793,13 @@ const OrderCreate = forwardRef((props, ref) => {
     function findTotalPrice() {
         totalPrice = 0.00;
         for (var i = 0; i < selectedProducts.length; i++) {
+            let productDiscount = 0.00;
+            if (selectedProducts[i].discount) {
+                productDiscount = selectedProducts[i].discount;
+            }
             totalPrice +=
                 (parseFloat(selectedProducts[i].unit_price) *
-                    parseFloat(selectedProducts[i].quantity)) - parseFloat(selectedProducts[i].discount);
+                    parseFloat(selectedProducts[i].quantity)) - productDiscount;
         }
         // totalPrice = totalPrice.toFixed(2);
         // totalPrice = Math.round(totalPrice * 100) / 100;
@@ -868,7 +872,9 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function findProductDiscountPercent(productIndex) {
         let price = (parseFloat(selectedProducts[productIndex].unit_price) * parseFloat(selectedProducts[productIndex].quantity));
-        if (parseFloat(selectedProducts[productIndex].discount) >= 0 && price > 0) {
+        if (selectedProducts[productIndex].discount
+            && parseFloat(selectedProducts[productIndex].discount) >= 0
+            && price > 0) {
 
             let discountPercent = parseFloat(parseFloat(selectedProducts[productIndex].discount / price) * 100);
             selectedProducts[productIndex].discount_percent = discountPercent;
@@ -880,7 +886,9 @@ const OrderCreate = forwardRef((props, ref) => {
     function findProductDiscount(productIndex) {
         let price = (selectedProducts[productIndex].unit_price * selectedProducts[productIndex].quantity);
 
-        if (selectedProducts[productIndex].discount_percent >= 0 && price > 0) {
+        if (selectedProducts[productIndex].discount_percent
+            && selectedProducts[productIndex].discount_percent >= 0
+            && price > 0) {
             selectedProducts[productIndex].discount = parseFloat(price * parseFloat(selectedProducts[productIndex].discount_percent / 100));
             setSelectedProducts([...selectedProducts]);
         }
@@ -1247,7 +1255,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             }
 
                                             if (selectedProduct[0]) {
-                                              
+
                                                 if (selectedProduct[0].product_stores[formData.store_id]) {
                                                     selectedProduct[0].unit_price = selectedProduct[0].product_stores[formData.store_id].retail_unit_price;
                                                 }
@@ -1681,11 +1689,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                         if (!e.target.value) {
                                                             selectedProducts[index].discount = "";
-                                                            selectedProducts[index].discount_percent = 0.00;
-                                                            errors["discount_" + index] = "Invalid Discount";
+                                                            selectedProducts[index].discount_percent = "";
+                                                            // errors["discount_" + index] = "Invalid Discount";
                                                             setFormData({ ...formData });
                                                             reCalculate(index);
-                                                            setErrors({ ...errors });
+                                                            //setErrors({ ...errors });
                                                             return;
                                                         }
 
@@ -1730,10 +1738,11 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                         if (!e.target.value) {
                                                             selectedProducts[index].discount_percent = "";
-                                                            selectedProducts[index].discount = 0.00;
-                                                            errors["discount_percent_" + index] = "Invalid Discount Percent";
+                                                            selectedProducts[index].discount = "";
+                                                            //errors["discount_percent_" + index] = "Invalid Discount Percent";
                                                             setFormData({ ...formData });
-                                                            setErrors({ ...errors });
+                                                            reCalculate(index);
+                                                            //setErrors({ ...errors });
                                                             return;
                                                         }
 
@@ -1754,7 +1763,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td className="text-end" >
                                                 <NumberFormat
-                                                    value={((product.unit_price * product.quantity)-product.discount).toFixed(2)}
+                                                    value={((product.unit_price * product.quantity) - product.discount).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={" "}
