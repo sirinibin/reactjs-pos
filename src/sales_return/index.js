@@ -191,7 +191,7 @@ function SalesReturnIndex(props) {
                     {
                         value: "Discount",
                     }, {
-                        value: salesReturn.discount.toFixed(2),
+                        value: salesReturn.discount?.toFixed(2),
                     },
                 ]);
 

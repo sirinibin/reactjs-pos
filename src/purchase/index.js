@@ -206,7 +206,7 @@ function PurchaseIndex(props) {
                     { value: purchase.vendor_name },
                     { value: supplierVatNo, style: { alignment: { horizontal: "center" } } },
                     { value: amountBeforeVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
-                    { value: purchase.discount.toFixed(2), style: { alignment: { horizontal: "right" } } },
+                    { value: purchase.discount?.toFixed(2), style: { alignment: { horizontal: "right" } } },
                     { value: amountAfterDiscount.toFixed(2), style: { alignment: { horizontal: "right" } } },
                     { value: purchase.vat_price.toFixed(2), style: { alignment: { horizontal: "right" } } },
                     { value: amountAfterVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
@@ -339,7 +339,7 @@ function PurchaseIndex(props) {
             {
                 value: "Discount",
             }, {
-                value: purchase.discount.toFixed(2),
+                value: purchase.discount?.toFixed(2),
             },
         ]);
      

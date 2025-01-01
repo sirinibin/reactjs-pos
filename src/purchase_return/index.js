@@ -187,7 +187,7 @@ function PurchaseReturnIndex(props) {
                     {
                         value: "Discount",
                     }, {
-                        value: purchaseReturn.discount.toFixed(2),
+                        value: purchaseReturn.discount?.toFixed(2),
                     },
                 ]);
 

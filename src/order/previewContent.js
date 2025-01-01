@@ -243,7 +243,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 /> : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }} className="text-end">{product.discount_percent ? "("+product.discount_percent.toFixed(2)+"%)" : ""}{product.discount ? " "+product.discount.toFixed(2) : ""} </td>
+                                            <td style={{ padding: "1px" }} className="text-end">{product.discount_percent ? "("+product.discount_percent.toFixed(2)+"%)" : ""}{product.discount ? " "+product.discount?.toFixed(2) : ""} </td>
                                             <td style={{ padding: "1px" }} className="text-end">
                                                 <NumberFormat
                                                     value={((product.unit_price * product.quantity)-product.discount).toFixed(2)}
@@ -295,7 +295,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
-                                                value={props.model.discount.toFixed(2)}
+                                                value={props.model.discount?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}

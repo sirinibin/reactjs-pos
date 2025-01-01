@@ -131,7 +131,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             value: product.discount_percent ? product.discount_percent.toFixed(2) : "0.00",
                         },
                         {
-                            value: product.discount ? product.discount.toFixed(2) : "0.00",
+                            value: product.discount ? product.discount?.toFixed(2) : "0.00",
                         },
                         {
                             value: vat_percent.toFixed(2),
@@ -173,7 +173,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "Sales Discount",
                     }, {
-                        value: order.discount.toFixed(2),
+                        value: order.discount?.toFixed(2),
                     },
                 ]);
 
@@ -2020,7 +2020,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 ))}
 
                                                         </td>
-                                                        <td>{order.discount.toFixed(2)} </td>
+                                                        <td>{order.discount?.toFixed(2)} </td>
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit?.toFixed(2)} </td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{order.net_loss?.toFixed(2)} </td> : ""}

@@ -585,7 +585,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         if (formData.discount_percent >= 0 && totalPrice > 0) {
             formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100));
             //formData.discount = Math.round(formData.discount * 100) / 100;
-            formData.discount = parseFloat(formData.discount.toFixed(2));
+            formData.discount = parseFloat(formData.discount?.toFixed(2));
             setFormData({ ...formData });
         }
     }

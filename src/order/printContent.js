@@ -108,7 +108,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
 
                                     </h4>
                                     <div style={{ fontSize: "3mm" }}>
-                                    {product.discount_percent ? product.discount_percent.toFixed(2)+"% off" : ""}{product.discount ? " ("+product.discount.toFixed(2)+")" : ""}
+                                    {product.discount_percent ? product.discount_percent.toFixed(2)+"% off" : ""}{product.discount ? " ("+product.discount?.toFixed(2)+")" : ""}
                                     </div>
                                 </td>
                                 <td className="text-end" style={{ border: "solid 0px", width: "99px", paddingRight: "5px" }} >
@@ -161,7 +161,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
                                 <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                     <NumberFormat
-                                        value={props.model.discount.toFixed(2)}
+                                        value={props.model.discount?.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={""}

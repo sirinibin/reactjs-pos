@@ -276,7 +276,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
-                                                value={props.model.discount.toFixed(2)}
+                                                value={props.model.discount?.toFixed(2)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}

@@ -148,7 +148,7 @@ const QuotationPrintContent = forwardRef((props, ref) => {
                             <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
                                 <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                     <NumberFormat
-                                        value={props.model.discount.toFixed(2)}
+                                        value={props.model.discount?.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" SAR"}
