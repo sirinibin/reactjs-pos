@@ -20,7 +20,14 @@ jobs:
         with:
           node-version: 17.9.0 # Use your project's Node.js version
 
-      # Step 3: Install dependencies and build
+         
+     # Step 3: Install dependencies and build
+      - name: Check node & npm version
+        run: |
+          node -v
+          npm -v
+
+      # Step 4: Install dependencies and build
       - name: Install dependencies and build
         run: |
           npm install
