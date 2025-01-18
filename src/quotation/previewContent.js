@@ -168,7 +168,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 <li>Part Number</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "20%" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "15%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -201,6 +201,17 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 <li>Unit Price</li>
                                             </ul>
                                         </th>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{
+                                                    height: "15px"
+                                                }}
+                                            >
+                                                <li>تخفيض</li>
+                                                <li>Discount</li>
+                                            </ul>
+                                        </th>
                                         <th className="per20 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
@@ -208,8 +219,8 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                     height: "15px"
                                                 }}
                                             >
-                                                <li>المبلغ الإجمالي</li>
-                                                <li>Total Amount</li>
+                                                <li>سعر</li>
+                                                <li>Price</li>
                                             </ul>
                                         </th>
                                     </tr>
@@ -232,6 +243,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 /> : ""}
                                             </td>
+                                            <td style={{ padding: "1px" }} className="text-end">{product.discount_percent ? "("+product.discount_percent.toFixed(2)+"%)" : ""}{product.discount ? " "+product.discount?.toFixed(2) : ""} </td>
                                             <td style={{ padding: "1px" }} className="text-end">
                                                 <NumberFormat
                                                     value={(product.unit_price * product.quantity).toFixed(2)}

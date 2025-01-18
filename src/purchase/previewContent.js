@@ -19,17 +19,17 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
         let options = {
             /*weekday: 'long', */
             year: 'numeric',
-            month: 'long',
+            month: 'numeric',
             day: 'numeric',
             hour: "numeric",
             minute: "numeric",
             second: "numeric",
+            //  timeZoneName: "short",
         };
         return event.toLocaleDateString('ar-EG', options)
     }
 
     return (<>
-
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
                 className="container"
@@ -40,8 +40,8 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                     borderColor: "silver",
                     borderRadius: "2mm",
                     padding: "20px",
-                    marginTop: page.top + "px",
-                    height: "1110px",
+                    marginTop: page.top+"px",
+                    height: "110px",
                     width: "770px"
                 }}
 
@@ -74,8 +74,8 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                 {props.model.store ? props.model.store.title_in_arabic : "<STORE_TITLE_ARABIC>"}
                             </li>
                             {/* <!-- <li><hr /></li> --> */}
-                            <li>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"} / رقم التسجيل</li>
-                            <li>{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"} / الرقم الضريبي</li>
+                            <li>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"} / ‫ت‬.‫س‬</li>
+                            <li>{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"} / ‫الضريبي‬ ‫الرقم‬</li>
                         </ul>
                     </div>
                 </div>
@@ -83,40 +83,42 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                     <div className="col">
                         <u
                         ><h1 className="text-center" style={{ fontSize: "3mm" }}>
-                                PURCHASE TAX INVOICE / فاتورة ضريبية
+                                PURCHASE TAX INVOICE / فاتورة ضريبة الشراء
                             </h1>
                         </u>
                     </div>
                 </div>
+
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-start">
                             <li><strong>Invoice No.: </strong>{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                            <li><strong>Invoice Date: </strong>
-                                {props.model.date ? format(
-                                    new Date(props.model.date),
-                                    "MMM dd yyyy h:mma"
-                                ) : "<DATETIME>"}
-                            </li>
+                            <li><strong>Invoice Date: </strong> {props.model.date ? format(
+                                new Date(props.model.date),
+                                "yyyy-MM-dd h:mma"
+                            ) : "<DATETIME>"} </li>
                             <li>
-                                <strong>Vendor: </strong>{props.model.vendor ? props.model.vendor.name : "<VENDOR_NAME>"}
+                                <strong>Vendor: </strong>{props.model.vendor ? props.model.vendor.name : "N/A"}
                             </li>
-                            <li><strong>VAT Number: </strong>{props.model.vendor ? props.model.vendor.vat_no : "<VENDOR_VAT_NO>"}
+                            <li><strong>VAT Number: </strong>{props.model.vendor ? props.model.vendor.vat_no : "N/A"}
                             </li>
                         </ul>
                     </div>
+
                     <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "20%", padding: "0px" }}>
                         {props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "70px", height: "72px" }} alt="Invoice QR Code" /> : ""}
                     </div>
 
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-end">
-                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :رقم فاتورة الشراء</strong></li>
-                            <li><strong>تاريخ فاتورة الشراء: </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
+                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :رقم الفاتورة </strong></li>
+                            <li><strong>تاريخ الفاتورة:  </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
                             <li>
-                                <strong> :اسم البائع</strong>{props.model.vendor ? props.model.vendor.name_in_arabic : "<VENDOR_NAME_ARABIC>"}
+                                <strong>بائع: </strong>{props.model.vendor ? props.model.vendor.name_in_arabic : "<VENDOR_NAME_ARABIC>"}
                             </li>
-                            <li><strong> :ظريبه الشراء</strong>{props.model.vendor ? props.model.vendor.vat_no_in_arabic : "<VENDOR_VAT_NO_ARABIC>"}</li>
+                            <li><strong>رقم ضريبة القيمة المضافة: </strong>{props.model.vendor ? props.model.vendor.vat_no_in_arabic : "<VENDOR_VAT_NO_ARABIC>"}</li>
+
+
                         </ul>
                     </div>
                 </div>
@@ -143,7 +145,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                 style={{ borderRadius: "6px" }}
                             >
                                 <thead style={{ fontSize: "3mm" }}>
-                                    <tr>
+                                    <tr >
                                         <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
@@ -162,11 +164,11 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                                     height: "15px"
                                                 }}
                                             >
-                                                <li>رمز الصنف</li>
+                                                <li>رقم القطعة</li>
                                                 <li>Part No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "20%" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "15%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -180,7 +182,9 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                         <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
-                                                style={{ height: "15px" }}
+                                                style={{
+                                                    height: "15px"
+                                                }}
                                             >
                                                 <li>كمية</li>
                                                 <li>Qty</li>
@@ -189,16 +193,31 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                         <th className="per10 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
-                                                style={{ height: "15px" }}
+                                                style={{
+                                                    height: "15px"
+                                                }}
                                             >
                                                 <li>سعر الوحدة</li>
                                                 <li>Unit Price</li>
                                             </ul>
                                         </th>
-                                        <th className="per20 text-center" style={{ padding: "0px",width: "5%" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
-                                                style={{ height: "15px"}}
+                                                style={{
+                                                    height: "15px"
+                                                }}
+                                            >
+                                                <li>تخفيض</li>
+                                                <li>Discount</li>
+                                            </ul>
+                                        </th>
+                                        <th className="per20 text-center" style={{ padding: "0px", width: "5%" }}>
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{
+                                                    height: "15px"
+                                                }}
                                             >
                                                 <li>سعر</li>
                                                 <li>Price</li>
@@ -206,27 +225,28 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody style={{ fontSize: "2.7mm" }}>
+                                <tbody style={{ fontSize: "2.7mm" }} >
                                     {page.products && page.products.map((product, index) => (
-                                        <tr key={index} className="text-center">
-                                            <td style={{ padding: "1px", height: "16px" }}>{index + 1 + (pageIndex * props.model.pageSize)}</td>
+                                        <tr key={product.item_code} className="text-center"  >
+                                            <td style={{ padding: "1px", height: "16px" }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                             <td style={{ padding: "1px" }} >{product.part_number ? product.part_number : ""}</td>
-                                            <td style={{ padding: "1px" }} >
+                                            <td style={{ padding: "1px" }}>
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }} >{product.quantity ? product.quantity.toFixed(2) : ""}  {product.unit ? product.unit : ""}</td>
+                                            <td style={{ padding: "1px" }}>{product.quantity ? product.quantity.toFixed(2) : ""}  {product.unit ? product.unit : ""}</td>
                                             <td className="text-end" style={{ padding: "1px" }} >
-                                                {product.purchase_unit_price ? <NumberFormat
-                                                    value={product.purchase_unit_price.toFixed(2)}
+                                                {product.unit_price ? <NumberFormat
+                                                    value={product.unit_price.toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={""}
                                                     renderText={(value, props) => value}
                                                 /> : ""}
                                             </td>
+                                            <td style={{ padding: "1px" }} className="text-end">{product.discount_percent ? "("+product.discount_percent.toFixed(2)+"%)" : ""}{product.discount ? " "+product.discount?.toFixed(2) : ""} </td>
                                             <td style={{ padding: "1px" }} className="text-end">
                                                 <NumberFormat
-                                                    value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                                    value={((product.unit_price * product.quantity)-product.discount).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={""}
@@ -239,7 +259,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
 
                                 <tfoot style={{ fontSize: "3mm", }}>
                                     <tr >
-                                        <th colSpan="4" className="text-end" style={{ padding: "2px", }} ></th>
+                                        <th colSpan="5" className="text-end" style={{ padding: "2px", }} ></th>
 
                                         <th className="text-end" style={{ padding: "2px" }}>
                                             Total المجموع:
@@ -255,7 +275,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="5" style={{ padding: "2px" }}>
+                                        <th className="text-end" colSpan="6" style={{ padding: "2px" }}>
 
                                             Shipping / Handling Fees   رسوم الشحن / المناولة:
                                         </th>
@@ -270,9 +290,8 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="5" style={{ padding: "2px" }}>
-                                            Discount خصم:
-
+                                        <th className="text-end" colSpan="6" style={{ padding: "2px" }}>
+                                          Discount تخفيض:
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
@@ -285,7 +304,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="4" style={{ padding: "2px" }}>
+                                        <th className="text-end" colSpan="5" style={{ padding: "2px" }}>
                                             VAT ضريبة:
                                         </th>
                                         <th className="text-end" colSpan="1" style={{ padding: "2px" }} >{props.model.vat_percent.toFixed(2)}%</th>
@@ -301,7 +320,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                     </tr>
 
                                     <tr>
-                                        <th colSpan="5" className="text-end" style={{ padding: "2px" }}>
+                                        <th colSpan="6" className="text-end" style={{ padding: "2px" }}>
                                             Net Total الإجمالي الصافي:
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
@@ -315,7 +334,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
                                             In Words بكلمات:
                                         </th>
                                         <th
@@ -341,7 +360,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
                                             Delivered By سلمت بواسطة:
                                         </th>
-                                        <th style={{ width: "30%", padding: "2px" }}> {props.model.order_placed_by_user ? props.model.order_placed_by_user.name : null}</th>
+                                        <th style={{ width: "30%", padding: "2px" }}> {props.model.delivered_by_user ? props.model.delivered_by_user.name : null}</th>
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
                                             Received By استلمت من قبل:
                                         </th>
@@ -377,11 +396,10 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                     </tr>
                                 </thead>
                             </table>
-                           
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "3mm", height: "55px" }}>
+                <div className="row" style={{ fontSize: "3mm", height: "55px", }}>
                     <div className="col-md-2 text-start">
                         {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                     </div>

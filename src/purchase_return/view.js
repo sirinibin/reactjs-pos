@@ -174,7 +174,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
 
-            <div className="table-responsive" style={{ overflowX: "auto" }}>
+                <div className="table-responsive" style={{ overflowX: "auto" }}>
                     <table className="table table-striped table-sm table-bordered">
                         <thead>
                             <tr className="text-end">
@@ -182,8 +182,10 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                 <th>Part No.</th>
                                 <th>Name</th>
                                 <th>Qty</th>
-                                <th>Purchase Return Unit Price</th>
-                                <th>Purchase Return Price</th>
+                                <th>Unit Price</th>
+                                <th>Discount</th>
+                                <th>Discount %</th>
+                                <th>Price</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -202,9 +204,27 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td>
+                                    <td className="text-end">
+                                        <NumberFormat
+                                            value={product.discount?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td className="text-end">
+                                        <NumberFormat
+                                            value={product.discount_percent?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={"%"}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
                                     <td>
                                         <NumberFormat
-                                            value={(product.purchasereturn_unit_price * product.quantity).toFixed(2)}
+                                            value={((product.purchasereturn_unit_price * product.quantity) - product.discount)?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -214,8 +234,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                 </tr>
                             ))}
                             <tr>
-                                <td colSpan="4"></td>
-                                <th className="text-end">Total</th>
+                                <th colSpan="7" className="text-end">Total</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={model.total}
@@ -227,24 +246,29 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                 </td>
                             </tr>
                             <tr>
-                                <th colSpan="5" className="text-end">
-                                    Discount
+                                <th colSpan="7" className="text-end">
+                                    Shipping / Handling Fees
                                 </th>
                                 <td className="text-end">
-                                    <NumberFormat
-                                        value={model.discount}
+                                    {model.shipping_handling_fees ? <NumberFormat
+                                        value={model.shipping_handling_fees?.toFixed(2)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" "}
                                         renderText={(value, props) => value}
-                                    />
+                                    /> : "0.00 "}
                                 </td>
                             </tr>
                             <tr>
-                                <th colSpan="4" className="text-end">
-                                    
+                                <th colSpan="7" className="text-end">
+                                    Discount  {model.discount_percent?.toFixed(2) + "%"}
                                 </th>
-                                <td className="text-end">VAT: {model.vat_percent + "%"}</td>
+                                <td className="text-end">
+                                    {model.discount?.toFixed(2)}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th colSpan="7" className="text-end">VAT {model.vat_percent + "%"}</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={model.vat_price}
@@ -257,8 +281,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                             </tr>
 
                             <tr>
-                                <td colSpan="4"></td>
-                                <th className="text-end">Net Total</th>
+                                <th colSpan="7" className="text-end">Net Total</th>
                                 <th className="text-end">
                                     <NumberFormat
                                         value={model.net_total}
@@ -289,8 +312,8 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                             <th>Purchase Returned by:</th><td> {model.purchase_returned_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Date:</th><td> 
-                            {model.date ? format(
+                            <th>Date:</th><td>
+                                {model.date ? format(
                                     new Date(model.date),
                                     "MMM dd yyyy h:mma"
                                 ) : "Not set"}
@@ -363,7 +386,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                     </tbody>
                 </Table>
 
-               
+
 
                 {/*
                     <form className="row g-3 needs-validation" >

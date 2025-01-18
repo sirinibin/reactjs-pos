@@ -25,6 +25,7 @@ function SalesReturnIndex(props) {
 
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
+    let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
     let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
     let [totalPaidSalesReturn, setTotalPaidSalesReturn] = useState(0.00);
@@ -105,7 +106,7 @@ function SalesReturnIndex(props) {
         console.log("groupedByDate:", groupedByDate);
 
         excelData = [{
-            columns: [
+            columns: [        
                 { title: "Description", width: { wch: 50 } },//pixels width 
                 { title: "Quantity", width: { wpx: 90 } },//char width 
                 { title: "Unit", width: { wpx: 90 } },
@@ -114,23 +115,26 @@ function SalesReturnIndex(props) {
                 { title: "Disc %", width: { wpx: 90 } },
                 { title: "Disc", width: { wpx: 90 } },
                 { title: "Tax %", width: { wpx: 90 } },
-                { title: "Tax Amount", width: { wpx: 90 } },
+                { title: "Tax Amount", width: { wpx: 180 } },
                 { title: "Net Amount", width: { wpx: 90 } },
             ],
             data: [],
         }];
 
 
-        let totalAmount = 0;
-        let totalTax = 0;
+        let totalAmountBeforeVAT = 0;
+        let totalAmountAfterVAT = 0;
+        let totalVAT = 0;
 
         let invoiceCount = 0;
         for (let returnDate in groupedByDate) {
 
             console.log("returnDate:", returnDate);
             excelData[0].data.push([{ value: "Inv Date: " + returnDate }]);
-            let dayTotal = 0.00;
-            let dayTax = 0.00;
+
+            let dayTotalBeforeVAT = 0.00;
+            let dayTotalAfterVAT = 0.00;
+            let dayVAT = 0.00;
 
             for (var i2 = 0; i2 < groupedByDate[returnDate].length; i2++) {
                 invoiceCount++;
@@ -141,9 +145,18 @@ function SalesReturnIndex(props) {
                     continue;
                 }
 
+                let totalAmountAfterDiscount = salesReturn.total + salesReturn.shipping_handling_fees - salesReturn.discount;
+                let totalAmountBeforeVat = salesReturn.total - salesReturn.discount + salesReturn.shipping_handling_fees;
+                let totalAmountAfterVat = totalAmountBeforeVat + salesReturn.vat_price;
+
                 for (var j = 0; j < salesReturn.products.length; j++) {
 
                     let product = salesReturn.products[j];
+
+                    let gross_amount = product.unit_price * product.quantity;
+                    let vat_percent = salesReturn.vat_percent ? salesReturn.vat_percent : 15.00;
+                    let tax_amount = ((product.unit_price * product.quantity) - product.discount) * parseFloat(vat_percent / 100);
+                    let net_amount = (gross_amount - product.discount) + tax_amount;
 
                     excelData[0].data.push([
                         {
@@ -159,25 +172,41 @@ function SalesReturnIndex(props) {
                             value: product.unit_price ? product.unit_price.toFixed(2) : 0.00,
                         },
                         {
-                            value: (product.unit_price * product.quantity).toFixed(2)
+                            value: (gross_amount)?.toFixed(2)
                         },
                         {
-                            value: "0.00",
+                            value: product.discount_percent ? product.discount_percent.toFixed(2) : "0.00",
                         },
                         {
-                            value: "0.00",
+                            value: product.discount ? product.discount?.toFixed(2) : "0.00",
                         },
                         {
-                            value: "15.00",
+                            value: vat_percent.toFixed(2),
                         },
                         {
-                            value: ((product.unit_price * product.quantity).toFixed(2) * 0.15).toFixed(2),
+                            value: tax_amount.toFixed(2),
                         },
                         {
-                            value: (product.unit_price * product.quantity).toFixed(2),
+                            value: net_amount.toFixed(2),
                         },
                     ]);
                 }
+
+                  excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Shipping/Handling Fees",
+                    }, {
+                        value: salesReturn.shipping_handling_fees.toFixed(2),
+                    },
+                ]);
 
                 excelData[0].data.push([
                     { value: "", },
@@ -205,7 +234,40 @@ function SalesReturnIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Tax",
+                        value: "Total Amount After Discount",
+                    }, {
+                        value: totalAmountAfterDiscount.toFixed(2),
+                    },
+                ]);
+
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "Total Amount Before VAT",
+                    }, {
+                        value: totalAmountBeforeVat.toFixed(2),
+                    },
+                ]);
+
+               
+                excelData[0].data.push([
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    { value: "", },
+                    {
+                        value: "VAT Amount",
                     }, {
                         value: salesReturn.vat_price.toFixed(2),
                     },
@@ -223,15 +285,16 @@ function SalesReturnIndex(props) {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Total",
+                        value: "Total Amount After VAT",
                     }, {
-                        value: (salesReturn.total - salesReturn.discount).toFixed(2),
+                        value: totalAmountAfterVat.toFixed(2),
                     },
                 ]);
 
-                dayTotal += salesReturn.total - salesReturn.discount;
-                dayTax += salesReturn.vat_price;
 
+                dayVAT += salesReturn.vat_price;
+                dayTotalBeforeVAT += totalAmountBeforeVat;
+                dayTotalAfterVAT += totalAmountAfterVat;
             }
 
             excelData[0].data.push([
@@ -244,9 +307,9 @@ function SalesReturnIndex(props) {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Tax",
+                    value: "Day Total Before VAT",
                 }, {
-                    value: dayTax.toFixed(2),
+                    value: dayTotalBeforeVAT.toFixed(2),
                 },
             ]);
 
@@ -260,14 +323,32 @@ function SalesReturnIndex(props) {
                 { value: "", },
                 { value: "", },
                 {
-                    value: "Day Total",
+                    value: "Day VAT",
                 }, {
-                    value: dayTotal.toFixed(2),
+                    value: dayVAT.toFixed(2),
                 },
             ]);
 
-            totalAmount += dayTotal;
-            totalTax += dayTax;
+            excelData[0].data.push([
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                { value: "", },
+                {
+                    value: "Day Total After VAT",
+                }, {
+                    value: dayTotalAfterVAT.toFixed(2),
+                },
+            ]);
+
+
+            totalAmountBeforeVAT += dayTotalBeforeVAT;
+            totalAmountAfterVAT += dayTotalAfterVAT;
+            totalVAT += dayVAT;
 
 
         }//end for
@@ -289,6 +370,7 @@ function SalesReturnIndex(props) {
             },
         ]);
 
+
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -299,9 +381,9 @@ function SalesReturnIndex(props) {
             { value: "", },
             { value: "", },
             {
-                value: "Total Tax",
+                value: "Total Amount Before VAT",
             }, {
-                value: totalTax.toFixed(2),
+                value: totalAmountBeforeVAT.toFixed(2),
             },
         ]);
 
@@ -315,12 +397,27 @@ function SalesReturnIndex(props) {
             { value: "", },
             { value: "", },
             {
-                value: "Total Amount",
+                value: "Total VAT",
             }, {
-                value: totalAmount.toFixed(2),
+                value: totalVAT.toFixed(2),
             },
         ]);
 
+        excelData[0].data.push([
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            { value: "", },
+            {
+                value: "Total Amount After VAT",
+            }, {
+                value: totalAmountAfterVAT.toFixed(2),
+            },
+        ]);
 
 
         setExcelData(excelData);
@@ -690,6 +787,9 @@ function SalesReturnIndex(props) {
                 vatPrice = data.meta.vat_price;
                 setVatPrice(vatPrice);
 
+                totalShippingHandlingFees = data.meta.shipping_handling_fees;
+                setTotalShippingHandlingFees(totalShippingHandlingFees);
+
                 totalDiscount = data.meta.discount;
                 setTotalDiscount(totalDiscount);
 
@@ -919,6 +1019,17 @@ function SalesReturnIndex(props) {
                             Cash Discount: <Badge bg="secondary">
                                 <NumberFormat
                                     value={totalCashDiscount.toFixed(2)}
+                                    displayType={"text"}
+                                    thousandSeparator={true}
+                                    suffix={" "}
+                                    renderText={(value, props) => value}
+                                />
+                            </Badge>
+                        </h1>
+                        <h1 className="text-end">
+                            Shipping/Handling fees: <Badge bg="secondary">
+                                <NumberFormat
+                                    value={totalShippingHandlingFees.toFixed(2)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}

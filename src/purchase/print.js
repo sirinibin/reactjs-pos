@@ -1,12 +1,12 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from 'react-bootstrap';
-import PurchaseReturnPrintContent from './printContent.js';
+import OrderPrintContent from './printContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
 import { format } from "date-fns";
 
-const PurchaseReturnPrint = forwardRef((props, ref) => {
+const PurchasePrint = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(modelObj) {
@@ -18,16 +18,16 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
                     getStore(model.store_id);
                 }
 
-                if (model.customer_id) {
-                    getCustomer(model.customer_id);
+                if (model.vendor_id) {
+                    getVendor(model.vendor_id);
                 }
 
-                if (model.order_placed_by) {
-                    getUser(model.order_placed_by);
+                if (model.delivered_by) {
+                    getUser(model.delivered_by);
                 }
 
-                if (model.order_placed_by_signature_id) {
-                    getSignature(model.order_placed_by_signature_id);
+                if (model.delivered_by_signature_id) {
+                    getSignature(model.delivered_by_signature_id);
                 }
 
                 let pageSize = 15;
@@ -65,7 +65,7 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
                         }
                     }
 
-                    top += 1057;
+                    top += 1066;
                     offset += pageSize;
                     if ((i + 1) === totalPages) {
                         model.pages[i].lastPage = true;
@@ -104,15 +104,15 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
         qrContent = "";
 
         if (model.code) {
-            qrContent += "Quotation #: " + model.code + "<br />";
+            qrContent += "Sales Invoice #: " + model.code + "<br />";
         }
 
         if (model.store) {
             qrContent += "Store: " + model.store.name + "<br />";
         }
 
-        if (model.customer) {
-            qrContent += "Customer: " + model.customer.name + "<br />";
+        if (model.vendor) {
+            qrContent += "Vendor: " + model.vendor.name + "<br />";
         }
 
 
@@ -155,7 +155,7 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
                 let storeData = data.result;
                 model.store = storeData;
 
-                var d = new Date(model.created_at);
+                var d = new Date(model.date);
                 console.log("d:", d);
 
 
@@ -184,8 +184,8 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
 
 
 
-    function getCustomer(id) {
-        console.log("inside get Customer");
+    function getVendor(id) {
+        console.log("inside get Vendor");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -194,7 +194,7 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/customer/' + id, requestOptions)
+        fetch('/v1/vendor/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -207,8 +207,8 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                let customerData = data.result;
-                model.customer = customerData;
+                let vendorData = data.result;
+                model.vendor = vendorData;
                 setModel({ ...model });
             })
             .catch(error => {
@@ -291,7 +291,7 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Quotation";
+        let filename = "Sales_Invoice";
 
         if (model.id) {
             filename += "_#" + model.code;
@@ -309,7 +309,7 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
             <Modal.Header>
-                <Modal.Title>PurchaseReturn Order Preview</Modal.Title>
+                <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
                         <i className="bi bi-printer"></i> Print
@@ -325,8 +325,8 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
 
             </Modal.Header>
             <Modal.Body>
-                <div ref={printAreaRef}>
-                    <PurchaseReturnPrintContent model={model} />
+                <div ref={printAreaRef} >
+                    <OrderPrintContent model={model} />
                 </div>
             </Modal.Body>
             <Modal.Footer>
@@ -344,4 +344,4 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
 
 });
 
-export default PurchaseReturnPrint;
+export default PurchasePrint;

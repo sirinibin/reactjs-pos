@@ -333,9 +333,7 @@ const OrderView = forwardRef((props, ref) => {
                                 </tr>
                             ))}
                             <tr>
-                                <td colSpan="6"></td>
-
-                                <th className="text-end">Total</th>
+                                <th  colSpan="7" className="text-end">Total</th>
                                 <td className="text-end">
                                     {model.total ? <NumberFormat
                                         value={model.total.toFixed(2)}
@@ -413,10 +411,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td> : ""}
                             </tr>
                             <tr>
-                                <th colSpan="6" className="text-end">
-
-                                </th>
-                                <th className="text-end">VAT {model.vat_percent + "%"}</th>
+                                <th colSpan="7"  className="text-end">VAT {model.vat_percent?.toFixed(2) + "%"}</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={model.vat_price?.toFixed(2)}
@@ -435,8 +430,7 @@ const OrderView = forwardRef((props, ref) => {
                                     : ""}
                             </tr>
                             <tr>
-                                <td colSpan="6"></td>
-                                <th className="text-end">Net Total</th>
+                                <th colSpan="7" className="text-end">Net Total</th>
                                 <th className="text-end">
                                     <NumberFormat
                                         value={model.net_total?.toFixed(2)}

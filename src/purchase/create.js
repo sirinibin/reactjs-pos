@@ -264,7 +264,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     }
                 ];
 
-                
+
 
                 setSelectedOrderPlacedByUsers([...selectedOrderPlacedByUsers]);
 
@@ -423,7 +423,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setProductOptions(products);
         setIsProductsLoading(false);
     }
-    
+
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -442,6 +442,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
                 retail_unit_price: parseFloat(selectedProducts[i].retail_unit_price),
                 wholesale_unit_price: parseFloat(selectedProducts[i].wholesale_unit_price),
+                discount: selectedProducts[i].discount ? parseFloat(selectedProducts[i].discount) : 0,
+                discount_percent: selectedProducts[i].discount_percent ? parseFloat(selectedProducts[i].discount_percent) : 0,
             });
         }
 
@@ -574,19 +576,15 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 product.stores
             );
             */
-            if (product.product_stores[formData.store_id]) {
-                product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
-            }
 
             if (product.product_stores[formData.store_id]) {
-                //product.purchase_unit_price = productStore.purchase_unit_price;
                 product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+                product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
+                product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
+                product.discount = 0.00;
+                product.discount_percent = 0.00;
             }
 
-            if (product.product_stores[formData.store_id]) {
-                // product.wholesale_unit_price = productStore.wholesale_unit_price;
-                product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
-            }
         }
 
 
@@ -623,6 +621,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 quantity: product.quantity,
                 product_stores: product.product_stores,
                 unit: product.unit,
+                discount: product.discount,
+                discount_percent: product.discount_percent,
             };
 
             if (product.purchase_unit_price) {
@@ -667,7 +667,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     function removeProduct(product) {
-     
+
 
         const index = selectedProducts.indexOf(product);
         if (index > -1) {
@@ -689,12 +689,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
     function findTotalPrice() {
         totalPrice = 0.00;
         for (var i = 0; i < selectedProducts.length; i++) {
+            let productDiscount = 0.00;
+            if (selectedProducts[i].discount) {
+                productDiscount = selectedProducts[i].discount;
+            }
             totalPrice +=
-                parseFloat(selectedProducts[i].purchase_unit_price) *
-                parseFloat(selectedProducts[i].quantity);
+                (parseFloat(selectedProducts[i].purchase_unit_price) *
+                    parseFloat(selectedProducts[i].quantity)) - productDiscount;
         }
-        // totalPrice = totalPrice.toFixed(2);
-        // totalPrice = Math.round(totalPrice * 100) / 100;
         setTotalPrice(totalPrice);
     }
 
@@ -747,7 +749,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }
 
         setFormData({ ...formData });
-      //  console.log(" netTotal:", netTotal);
+        //  console.log(" netTotal:", netTotal);
         validatePaymentAmounts();
 
     }
@@ -775,8 +777,40 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }
     }
 
+    function findProductDiscountPercent(productIndex) {
+        let price = (parseFloat(selectedProducts[productIndex].purchase_unit_price) * parseFloat(selectedProducts[productIndex].quantity));
+        if (selectedProducts[productIndex] && selectedProducts[productIndex].discount
+            && parseFloat(selectedProducts[productIndex].discount) >= 0
+            && price > 0) {
 
-    function reCalculate() {
+            let discountPercent = parseFloat(parseFloat(selectedProducts[productIndex].discount / price) * 100);
+            selectedProducts[productIndex].discount_percent = discountPercent;
+            setSelectedProducts([...selectedProducts]);
+
+        }
+    }
+
+    function findProductDiscount(productIndex) {
+        let price = (selectedProducts[productIndex].purchase_unit_price * selectedProducts[productIndex].quantity);
+
+        if (selectedProducts[productIndex] && selectedProducts[productIndex].discount_percent
+            && selectedProducts[productIndex].discount_percent >= 0
+            && price > 0) {
+            selectedProducts[productIndex].discount = parseFloat(price * parseFloat(selectedProducts[productIndex].discount_percent / 100));
+            setSelectedProducts([...selectedProducts]);
+        }
+    }
+
+
+    function reCalculate(productIndex) {
+        if (selectedProducts[productIndex] && selectedProducts[productIndex]) {
+            if (selectedProducts[productIndex] && selectedProducts[productIndex].is_discount_percent) {
+                findProductDiscount(productIndex);
+            } else {
+                findProductDiscountPercent(productIndex);
+            }
+        }
+
         findTotalPrice();
 
         if (formData.is_discount_percent) {
@@ -794,8 +828,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
             date = formData.date_str;
         }
 
-        if(!formData.payments_input){
-            formData.payments_input=[];
+        if (!formData.payments_input) {
+            formData.payments_input = [];
         }
 
         formData.payments_input.push({
@@ -974,11 +1008,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     const UserCreateFormRef = useRef();
-   
+
 
 
     const SignatureCreateFormRef = useRef();
-  
+
 
     const ProductDetailsViewRef = useRef();
     function openProductDetailsView(id) {
@@ -1288,12 +1322,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         <th style={{ width: "2%" }}>Remove</th>
                                         <th style={{ width: "5%" }}>SI No.</th>
                                         <th style={{ width: "8%" }}>Part No.</th>
-                                        <th style={{ width: "26%" }} className="text-start">Name</th>
+                                        <th style={{ width: "20%" }} className="text-start">Name</th>
                                         <th style={{ width: "11%" }}>Qty</th>
-                                        <th style={{ width: "11%" }}>Purchase Unit Price</th>
-                                        <th style={{ width: "11%" }}>Wholesale Unit Price</th>
-                                        <th style={{ width: "11%" }}>Retail Unit Price</th>
-                                        <th style={{ width: "15%" }}>Purchase Price</th>
+                                        <th style={{ width: "11%" }}>Unit Price</th>
+                                        <th style={{ width: "10%" }}>Discount</th>
+                                        <th style={{ width: "10%" }}>Discount%</th>
+                                        <th style={{ width: "11%" }}>Set latest wholesale unit price</th>
+                                        <th style={{ width: "11%" }}>Set latest retail unit price</th>
+                                        <th style={{ width: "15%" }}>Price</th>
 
                                     </tr>
                                 </thead>
@@ -1410,6 +1446,104 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 )}
 
                                             </td>
+
+                                            <td>
+                                                <div className="input-group mb-3">
+                                                    <input type="number" className="form-control text-end" value={selectedProducts[index].discount} onChange={(e) => {
+                                                        selectedProducts[index].is_discount_percent = false;
+                                                        if (parseFloat(e.target.value) === 0) {
+                                                            selectedProducts[index].discount = parseFloat(e.target.value);
+                                                            setFormData({ ...formData });
+                                                            errors["discount_" + index] = "";
+                                                            setErrors({ ...errors });
+                                                            reCalculate(index);
+                                                            return;
+                                                        }
+
+                                                        if (parseFloat(e.target.value) < 0) {
+                                                            selectedProducts[index].discount = parseFloat(e.target.value);
+                                                            selectedProducts[index].discount_percent = 0.00;
+                                                            setFormData({ ...formData });
+                                                            errors["discount_" + index] = "Discount should be >= 0";
+                                                            setErrors({ ...errors });
+                                                            reCalculate(index);
+                                                            return;
+                                                        }
+
+                                                        if (!e.target.value) {
+                                                            selectedProducts[index].discount = "";
+                                                            selectedProducts[index].discount_percent = "";
+                                                            // errors["discount_" + index] = "Invalid Discount";
+                                                            setFormData({ ...formData });
+                                                            reCalculate(index);
+                                                            //setErrors({ ...errors });
+                                                            return;
+                                                        }
+
+                                                        errors["discount_" + index] = "";
+                                                        errors["discount_percent_" + index] = "";
+                                                        setErrors({ ...errors });
+
+                                                        selectedProducts[index].discount = parseFloat(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        reCalculate(index);
+                                                    }} />
+                                                </div>
+                                                {" "}
+                                                {errors["discount_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["discount_" + index]}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <div className="input-group mb-3">
+                                                    <input type="number" className="form-control text-end" value={selectedProducts[index].discount_percent} onChange={(e) => {
+                                                        selectedProducts[index].is_discount_percent = true;
+                                                        if (parseFloat(e.target.value) === 0) {
+                                                            selectedProducts[index].discount_percent = parseFloat(e.target.value);
+                                                            setFormData({ ...formData });
+                                                            errors["discount_percent_" + index] = "";
+                                                            setErrors({ ...errors });
+                                                            reCalculate(index);
+                                                            return;
+                                                        }
+
+                                                        if (parseFloat(e.target.value) < 0) {
+                                                            selectedProducts[index].discount_percent = parseFloat(e.target.value);
+                                                            selectedProducts[index].discount = 0.00;
+                                                            setFormData({ ...formData });
+                                                            errors["discount_percent_" + index] = "Discount percent should be >= 0";
+                                                            setErrors({ ...errors });
+                                                            reCalculate(index);
+                                                            return;
+                                                        }
+
+                                                        if (!e.target.value) {
+                                                            selectedProducts[index].discount_percent = "";
+                                                            selectedProducts[index].discount = "";
+                                                            //errors["discount_percent_" + index] = "Invalid Discount Percent";
+                                                            setFormData({ ...formData });
+                                                            reCalculate(index);
+                                                            //setErrors({ ...errors });
+                                                            return;
+                                                        }
+
+                                                        errors["discount_percent_" + index] = "";
+                                                        errors["discount_" + index] = "";
+                                                        setErrors({ ...errors });
+
+                                                        selectedProducts[index].discount_percent = parseFloat(e.target.value);
+                                                        setFormData({ ...formData });
+                                                        reCalculate(index);
+                                                    }} />{""}
+                                                </div>
+                                                {errors["discount_percent_" + index] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["discount_percent_" + index]}
+                                                    </div>
+                                                )}
+                                            </td>
                                             <td style={{ width: "180px" }}>
                                                 <div className="input-group mb-3">
                                                     <input type="number" value={product.wholesale_unit_price} className="form-control"
@@ -1441,7 +1575,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                   
+
                                                 </div>
 
                                                 {errors["wholesale_unit_price_" + index] && (
@@ -1484,7 +1618,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             reCalculate();
 
                                                         }} />
-                                                   
+
                                                 </div>
 
                                                 {errors["retail_unit_price_" + index] && (
@@ -1497,7 +1631,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td className="text-end">
                                                 <NumberFormat
-                                                    value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                                    value={((product.purchase_unit_price * product.quantity) - product.discount).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={""}

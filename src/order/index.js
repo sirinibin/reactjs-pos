@@ -125,7 +125,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             value: product.unit_price ? product.unit_price.toFixed(2) : 0.00,
                         },
                         {
-                            value: gross_amount.toFixed(2)
+                            value: gross_amount?.toFixed(2)
                         },
                         {
                             value: product.discount_percent ? product.discount_percent.toFixed(2) : "0.00",
@@ -171,7 +171,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     { value: "", },
                     { value: "", },
                     {
-                        value: "Sales Discount",
+                        value: "Discount",
                     }, {
                         value: order.discount?.toFixed(2),
                     },

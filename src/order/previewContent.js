@@ -291,7 +291,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th className="text-end" colSpan="6" style={{ padding: "2px" }}>
-                                            Sales Discount خصم المبيعات:
+                                          Discount تخفيض:
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat

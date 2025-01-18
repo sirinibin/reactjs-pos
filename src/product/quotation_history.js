@@ -585,9 +585,46 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("discount");
+                                                                }}
+                                                            >
+                                                                Discount
+                                                                {sortField === "discount" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "discount" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("discount_percent");
+                                                                }}
+                                                            >
+                                                                Discount %
+                                                                {sortField === "discount_percent" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "discount_percent" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
 
                                                         <th>
-
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -827,6 +864,26 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
+                                                                id="discount"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("discount", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="discount_percent"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("discount_percent", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
                                                                 id="price"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("price", e.target.value)
@@ -910,6 +967,8 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price.toFixed(2)}</td>
+                                                                <td>{history.discount?.toFixed(2)}</td>
+                                                                <td>{history.discount_percent?.toFixed(2)}</td>
                                                                 <td>{history.price.toFixed(2) + " "}</td>
                                                                 <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " "}</td>

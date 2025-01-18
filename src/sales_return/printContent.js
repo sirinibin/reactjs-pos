@@ -6,10 +6,10 @@ import n2words from 'n2words'
 const SalesReturnPrintContent = forwardRef((props, ref) => {
 
 
-   
 
 
-    let border ="0";
+
+    let border = "0";
     return (<>
 
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
@@ -51,8 +51,8 @@ const SalesReturnPrintContent = forwardRef((props, ref) => {
                         new Date(props.model.date),
                         "yyyy-MM-dd"
                     ) : ""}
-                      &nbsp;&nbsp;&nbsp;&nbsp;
-                     {props.model.date ? format(
+                    &nbsp;&nbsp;&nbsp;&nbsp;
+                    {props.model.date ? format(
                         new Date(props.model.date),
                         "h:mma"
                     ) : ""}
@@ -106,11 +106,14 @@ const SalesReturnPrintContent = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </h4>
+                                    <div style={{ fontSize: "3mm" }}>
+                                        {product.discount_percent ? product.discount_percent.toFixed(2) + "% off" : ""}{product.discount ? " (" + product.discount?.toFixed(2) + ")" : ""}
+                                    </div>
                                 </td>
                                 <td className="text-end" style={{ border: "solid 0px", width: "99px", paddingRight: "5px" }} >
                                     <h4 style={{ fontSize: "3mm" }}>
                                         <NumberFormat
-                                            value={(product.unit_price * product.quantity).toFixed(2)}
+                                            value={((product.unit_price * product.quantity) - product.discount).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={""}
@@ -197,7 +200,7 @@ const SalesReturnPrintContent = forwardRef((props, ref) => {
 
                 {page.lastPage ? <div style={{ position: "absolute", left: "600px", top: (670 + page.top) + "px" }} >
                     {props.model.QRImageData && <img style={{ width: "102px", height: "94px" }} src={props.model.QRImageData} alt="Invoice QR Code" />}
-                    
+
                 </div> : ""}
             </div >
         ))}

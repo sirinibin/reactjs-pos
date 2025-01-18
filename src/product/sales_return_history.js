@@ -7,6 +7,7 @@ import { Button, Spinner, Modal, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import OrderView from "../order/view.js";
+import SalesReturnView from "../sales_return/view.js";
 import CustomerView from "../customer/view.js";
 
 //function ProductIndex(props) {
@@ -48,7 +49,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
 
 
     //Created At filter
-   
+
 
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
@@ -254,6 +255,11 @@ const SalesReturnHistory = forwardRef((props, ref) => {
         OrderDetailsViewRef.current.open(id);
     }
 
+    const SalesReturnDetailsViewRef = useRef();
+    function openSalesReturnDetailsView(id) {
+        SalesReturnDetailsViewRef.current.open(id);
+    }
+
 
     const CustomerDetailsViewRef = useRef();
     function openCustomerDetailsView(id) {
@@ -268,6 +274,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
     return (
         <>
             <OrderView ref={OrderDetailsViewRef} />
+            <SalesReturnView ref={SalesReturnDetailsViewRef} />
             <CustomerView ref={CustomerDetailsViewRef} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
@@ -511,6 +518,25 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
+                                                                    sort("sales_return_code");
+                                                                }}
+                                                            >
+                                                                Sales Return ID
+                                                                {sortField === "sales_return_code" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "sales_return_code" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
                                                                     sort("order_code");
                                                                 }}
                                                             >
@@ -579,6 +605,44 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
                                                                 {sortField === "unit_price" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("discount");
+                                                                }}
+                                                            >
+                                                                Discount
+                                                                {sortField === "discount" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "discount" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("discount_percent");
+                                                                }}
+                                                            >
+                                                                Discount %
+                                                                {sortField === "discount_percent" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "discount_percent" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -783,6 +847,16 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
+                                                                id="sales_return_code"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("sales_return_code", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
                                                                 id="order_code"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("order_code", e.target.value)
@@ -817,6 +891,26 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                 id="unit_price"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("unit_price", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="discount"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("discount", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="discount_percent"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("discount_percent", e.target.value)
                                                                 }
                                                                 className="form-control"
                                                             />
@@ -893,6 +987,15 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
+                                                                        openSalesReturnDetailsView(history.sales_return_id);
+                                                                    }}>{history.sales_return_code}
+                                                                </td>
+                                                                <td style={{
+                                                                    textDecoration: "underline",
+                                                                    color: "blue",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                    onClick={() => {
                                                                         openOrderDetailsView(history.order_id);
                                                                     }}>{history.order_code}
                                                                 </td>
@@ -907,6 +1010,8 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price.toFixed(2)}</td>
+                                                                <td>{history.discount.toFixed(2)}</td>
+                                                                <td>{history.discount_percent.toFixed(2)}</td>
                                                                 <td>{history.price.toFixed(2) + " "}</td>
                                                                 <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " "}</td>

@@ -7,6 +7,7 @@ import { Button, Spinner, Modal, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import PurchaseReturnView from "../purchase_return/view.js";
+import PurchaseView from "../purchase/view.js";
 import VendorView from "../vendor/view.js";
 
 //function ProductIndex(props) {
@@ -254,6 +255,11 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
         PurchaseReturnDetailsViewRef.current.open(id);
     }
 
+    const PurchaseDetailsViewRef = useRef();
+    function openPurchaseDetailsView(id) {
+        PurchaseDetailsViewRef.current.open(id);
+    }
+
 
     const VendorDetailsViewRef = useRef();
     function openVendorDetailsView(id) {
@@ -265,6 +271,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
     return (
         <>
             <PurchaseReturnView ref={PurchaseReturnDetailsViewRef} />
+            <PurchaseView ref={PurchaseDetailsViewRef} />
             <VendorView ref={VendorDetailsViewRef} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
@@ -507,6 +514,26 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                 onClick={() => {
+                                                                    sort("purchase_code");
+                                                                }}
+                                                            >
+                                                                Purchase ID
+                                                                {sortField === "purchase_code" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "purchase_code" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
                                                                     sort("vendor_name");
                                                                 }}
                                                             >
@@ -555,6 +582,44 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up-alt"></i>
                                                                 ) : null}
                                                                 {sortField === "unit_price" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("discount");
+                                                                }}
+                                                            >
+                                                                Discount
+                                                                {sortField === "discount" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "discount" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("discount_percent");
+                                                                }}
+                                                            >
+                                                                Discount %
+                                                                {sortField === "discount_percent" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "discount_percent" && sortProduct === "" ? (
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
@@ -727,6 +792,16 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
+                                                                id="purchase_code"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("purchase_code", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
                                                                 id="vendor_name"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("vendor_name", e.target.value)
@@ -751,6 +826,26 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                 id="unit_price"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("unit_price", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="discount"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("discount", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="discount_percent"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("discount_percent", e.target.value)
                                                                 }
                                                                 className="form-control"
                                                             />
@@ -814,11 +909,22 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                     cursor: "pointer",
                                                                 }}
                                                                     onClick={() => {
+                                                                        openPurchaseDetailsView(history.purchase_id);
+                                                                    }}>{history.purchase_code}
+                                                                </td>
+                                                                <td style={{
+                                                                    textDecoration: "underline",
+                                                                    color: "blue",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                    onClick={() => {
                                                                         openVendorDetailsView(history.vendor_id);
                                                                     }}>{history.vendor_name}
                                                                 </td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price.toFixed(2)}</td>
+                                                                <td>{history.discount?.toFixed(2)}</td>
+                                                                <td>{history.discount_percent?.toFixed(2)}</td>
                                                                 <td>{history.price.toFixed(2) + " "}</td>
                                                                 <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " "}</td>

@@ -3,6 +3,7 @@ import { Modal, Button } from 'react-bootstrap';
 import PurchaseReturnPreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
+import { Invoice } from '@axenda/zatca';
 
 const PurchaseReturnPreview = forwardRef((props, ref) => {
 
@@ -20,15 +21,15 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
                     getVendor(model.vendor_id);
                 }
 
-                if (model.order_placed_by) {
-                    getUser(model.order_placed_by);
+                if (model.delivered_by) {
+                    getUser(model.delivered_by);
                 }
 
-                if (model.order_placed_by_signature_id) {
-                    getSignature(model.order_placed_by_signature_id);
+                if (model.delivered_by_signature_id) {
+                    getSignature(model.delivered_by_signature_id);
                 }
 
-                let pageSize = 12;
+                let pageSize = 20;
                 model.pageSize = pageSize;
                 let totalProducts = model.products.length;
                 let top = 0;
@@ -57,10 +58,6 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
                     });
 
                     for (let j = offset; j < totalProducts; j++) {
-                        if (!model.products[j].selected) {
-                            continue
-                        }
-
                         model.pages[i].products.push(model.products[j]);
 
                         if (model.pages[i].products.length === pageSize) {
@@ -68,7 +65,13 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
                         }
                     }
 
-                    top += 1057;
+                    if (model.pages[i].products.length < pageSize) {
+                        for (let s = model.pages[i].products.length; s < pageSize; s++) {
+                            model.pages[i].products.push({});
+                        }
+                    }
+
+                    top += 1057; //1057
                     offset += pageSize;
 
                     if (i === 0) {
@@ -81,7 +84,6 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
                 }
 
                 console.log("model.pages:", model.pages);
-
                 console.log("model.products:", model.products);
                 getQRCodeContents();
                 //model.qr_content = getQRCodeContents();
@@ -101,7 +103,6 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(props.show);
 
-
     function handleClose() {
         setShow(false);
     }
@@ -109,53 +110,19 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
 
     let [qrContent, setQrContent] = useState("");
 
-
-    function getVendor(id) {
-        console.log("inside get Order");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
-            },
-        };
-
-        fetch('/v1/vendor/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                let vendorData = data.result;
-                model.vendor = vendorData;
-                setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
-    }
-
     function getQRCodeContents() {
         qrContent = "";
 
         if (model.code) {
-            qrContent += "PurchaseReturn #: " + model.code + "<br />";
+            qrContent += "Invoice #: " + model.code + "<br />";
         }
 
         if (model.store) {
             qrContent += "Store: " + model.store.name + "<br />";
         }
 
-        if (model.customer) {
-            qrContent += "Customer: " + model.customer.name + "<br />";
+        if (model.vendor) {
+            qrContent += "Vendor: " + model.vendor.name + "<br />";
         }
 
 
@@ -197,8 +164,52 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
                 console.log(data);
                 let storeData = data.result;
                 model.store = storeData;
+
+                const invoice = new Invoice({
+                    sellerName: model.store_name,
+                    vatRegistrationNumber: model.store.vat_no,
+                    invoiceTimestamp: model.date,
+                    invoiceTotal: model.net_total,
+                    invoiceVatTotal: model.vat_price,
+                });
+
+                model.QRImageData = await invoice.render();
                 console.log("model.QRImageData:", model.QRImageData);
 
+                setModel({ ...model });
+            })
+            .catch(error => {
+
+            });
+    }
+
+
+
+    function getVendor(id) {
+        console.log("inside get Vendor");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/vendor/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+                let vendorData = data.result;
+                model.vendor = vendorData;
                 setModel({ ...model });
             })
             .catch(error => {
@@ -231,7 +242,7 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 let userData = data.result;
-                model.order_placed_by_user = userData;
+                model.delivered_by_user = userData;
                 setModel({ ...model });
             })
             .catch(error => {
@@ -263,11 +274,10 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 let signatureData = data.result;
-                model.order_placed_by_signature = signatureData;
+                model.delivered_by_signature = signatureData;
                 setModel({ ...model });
             })
             .catch(error => {
-
             });
     }
 
@@ -282,7 +292,7 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "PurchaseReturn";
+        let filename = "Sales_";
 
         if (model.id) {
             filename += "_#" + model.code;
@@ -300,7 +310,7 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Purchase Return Preview</Modal.Title>
+                <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
                         <i className="bi bi-printer"></i> Print

@@ -4,6 +4,7 @@ import { format } from "date-fns";
 import n2words from 'n2words'
 
 const PurchasePrintContent = forwardRef((props, ref) => {
+    //Non-A4
     let border = "0";
     return (<>
 
@@ -23,22 +24,22 @@ const PurchasePrintContent = forwardRef((props, ref) => {
 
 
             >
-                <h4 style={{ fontSize: "4mm", position: "absolute", left: "300px", top: (40 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
-                    {"PURCHASE ORDER / أمر شراء"}
-                </h4>
+                <h2 style={{ fontSize: "4mm", position: "absolute", left: "305px", top: (40 + page.top) + "px", border: "solid " + border + "px", textDecoration: "underline", }}>
+                    {" PURCHASE TAX INVOICE / فاتورة ضريبة الشراء"}
+                </h2>
 
                 <h4 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: (14 + page.top) + "px", border: "solid " + border + "px", }}>
-                    {props.model.customer && props.model.customer.name ? props.model.customer.name : "N/A"}
+                    {props.model.vendor && props.model.vendor.name ? props.model.vendor.name : "N/A"}
                 </h4>
                 <h4 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: (28 + page.top) + "px", border: "solid " + border + "px", }}>
-                    {props.model.customer && props.model.customer.name_in_arabic ? props.model.customer.name_in_arabic : "N/A"}
+                    {props.model.vendor && props.model.vendor.name_in_arabic ? props.model.vendor.name_in_arabic : "N/A"}
                 </h4>
 
                 <h4 style={{ fontSize: "3mm", position: "absolute", left: "100px", top: (46 + page.top) + "px", border: "solid " + border + "px", }}>
-                    {props.model.customer && props.model.customer.vat_no ? props.model.customer.vat_no : "N/A"}
+                    {props.model.vendor && props.model.vendor.vat_no ? props.model.vendor.vat_no : "N/A"}
                 </h4>
                 <h4 style={{ fontSize: "3mm", position: "absolute", left: "105px", top: (60 + page.top) + "px", border: "solid " + border + "px", }}>
-                    {props.model.customer && props.model.customer.vat_no_in_arabic ? props.model.customer.vat_no_in_arabic : "N/A"}
+                    {props.model.vendor && props.model.vendor.vat_no_in_arabic ? props.model.vendor.vat_no_in_arabic : "N/A"}
                 </h4>
 
 
@@ -47,7 +48,7 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                         new Date(props.model.date),
                         "yyyy-MM-dd"
                     ) : ""}
-                      &nbsp;&nbsp;&nbsp;&nbsp;
+                    &nbsp;&nbsp;&nbsp;&nbsp;
                      {props.model.date ? format(
                         new Date(props.model.date),
                         "h:mma"
@@ -70,7 +71,7 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                                     </h4>
                                 </td>
                                 <td className="text-center" style={{ border: "solid 0px", width: "93px" }} >
-                                    <h4 style={{ fontSize: "3mm" }}>
+                                    <h4 style={{ fontSize: "2.2mm" }}>
                                         {product.part_number ? product.part_number : ""}
                                     </h4>
                                 </td>
@@ -79,10 +80,10 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                                         {product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "-2px" }}>
                                             {product.name_in_arabic}
                                         </h4> : ""}
-                                        {product.name && product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "-11px" }}>
+                                        {product.name && product.name_in_arabic ? <h4 style={{ fontSize: "2.4mm", position: "relative", top: "-11px" }}>
                                             {product.name}
                                         </h4> : ""}
-                                        {product.name && !product.name_in_arabic ? <h4 style={{ fontSize: "3mm", position: "relative", top: "2px" }}>
+                                        {product.name && !product.name_in_arabic ? <h4 style={{ fontSize: "2.4mm", position: "relative", top: "2px" }}>
                                             {product.name}
                                         </h4> : ""}
                                     </div>
@@ -93,7 +94,9 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                                     </h4>
                                 </td>
                                 <td className="text-end" style={{ border: "solid 0px", width: "111px", paddingRight: "5px" }}>
-                                    <h4 style={{ fontSize: "3mm" }}>
+                                   
+                                   <h4 style={{ fontSize: "3mm" }}>
+                                   
                                         <NumberFormat
                                             value={(product.purchase_unit_price).toFixed(2)}
                                             displayType={"text"}
@@ -101,12 +104,17 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                                             suffix={""}
                                             renderText={(value, props) => value}
                                         />
+                                       
+
                                     </h4>
+                                    <div style={{ fontSize: "3mm" }}>
+                                    {product.discount_percent ? product.discount_percent.toFixed(2)+"% off" : ""}{product.discount ? " ("+product.discount?.toFixed(2)+")" : ""}
+                                    </div>
                                 </td>
                                 <td className="text-end" style={{ border: "solid 0px", width: "99px", paddingRight: "5px" }} >
                                     <h4 style={{ fontSize: "3mm" }}>
                                         <NumberFormat
-                                            value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                            value={((product.purchase_unit_price * product.quantity)-product.discount).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={""}
@@ -120,7 +128,7 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                     </tbody>
                 </table>
 
-                {page.lastPage ? <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: (510 + page.top) + "px", border: "solid 0px", }}>
+                {page.lastPage ? <table style={{ fontSize: "3mm", position: "absolute", left: "646px", top: (530 + page.top) + "px", border: "solid 0px", }}>
                     <tbody>
                         <tr className="text-end" style={{ verticalAlign: "center", border: "solid 0px", }}>
                             <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
@@ -132,6 +140,7 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                                         suffix={""}
                                         renderText={(value, props) => value}
                                     />
+                                
                                 </h4>
                             </td>
                         </tr>
@@ -179,24 +188,29 @@ const PurchasePrintContent = forwardRef((props, ref) => {
                 </table> : ""}
 
 
-                {page.lastPage && props.model.shipping_handling_fees && props.model.shipping_handling_fees > 0 ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "480px", top: (533 + page.top) + "px" }}>
+                {page.lastPage && props.model.shipping_handling_fees && props.model.shipping_handling_fees > 0 ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "480px", top: (513 + page.top) + "px" }}>
                     {"Shipping / Handling Fees: "}
                 </h4> : ""}
 
-                {page.lastPage && props.model.shipping_handling_fees ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "686px", top: (533 + page.top) + "px" }}>
-                    {props.model.shipping_handling_fees.toFixed(2) + ""}
+                {page.lastPage && props.model.shipping_handling_fees ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "686px", top: (513 + page.top) + "px" }}>
+                    {props.model.shipping_handling_fees.toFixed(2)}
                 </h4> : ""}
 
-                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: (555 + page.top) + "px" }}>
+
+                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", right: "320px", top: (565 + page.top) + "px" }}>
                     {n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}
                 </h4> : ""}
-                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "50px", top: (565 + page.top) + "px" }}>
+                {page.lastPage ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "50px", top: (580 + page.top) + "px" }}>
                     {n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}
                 </h4> : ""}
 
-                <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: (654 + page.top) + "px" }}>
-                    {props.model.order_placed_by_user ? props.model.order_placed_by_user.name : ""}
+                <h4 style={{ fontSize: "3mm", position: "absolute", left: "205px", top: (664 + page.top) + "px" }}>
+                    {props.model.delivered_by_user ? props.model.delivered_by_user.name : ""}
                 </h4>
+
+                {page.lastPage ? <div style={{ position: "absolute", left: "600px", top: (670 + page.top) + "px" }} >
+                    {props.model.QRImageData && <img style={{ width: "102px", height: "94px" }} src={props.model.QRImageData} alt="Invoice QR Code" />}
+                </div> : ""}
             </div >
         ))}
     </>);

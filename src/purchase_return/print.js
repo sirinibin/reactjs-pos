@@ -1,12 +1,13 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from 'react-bootstrap';
-import PurchasePrintContent from './printContent.js';
+import PurchaseReturnPrintContent from './printContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
+//import { generateQR } from "@zatca/qr";
 import { format } from "date-fns";
 
-const PurchasePrint = forwardRef((props, ref) => {
+const PurchaseReturnPrint = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(modelObj) {
@@ -18,16 +19,16 @@ const PurchasePrint = forwardRef((props, ref) => {
                     getStore(model.store_id);
                 }
 
-                if (model.customer_id) {
-                    getCustomer(model.customer_id);
+                if (model.vendor_id) {
+                    getVendor(model.vendor_id);
                 }
 
-                if (model.order_placed_by) {
-                    getUser(model.order_placed_by);
+                if (model.received_by) {
+                    getUser(model.received_by);
                 }
 
-                if (model.order_placed_by_signature_id) {
-                    getSignature(model.order_placed_by_signature_id);
+                if (model.received_by_signature_id) {
+                    getSignature(model.received_by_signature_id);
                 }
 
                 let pageSize = 15;
@@ -58,7 +59,7 @@ const PurchasePrint = forwardRef((props, ref) => {
                     });
 
                     for (let j = offset; j < totalProducts; j++) {
-                        if(!model.products[j].selected){
+                        if (!model.products[j].selected) {
                             continue;
                         }
 
@@ -69,7 +70,7 @@ const PurchasePrint = forwardRef((props, ref) => {
                         }
                     }
 
-                    top += 1057;
+                    top += 1066;
                     offset += pageSize;
                     if ((i + 1) === totalPages) {
                         model.pages[i].lastPage = true;
@@ -115,8 +116,8 @@ const PurchasePrint = forwardRef((props, ref) => {
             qrContent += "Store: " + model.store.name + "<br />";
         }
 
-        if (model.customer) {
-            qrContent += "Customer: " + model.customer.name + "<br />";
+        if (model.vendor) {
+            qrContent += "Vendor: " + model.vendor.name + "<br />";
         }
 
 
@@ -168,6 +169,8 @@ const PurchasePrint = forwardRef((props, ref) => {
                     "yyyy-MM-dd h:m:mma"
                 );
                 console.log("d2:", d2);
+
+                
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
@@ -177,6 +180,18 @@ const PurchasePrint = forwardRef((props, ref) => {
                 });
 
                 model.QRImageData = await invoice.render();
+                /*
+                const invoiceData = {
+                    sellerName: model.store_name,
+                    vatNumber: model.store.vat_no,
+                    timestamp: d2,
+                    total: model.net_total,
+                    vatTotal: model.vat_price,
+                };
+
+                model.QRImageData = await generateQR(invoiceData, { format: "buffer" });
+                */
+
                 console.log("model.QRImageData:", model.QRImageData);
 
                 setModel({ ...model });
@@ -188,8 +203,8 @@ const PurchasePrint = forwardRef((props, ref) => {
 
 
 
-    function getCustomer(id) {
-        console.log("inside get Customer");
+    function getVendor(id) {
+        console.log("inside get Vendor");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -198,7 +213,7 @@ const PurchasePrint = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/customer/' + id, requestOptions)
+        fetch('/v1/vendor/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -211,8 +226,8 @@ const PurchasePrint = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                let customerData = data.result;
-                model.customer = customerData;
+                let vendorData = data.result;
+                model.vendor = vendorData;
                 setModel({ ...model });
             })
             .catch(error => {
@@ -313,7 +328,7 @@ const PurchasePrint = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false} style={{ overflowY: "auto", height: "auto" }}>
             <Modal.Header>
-                <Modal.Title>Purchase Order Preview</Modal.Title>
+                <Modal.Title>Sales Return Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
                         <i className="bi bi-printer"></i> Print
@@ -330,7 +345,7 @@ const PurchasePrint = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <PurchasePrintContent model={model} />
+                    <PurchaseReturnPrintContent model={model} />
                 </div>
             </Modal.Body>
             <Modal.Footer>
@@ -348,4 +363,4 @@ const PurchasePrint = forwardRef((props, ref) => {
 
 });
 
-export default PurchasePrint;
+export default PurchaseReturnPrint;

@@ -1,6 +1,6 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from 'react-bootstrap';
-import QuotationPreviewContent from './previewContent.js';
+import SalesReturnPreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
@@ -21,15 +21,15 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                     getCustomer(model.customer_id);
                 }
 
-                if (model.received_by) {
-                    getUser(model.received_by);
+                if (model.delivered_by) {
+                    getUser(model.delivered_by);
                 }
 
-                if (model.received_by_signature_id) {
-                    getSignature(model.received_by_signature_id);
+                if (model.delivered_by_signature_id) {
+                    getSignature(model.delivered_by_signature_id);
                 }
 
-                let pageSize = 12;
+                let pageSize = 20;
                 model.pageSize = pageSize;
                 let totalProducts = model.products.length;
                 let top = 0;
@@ -58,10 +58,6 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                     });
 
                     for (let j = offset; j < totalProducts; j++) {
-                        if(!model.products[j].selected){
-                            continue
-                        }
-
                         model.pages[i].products.push(model.products[j]);
 
                         if (model.pages[i].products.length === pageSize) {
@@ -69,7 +65,13 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                         }
                     }
 
-                    top += 1057;
+                    if (model.pages[i].products.length < pageSize) {
+                        for (let s = model.pages[i].products.length; s < pageSize; s++) {
+                            model.pages[i].products.push({});
+                        }
+                    }
+
+                    top += 1057; //1057
                     offset += pageSize;
 
                     if (i === 0) {
@@ -82,7 +84,6 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                 }
 
                 console.log("model.pages:", model.pages);
-
                 console.log("model.products:", model.products);
                 getQRCodeContents();
                 //model.qr_content = getQRCodeContents();
@@ -113,7 +114,7 @@ const SalesReturnPreview = forwardRef((props, ref) => {
         qrContent = "";
 
         if (model.code) {
-            qrContent += "Quotation #: " + model.code + "<br />";
+            qrContent += "Invoice #: " + model.code + "<br />";
         }
 
         if (model.store) {
@@ -167,12 +168,13 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: model.created_at,
-                    invoiceTotal: model.total,
+                    invoiceTimestamp: model.date,
+                    invoiceTotal: model.net_total,
                     invoiceVatTotal: model.vat_price,
                 });
 
                 model.QRImageData = await invoice.render();
+                console.log("model.QRImageData:", model.QRImageData);
 
                 setModel({ ...model });
             })
@@ -216,7 +218,7 @@ const SalesReturnPreview = forwardRef((props, ref) => {
     }
 
     function getUser(id) {
-        console.log("inside get User(Received by)");
+        console.log("inside get User(Delivered by)");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -240,7 +242,7 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 let userData = data.result;
-                model.received_by_user = userData;
+                model.delivered_by_user = userData;
                 setModel({ ...model });
             })
             .catch(error => {
@@ -272,11 +274,10 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 let signatureData = data.result;
-                model.received_by_signature = signatureData;
+                model.delivered_by_signature = signatureData;
                 setModel({ ...model });
             })
             .catch(error => {
-
             });
     }
 
@@ -291,7 +292,7 @@ const SalesReturnPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Quotation";
+        let filename = "Sales_";
 
         if (model.id) {
             filename += "_#" + model.code;
@@ -309,7 +310,7 @@ const SalesReturnPreview = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Sales Return Invoice Preview</Modal.Title>
+                <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
                         <i className="bi bi-printer"></i> Print
@@ -326,7 +327,7 @@ const SalesReturnPreview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <QuotationPreviewContent model={model} />
+                    <SalesReturnPreviewContent model={model} />
                 </div>
             </Modal.Body>
             <Modal.Footer>

@@ -101,175 +101,79 @@ function PurchaseReturnIndex(props) {
 
         excelData = [{
             columns: [
-                { title: "Description", width: { wch: 50 } },//pixels width 
-                { title: "Quantity", width: { wpx: 90 } },//char width 
+                { title: "الرقم التسلسلي - S/L No.", width: { wch: 18 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width 
+                { title: "تاريخ الفاتورة - Date of Invoice", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "رقم الفاتورة - Invoice Number", width: { wch: 25 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "اسم المورد بالعربية - Supplier Name", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "الرقمالضريبيللمورد - Supplier VAT No", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "المبلغ قبل الضريبة - Amount Before VAT", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "تخفيض - Discount", width: { wch: 15 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "المبلغ بعد الخصم - Amount After Discount", width: { wch: 30 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "قيمة الضريبة -  VAT Amount", width: { wch: 20 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                { title: "الإجمالي شامل الضريبة - Total Amount after VAT", width: { wch: 35 }, style: { fill: { patternType: "solid", fgColor: { rgb: "FFCCEEFF" } }, font: { vertAlign: true, bold: true }, alignment: { horizontal: "center", vertical: "center" } } },//pixels width
+                /*
+                { title: "Description", width: { wch: 50 } },//pixels width  wpx
+                { title: "Quantity", width: { wpx: 90 } },//char width  wch
                 { title: "Unit", width: { wpx: 90 } },
                 { title: "Rate", width: { wpx: 90 } },
                 { title: "Gross", width: { wpx: 90 } },
                 { title: "Disc %", width: { wpx: 90 } },
                 { title: "Disc", width: { wpx: 90 } },
                 { title: "Tax %", width: { wpx: 90 } },
-                { title: "Tax Amount", width: { wpx: 90 } },
+                { title: "Tax Amount", width: { wpx: 180 } },
                 { title: "Net Amount", width: { wpx: 90 } },
+                */
             ],
             data: [],
         }];
 
 
-        let totalAmount = 0;
-        let totalTax = 0;
+        var totalAmountBeforeVAT = 0.00;
+        var totalAmountAfterVAT = 0.00;
+        var totalAmountAfterDiscount = 0.00;
+        var totalVAT = 0.00;
+        var totalDiscount = 0.00;
 
         let invoiceCount = 0;
         for (let purchaseReturnDate in groupedByDate) {
 
             console.log("purchaseReturnDate:", purchaseReturnDate);
-            excelData[0].data.push([{ value: "Inv Date: " + purchaseReturnDate }]);
-            let dayTotal = 0.00;
-            let dayTax = 0.00;
+            // excelData[0].data.push([{ value: "Inv Date: " + purchaseDate }]);
+
 
             for (var i2 = 0; i2 < groupedByDate[purchaseReturnDate].length; i2++) {
                 invoiceCount++;
                 let purchaseReturn = groupedByDate[purchaseReturnDate][i2];
                 let invoiceNo = purchaseReturn.vendor_invoice_no ? purchaseReturn.vendor_invoice_no + " / " + purchaseReturn.code : purchaseReturn.code;
-                excelData[0].data.push([{ value: "Inv No (" + invoiceNo + ") - " + invoiceCount + " [" + purchaseReturn.vendor_name + "]" }]);
-
-                if (!purchaseReturn.products) {
-                    continue;
+                let supplierVatNo = "N/A";
+                if (purchaseReturn.vendor && purchaseReturn.vendor.vat_no) {
+                    supplierVatNo = purchaseReturn.vendor.vat_no;
                 }
 
-                for (var j = 0; j < purchaseReturn.products.length; j++) {
+                let amountBeforeVAT = (purchaseReturn.total + purchaseReturn.shipping_handling_fees);
+                let amountAfterDiscount = (purchaseReturn.total + purchaseReturn.shipping_handling_fees - purchaseReturn.discount);
+                let amountAfterVAT = (purchaseReturn.total + purchaseReturn.shipping_handling_fees - purchaseReturn.discount + purchaseReturn.vat_price);
 
-                    let product = purchaseReturn.products[j];
-
-                    excelData[0].data.push([
-                        {
-                            value: product.name
-                        },
-                        {
-                            value: product.quantity.toFixed(2),
-                        },
-                        {
-                            value: product.unit ? product.unit : "PCs",
-                        },
-                        {
-                            value: product.purchasereturn_unit_price ? product.purchasereturn_unit_price.toFixed(2) : 0.00,
-                        },
-                        {
-                            value: (product.purchasereturn_unit_price * product.quantity).toFixed(2)
-                        },
-                        {
-                            value: "0.00",
-                        },
-                        {
-                            value: "0.00",
-                        },
-                        {
-                            value: "15.00",
-                        },
-                        {
-                            value: ((product.purchasereturn_unit_price * product.quantity).toFixed(2) * 0.15).toFixed(2),
-                        },
-                        {
-                            value: (product.purchasereturn_unit_price * product.quantity).toFixed(2),
-                        },
-                    ]);
-                }
+                totalAmountBeforeVAT += amountBeforeVAT;
+                totalDiscount += purchaseReturn.discount;
+                totalAmountAfterDiscount += amountAfterDiscount;
+                totalVAT += purchaseReturn.vat_price;
+                totalAmountAfterVAT += amountAfterVAT;
 
                 excelData[0].data.push([
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    {
-                        value: "Discount",
-                    }, {
-                        value: purchaseReturn.discount?.toFixed(2),
-                    },
+                    { value: invoiceCount, style: { alignment: { horizontal: "center" } } },
+                    { value: purchaseReturnDate, style: { alignment: { horizontal: "center" } } },
+                    { value: invoiceNo, style: { alignment: { horizontal: "center" } } },
+                    { value: purchaseReturn.vendor_name },
+                    { value: supplierVatNo, style: { alignment: { horizontal: "center" } } },
+                    { value: amountBeforeVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
+                    { value: purchaseReturn.discount?.toFixed(2), style: { alignment: { horizontal: "right" } } },
+                    { value: amountAfterDiscount.toFixed(2), style: { alignment: { horizontal: "right" } } },
+                    { value: purchaseReturn.vat_price.toFixed(2), style: { alignment: { horizontal: "right" } } },
+                    { value: amountAfterVAT.toFixed(2), style: { alignment: { horizontal: "right" } } },
                 ]);
-
-                excelData[0].data.push([
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    {
-                        value: "Tax",
-                    }, {
-                        value: purchaseReturn.vat_price.toFixed(2),
-                    },
-                ]);
-
-
-
-                excelData[0].data.push([
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    { value: "", },
-                    {
-                        value: "Total",
-                    }, {
-                        value: (purchaseReturn.total - purchaseReturn.discount).toFixed(2),
-                    },
-                ]);
-
-                dayTotal += (purchaseReturn.total - purchaseReturn.discount);
-                dayTax += purchaseReturn.vat_price;
-
             }
-
-            excelData[0].data.push([
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                {
-                    value: "Day Tax",
-                }, {
-                    value: dayTax.toFixed(2),
-                },
-            ]);
-
-
-            excelData[0].data.push([
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                { value: "", },
-                {
-                    value: "Day Total",
-                }, {
-                    value: dayTotal.toFixed(2),
-                },
-            ]);
-
-
-            totalAmount += dayTotal;
-            totalTax += dayTax;
-
-        }//end for1
-
-
+        }
         excelData[0].data.push([
             { value: "", },
             { value: "", },
@@ -279,11 +183,8 @@ function PurchaseReturnIndex(props) {
             { value: "", },
             { value: "", },
             { value: "", },
-            {
-                value: "",
-            }, {
-                value: "",
-            },
+            { value: "", },
+            { value: "", },
         ]);
 
         excelData[0].data.push([
@@ -291,31 +192,12 @@ function PurchaseReturnIndex(props) {
             { value: "", },
             { value: "", },
             { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Total Tax",
-            }, {
-                value: totalTax.toFixed(2),
-            },
-        ]);
-
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Total Amount",
-            }, {
-                value: totalAmount.toFixed(2),
-            },
+            { value: "TOTAL", style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalAmountBeforeVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalDiscount.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalAmountAfterDiscount.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
+            { value: totalAmountAfterVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
         ]);
 
         setExcelData(excelData);
