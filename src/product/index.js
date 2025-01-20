@@ -390,12 +390,15 @@ function ProductIndex(props) {
 
 
     const ProductJsonDialogRef = useRef();
+    /*
     function openJsonDialog() {
         let jsonContent = getProductsJson();
         ProductJsonDialogRef.current.open(jsonContent);
     }
+    */
 
 
+    /*
     function getProductsJson() {
         let jsonContent = [];
         for (let i = 0; i < productList.length; i++) {
@@ -414,7 +417,9 @@ function ProductIndex(props) {
         console.log("jsonContent:", jsonContent);
         return jsonContent;
     }
+    */
 
+    /*
     function getProductPrice(product) {
         let store_id = cookies.get("store_id");
         let vat_percent = 0.15;
@@ -431,7 +436,6 @@ function ProductIndex(props) {
 
         for (let i = 0; i < product.stores.length; i++) {
             if (product.stores[i].store_id === store_id) {
-                // product.stores[i].retail_unit_price = product.stores[i].retail_unit_price; /* $2,500.00 */
                 let res = {
                     retail_unit_price: "0.00",
                     purchase_unit_price_secret: "",
@@ -452,6 +456,7 @@ function ProductIndex(props) {
             purchase_unit_price_secret: "",
         };
     }
+    */
 
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {
