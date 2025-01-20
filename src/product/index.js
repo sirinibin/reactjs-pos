@@ -4,10 +4,11 @@ import ProductJson from "./json.js";
 import ProductView from "./view.js";
 import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
-import { format } from "date-fns";
-import DatePicker from "react-datepicker";
+//import { format } from "date-fns";
+//import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
+//import { Button, Spinner, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
+import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import SalesHistory from "./sales_history.js";
 import SalesReturnHistory from "./sales_return_history.js";
@@ -23,7 +24,7 @@ function ProductIndex(props) {
 
     const cookies = new Cookies();
 
-    const selectedDate = new Date();
+    // const selectedDate = new Date();
 
     //list
     const [productList, setProductList] = useState([]);
@@ -38,18 +39,20 @@ function ProductIndex(props) {
 
 
     //Created At filter
+    /*
     const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
     const [createdAtValue, setCreatedAtValue] = useState("");
     const [createdAtFromValue, setCreatedAtFromValue] = useState("");
     const [createdAtToValue, setCreatedAtToValue] = useState("");
+    */
 
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
     //Created By Product Auto Suggestion
-    const [productOptions, setProductOptions] = useState([]);
-    const [selectedCreatedByProducts, setSelectedCreatedByProducts] = useState([]);
+    //const [productOptions, setProductOptions] = useState([]);
+    //const [selectedCreatedByProducts, setSelectedCreatedByProducts] = useState([]);
 
     //Created By Product Auto Suggestion
     const [categoryOptions, setCategoryOptions] = useState([]);
@@ -109,6 +112,7 @@ function ProductIndex(props) {
     }
 
 
+    /*
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggest Users");
 
@@ -140,8 +144,9 @@ function ProductIndex(props) {
         );
         let data = await result.json();
 
-        setProductOptions(data.result);
+       // setProductOptions(data.result);
     }
+    */
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
@@ -151,6 +156,7 @@ function ProductIndex(props) {
         list();
     }
 
+    /*
     function searchByDateField(field, value) {
         if (!value) {
             page = 1;
@@ -166,34 +172,41 @@ function ProductIndex(props) {
         value = format(d, "MMM dd yyyy");
 
         if (field === "created_at") {
+            /*
             setCreatedAtValue(value);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
-            searchParams["created_at_from"] = "";
-            searchParams["created_at_to"] = "";
-            searchParams[field] = value;
-        }
-        if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
-            setCreatedAtValue("");
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
-        } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
-            setCreatedAtValue("");
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
-        }
+            */
+    /*     searchParams["created_at_from"] = "";
+         searchParams["created_at_to"] = "";
+         searchParams[field] = value;
+     }
+     if (field === "created_at_from") {
+         /*
+         setCreatedAtFromValue(value);
+         setCreatedAtValue("");
+         */
+    /*      searchParams["created_at"] = "";
+          searchParams[field] = value;
+      } else if (field === "created_at_to") {
+          /*
+          setCreatedAtToValue(value);
+          setCreatedAtValue("");
+          */
+    /*       searchParams["created_at"] = "";
+           searchParams[field] = value;
+       }
 
-        page = 1;
-        setPage(page);
+       page = 1;
+       setPage(page);
 
-        list();
-    }
+       list();
+   }
+   */
 
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
-            setSelectedCreatedByProducts(values);
+            // setSelectedCreatedByProducts(values);
         } else if (field === "category_id") {
             setSelectedProductCategories(values);
         }
@@ -223,8 +236,11 @@ function ProductIndex(props) {
                 Authorization: cookies.get("access_token"),
             },
         };
-        let Select =
+        /*let Select =
             "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+        */
+        let Select =
+            "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + cookies.get("store_id") + ".stock,product_stores." + cookies.get("store_id") + ".purchase_unit_price,product_stores." + cookies.get("store_id") + ".wholesale_unit_price,product_stores." + cookies.get("store_id") + ".retail_unit_price,product_stores." + cookies.get("store_id") + ".store_id";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -732,6 +748,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                {/*
                                                 <th>
                                                     <b
                                                         style={{
@@ -750,7 +767,8 @@ function ProductIndex(props) {
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
+                                                        </th>*/}
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -808,6 +826,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                {/*
                                                 <th>
                                                     <b
                                                         style={{
@@ -884,6 +903,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                        */}
 
                                                 <th>
                                                     <b
@@ -924,7 +944,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
+                                                {/*
                                                 <th>
                                                     <b
                                                         style={{
@@ -1380,14 +1400,15 @@ function ProductIndex(props) {
                                                             <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
+                                                        </th>
                                                 <th>Actions</th>
+                                                */}
                                             </tr>
                                         </thead>
 
                                         <thead>
                                             <tr className="text-center">
-                                                <th></th>
+                                                <th style={{ minWidth: "100px" }}></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1401,6 +1422,7 @@ function ProductIndex(props) {
 
                                                 <th>
                                                     <input
+                                                        style={{ minWidth: "275px" }}
                                                         type="text"
                                                         id="name"
                                                         onChange={(e) =>
@@ -1422,7 +1444,8 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-
+                                                {/*
+ 
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1432,7 +1455,7 @@ function ProductIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th>
+                                                    </th>*/}
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1465,6 +1488,7 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                {/*
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1505,6 +1529,7 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                    */}
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1515,7 +1540,7 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
+                                                <th style={{ width: "300px" }}>
                                                     <Typeahead
                                                         id="category_id"
                                                         labelKey="name"
@@ -1535,7 +1560,7 @@ function ProductIndex(props) {
                                                         multiple
                                                     />
                                                 </th>
-
+                                                {/*
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1813,34 +1838,42 @@ function ProductIndex(props) {
                                                             />
                                                         </span>
                                                     ) : null}
-                                                </th>
-                                                <th></th>
+                                                            </th>
+                                                <th></th>*/}
                                             </tr>
                                         </thead>
 
                                         <tbody className="text-center">
                                             {productList &&
                                                 productList.map((product) => (
-                                                    <tr key={product.id}>
-                                                        <td>
+                                                    <tr key={product.id} onClick={() => {
+
+                                                        openUpdateForm(product.id);
+                                                    }} style={{ cursor: "pointer" }}>
+                                                        <td onClick={(e) => {
+                                                            e.stopPropagation();
+
+                                                        }} >
+                                                            {/*
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(product.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
-                                                            </Button>
+                                                        </Button>*/}
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                 openDetailsView(product.id);
-                                                            }}>
+                                                            }} style={{ marginRight: "5px" }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
-                                                            &nbsp;  &nbsp;
+
 
                                                             <button
                                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                                 type="button"
                                                                 data-bs-toggle="dropdown"
                                                                 aria-expanded="false"
+                                                                style={{ height: "28px" }}
                                                             ></button>
                                                             <ul className="dropdown-menu">
                                                                 <li>
@@ -1901,9 +1934,13 @@ function ProductIndex(props) {
 
                                                         </td>
                                                         <td>{product.part_number}</td>
-                                                        <td>{product.name + (product.name_in_arabic ? " / " + product.name_in_arabic : "")}</td>
+                                                        <td >
+
+                                                            {product.name + (product.name_in_arabic ? " / " + product.name_in_arabic : "")}
+
+                                                        </td>
                                                         <td>{product.ean_12}</td>
-                                                        <td>{product.rack}</td>
+                                                        {/*<td>{product.rack}</td>*/}
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
@@ -1937,6 +1974,17 @@ function ProductIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
+                                                        <td>
+                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
+                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                    return (<b>{product.product_stores[key].stock}</b>);
+                                                                } else if (!cookies.get("store_id")) {
+                                                                    return (<li><b>{product.product_stores[key].stock}</b> {"@" + product.product_stores[key].store_name}</li>);
+                                                                }
+                                                                return ""
+                                                            })}
+                                                        </td>
+                                                        {/*
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
@@ -2044,25 +2092,17 @@ function ProductIndex(props) {
 
                                                                 return ""
                                                             })}
-                                                        </td>
-                                                        <td>
-                                                            {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
-                                                                    return (<b>{product.product_stores[key].stock}</b>);
-                                                                } else if (!cookies.get("store_id")) {
-                                                                    return (<li><b>{product.product_stores[key].stock}</b> {"@" + product.product_stores[key].store_name}</li>);
-                                                                }
-                                                                return ""
-                                                            })}
-                                                        </td>
+                                                        </td>*/}
+
                                                         <td>
                                                             <ul>
                                                                 {product.category_name &&
                                                                     product.category_name.map((name) => (
-                                                                        <li key={name}>{name}</li>
+                                                                        <li key={name}  >{name}</li>
                                                                     ))}
                                                             </ul>
                                                         </td>
+                                                        {/*
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
@@ -2150,7 +2190,7 @@ function ProductIndex(props) {
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return_profit}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
-                                                                 return ""
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
@@ -2230,7 +2270,7 @@ function ProductIndex(props) {
                                                                 } else if (!cookies.get("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].quotation_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
-                                                                 return ""
+                                                                return ""
                                                             })}
                                                         </td>
                                                         <td>
@@ -2281,6 +2321,8 @@ function ProductIndex(props) {
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
+                                                            */}
+                                                        {/*
                                                         <td>
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(product.id);
@@ -2358,7 +2400,7 @@ function ProductIndex(props) {
                                                                 </li>
                                                             </ul>
 
-                                                        </td>
+                                                                </td>*/}
                                                     </tr>
                                                 ))}
                                         </tbody>
