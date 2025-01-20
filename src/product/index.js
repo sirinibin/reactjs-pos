@@ -580,6 +580,7 @@ function ProductIndex(props) {
 
 
                     <div className="col text-end">
+                        {/*
                         <Button
                             hide={true.toString()}
                             variant="primary"
@@ -587,7 +588,7 @@ function ProductIndex(props) {
                             onClick={openJsonDialog}
                         >
                             Get JSON for Bar Tender
-                        </Button>
+    </Button>*/}
                     </div>
                 </div>
 
