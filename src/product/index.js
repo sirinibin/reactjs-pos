@@ -60,7 +60,8 @@ function ProductIndex(props) {
 
 
     useEffect(() => {
-        list();
+        list("0","0"); //load  only documents
+        list("1","1"); //load only stats
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -153,7 +154,8 @@ function ProductIndex(props) {
 
         page = 1;
         setPage(page);
-        list();
+        list("0","0"); //load  only documents
+        list("1","1"); //load only stats
     }
 
     /*
@@ -220,7 +222,8 @@ function ProductIndex(props) {
         page = 1;
         setPage(page);
 
-        list();
+        list("0","0"); //load  only documents
+        list("1","1"); //load only stats
     }
 
     let [stock, setStock] = useState(0.00);
@@ -228,7 +231,7 @@ function ProductIndex(props) {
     let [wholesaleStockValue, setWholesaleStockValue] = useState(0.00);
     let [purchaseStockValue, setPurchaseStockValue] = useState(0.00);
 
-    function list() {
+    function list(loadStats,noData) {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -249,8 +252,17 @@ function ProductIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
+        searchParams["stats"] = "0";
+        searchParams["no_data"] = "0";
 
-        searchParams["stats"] = "1"
+        if(loadStats==="1"){
+            searchParams["stats"] = "1"
+        }
+
+        if(noData==="1"){
+            searchParams["no_data"] = "1"
+        }
+      
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -290,26 +302,35 @@ function ProductIndex(props) {
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
-                setProductList(data.result);
+               
+        
+                if(noData!=="1"){
+                    setProductList(data.result);    
+                    let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
-                let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
+                    setTotalPages(pageCount);
+                    setTotalItems(data.total_count);
+                    setOffset((page - 1) * pageSize);
+                    setCurrentPageItemsCount(data.result.length);
+                }
+                
 
-                setTotalPages(pageCount);
-                setTotalItems(data.total_count);
-                setOffset((page - 1) * pageSize);
-                setCurrentPageItemsCount(data.result.length);
+              
 
-                stock = data.meta.stock;
-                setStock(stock);
-
-                retailStockValue = data.meta.retail_stock_value;
-                setRetailStockValue(retailStockValue);
-
-                wholesaleStockValue = data.meta.wholesale_stock_value;
-                setWholesaleStockValue(wholesaleStockValue);
-
-                purchaseStockValue = data.meta.purchase_stock_value;
-                setPurchaseStockValue(purchaseStockValue);
+                if(loadStats==="1"){
+                    stock = data.meta.stock;
+                    setStock(stock);
+    
+                    retailStockValue = data.meta.retail_stock_value;
+                    setRetailStockValue(retailStockValue);
+    
+                    wholesaleStockValue = data.meta.wholesale_stock_value;
+                    setWholesaleStockValue(wholesaleStockValue);
+    
+                    purchaseStockValue = data.meta.purchase_stock_value;
+                    setPurchaseStockValue(purchaseStockValue);
+                }
+              
 
             })
             .catch((error) => {
@@ -324,19 +345,19 @@ function ProductIndex(props) {
         setSortField(sortField);
         sortProduct = sortProduct === "-" ? "" : "-";
         setSortProduct(sortProduct);
-        list();
+        list("0","0"); //load only documents
     }
 
     function changePageSize(size) {
         pageSize = parseInt(size);
         setPageSize(pageSize);
-        list();
+        list("0","0"); //load  only documents
     }
 
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list();
+        list("0","0"); //load  only documents
     }
 
     const CreateFormRef = useRef();
@@ -579,7 +600,8 @@ function ProductIndex(props) {
                                         <Button
                                             onClick={() => {
                                                 setIsRefreshInProcess(true);
-                                                list();
+                                                list("0","0"); //load  only documents
+                                                list("1","1"); //load only stats
                                             }}
                                             variant="primary"
                                             disabled={isRefreshInProcess}
