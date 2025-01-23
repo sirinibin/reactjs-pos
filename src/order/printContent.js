@@ -107,9 +107,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                        
 
                                     </h4>
-                                    <div style={{ fontSize: "3mm" }}>
+                                    <h4 style={{ fontSize: "3mm" }}>
                                     {product.discount_percent ? product.discount_percent.toFixed(2)+"% off" : ""}{product.discount ? " ("+product.discount?.toFixed(2)+")" : ""}
-                                    </div>
+                                    </h4>
                                 </td>
                                 <td className="text-end" style={{ border: "solid 0px", width: "99px", paddingRight: "5px" }} >
                                     <h4 style={{ fontSize: "3mm" }}>
