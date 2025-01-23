@@ -105,11 +105,9 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                        
-
+                                       {product.discount ? " ["+product.discount.toFixed(2)+" off]" : ""}
                                     </h4>
-                                    <h4 style={{ fontSize: "3mm" }}>
-                                    {product.discount_percent ? product.discount_percent.toFixed(2)+"% off" : ""}{product.discount ? " ("+product.discount?.toFixed(2)+")" : ""}
-                                    </h4>
+                                  
                                 </td>
                                 <td className="text-end" style={{ border: "solid 0px", width: "99px", paddingRight: "5px" }} >
                                     <h4 style={{ fontSize: "3mm" }}>
