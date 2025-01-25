@@ -1064,7 +1064,7 @@ const OrderCreate = forwardRef((props, ref) => {
         // errors["payment_date"] = [];
         //errors["payment_method"] = [];
         //errors["payment_amount"] = [];
-        for (var key = 0; key < formData.payments_input.length; key++) {
+        for (var key = 0; key < formData.payments_input?.length; key++) {
             errors["payment_amount_" + key] = "";
             errors["payment_date_" + key] = "";
             errors["payment_method_" + key] = "";
@@ -1622,7 +1622,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                             </td>
                                             <td>
-
                                                 <div className="input-group mb-3">
                                                     <input type="number" value={product.unit_price} className="form-control text-end"
 
