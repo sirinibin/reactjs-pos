@@ -933,6 +933,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         findVatPrice();
         findNetTotal();
+        findTotalPayments();
     }
 
     const DetailsViewRef = useRef();
@@ -987,6 +988,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     function findTotalPayments() {
+        console.log("Inisde findTotalPayments")
         let totalPayment = 0.00;
         for (var i = 0; i < formData.payments_input?.length; i++) {
             if (formData.payments_input[i].amount && !formData.payments_input[i].deleted) {
@@ -1120,6 +1122,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
             }
         }
+
+        findTotalPayments();
 
         if (haveErrors) {
             return false;

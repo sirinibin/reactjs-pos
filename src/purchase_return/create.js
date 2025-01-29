@@ -699,6 +699,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }
 
     function validatePaymentAmounts() {
+        findTotalPayments()
+        
         if (selectedProducts && selectedProducts.filter(product => product.selected).length === 0) {
             return true;
         }
