@@ -14,6 +14,10 @@ const MonthlySales = forwardRef((props, ref) => {
 
     const yearOptions = [
         {
+            label: "2025",
+            value: 2025,
+        },
+        {
             label: "2024",
             value: 2024,
         },
