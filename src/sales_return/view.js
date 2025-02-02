@@ -434,7 +434,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
-
+                            <th>UUID:</th><td> {model.uuid}</td>
                             <th>Order ID: </th><td> {model.order_code}</td>
                             <th>Store: </th><td> {model.store_name}</td>
                             <th>Customer: </th><td> {model.customer_name}</td>

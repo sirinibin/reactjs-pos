@@ -486,6 +486,7 @@ const OrderView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="xl">
                     <tbody>
                         <tr>
+                            <th>UUID:</th><td> {model.uuid}</td>
                             <th>Store:</th><td> {model.store_name}</td>
                             <th>Customer:</th><td> {model.customer_name}</td>
                             <th>Delivered by:</th><td> {model.delivered_by_name}</td>
