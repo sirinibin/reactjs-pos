@@ -502,7 +502,7 @@ const OrderIndex = forwardRef((props, ref) => {
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
-    const [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
+    let [currentPageItemsCount, setCurrentPageItemsCount] = useState(0);
     const [offset, setOffset] = useState(0);
 
     //Date filter
@@ -827,6 +827,8 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalPages(pageCount);
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
+                console.log("data.result.length:",data.result.length);
+                currentPageItemsCount = data.result.length;
                 setCurrentPageItemsCount(data.result.length);
 
                 totalSales = data.meta.total_sales;
@@ -1187,8 +1189,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     <option value="40">40</option>
                                                     <option value="50">50</option>
                                                     <option value="100">100</option>
-                                                    <option value="100">500</option>
-                                                    <option value="100">1000</option>
+                                                    <option value="500">500</option>
+                                                    <option value="1000">1000</option>
                                                 </select>
                                             </>
                                         )}
