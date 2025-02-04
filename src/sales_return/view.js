@@ -435,6 +435,7 @@ const SalesReturnView = forwardRef((props, ref) => {
                     <tbody>
                         <tr>
                             <th>UUID:</th><td> {model.uuid}</td>
+                            <th>Invoice Count Value(ICU):</th><td> {model.invoice_count_value}</td>
                             <th>Order ID: </th><td> {model.order_code}</td>
                             <th>Store: </th><td> {model.store_name}</td>
                             <th>Customer: </th><td> {model.customer_name}</td>

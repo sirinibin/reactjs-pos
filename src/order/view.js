@@ -487,6 +487,7 @@ const OrderView = forwardRef((props, ref) => {
                     <tbody>
                         <tr>
                             <th>UUID:</th><td> {model.uuid}</td>
+                            <th>Invoice Count Value(ICU):</th><td> {model.invoice_count_value}</td>
                             <th>Store:</th><td> {model.store_name}</td>
                             <th>Customer:</th><td> {model.customer_name}</td>
                             <th>Delivered by:</th><td> {model.delivered_by_name}</td>
@@ -495,7 +496,7 @@ const OrderView = forwardRef((props, ref) => {
                             <th>Date:</th><td>
                                 {model.date ? format(
                                     new Date(model.date),
-                                    "MMM dd yyyy h:mma"
+                                    "MMM dd yyyy h:mm:ssa"
                                 ) : "Not set"}
                             </td>
                             <th>VAT %:</th><td> {model.vat_percent}%</td>
