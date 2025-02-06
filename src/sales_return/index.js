@@ -879,11 +879,31 @@ function SalesReturnIndex(props) {
     const paymentMethodOptions = [
         {
             id: "cash",
-            name: "cash",
+            name: "Cash",
         },
         {
-            id: "bank_account",
-            name: "Bank Account / Debit / Credit card",
+            id: "debit_card",
+            name: "Debit Card",
+        },
+        {
+            id: "credit_card",
+            name: "Credit Card",
+        },
+        {
+            id: "bank_card",
+            name: "Bank Card",
+        },
+        {
+            id: "bank_transfer",
+            name: "Bank Transfer",
+        },
+        {
+            id: "bank_cheque",
+            name: "Cheque",
+        },
+        {
+            id: "customer_account",
+            name: "Customer account",
         },
     ];
     const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);

@@ -364,7 +364,7 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
                                             if (!e.target.value) {
                                                 errors["method"] = "Invalid Payment Method";
                                                 setErrors({ ...errors });
-                                                formData.method="";
+                                                formData.method = "";
                                                 setFormData({ ...formData });
                                                 return;
                                             }
@@ -380,7 +380,11 @@ const PurchasePaymentCreate = forwardRef((props, ref) => {
                                     >
                                         <option value="">Select</option>
                                         <option value="cash">Cash</option>
-                                        <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                        <option value="debit_card">Debit Card</option>
+                                        <option value="credit_card">Credit Card</option>
+                                        <option value="bank_card">Bank Card</option>
+                                        <option value="bank_transfer">Bank Transfer</option>
+                                        <option value="bank_cheque">Cheque</option>
                                         <option value="vendor_account">Vendor Account</option>
                                     </select>
                                     {errors.method && (

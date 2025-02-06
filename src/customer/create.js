@@ -103,6 +103,12 @@ const CustomerCreate = forwardRef((props, ref) => {
     }
 
 
+    function convertToArabicNumber(input) {
+        return input.replace(/\d/g, function (m) {
+            return persianMap[parseInt(m)];
+        });
+    }
+
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
@@ -114,8 +120,40 @@ const CustomerCreate = forwardRef((props, ref) => {
             formData.vat_percent = null;
         }
 
-        formData.phone_in_arabic = convertToPersianNumber(formData.phone);
-        formData.vat_no_in_arabic = convertToPersianNumber(formData.vat_no);
+        formData.phone_in_arabic = convertToArabicNumber(formData.phone);
+        formData.vat_no_in_arabic = convertToArabicNumber(formData.vat_no);
+
+        if (formData.registration_number) {
+            formData.registration_number_in_arabic = convertToArabicNumber(formData.registration_number.toString());
+        }
+
+        if (formData.national_address.application_no) {
+            formData.national_address.application_no_arabic = convertToArabicNumber(formData.national_address.application_no.toString());
+        }
+
+        if (formData.national_address.service_no) {
+            formData.national_address.service_no_arabic = convertToArabicNumber(formData.national_address.service_no.toString());
+        }
+
+        if (formData.national_address.customer_account_no) {
+            formData.national_address.customer_account_no_arabic = convertToArabicNumber(formData.national_address.customer_account_no.toString());
+        }
+
+        if (formData.national_address.building_no) {
+            formData.national_address.building_no_arabic = convertToArabicNumber(formData.national_address.building_no.toString());
+        }
+
+        if (formData.national_address.zipcode) {
+            formData.national_address.zipcode_arabic = convertToArabicNumber(formData.national_address.zipcode.toString());
+        }
+
+        if (formData.national_address.additional_no) {
+            formData.national_address.additional_no_arabic = convertToArabicNumber(formData.national_address.additional_no.toString());
+        }
+
+        if (formData.national_address.unit_no) {
+            formData.national_address.unit_no_arabic = convertToArabicNumber(formData.national_address.unit_no.toString());
+        }
 
         let endPoint = "/v1/customer";
         let method = "POST";
@@ -178,15 +216,6 @@ const CustomerCreate = forwardRef((props, ref) => {
     let persianDigits = "۰۱۲۳٤۵٦۷۸۹";
     let persianMap = persianDigits.split("");
 
-
-    function convertToPersianNumber(input) {
-        if (!input) {
-            return "";
-        }
-        return input.replace(/\d/g, function (m) {
-            return persianMap[parseInt(m)];
-        });
-    }
 
     /*
 
@@ -439,6 +468,39 @@ const CustomerCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
+                            <label className="form-label">Registration Number(CRN)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.registration_number ? formData.registration_number : ""}
+                                    type='number'
+                                    onChange={(e) => {
+                                        errors["registration_number"] = "";
+                                        setErrors({ ...errors });
+                                        formData.registration_number = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="registration_number"
+                                    placeholder="Registration Number(C.R NO.)"
+                                />
+                                {errors.registration_number && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.registration_number}
+                                    </div>
+                                )}
+                                {formData.registration_number && !errors.registration_number && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
                             <label className="form-label">Email (Optional)</label>
 
                             <div className="input-group mb-3">
@@ -464,6 +526,452 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                                 {formData.email && !errors.email && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <h2>National Address:</h2>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Application Number</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.application_no ? formData.national_address.application_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_application_no"] = "";
+                                        formData.national_address.application_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.application_no"
+                                    placeholder="Application Number"
+                                />
+
+                                {errors.national_address_application_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_application_no}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.application_no && !errors.national_address_application_no && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Service Number</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.service_no ? formData.national_address.service_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_service_no"] = "";
+                                        formData.national_address.service_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.service_no"
+                                    placeholder="Service Number"
+                                />
+
+                                {errors.national_address_service_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_service_no}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.service_no && !errors.national_address_service_no && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Customer Account Number</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.customer_account_no ? formData.national_address.customer_account_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_customer_account_no"] = "";
+                                        formData.national_address.customer_account_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.customer_account_no"
+                                    placeholder="Customer Account Number"
+                                />
+
+                                {errors.national_address_customer_account_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_customer_account_no}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.customer_account_no && !errors.national_address_customer_account_no && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Building Number</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.building_no ? formData.national_address.building_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_building_no"] = "";
+                                        formData.national_address.building_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.building_no"
+                                    placeholder="Building Number"
+                                />
+
+                                {errors.national_address_building_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_building_no}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.building_no && !errors.national_address_building_no && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Street Name</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.street_name ? formData.national_address.street_name : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_street_name"] = "";
+                                        formData.national_address.street_name = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.street_name"
+                                    placeholder="Street Name"
+                                />
+
+                                {errors.national_address_street_name && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_street_name}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.street_name && !errors.national_address_street_name && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Street Name(Arabic)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.street_name_arabic ? formData.national_address.street_name_arabic : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_street_name_arabic"] = "";
+                                        formData.national_address.street_name_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.street_name_arabic"
+                                    placeholder="Street Name(Arabic)"
+                                />
+
+                                {errors.national_address_street_name_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_street_name_arabic}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.street_name_arabic && !errors.national_address_street_name_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <div className="col-md-6">
+                            <label className="form-label">District Name</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.district_name ? formData.national_address.district_name : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_district_name"] = "";
+                                        formData.national_address.district_name = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.district_name"
+                                    placeholder="District Name"
+                                />
+
+                                {errors.national_address_district_name && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_district_name}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.district_name && !errors.national_address_district_name && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">District Name(Arabic)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.district_name_arabic ? formData.national_address.district_name_arabic : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_district_name_arabic"] = "";
+                                        formData.national_address.district_name_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.district_name_arabic"
+                                    placeholder="District Name(Arabic)"
+                                />
+
+                                {errors.national_address_district_name_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_district_name_arabic}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.district_name_arabic && !errors.national_address_district_name_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <div className="col-md-6">
+                            <label className="form-label">City Name</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.city_name ? formData.national_address.city_name : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_city_name"] = "";
+                                        formData.national_address.city_name = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.city_name"
+                                    placeholder="City Name"
+                                />
+
+                                {errors.national_address_city_name && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_city_name}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.city_name && !errors.national_address_city_name && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">City Name(Arabic)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.city_name_arabic ? formData.national_address.city_name_arabic : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_city_name_arabic"] = "";
+                                        formData.national_address.city_name_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.city_name_arabic"
+                                    placeholder="City Name(Arabic)"
+                                />
+
+                                {errors.national_address_city_name_arabic && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_city_name_arabic}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.city_name_arabic && !errors.national_address_city_name_arabic && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Zipcode</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.zipcode ? formData.national_address.zipcode : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_zipcode"] = "";
+                                        formData.national_address.zipcode = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.zipcode"
+                                    placeholder="Zipcode"
+                                />
+
+                                {errors.national_address_zipcode && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_zipcode}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.zipcode && !errors.national_address_zipcode && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Additional Number</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.additional_no ? formData.national_address.additional_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_additional_no"] = "";
+                                        formData.national_address.additional_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.additional_no"
+                                    placeholder="Additional Number"
+                                />
+
+                                {errors.national_address_additional_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_additional_no}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.additional_no && !errors.national_address_additional_no && (
+                                    <div style={{ color: "green" }}>
+                                        <i className="bi bi-check-lg"> </i>
+                                        Looks good!
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Unit Number</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.unit_no ? formData.national_address.unit_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_unit_no"] = "";
+                                        formData.national_address.unit_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.unit_no"
+                                    placeholder="Unit Number"
+                                />
+
+                                {errors.national_address_unit_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_unit_no}
+                                    </div>
+                                )}
+                                {formData.national_address && formData.national_address.unit_no && !errors.national_address_unit_no && (
                                     <div style={{ color: "green" }}>
                                         <i className="bi bi-check-lg"> </i>
                                         Looks good!

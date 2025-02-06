@@ -673,11 +673,31 @@ function PurchaseReturnIndex(props) {
     const paymentMethodOptions = [
         {
             id: "cash",
-            name: "cash",
+            name: "Cash",
         },
         {
-            id: "bank_account",
-            name: "Bank Account / Debit / Credit card",
+            id: "debit_card",
+            name: "Debit Card",
+        },
+        {
+            id: "credit_card",
+            name: "Credit Card",
+        },
+        {
+            id: "bank_card",
+            name: "Bank Card",
+        },
+        {
+            id: "bank_transfer",
+            name: "Bank Transfer",
+        },
+        {
+            id: "bank_cheque",
+            name: "Cheque",
+        },
+        {
+            id: "vendor_account",
+            name: "Vendor Account",
         },
     ];
 

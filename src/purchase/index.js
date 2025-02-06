@@ -100,11 +100,31 @@ function PurchaseIndex(props) {
     const paymentMethodOptions = [
         {
             id: "cash",
-            name: "cash",
+            name: "Cash",
         },
         {
-            id: "bank_account",
-            name: "Bank Account / Debit / Credit card",
+            id: "debit_card",
+            name: "Debit Card",
+        },
+        {
+            id: "credit_card",
+            name: "Credit Card",
+        },
+        {
+            id: "bank_card",
+            name: "Bank Card",
+        },
+        {
+            id: "bank_transfer",
+            name: "Bank Transfer",
+        },
+        {
+            id: "bank_cheque",
+            name: "Cheque",
+        },
+        {
+            id: "vendor_account",
+            name: "Vendor Account",
         },
     ];
 
@@ -238,294 +258,6 @@ function PurchaseIndex(props) {
             { value: totalVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
             { value: totalAmountAfterVAT.toFixed(2), style: { font: { vertAlign: true, bold: true }, alignment: { horizontal: "right" } } },
         ]);
-        /*
-        excelData[0].data.push([{ value: "Inv No (" + invoiceNo + ") - " + invoiceCount }]);
-        excelData[0].data.push([{ value: "Supplier Name: " + purchase.vendor_name }]);
-        if (purchase.vendor && purchase.vendor.vat_no) {
-            excelData[0].data.push([{ value: "Supplier VAT No.: " + purchase.vendor.vat_no }]);
-        } else {
-            excelData[0].data.push([{ value: "Supplier VAT No.: N/A" }]);
-        }
-        */
-
-
-        /*
-        if (!purchase.products) {
-            continue;
-        }
-        */
-
-        /*
-        for (var j = 0; j < purchase.products.length; j++) {
-     
-            let product = purchase.products[j];
-     
-            excelData[0].data.push([
-                {
-                    value: product.name
-                },
-                {
-                    value: product.quantity.toFixed(2),
-                },
-                {
-                    value: product.unit ? product.unit : "PCs",
-                },
-                {
-                    value: product.purchase_unit_price ? product.purchase_unit_price.toFixed(2) : 0.00,
-                },
-                {
-                    value: (product.purchase_unit_price * product.quantity).toFixed(2)
-                },
-                {
-                    value: "0.00",
-                },
-                {
-                    value: "0.00",
-                },
-                {
-                    value: "15.00",
-                },
-                {
-                    value: ((product.purchase_unit_price * product.quantity).toFixed(2) * 0.15).toFixed(2),
-                },
-                {
-                    value: (product.purchase_unit_price * product.quantity).toFixed(2),
-                },
-            ]);
-        }
-     
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Shipping/Handling Fees",
-            }, {
-                value: purchase.shipping_handling_fees.toFixed(2),
-            },
-        ]);
-     
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Total Amount Before VAT",
-            }, {
-                value: (purchase.total + purchase.shipping_handling_fees).toFixed(2),
-            },
-        ]);
-     
-     
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Discount",
-            }, {
-                value: purchase.discount?.toFixed(2),
-            },
-        ]);
-     
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Total Amount After Discount",
-            }, {
-                value: (purchase.total + purchase.shipping_handling_fees - purchase.discount).toFixed(2),
-            },
-        ]);
-     
-     
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "VAT Amount",
-            }, {
-                value: purchase.vat_price.toFixed(2),
-            },
-        ]);
-     
-     
-     
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Total Amount After VAT",
-            }, {
-                value: (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price).toFixed(2),
-            },
-        ]);
-     
-        dayTotalBeforeVAT += (purchase.total + purchase.shipping_handling_fees - purchase.discount);
-        dayTotalAfterVAT += (purchase.total + purchase.shipping_handling_fees - purchase.discount + purchase.vat_price);
-        dayVAT += purchase.vat_price;
-     
-    }
-     
-     
-    excelData[0].data.push([
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        {
-            value: "Day Total Before VAT",
-        }, {
-            value: dayTotalBeforeVAT.toFixed(2),
-        },
-    ]);
-     
-    excelData[0].data.push([
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        {
-            value: "Day VAT",
-        }, {
-            value: dayVAT.toFixed(2),
-        },
-    ]);
-     
-     
-    excelData[0].data.push([
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        { value: "", },
-        {
-            value: "Day Total After VAT",
-        }, {
-            value: dayTotalAfterVAT.toFixed(2),
-        },
-    ]);
-     
-    totalAmountBeforeVAT += dayTotalBeforeVAT;
-    totalAmountAfterVAT += dayTotalAfterVAT;
-    totalVAT += dayVAT;
-     
-     
-    }//end for1
-    */
-
-        /*
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "",
-            }, {
-                value: "",
-            },
-        ]);
-     
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Total Amount Before VAT",
-            }, {
-                value: totalAmountBeforeVAT.toFixed(2),
-            },
-        ]);
-     
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Total VAT",
-            }, {
-                value: totalVAT.toFixed(2),
-            },
-        ]);
-     
-        excelData[0].data.push([
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            { value: "", },
-            {
-                value: "Total Amount After VAT",
-            }, {
-                value: totalAmountAfterVAT.toFixed(2),
-            },
-        ]);
-        */
-
-
-
 
         setExcelData(excelData);
 
