@@ -588,9 +588,13 @@ const CapitalCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                 >
-                                    <option value="" SELECTED></option>
+                                    <option value="" SELECTED>Select</option>
                                     <option value="cash">Cash</option>
-                                    <option value="bank_account">Bank Account / Debit / Credit Card</option>
+                                    <option value="debit_card">Debit Card</option>
+                                    <option value="credit_card">Credit Card</option>
+                                    <option value="bank_card">Bank Card</option>
+                                    <option value="bank_transfer">Bank Transfer</option>
+                                    <option value="bank_cheque">Cheque</option>
                                 </select>
                                 {errors.payment_method && (
                                     <div style={{ color: "red" }}>
