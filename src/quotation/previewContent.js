@@ -243,10 +243,10 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 /> : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }} className="text-end">{product.discount_percent ? "("+product.discount_percent.toFixed(2)+"%)" : ""}{product.discount ? " "+product.discount?.toFixed(2) : ""} </td>
+                                            <td style={{ padding: "1px" }} className="text-end">{product.unit_discount_percent ? "(" + product.unit_discount_percent.toFixed(2) + "%)" : ""}{product.unit_discount ? " " + (product.unit_discount * product.quantity)?.toFixed(2) : ""} </td>
                                             <td style={{ padding: "1px" }} className="text-end">
                                                 <NumberFormat
-                                                    value={((product.unit_price * product.quantity)-product.discount).toFixed(2)}
+                                                    value={((product.unit_price - product.unit_discount) * product.quantity).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={""}
@@ -259,9 +259,9 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
 
                                 <tfoot style={{ fontSize: "3mm", }}>
                                     <tr >
-                                    
 
-                                        <th  colSpan="6"  className="text-end" style={{ padding: "2px" }}>
+
+                                        <th colSpan="6" className="text-end" style={{ padding: "2px" }}>
                                             Total المجموع:
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px", }} >
@@ -305,7 +305,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="6" style={{ padding: "2px" }} > VAT {props.model.vat_percent.toFixed(2)+"%"} ضريبة: </th>
+                                        <th className="text-end" colSpan="6" style={{ padding: "2px" }} > VAT {props.model.vat_percent.toFixed(2) + "%"} ضريبة: </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
                                                 value={props.model.vat_price.toFixed(2)}
@@ -332,7 +332,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
                                             بكلمات:
                                         </th>
                                         <th
@@ -349,7 +349,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
                                             In Words
                                         </th>
                                         <th
@@ -366,7 +366,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
                                             صلاحية:
                                         </th>
                                         {props.model.validity_days ? <th
@@ -399,7 +399,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
 
                                     </tr>
                                     <tr>
-                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
+                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
                                             Validity
                                         </th>
                                         {props.model.validity_days ? <th
@@ -432,7 +432,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                         </th> : ""}
                                     </tr>
                                     {props.model.pages.length === (pageIndex + 1) ? <tr >
-                                        <td colSpan="6" style={{ padding: "0px" }}>
+                                        <td colSpan="7" style={{ padding: "0px" }}>
 
                                             <table
                                                 className="table table-bordered"
@@ -515,19 +515,19 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 </thead>
                                                 <tbody style={{ fontSize: "3mm" }} >
                                                     <tr>
-                                                        <td style={{width:"5%"}}>
+                                                        <td style={{ width: "5%" }}>
                                                             NATIONAL COMMERCIAL BANK(NCB)
                                                         </td>
-                                                        <td style={{width:"5%"}}>
+                                                        <td style={{ width: "5%" }}>
                                                             57560905
                                                         </td>
-                                                        <td style={{maxWidth:"100px"}}>
+                                                        <td style={{ maxWidth: "100px" }}>
                                                             SA751000001 4600000922202
                                                         </td>
-                                                        <td style={{width:"10%"}}>
+                                                        <td style={{ width: "10%" }}>
                                                             GULF UNION OZONE CO.
                                                         </td>
-                                                        <td style={{width:"5%"}}>
+                                                        <td style={{ width: "5%" }}>
                                                             14600000922202
                                                         </td>
                                                     </tr>

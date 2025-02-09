@@ -40,7 +40,7 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
                     borderColor: "silver",
                     borderRadius: "2mm",
                     padding: "20px",
-                    marginTop: page.top+"px",
+                    marginTop: page.top + "px",
                     height: "110px",
                     width: "770px"
                 }}
@@ -243,10 +243,10 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 /> : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }} className="text-end">{product.discount_percent ? "("+product.discount_percent.toFixed(2)+"%)" : ""}{product.discount ? " "+product.discount?.toFixed(2) : ""} </td>
+                                            <td style={{ padding: "1px" }} className="text-end">{product.unit_discount_percent ? "(" + product.unit_discount_percent.toFixed(2) + "%)" : ""}{product.unit_discount ? " " + (product.unit_discount * product.quantit)?.toFixed(2) : ""} </td>
                                             <td style={{ padding: "1px" }} className="text-end">
                                                 <NumberFormat
-                                                    value={((product.purchasereturn_unit_price * product.quantity)-product.discount).toFixed(2)}
+                                                    value={((product.purchasereturn_unit_price - product.unit_discount) * product.quantity).toFixed(2)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={""}

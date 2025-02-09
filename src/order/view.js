@@ -240,8 +240,8 @@ const OrderView = forwardRef((props, ref) => {
                                 <th>Name</th>
                                 <th>Qty</th>
                                 <th>Unit Price</th>
-                                <th>Discount</th>
-                                <th>Discount %</th>
+                                <th>Disc.</th>
+                                <th>Disc. %</th>
                                 <th>Price</th>
                                 <th>Qty Returned</th>
                                 {cookies.get('admin') === "true" ? <th>Purchase Unit Price</th> : ""}
@@ -268,7 +268,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.discount?.toFixed(2)}
+                                            value={product.unit_discount ? (product.unit_discount * product.quantity)?.toFixed(2) : 0.00}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -277,7 +277,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.discount_percent?.toFixed(2)}
+                                            value={product.unit_discount_percent?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={"%"}
@@ -286,7 +286,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={((product.unit_price * product.quantity)-product.discount).toFixed(2)}
+                                            value={((product.unit_price-product.unit_discount) * product.quantity).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}

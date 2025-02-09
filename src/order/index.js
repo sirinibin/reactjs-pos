@@ -99,15 +99,21 @@ const OrderIndex = forwardRef((props, ref) => {
                 let totalAmountAfterDiscount = order.total + order.shipping_handling_fees - order.discount;
                 let totalAmountBeforeVat = order.total - order.discount + order.shipping_handling_fees;
                 let totalAmountAfterVat = totalAmountBeforeVat + order.vat_price;
-               
+
 
                 for (var j = 0; j < order.products.length; j++) {
-
                     let product = order.products[j];
+                    let unitDiscount = 0.00;
+                    if (product.unit_discount) {
+                        unitDiscount = product.unit_discount;
+                    }
+
+
+                 
                     let gross_amount = product.unit_price * product.quantity;
                     let vat_percent = order.vat_percent ? order.vat_percent : 15.00;
-                    let tax_amount = ((product.unit_price * product.quantity) - product.discount) * parseFloat(vat_percent / 100);
-                    let net_amount = (gross_amount - product.discount) + tax_amount;
+                    let tax_amount = ((product.unit_price - unitDiscount) * product.quantity) * parseFloat(vat_percent / 100);
+                    let net_amount = (gross_amount - (unitDiscount * product.quantity)) + tax_amount;
 
 
 
@@ -128,10 +134,10 @@ const OrderIndex = forwardRef((props, ref) => {
                             value: gross_amount?.toFixed(2)
                         },
                         {
-                            value: product.discount_percent ? product.discount_percent.toFixed(2) : "0.00",
+                            value: product.unit_discount_percent ? product.unit_discount_percent.toFixed(2) : "0.00",
                         },
                         {
-                            value: product.discount ? product.discount?.toFixed(2) : "0.00",
+                            value: product.unit_discount ? (product.unit_discount * product.quantity)?.toFixed(2) : "0.00",
                         },
                         {
                             value: vat_percent.toFixed(2),
@@ -843,7 +849,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalPages(pageCount);
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
-                console.log("data.result.length:",data.result.length);
+                console.log("data.result.length:", data.result.length);
                 currentPageItemsCount = data.result.length;
                 setCurrentPageItemsCount(data.result.length);
 
@@ -955,15 +961,15 @@ const OrderIndex = forwardRef((props, ref) => {
         CreateFormRef.current.open(id);
     }
 
-  
-  
+
+
 
     const SalesReturnListRef = useRef();
 
     //Sales Payments
 
     const SalesPaymentListRef = useRef();
-  
+
 
 
     //Sales Return

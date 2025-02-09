@@ -236,7 +236,7 @@ const PurchaseView = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
 
-            <div className="table-responsive" style={{ overflowX: "auto" }}>
+                <div className="table-responsive" style={{ overflowX: "auto" }}>
                     <table className="table table-striped table-sm table-bordered">
                         <thead>
                             <tr className="text-center">
@@ -245,8 +245,8 @@ const PurchaseView = forwardRef((props, ref) => {
                                 <th>Name</th>
                                 <th>Qty</th>
                                 <th>Unit Price</th>
-                                <th>Discount</th>
-                                <th>Discount %</th>
+                                <th>Disc.</th>
+                                <th>Disc. %</th>
                                 <th>Price</th>
                                 <th>Qty Returned</th>
                                 <th>Wholesale Unit Price</th>
@@ -276,7 +276,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.discount?.toFixed(2)}
+                                            value={(product.unit_discount * product.quantity)?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -285,7 +285,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.discount_percent?.toFixed(2)}
+                                            value={product.unit_discount_percent?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={"%"}
@@ -294,7 +294,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     </td>
                                     <td>
                                         <NumberFormat
-                                            value={((product.purchase_unit_price * product.quantity)-product.discount).toFixed(2)}
+                                            value={((product.purchase_unit_price - product.unit_discount) * product.quantity).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -499,7 +499,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                     </td> : ""}
                             </tr>
                             <tr>
-                                <th  colSpan="7" className="text-end">VAT {model.vat_percent?.toFixed(2) + "%"}</th>
+                                <th colSpan="7" className="text-end">VAT {model.vat_percent?.toFixed(2) + "%"}</th>
                                 <td className="text-end">
                                     <NumberFormat
                                         value={model.vat_price}
@@ -639,7 +639,7 @@ const PurchaseView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </th> : ""}
-                                    {cookies.get('admin') === "true" ?
+                                {cookies.get('admin') === "true" ?
                                     <th className="text-end">
                                         <NumberFormat
                                             value={model.wholesale_loss}
@@ -783,7 +783,7 @@ const PurchaseView = forwardRef((props, ref) => {
                     </tbody>
                 </Table>
 
-               
+
                 {/*
                     <form className="row g-3 needs-validation" >
                         

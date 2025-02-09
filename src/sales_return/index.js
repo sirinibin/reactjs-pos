@@ -106,7 +106,7 @@ function SalesReturnIndex(props) {
         console.log("groupedByDate:", groupedByDate);
 
         excelData = [{
-            columns: [        
+            columns: [
                 { title: "Description", width: { wch: 50 } },//pixels width 
                 { title: "Quantity", width: { wpx: 90 } },//char width 
                 { title: "Unit", width: { wpx: 90 } },
@@ -153,10 +153,16 @@ function SalesReturnIndex(props) {
 
                     let product = salesReturn.products[j];
 
+                    let unitDiscount = 0;
+
+                    if (product.unit_discount) {
+                        unitDiscount = product.unit_discount;
+                    }
+
                     let gross_amount = product.unit_price * product.quantity;
                     let vat_percent = salesReturn.vat_percent ? salesReturn.vat_percent : 15.00;
-                    let tax_amount = ((product.unit_price * product.quantity) - product.discount) * parseFloat(vat_percent / 100);
-                    let net_amount = (gross_amount - product.discount) + tax_amount;
+                    let tax_amount = ((product.unit_price - unitDiscount) * product.quantity) * parseFloat(vat_percent / 100);
+                    let net_amount = (gross_amount - (unitDiscount * product.quantity)) + tax_amount;
 
                     excelData[0].data.push([
                         {
@@ -175,10 +181,10 @@ function SalesReturnIndex(props) {
                             value: (gross_amount)?.toFixed(2)
                         },
                         {
-                            value: product.discount_percent ? product.discount_percent.toFixed(2) : "0.00",
+                            value: product.unit_discount_percent ? product.unit_discount_percent.toFixed(2) : "0.00",
                         },
                         {
-                            value: product.discount ? product.discount?.toFixed(2) : "0.00",
+                            value: product.unit_discount ? (product.unit_discount * product.quantity)?.toFixed(2) : "0.00",
                         },
                         {
                             value: vat_percent.toFixed(2),
@@ -192,7 +198,7 @@ function SalesReturnIndex(props) {
                     ]);
                 }
 
-                  excelData[0].data.push([
+                excelData[0].data.push([
                     { value: "", },
                     { value: "", },
                     { value: "", },
@@ -256,7 +262,7 @@ function SalesReturnIndex(props) {
                     },
                 ]);
 
-               
+
                 excelData[0].data.push([
                     { value: "", },
                     { value: "", },
@@ -1784,7 +1790,7 @@ function SalesReturnIndex(props) {
                                                         selected={selectedCreatedAtDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
-                                                        isClearable={true}  
+                                                        isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
                                                                 setCreatedAtValue("");
@@ -1819,7 +1825,7 @@ function SalesReturnIndex(props) {
                                                                 selected={selectedCreatedAtFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
-                                                                isClearable={true}  
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtFromValue("");
@@ -1828,7 +1834,7 @@ function SalesReturnIndex(props) {
                                                                     }
                                                                     searchByDateField("created_at_from", date);
                                                                     selectedCreatedAtFromDate = date;
-                                                            setSelectedCreatedAtFromDate(date);
+                                                                    setSelectedCreatedAtFromDate(date);
                                                                 }}
                                                             />
                                                             To:{" "}
@@ -1838,7 +1844,7 @@ function SalesReturnIndex(props) {
                                                                 selected={selectedCreatedAtToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
-                                                                isClearable={true}  
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtToValue("");

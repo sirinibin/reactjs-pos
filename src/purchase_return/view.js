@@ -206,7 +206,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.discount?.toFixed(2)}
+                                            value={(product.unit_discount * product.quantity)?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -215,7 +215,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.discount_percent?.toFixed(2)}
+                                            value={product.unit_discount_percent?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={"%"}
@@ -224,7 +224,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                     </td>
                                     <td>
                                         <NumberFormat
-                                            value={((product.purchasereturn_unit_price * product.quantity) - product.discount)?.toFixed(2)}
+                                            value={((product.purchasereturn_unit_price - product.unit_discount) * product.quantity)?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}

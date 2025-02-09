@@ -97,14 +97,14 @@ const QuotationPrintContent = forwardRef((props, ref) => {
                                             suffix={" SAR"}
                                             renderText={(value, props) => value}
                                         />
-                                          {product.discount ? " ["+product.discount.toFixed(2)+" off]" : ""}
+                                          {product.unit_discount ? " ["+(product.unit_discount* product.quantity).toFixed(2)+" off]" : ""}
                                     </h4>
                                   
                                 </td>
                                 <td className="text-end" style={{ border: "solid 0px", width: "99px", paddingRight: "5px" }} >
                                     <h4 style={{ fontSize: "3mm" }}>
                                         <NumberFormat
-                                            value={((product.unit_price * product.quantity) - product.discount).toFixed(2)}
+                                            value={((product.unit_price - product.unit_discount) * product.quantity).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={""}

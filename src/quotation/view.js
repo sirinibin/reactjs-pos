@@ -124,8 +124,8 @@ const QuotationView = forwardRef((props, ref) => {
                                 <th>Name</th>
                                 <th>Qty</th>
                                 <th>Unit Price</th>
-                                <th>Discount</th>
-                                <th>Discount %</th>
+                                <th>Disc.</th>
+                                <th>Disc. %</th>
                                 <th>Price</th>
                                 {cookies.get('admin') === "true" ? <th>Purchase Unit Price</th> : ""}
                                 {cookies.get('admin') === "true" ? <th>Purchase Price</th> : ""}
@@ -151,7 +151,7 @@ const QuotationView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.discount?.toFixed(2)}
+                                            value={(product.unit_discount * product.quantity)?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -160,7 +160,7 @@ const QuotationView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.discount_percent?.toFixed(2)}
+                                            value={product.unit_discount_percent?.toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={"%"}
@@ -169,7 +169,7 @@ const QuotationView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={((product.unit_price * product.quantity) - product.discount).toFixed(2)}
+                                            value={((product.unit_price - product.unit_discount) * product.quantity).toFixed(2)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -273,11 +273,11 @@ const QuotationView = forwardRef((props, ref) => {
                                 <td colSpan="2"></td>
                                 {cookies.get('admin') === "true" ?
                                     <td className="text-end">
-                                        {model.net_profit > 0 ? model.discount?model.discount.toFixed(2):"0.00" : "0.00"}
+                                        {model.net_profit > 0 ? model.discount ? model.discount.toFixed(2) : "0.00" : "0.00"}
                                     </td> : ""}
                                 {cookies.get('admin') === "true" ?
                                     <td className="text-end">
-                                        {model.net_loss > 0 ? model.discount?model.discount.toFixed(2):"0.00" : "0.00"}
+                                        {model.net_loss > 0 ? model.discount ? model.discount.toFixed(2) : "0.00" : "0.00"}
                                     </td> : ""}
                             </tr>
                             <tr>
@@ -311,7 +311,7 @@ const QuotationView = forwardRef((props, ref) => {
                                     />
                                 </th>
 
-                            
+
                                 {cookies.get('admin') === "true" ?
                                     <th colSpan="2" className="text-end">Net Profit / Loss</th>
                                     : ""}
@@ -336,7 +336,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </th> : ""}
-                               
+
                             </tr>
                         </tbody>
                     </table>
