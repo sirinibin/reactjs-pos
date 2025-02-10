@@ -120,7 +120,7 @@ function PurchaseIndex(props) {
         },
         {
             id: "bank_cheque",
-            name: "Cheque",
+            name: "Bank Cheque",
         },
         {
             id: "vendor_account",

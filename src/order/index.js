@@ -583,7 +583,7 @@ const OrderIndex = forwardRef((props, ref) => {
         },
         {
             id: "bank_cheque",
-            name: "Cheque",
+            name: "Bank Cheque",
         },
         {
             id: "customer_account",

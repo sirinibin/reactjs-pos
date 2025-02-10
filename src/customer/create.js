@@ -104,7 +104,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
 
     function convertToArabicNumber(input) {
-        return input.replace(/\d/g, function (m) {
+        return input?.replace(/\d/g, function (m) {
             return persianMap[parseInt(m)];
         });
     }
@@ -127,31 +127,31 @@ const CustomerCreate = forwardRef((props, ref) => {
             formData.registration_number_in_arabic = convertToArabicNumber(formData.registration_number.toString());
         }
 
-        if (formData.national_address.application_no) {
+        if (formData.national_address?.application_no) {
             formData.national_address.application_no_arabic = convertToArabicNumber(formData.national_address.application_no.toString());
         }
 
-        if (formData.national_address.service_no) {
+        if (formData.national_address?.service_no) {
             formData.national_address.service_no_arabic = convertToArabicNumber(formData.national_address.service_no.toString());
         }
 
-        if (formData.national_address.customer_account_no) {
+        if (formData.national_address?.customer_account_no) {
             formData.national_address.customer_account_no_arabic = convertToArabicNumber(formData.national_address.customer_account_no.toString());
         }
 
-        if (formData.national_address.building_no) {
+        if (formData.national_address?.building_no) {
             formData.national_address.building_no_arabic = convertToArabicNumber(formData.national_address.building_no.toString());
         }
 
-        if (formData.national_address.zipcode) {
+        if (formData.national_address?.zipcode) {
             formData.national_address.zipcode_arabic = convertToArabicNumber(formData.national_address.zipcode.toString());
         }
 
-        if (formData.national_address.additional_no) {
+        if (formData.national_address?.additional_no) {
             formData.national_address.additional_no_arabic = convertToArabicNumber(formData.national_address.additional_no.toString());
         }
 
-        if (formData.national_address.unit_no) {
+        if (formData.national_address?.unit_no) {
             formData.national_address.unit_no_arabic = convertToArabicNumber(formData.national_address.unit_no.toString());
         }
 
