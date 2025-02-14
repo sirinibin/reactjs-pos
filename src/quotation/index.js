@@ -107,6 +107,13 @@ function QuotationIndex(props) {
     var params = {
       name: searchTerm,
     };
+
+
+    if (cookies.get("store_id")) {
+      params.store_id = cookies.get("store_id");
+    }
+
+
     var queryString = ObjectToSearchQueryParams(params);
     if (queryString !== "") {
       queryString = `&${queryString}`;
@@ -572,23 +579,23 @@ function QuotationIndex(props) {
                           </b>
                         </th>
                         <th>
-                            <b
-                                style={{
-                                    textDecoration: "underline",
-                                    cursor: "pointer",
-                                }}
-                                onClick={() => {
-                                    sort("date");
-                                }}
-                            >
-                                Date
-                                {sortField === "date" && sortOrder === "-" ? (
-                                    <i className="bi bi-sort-down"></i>
-                                ) : null}
-                                {sortField === "date" && sortOrder === "" ? (
-                                    <i className="bi bi-sort-up"></i>
-                                ) : null}
-                            </b>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("date");
+                            }}
+                          >
+                            Date
+                            {sortField === "date" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-down"></i>
+                            ) : null}
+                            {sortField === "date" && sortOrder === "" ? (
+                              <i className="bi bi-sort-up"></i>
+                            ) : null}
+                          </b>
                         </th>
                         <th>
                           <b
@@ -743,69 +750,69 @@ function QuotationIndex(props) {
                           />
                         </th>
                         <th>
-                            <DatePicker
-                                id="date_str"
-                                value={dateValue}
+                          <DatePicker
+                            id="date_str"
+                            value={dateValue}
+                            selected={selectedDate}
+                            className="form-control"
+                            dateFormat="MMM dd yyyy"
+                            onChange={(date) => {
+                              if (!date) {
+                                setDateValue("");
+                                searchByDateField("date_str", "");
+                                return;
+                              }
+                              searchByDateField("date_str", date);
+                            }}
+                          />
+                          <small
+                            style={{
+                              color: "blue",
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={(e) => setShowDateRange(!showDateRange)}
+                          >
+                            {showDateRange ? "Less.." : "More.."}
+                          </small>
+                          <br />
+
+                          {showDateRange ? (
+                            <span className="text-left">
+                              From:{" "}
+                              <DatePicker
+                                id="from_date"
+                                value={fromDateValue}
                                 selected={selectedDate}
                                 className="form-control"
                                 dateFormat="MMM dd yyyy"
                                 onChange={(date) => {
-                                    if (!date) {
-                                        setDateValue("");
-                                        searchByDateField("date_str", "");
-                                        return;
-                                    }
-                                    searchByDateField("date_str", date);
+                                  if (!date) {
+                                    setFromDateValue("");
+                                    searchByDateField("from_date", "");
+                                    return;
+                                  }
+                                  searchByDateField("from_date", date);
                                 }}
-                            />
-                            <small
-                                style={{
-                                    color: "blue",
-                                    textDecoration: "underline",
-                                    cursor: "pointer",
+                              />
+                              To:{" "}
+                              <DatePicker
+                                id="to_date"
+                                value={toDateValue}
+                                selected={selectedDate}
+                                className="form-control"
+                                dateFormat="MMM dd yyyy"
+                                onChange={(date) => {
+                                  if (!date) {
+                                    setToDateValue("");
+                                    searchByDateField("to_date", "");
+                                    return;
+                                  }
+                                  searchByDateField("to_date", date);
                                 }}
-                                onClick={(e) => setShowDateRange(!showDateRange)}
-                            >
-                                {showDateRange ? "Less.." : "More.."}
-                            </small>
-                            <br />
-
-                            {showDateRange ? (
-                                <span className="text-left">
-                                    From:{" "}
-                                    <DatePicker
-                                        id="from_date"
-                                        value={fromDateValue}
-                                        selected={selectedDate}
-                                        className="form-control"
-                                        dateFormat="MMM dd yyyy"
-                                        onChange={(date) => {
-                                            if (!date) {
-                                                setFromDateValue("");
-                                                searchByDateField("from_date", "");
-                                                return;
-                                            }
-                                            searchByDateField("from_date", date);
-                                        }}
-                                    />
-                                    To:{" "}
-                                    <DatePicker
-                                        id="to_date"
-                                        value={toDateValue}
-                                        selected={selectedDate}
-                                        className="form-control"
-                                        dateFormat="MMM dd yyyy"
-                                        onChange={(date) => {
-                                            if (!date) {
-                                                setToDateValue("");
-                                                searchByDateField("to_date", "");
-                                                return;
-                                            }
-                                            searchByDateField("to_date", date);
-                                        }}
-                                    />
-                                </span>
-                            ) : null}
+                              />
+                            </span>
+                          ) : null}
                         </th>
                         <th>
                           <input
