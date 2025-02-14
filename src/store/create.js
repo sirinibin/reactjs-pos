@@ -661,14 +661,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="title"
                                     placeholder="Title"
                                 />
-              
+
                             </div>
                             {errors.title && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.title}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.title}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -689,15 +689,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="title_in_arabic"
                                     placeholder="Title In Arabic"
                                 />
-                              
+
 
                             </div>
                             {errors.title_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.title_in_arabic}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.title_in_arabic}
+                                </div>
+                            )}
                         </div>
 
 
@@ -720,14 +720,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="address"
                                     placeholder="Address"
                                 />
-                               
+
                             </div>
                             {errors.address && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.address}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -748,14 +748,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="address_in_arabic"
                                     placeholder="Address In Arabic"
                                 />
-                              
+
                             </div>
                             {errors.address_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.address_in_arabic}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address_in_arabic}
+                                </div>
+                            )}
 
                         </div>
 
@@ -789,15 +789,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     }}
                                     multiple
                                 />
-                              
+
 
                             </div>
                             {errors.use_products_from_store_id && (
-                                    <div style={{ color: "red" }}>
-                                    
-                                        {errors.use_products_from_store_id}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.use_products_from_store_id}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -818,15 +818,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="registration_number"
                                     placeholder="Registration Number(C.R NO.)"
                                 />
-                               
+
 
                             </div>
                             {errors.registration_number && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.registration_number}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.registration_number}
+                                </div>
+                            )}
                         </div>
 
 
@@ -848,15 +848,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="zipcode"
                                     placeholder="Zipcode"
                                 />
-                                
+
 
                             </div>
                             {errors.zipcode && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.zipcode}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.zipcode}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -877,15 +877,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="phone"
                                     placeholder="Phone"
                                 />
-                               
+
 
                             </div>
                             {errors.phone && (
-                                    <div style={{ color: "red" }}>
-                                      
-                                        {errors.phone}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.phone}
+                                </div>
+                            )}
                         </div>
 
 
@@ -907,15 +907,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="vat_no"
                                     placeholder="VAT NO."
                                 />
-                              
+
 
                             </div>
                             {errors.vat_no && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.vat_no}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.vat_no}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -944,15 +944,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="vat_percent"
                                     placeholder="Vat %"
                                 />
-                               
+
 
                             </div>
                             {errors.vat_percent && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.vat_percent}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.vat_percent}
+                                </div>
+                            )}
                         </div>
 
 
@@ -977,15 +977,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Email"
                                 />
 
-                             
+
 
                             </div>
                             {errors.email && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.email}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.email}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1047,15 +1047,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="logo"
                                     placeholder="Logo"
                                 />
-                               
+
 
                             </div>
                             {errors.logo_content && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.logo_content}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.logo_content}
+                                </div>
+                            )}
                         </div>
 
                         <h2>National Address:</h2>
@@ -1078,15 +1078,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Building Number"
                                 />
 
-                               
+
 
                             </div>
                             {errors.national_address_building_no && (
-                                    <div style={{ color: "red" }}>
-                                      
-                                        {errors.national_address_building_no}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_building_no}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1108,14 +1108,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Street Name"
                                 />
 
-                              
+
 
                             </div>
                             {errors.national_address_street_name && (
-                                    <div style={{ color: "red" }}>
-                                        {errors.national_address_street_name}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+                                    {errors.national_address_street_name}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1167,15 +1167,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="District Name"
                                 />
 
-                              
+
 
                             </div>
                             {errors.national_address_district_name && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.national_address_district_name}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_district_name}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1197,14 +1197,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="District Name(Arabic)"
                                 />
 
-                              
+
                             </div>
                             {errors.national_address_district_name_arabic && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.national_address_district_name_arabic}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_district_name_arabic}
+                                </div>
+                            )}
 
                         </div>
 
@@ -1228,15 +1228,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="City Name"
                                 />
 
-                               
+
 
                             </div>
                             {errors.national_address_city_name && (
-                                    <div style={{ color: "red" }}>
-                                      
-                                        {errors.national_address_city_name}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_city_name}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1258,15 +1258,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="City Name(Arabic)"
                                 />
 
-                              
+
 
                             </div>
                             {errors.national_address_city_name_arabic && (
-                                    <div style={{ color: "red" }}>
-                                      
-                                        {errors.national_address_city_name_arabic}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_city_name_arabic}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1288,15 +1288,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Zipcode"
                                 />
 
-                              
+
 
                             </div>
                             {errors.national_address_zipcode && (
-                                    <div style={{ color: "red" }}>
-                                      
-                                        {errors.national_address_zipcode}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_zipcode}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1318,15 +1318,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Additional Number"
                                 />
 
-                               
+
 
                             </div>
                             {errors.national_address_additional_no && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.national_address_additional_no}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_additional_no}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1348,15 +1348,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Unit Number"
                                 />
 
-                              
+
 
                             </div>
                             {errors.national_address_unit_no && (
-                                    <div style={{ color: "red" }}>
-                                       
-                                        {errors.national_address_unit_no}
-                                    </div>
-                                )}
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_unit_no}
+                                </div>
+                            )}
                         </div>
 
                         <h2>Serial Numbers</h2>
@@ -1379,13 +1379,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="S-INV-UMLJ"
                                 />
 
-                                {errors.sales_serial_number_prefix && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.sales_serial_number_prefix}
-                                    </div>
-                                )}
+
                             </div>
+                            {errors.sales_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.sales_serial_number_prefix}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1406,13 +1407,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="4 will make counter value: 0001"
                                 />
 
-                                {errors.formData?.sales_serial_number.padding_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.sales_serial_number_padding_count}
-                                    </div>
-                                )}
+
                             </div>
+                            {errors.formData?.sales_serial_number.padding_count && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.sales_serial_number_padding_count}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1433,13 +1435,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="eg: Start counting from 1000"
                                 />
 
-                                {errors.sales_serial_number_start_from_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.sales_serial_number_start_from_count}
-                                    </div>
-                                )}
+
                             </div>
+                            {errors.sales_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.sales_serial_number_start_from_count}
+                                </div>
+                            )}
                         </div>
 
                         <h5>Sales Return ID's: {formData.sales_return_serial_number.prefix.toUpperCase()}-{String(formData.sales_return_serial_number.start_from_count).padStart(formData.sales_return_serial_number.padding_count, '0')}, {formData.sales_return_serial_number.prefix.toUpperCase()}-{String((formData.sales_return_serial_number.start_from_count + 1)).padStart(formData.sales_return_serial_number.padding_count, '0')}...</h5>
@@ -1461,13 +1464,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="S-INV-UMLJ"
                                 />
 
-                                {errors.sales_return_serial_number_prefix && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.sales_return_serial_number_prefix}
-                                    </div>
-                                )}
+
                             </div>
+                            {errors.sales_return_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.sales_return_serial_number_prefix}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1488,13 +1492,13 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="4 will make counter value: 0001"
                                 />
 
-                                {errors.sales_return_serial_number_padding_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.sales_return_serial_number_padding_count}
-                                    </div>
-                                )}
+
                             </div>
+                            {errors.sales_return_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    {errors.sales_return_serial_number_padding_count}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1518,14 +1522,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="formData.sales_serial_number.start_from_count"
                                     placeholder="eg: Start counting from 1000"
                                 />
-
-                                {errors.sales_return_serial_number_start_from_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.sales_return_serial_number_start_from_count}
-                                    </div>
-                                )}
                             </div>
+                            {errors.sales_return_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    {errors.sales_return_serial_number_start_from_count}
+                                </div>
+                            )}
                         </div>
 
 
@@ -1548,13 +1550,13 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="S-INV-UMLJ"
                                 />
 
-                                {errors.purchase_serial_number_prefix && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.purchase_serial_number_prefix}
-                                    </div>
-                                )}
                             </div>
+
+                            {errors.purchase_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+                                    {errors.purchase_serial_number_prefix}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1574,14 +1576,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="formData.purchase_serial_number.padding_count"
                                     placeholder="4 will make counter value: 0001"
                                 />
-
-                                {errors.purchase_serial_number_padding_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.purchase_serial_number_padding_count}
-                                    </div>
-                                )}
                             </div>
+                            {errors.purchase_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    {errors.purchase_serial_number_padding_count}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1606,13 +1606,13 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="eg: Start counting from 1000"
                                 />
 
-                                {errors.purchase_serial_number_start_from_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.purchase_serial_number_start_from_count}
-                                    </div>
-                                )}
                             </div>
+                            {errors.purchase_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.purchase_serial_number_start_from_count}
+                                </div>
+                            )}
                         </div>
 
 
@@ -1635,13 +1635,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="PR-INV-UMLJ"
                                 />
 
-                                {errors.purchase_return_serial_number_prefix && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.purchase_return_serial_number_prefix}
-                                    </div>
-                                )}
+
                             </div>
+                            {errors.purchase_return_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.purchase_return_serial_number_prefix}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1662,13 +1663,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="4 will make counter value: 0001"
                                 />
 
-                                {errors.purchase_return_serial_number_padding_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.purchase_return_serial_number_padding_count}
-                                    </div>
-                                )}
+
                             </div>
+                            {errors.purchase_return_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.purchase_return_serial_number_padding_count}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1693,13 +1695,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="eg: Start counting from 1000"
                                 />
 
-                                {errors.purchase_return_serial_number_start_from_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.purchase_return_serial_number_start_from_count}
-                                    </div>
-                                )}
                             </div>
+
+                            {errors.purchase_return_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.purchase_return_serial_number_start_from_count}
+                                </div>
+                            )}
                         </div>
 
 
@@ -1722,13 +1725,14 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="PR-INV-UMLJ"
                                 />
 
-                                {errors.quotation_serial_number_prefix && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.quotation_serial_number_prefix}
-                                    </div>
-                                )}
+
                             </div>
+                            {errors.quotation_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.quotation_serial_number_prefix}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1748,14 +1752,13 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="formData.quotation_serial_number.padding_count"
                                     placeholder="4 will make counter value: 0001"
                                 />
-
-                                {errors.quotation_serial_number_padding_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.quotation_serial_number_padding_count}
-                                    </div>
-                                )}
                             </div>
+                            {errors.quotation_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.quotation_serial_number_padding_count}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-4">
@@ -1780,14 +1783,13 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="formData.quotation_serial_number.start_from_count"
                                     placeholder="eg: Start counting from 1000"
                                 />
-
-                                {errors.quotation_serial_number_start_from_count && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.quotation_serial_number_start_from_count}
-                                    </div>
-                                )}
                             </div>
+                            {errors.quotation_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.quotation_serial_number_start_from_count}
+                                </div>
+                            )}
                         </div>
 
 
