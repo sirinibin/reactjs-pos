@@ -133,18 +133,6 @@ const CustomerView = forwardRef((props, ref) => {
                         <Table striped bordered hover responsive="lg">
                             <tbody>
                                 <tr>
-                                    <th>Application Number: </th><td> {model.national_address.application_no}</td>
-                                    <th>Application Number(Arabic): </th><td> {model.national_address.application_no_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Service Number: </th><td> {model.national_address.service_no}</td>
-                                    <th>Service Number(Arabic): </th><td> {model.national_address.service_no_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Customer Account Number: </th><td> {model.national_address.customer_account_no}</td>
-                                    <th>Customer Account Number(Arabic): </th><td> {model.national_address.customer_account_no_arabic}</td>
-                                </tr>
-                                <tr>
                                     <th>Building Number: </th><td> {model.national_address.building_no}</td>
                                     <th>Building Number(Arabic): </th><td> {model.national_address.building_no_arabic}</td>
                                 </tr>

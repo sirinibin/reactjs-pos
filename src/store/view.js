@@ -92,9 +92,14 @@ const StoreView = forwardRef((props, ref) => {
                 <Table striped bordered hover responsive="lg">
                     <tbody>
                         <tr>
+                            <th>Zatca Phase:</th><td> {model.zatca?.phase ? "Phase " + model.zatca?.phase : "Phase 1"}</td>
                             <th>Name:</th><td> {model.name}</td>
                             <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
-                            <th>Code:</th><td> {model.code}</td>
+                        </tr>
+                        <tr>
+                            <th>Business category:</th><td> {model.business_category}</td>
+                            <th>Branch Code:</th><td> {model.code}</td>
+                            <th>Branch Name:</th><td> {model.branch_name}</td>
                         </tr>
                         <tr>
                             <th>Title:</th><td> {model.title}</td>
@@ -143,18 +148,6 @@ const StoreView = forwardRef((props, ref) => {
                         <Table striped bordered hover responsive="lg">
                             <tbody>
                                 <tr>
-                                    <th>Application Number: </th><td> {model.national_address.application_no}</td>
-                                    <th>Application Number(Arabic): </th><td> {model.national_address.application_no_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Service Number: </th><td> {model.national_address.service_no}</td>
-                                    <th>Service Number(Arabic): </th><td> {model.national_address.service_no_arabic}</td>
-                                </tr>
-                                <tr>
-                                    <th>Customer Account Number: </th><td> {model.national_address.customer_account_no}</td>
-                                    <th>Customer Account Number(Arabic): </th><td> {model.national_address.customer_account_no_arabic}</td>
-                                </tr>
-                                <tr>
                                     <th>Building Number: </th><td> {model.national_address.building_no}</td>
                                     <th>Building Number(Arabic): </th><td> {model.national_address.building_no_arabic}</td>
                                 </tr>
@@ -186,6 +179,52 @@ const StoreView = forwardRef((props, ref) => {
                         </Table>
                     </span>
                 }
+                <h2> Serial Numbers</h2>
+
+                <span>
+                    <Table striped bordered hover responsive="lg">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Prefix</th>
+                                <th>Padding count</th>
+                                <th>Counting start from</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {model.sales_serial_number && <tr>
+                                <td>Sales</td>
+                                <td> {model.sales_serial_number.prefix}</td>
+                                <td> {model.sales_serial_number.padding_count}</td>
+                                <td> {model.sales_serial_number.start_from_count}</td>
+                            </tr>}
+                            {model.sales_return_serial_number && <tr>
+                                <td>Sales Return</td>
+                                <td> {model.sales_return_serial_number.prefix}</td>
+                                <td> {model.sales_return_serial_number.padding_count}</td>
+                                <td> {model.sales_return_serial_number.start_from_count}</td>
+                            </tr>}
+                            {model.purchase_serial_number && <tr>
+                                <td>Purchase</td>
+                                <td> {model.purchase_serial_number.prefix}</td>
+                                <td> {model.purchase_serial_number.padding_count}</td>
+                                <td> {model.purchase_serial_number.start_from_count}</td>
+                            </tr>}
+                            {model.purchase_return_serial_number && <tr>
+                                <td>Purchase Return</td>
+                                <td> {model.purchase_return_serial_number.prefix}</td>
+                                <td> {model.purchase_return_serial_number.padding_count}</td>
+                                <td> {model.purchase_return_serial_number.start_from_count}</td>
+                            </tr>}
+                            {model.quotation_serial_number && <tr>
+                                <td>Quotation Return</td>
+                                <td> {model.quotation_serial_number.prefix}</td>
+                                <td> {model.quotation_serial_number.padding_count}</td>
+                                <td> {model.quotation_serial_number.start_from_count}</td>
+                            </tr>}
+                        </tbody>
+                    </Table>
+                </span>
 
                 {/*
                     <form className="row g-3 needs-validation" >

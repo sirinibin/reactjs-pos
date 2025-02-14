@@ -127,18 +127,6 @@ const CustomerCreate = forwardRef((props, ref) => {
             formData.registration_number_in_arabic = convertToArabicNumber(formData.registration_number.toString());
         }
 
-        if (formData.national_address?.application_no) {
-            formData.national_address.application_no_arabic = convertToArabicNumber(formData.national_address.application_no.toString());
-        }
-
-        if (formData.national_address?.service_no) {
-            formData.national_address.service_no_arabic = convertToArabicNumber(formData.national_address.service_no.toString());
-        }
-
-        if (formData.national_address?.customer_account_no) {
-            formData.national_address.customer_account_no_arabic = convertToArabicNumber(formData.national_address.customer_account_no.toString());
-        }
-
         if (formData.national_address?.building_no) {
             formData.national_address.building_no_arabic = convertToArabicNumber(formData.national_address.building_no.toString());
         }
@@ -160,6 +148,8 @@ const CustomerCreate = forwardRef((props, ref) => {
         if (formData.id) {
             endPoint = "/v1/customer/" + formData.id;
             method = "PUT";
+        } else if (cookies.get("store_id")) {
+            formData.store_id = cookies.get("store_id");
         }
 
 
@@ -535,109 +525,6 @@ const CustomerCreate = forwardRef((props, ref) => {
                         </div>
 
                         <h2>National Address:</h2>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Application Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address && formData.national_address.application_no ? formData.national_address.application_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_application_no"] = "";
-                                        formData.national_address.application_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.application_no"
-                                    placeholder="Application Number"
-                                />
-
-                                {errors.national_address_application_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_application_no}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.application_no && !errors.national_address_application_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Service Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address && formData.national_address.service_no ? formData.national_address.service_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_service_no"] = "";
-                                        formData.national_address.service_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.service_no"
-                                    placeholder="Service Number"
-                                />
-
-                                {errors.national_address_service_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_service_no}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.service_no && !errors.national_address_service_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Customer Account Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address && formData.national_address.customer_account_no ? formData.national_address.customer_account_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_customer_account_no"] = "";
-                                        formData.national_address.customer_account_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.customer_account_no"
-                                    placeholder="Customer Account Number"
-                                />
-
-                                {errors.national_address_customer_account_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_customer_account_no}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.customer_account_no && !errors.national_address_customer_account_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
                         <div className="col-md-6">
                             <label className="form-label">Building Number</label>
 

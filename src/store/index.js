@@ -1,13 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
 import StoreCreate from "./create.js";
+import ZatcaConnect from "./zatca_connect.js";
 import StoreView from "./view.js";
 import Cookies from "universal-cookie";
-import { Typeahead } from "react-bootstrap-typeahead";
-import { format } from "date-fns";
-import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+//import { confirm } from 'react-bootstrap-confirmation';
+import { formatDistanceToNow } from "date-fns";
+
+const TimeAgo = ({ datetime }) => {
+    return <span>{formatDistanceToNow(new Date(datetime), { addSuffix: true })}</span>;
+};
 
 function StoreIndex(props) {
     const cookies = new Cookies();
@@ -26,7 +30,6 @@ function StoreIndex(props) {
         window.location = "/dashboard/stores";
     }
 
-    const selectedDate = new Date();
 
     //list
     const [storeList, setStoreList] = useState([]);
@@ -40,19 +43,13 @@ function StoreIndex(props) {
     const [offset, setOffset] = useState(0);
 
 
-    //Created At filter
-    const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
-    const [createdAtValue, setCreatedAtValue] = useState("");
-    const [createdAtFromValue, setCreatedAtFromValue] = useState("");
-    const [createdAtToValue, setCreatedAtToValue] = useState("");
+
 
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
     const [isRefreshInProcess, setIsRefreshInProcess] = useState(false);
 
-    //Created By User Auto Suggestion
-    const [userOptions, setUserOptions] = useState([]);
-    const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
+
 
 
     useEffect(() => {
@@ -73,40 +70,6 @@ function StoreIndex(props) {
             .join("&");
     }
 
-    async function suggestUsers(searchTerm) {
-        console.log("Inside handle suggestUsers");
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(
-            "/v1/user?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setUserOptions(data.result);
-    }
-
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
 
@@ -115,62 +78,6 @@ function StoreIndex(props) {
         list();
     }
 
-    function searchByDateField(field, value) {
-        if (!value) {
-            page = 1;
-            searchParams[field] = "";
-            setPage(page);
-            list();
-            return;
-        }
-
-        let d = new Date(value);
-        d = new Date(d.toUTCString());
-
-        value = format(d, "MMM dd yyyy");
-
-        if (field === "created_at") {
-            setCreatedAtValue(value);
-            setCreatedAtFromValue("");
-            setCreatedAtToValue("");
-            searchParams["created_at_from"] = "";
-            searchParams["created_at_to"] = "";
-            searchParams[field] = value;
-        }
-        if (field === "created_at_from") {
-            setCreatedAtFromValue(value);
-            setCreatedAtValue("");
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
-        } else if (field === "created_at_to") {
-            setCreatedAtToValue(value);
-            setCreatedAtValue("");
-            searchParams["created_at"] = "";
-            searchParams[field] = value;
-        }
-
-        page = 1;
-        setPage(page);
-
-        list();
-    }
-
-    function searchByMultipleValuesField(field, values) {
-        if (field === "created_by") {
-            setSelectedCreatedByUsers(values);
-        }
-
-        searchParams[field] = Object.values(values)
-            .map(function (model) {
-                return model.id;
-            })
-            .join(",");
-
-        page = 1;
-        setPage(page);
-
-        list();
-    }
 
     function list() {
         const requestOptions = {
@@ -181,7 +88,7 @@ function StoreIndex(props) {
             },
         };
         let Select =
-            "select=id,name,code,created_by_name,created_at,vat_percent";
+            "select=id,name,code,branch_name,created_by_name,created_at,vat_percent,zatca";
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
@@ -261,6 +168,76 @@ function StoreIndex(props) {
         CreateFormRef.current.open(id);
     }
 
+    function openZatcaConnectForm(id) {
+        ZatcaConnectFormRef.current.open(id);
+    }
+
+    /*
+
+    const confirmZatcaDisconnection = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure?');
+        console.log(result);
+        if (result) {
+            disConnectFromZatca(id);
+        }
+    };
+
+    function disConnectFromZatca(id) {
+        console.log("Inside handle Connect");
+        let endPoint = "/v1/store/zatca/disconnect";
+        let method = "POST";
+
+        let formData = {id:id};
+
+        const requestOptions = {
+            method: method,
+            headers: {
+                'Accept': 'application/json',
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+            body: JSON.stringify(formData),
+        };
+
+        console.log("formData:", formData);
+
+        //setProcessing(true);
+        fetch(endPoint, requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    // get error message from body or default to response status
+                    const error = data && data.errors;
+                    //const error = data.errors
+                    return Promise.reject(error);
+                }
+
+                //setErrors({});
+               // setProcessing(false);
+
+                console.log("Response:");
+                console.log(data);
+                props.showToastMessage("Store Disconnected from Zatca Successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+                //setProcessing(false);
+                console.log(error);
+                //setErrors({ ...error });
+                console.error("There was an error!", error);
+                props.showToastMessage("Error Connecting to Zatca!", "danger");
+            });
+    }
+    */
+
+    const ZatcaConnectFormRef = useRef();
+
     const DetailsViewRef = useRef();
     function openDetailsView(id) {
         DetailsViewRef.current.open(id);
@@ -276,6 +253,7 @@ function StoreIndex(props) {
     return (
         <>
             <StoreCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
+            <ZatcaConnect ref={ZatcaConnectFormRef} refreshList={list} showToastMessage={props.showToastMessage} />
             <StoreView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
             <div className="container-fluid p-0">
@@ -305,7 +283,7 @@ function StoreIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={selectAllStore}
                         >
-                            <i className="bi bi-plus-lg"></i> Select All Stores
+                             Select All Stores
                         </Button>
                     </div>
                 </div>
@@ -434,6 +412,7 @@ function StoreIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
+                                                <th>Select</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -463,7 +442,7 @@ function StoreIndex(props) {
                                                             sort("code");
                                                         }}
                                                     >
-                                                        Code
+                                                        Branch Code
                                                         {sortField === "code" && sortStore === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -479,14 +458,14 @@ function StoreIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("created_by_name");
+                                                            sort("branch_name");
                                                         }}
                                                     >
-                                                        Created By
-                                                        {sortField === "created_by_name" && sortStore === "-" ? (
+                                                        Branch Name
+                                                        {sortField === "branch_name" && sortStore === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "created_by_name" && sortStore === "" ? (
+                                                        {sortField === "branch_name" && sortStore === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -498,15 +477,15 @@ function StoreIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("created_at");
+                                                            sort("zatca.phase");
                                                         }}
                                                     >
-                                                        Created At
-                                                        {sortField === "created_at" && sortStore === "-" ? (
-                                                            <i className="bi bi-sort-down"></i>
+                                                        Zatca phase
+                                                        {sortField === "zatca.phase" && sortStore === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "created_at" && sortStore === "" ? (
-                                                            <i className="bi bi-sort-up"></i>
+                                                        {sortField === "zatca.phase" && sortStore === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -516,6 +495,7 @@ function StoreIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -537,91 +517,24 @@ function StoreIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
-                                                    <Typeahead
-                                                        id="created_by"
-                                                        labelKey="name"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "created_by",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={userOptions}
-                                                        placeholder="Select Users"
-                                                        selected={selectedCreatedByUsers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestUsers(searchTerm);
-                                                        }}
-                                                        multiple
+                                                    <input
+                                                        type="text"
+                                                        id="branch_name"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("branch_name", e.target.value)
+                                                        }
+                                                        className="form-control"
                                                     />
                                                 </th>
                                                 <th>
-                                                    <DatePicker
-                                                        id="created_at"
-                                                        value={createdAtValue}
-                                                        selected={selectedDate}
-                                                        className="form-control"
-                                                        dateFormat="MMM dd yyyy"
-                                                        onChange={(date) => {
-                                                            if (!date) {
-                                                                setCreatedAtValue("");
-                                                                searchByDateField("created_at", "");
-                                                                return;
-                                                            }
-                                                            searchByDateField("created_at", date);
-                                                        }}
-                                                    />
-                                                    <small
-                                                        style={{
-                                                            color: "blue",
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={(e) =>
-                                                            setShowCreatedAtDateRange(!showCreatedAtDateRange)
+                                                    <input
+                                                        type="text"
+                                                        id="phase"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("zatca.phase", e.target.value)
                                                         }
-                                                    >
-                                                        {showCreatedAtDateRange ? "Less.." : "More.."}
-                                                    </small>
-                                                    <br />
-
-                                                    {showCreatedAtDateRange ? (
-                                                        <span className="text-left">
-                                                            From:{" "}
-                                                            <DatePicker
-                                                                id="created_at_from"
-                                                                value={createdAtFromValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setCreatedAtFromValue("");
-                                                                        searchByDateField("created_at_from", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("created_at_from", date);
-                                                                }}
-                                                            />
-                                                            To:{" "}
-                                                            <DatePicker
-                                                                id="created_at_to"
-                                                                value={createdAtToValue}
-                                                                selected={selectedDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setCreatedAtToValue("");
-                                                                        searchByDateField("created_at_to", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("created_at_to", date);
-                                                                }}
-                                                            />
-                                                        </span>
-                                                    ) : null}
+                                                        className="form-control"
+                                                    />
                                                 </th>
                                                 <th></th>
                                             </tr>
@@ -631,15 +544,6 @@ function StoreIndex(props) {
                                             {storeList &&
                                                 storeList.map((store) => (
                                                     <tr key={store.id}>
-                                                        <td>{store.name}</td>
-                                                        <td>{store.code}</td>
-                                                        <td>{store.created_by_name}</td>
-                                                        <td>
-                                                            {format(
-                                                                new Date(store.created_at),
-                                                                "MMM dd yyyy H:mma"
-                                                            )}
-                                                        </td>
                                                         <td>
                                                             {cookies.get('store_id') !== store.id ?
                                                                 <Button className="btn btn-danger btn-sm" onClick={() => {
@@ -647,8 +551,54 @@ function StoreIndex(props) {
                                                                 }}>
                                                                     <i className="bi bi-select"></i>
                                                                     SELECT
-                                                                </Button> : "SELECTED"}
+                                                                </Button> : <span className="badge bg-success">SELECTED</span>}
+                                                        </td>
+                                                        <td>{store.name}</td>
+                                                        <td>{store.code}</td>
+                                                        <td>{store.branch_name}</td>
+                                                        <td>
+                                                            {store.zatca.phase === "2" ?
+                                                                <span className="badge bg-success">
+                                                                    {"Phase " + store.zatca.phase}
+                                                                </span> : <span className="badge bg-warning">
+                                                                    {"Phase " + store.zatca.phase}
+                                                                </span>}
+                                                            <br />
+                                                            {store.zatca.phase === "2" && store.zatca.connected ?
+                                                                <span className="badge bg-success">
+                                                                    {"Connected"}
 
+
+                                                                </span> : ""}
+                                                            <br />
+                                                            {store.zatca.phase === "2" && store.zatca.last_connected_at ? <TimeAgo datetime={store.zatca.last_connected_at} /> : ""}
+                                                            <br />
+                                                            {store.zatca.phase === "2" && !store.zatca.connected ? <Button style={{ marginTop: "3px" }} className="btn btn-danger btn-sm" onClick={() => {
+                                                                openZatcaConnectForm(store.id);
+                                                            }}>
+                                                                <i className="bi bi-power"></i>&nbsp;
+                                                                Connect to Zatca
+                                                            </Button> : ""}
+
+                                                            {store.zatca.phase === "2" && store.zatca.connected ? <Button style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                openZatcaConnectForm(store.id);
+                                                            }}>
+                                                                <i className="fa fa-refresh"></i>&nbsp;
+                                                                Refresh Connection
+                                                            </Button> : ""}
+
+
+
+                                                            {/*store.zatca.phase === "2"&&store.zatca.connected ? <Button style={{marginTop:"3px"}} className="btn btn-danger btn-sm" onClick={() => {
+                                                                confirmZatcaDisconnection(store.id);
+                                                            }}>
+                                                                <i className="bi bi-power"></i>&nbsp;
+                                                                Disconnect from Zatca
+                                                        </Button>:""*/}
+
+
+                                                        </td>
+                                                        <td>
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(store.id);
                                                             }}>
@@ -660,23 +610,6 @@ function StoreIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
-
-                                                            {/*
-                                                        <button
-                                                            className="btn btn-outline-secondary dropdown-toggle"
-                                                            type="button"
-                                                            data-bs-toggle="dropdown"
-                                                            aria-expanded="false"
-                                                        ></button>
-                                                        <ul className="dropdown-menu">
-                                                            <li>
-                                                                <a href="/" className="dropdown-item">
-                                                                    <i className="bi bi-download"></i>
-                                                                    Download
-                                                                </a>
-                                                            </li>
-                                                        </ul>
-                                                       */}
                                                         </td>
                                                     </tr>
                                                 ))}

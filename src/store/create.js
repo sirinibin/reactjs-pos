@@ -4,6 +4,7 @@ import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
 import { Typeahead } from "react-bootstrap-typeahead";
+//import { DebounceInput } from 'react-debounce-input';
 
 const StoreCreate = forwardRef((props, ref) => {
 
@@ -12,8 +13,39 @@ const StoreCreate = forwardRef((props, ref) => {
             selectedStores = [];
             setSelectedStores(selectedStores);
 
-            formData = { national_address: {} };
-            setFormData({ national_address: {} });
+            formData = {
+                national_address: {},
+                zatca: {},
+                business_category: "Supply Activities",
+                branch_name: "",
+                code: "",
+                sales_serial_number: {
+                    prefix: "S-INV",
+                    start_from_count: 1,
+                    padding_count: 6
+                },
+                sales_return_serial_number: {
+                    prefix: "SR-INV",
+                    start_from_count: 1,
+                    padding_count: 6
+                },
+                purchase_serial_number: {
+                    prefix: "P-INV",
+                    start_from_count: 1,
+                    padding_count: 6
+                },
+                purchase_return_serial_number: {
+                    prefix: "PR-INV",
+                    start_from_count: 1,
+                    padding_count: 6
+                },
+                quotation_serial_number: {
+                    prefix: "QTN",
+                    start_from_count: 1,
+                    padding_count: 6
+                },
+            };
+            setFormData({ ...formData });
             if (id) {
                 getStore(id);
             }
@@ -56,7 +88,35 @@ const StoreCreate = forwardRef((props, ref) => {
 
     //fields
     let [formData, setFormData] = useState({
-        national_address: {}
+        national_address: {},
+        zatca: {},
+        branch_name: "",
+        business_category: "Supply Activities",
+        sales_serial_number: {
+            prefix: "S-INV-",
+            start_from_count: 1,
+            padding_count: 6
+        },
+        sales_return_serial_number: {
+            prefix: "SR-INV-",
+            start_from_count: 1,
+            padding_count: 6
+        },
+        purchase_serial_number: {
+            prefix: "P-INV-",
+            start_from_count: 1,
+            padding_count: 6
+        },
+        purchase_return_serial_number: {
+            prefix: "PR-INV-",
+            start_from_count: 1,
+            padding_count: 6
+        },
+        quotation_serial_number: {
+            prefix: "QTN-",
+            start_from_count: 1,
+            padding_count: 6
+        },
     });
 
     const [show, SetShow] = useState(false);
@@ -334,7 +394,7 @@ const StoreCreate = forwardRef((props, ref) => {
         if (formData.id) {
             data.result = data.result.filter(store => store.id !== formData.id);
         }
-        
+
         setStoreOptions(data.result);
     }
 
@@ -379,9 +439,70 @@ const StoreCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
+                        <div className="col-md-4">
+                            <label className="form-label">Zatca phase*</label>
+
+                            <div className="input-group mb-3">
+                                <select
+                                    value={formData.zatca?.phase}
+                                    onChange={(e) => {
+                                        console.log("Inside onchange payment method");
+                                        if (!e.target.value) {
+                                            formData.zatca.phase = "";
+                                            errors["zatca_phase"] = "Invalid Phase";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        errors["zatca_phase"] = "";
+                                        setErrors({ ...errors });
+
+                                        formData.zatca.phase = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                >
+                                    <option value="1" SELECTED>Phase 1</option>
+                                    <option value="2">Phase 2</option>
+
+                                </select>
+                            </div>
+                            {errors.zatca_phase && (
+                                <div style={{ color: "red" }}>
+                                    {errors.zatca_phase}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Business category*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.business_category}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["business_category"] = "";
+                                        setErrors({ ...errors });
+                                        formData.business_category = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="business_category"
+                                    placeholder="Business category"
+                                />
+                            </div>
+                            {errors.business_category && (
+                                <div style={{ color: "red" }}>
+                                    {errors.business_category}
+                                </div>
+                            )}
+                        </div>
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Name*</label>
 
                             <div className="input-group mb-3">
@@ -399,22 +520,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="name"
                                     placeholder="Name"
                                 />
-                                {errors.name && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.name}
-                                    </div>
-                                )}
-                                {formData.name && !errors.name && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.name && (
+                                <div style={{ color: "red" }}>
+                                    {errors.name}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Name In Arabic*</label>
 
                             <div className="input-group mb-3">
@@ -432,22 +546,17 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="name_in_arabic"
                                     placeholder="Name In Arabic"
                                 />
-                                {errors.name_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.name_in_arabic}
-                                    </div>
-                                )}
-                                {formData.name_in_arabic && !errors.name_in_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.name_in_arabic && (
+                                <div style={{ color: "red" }}>
+                                    {errors.name_in_arabic}
+                                </div>
+                            )}
                         </div>
-                        <div className="col-md-6">
-                            <label className="form-label">Code*</label>
+
+
+                        <div className="col-md-4">
+                            <label className="form-label">Branch Code*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -456,6 +565,38 @@ const StoreCreate = forwardRef((props, ref) => {
                                     onChange={(e) => {
                                         errors["code"] = "";
                                         setErrors({ ...errors });
+
+
+                                        if (!formData.id) {
+                                            if (formData.code) {
+                                                formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                // formData.sales_serial_number.prefix = formData.sales_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
+
+                                                formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                //formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
+
+                                                formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                //  formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
+
+                                                formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                // formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
+
+                                                formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix.replace("-" + formData.code.toUpperCase(), "");
+                                                // formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix.replace(formData.code.toUpperCase(), "-");
+                                            }
+
+                                            if (e.target.value) {
+                                                formData.sales_serial_number.prefix = formData.sales_serial_number.prefix + "-" + e.target.value.toUpperCase();
+                                                formData.sales_return_serial_number.prefix = formData.sales_return_serial_number.prefix + "-" + e.target.value.toUpperCase();
+                                                formData.purchase_serial_number.prefix = formData.purchase_serial_number.prefix + "-" + e.target.value.toUpperCase();
+                                                formData.purchase_return_serial_number.prefix = formData.purchase_return_serial_number.prefix + "-" + e.target.value.toUpperCase();
+                                                formData.quotation_serial_number.prefix = formData.quotation_serial_number.prefix + "-" + e.target.value.toUpperCase();
+                                            }
+                                        }
+
+
+
+
                                         formData.code = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
@@ -464,21 +605,45 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="code"
                                     placeholder="Code"
                                 />
-                                {errors.code && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.code}
-                                    </div>
-                                )}
-                                {formData.code && !errors.code && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+
+
                             </div>
+                            {errors.code && (
+                                <div style={{ color: "red" }}>
+                                    {errors.code}
+                                </div>
+                            )}
                         </div>
-                        <div className="col-md-6">
+
+                        <div className="col-md-4">
+                            <label className="form-label">Branch Name*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.branch_name}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["branch_name"] = "";
+                                        setErrors({ ...errors });
+                                        formData.branch_name = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="branch_name"
+                                    placeholder="Branch Name"
+                                />
+
+
+                            </div>
+                            {errors.branch_name && (
+                                <div style={{ color: "red" }}>
+                                    {errors.branch_name}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-4">
                             <label className="form-label">Title(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -496,22 +661,17 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="title"
                                     placeholder="Title"
                                 />
-                                {errors.title && (
+              
+                            </div>
+                            {errors.title && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.title}
                                     </div>
                                 )}
-                                {formData.title && !errors.title && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Title In Arabic(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -529,24 +689,20 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="title_in_arabic"
                                     placeholder="Title In Arabic"
                                 />
-                                {errors.title_in_arabic && (
+                              
+
+                            </div>
+                            {errors.title_in_arabic && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.title_in_arabic}
                                     </div>
                                 )}
-                                {formData.title_in_arabic && !errors.title_in_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Address*</label>
 
                             <div className="input-group mb-3">
@@ -564,22 +720,17 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="address"
                                     placeholder="Address"
                                 />
-                                {errors.address && (
+                               
+                            </div>
+                            {errors.address && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.address}
                                     </div>
                                 )}
-                                {formData.address && !errors.address && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Address In Arabic*</label>
 
                             <div className="input-group mb-3">
@@ -597,23 +748,19 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="address_in_arabic"
                                     placeholder="Address In Arabic"
                                 />
-                                {errors.address_in_arabic && (
+                              
+                            </div>
+                            {errors.address_in_arabic && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.address_in_arabic}
                                     </div>
                                 )}
-                                {formData.address_in_arabic && !errors.address_in_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
+
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Use products from other stores*</label>
+                        <div className="col-md-4">
+                            <label className="form-label">Use products from other stores(Optional)</label>
 
                             <div className="input-group mb-3">
                                 <Typeahead
@@ -642,22 +789,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     }}
                                     multiple
                                 />
-                                {errors.use_products_from_store_id && (
+                              
+
+                            </div>
+                            {errors.use_products_from_store_id && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                    
                                         {errors.use_products_from_store_id}
                                     </div>
                                 )}
-                                {formData.use_products_from_store_id && !errors.use_products_from_store_id && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Registration Number(C.R NO.)*</label>
 
                             <div className="input-group mb-3">
@@ -675,23 +818,19 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="registration_number"
                                     placeholder="Registration Number(C.R NO.)"
                                 />
-                                {errors.registration_number && (
+                               
+
+                            </div>
+                            {errors.registration_number && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.registration_number}
                                     </div>
                                 )}
-                                {formData.registration_number && !errors.registration_number && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Zipcode*</label>
 
                             <div className="input-group mb-3">
@@ -709,22 +848,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="zipcode"
                                     placeholder="Zipcode"
                                 />
-                                {errors.zipcode && (
+                                
+
+                            </div>
+                            {errors.zipcode && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.zipcode}
                                     </div>
                                 )}
-                                {formData.zipcode && !errors.zipcode && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Phone*</label>
 
                             <div className="input-group mb-3">
@@ -742,23 +877,19 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="phone"
                                     placeholder="Phone"
                                 />
-                                {errors.phone && (
+                               
+
+                            </div>
+                            {errors.phone && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                      
                                         {errors.phone}
                                     </div>
                                 )}
-                                {formData.phone && !errors.phone && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">VAT NO.*</label>
 
                             <div className="input-group mb-3">
@@ -776,22 +907,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="vat_no"
                                     placeholder="VAT NO."
                                 />
-                                {errors.vat_no && (
+                              
+
+                            </div>
+                            {errors.vat_no && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.vat_no}
                                     </div>
                                 )}
-                                {formData.vat_no && !errors.vat_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">VAT %*</label>
 
                             <div className="input-group mb-3">
@@ -817,25 +944,21 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="vat_percent"
                                     placeholder="Vat %"
                                 />
-                                {errors.vat_percent && (
+                               
+
+                            </div>
+                            {errors.vat_percent && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.vat_percent}
                                     </div>
                                 )}
-                                {formData.vat_percent && !errors.vat_percent && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
 
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Email*</label>
 
                             <div className="input-group mb-3">
@@ -854,22 +977,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Email"
                                 />
 
-                                {errors.email && (
+                             
+
+                            </div>
+                            {errors.email && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.email}
                                     </div>
                                 )}
-                                {formData.email && !errors.email && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Logo*</label>
 
                             <div className="input-group mb-3">
@@ -928,126 +1047,19 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="logo"
                                     placeholder="Logo"
                                 />
-                                {errors.logo_content && (
+                               
+
+                            </div>
+                            {errors.logo_content && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.logo_content}
                                     </div>
                                 )}
-                                {formData.logo_content && !errors.logo_content && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
                         <h2>National Address:</h2>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Application Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.application_no ? formData.national_address.application_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_application_no"] = "";
-                                        formData.national_address.application_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.application_no"
-                                    placeholder="Application Number"
-                                />
-
-                                {errors.national_address_application_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_application_no}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.application_no && !errors.national_address_application_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Service Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.service_no ? formData.national_address.service_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_service_no"] = "";
-                                        formData.national_address.service_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.service_no"
-                                    placeholder="Service Number"
-                                />
-
-                                {errors.national_address_service_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_service_no}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.service_no && !errors.national_address_service_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Customer Account Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.customer_account_no ? formData.national_address.customer_account_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_customer_account_no"] = "";
-                                        formData.national_address.customer_account_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.customer_account_no"
-                                    placeholder="Customer Account Number"
-                                />
-
-                                {errors.national_address_customer_account_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_customer_account_no}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.customer_account_no && !errors.national_address_customer_account_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Building Number</label>
 
                             <div className="input-group mb-3">
@@ -1066,22 +1078,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Building Number"
                                 />
 
-                                {errors.national_address_building_no && (
+                               
+
+                            </div>
+                            {errors.national_address_building_no && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                      
                                         {errors.national_address_building_no}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.building_no && !errors.national_address_building_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Street Name</label>
 
                             <div className="input-group mb-3">
@@ -1100,22 +1108,17 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Street Name"
                                 />
 
-                                {errors.national_address_street_name && (
+                              
+
+                            </div>
+                            {errors.national_address_street_name && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
                                         {errors.national_address_street_name}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.street_name && !errors.national_address_street_name && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Street Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -1140,17 +1143,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                         {errors.national_address_street_name_arabic}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.street_name_arabic && !errors.national_address_street_name_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+
                             </div>
                         </div>
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">District Name</label>
 
                             <div className="input-group mb-3">
@@ -1169,22 +1167,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="District Name"
                                 />
 
-                                {errors.national_address_district_name && (
+                              
+
+                            </div>
+                            {errors.national_address_district_name && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.national_address_district_name}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.district_name && !errors.national_address_district_name && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">District Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -1203,23 +1197,19 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="District Name(Arabic)"
                                 />
 
-                                {errors.national_address_district_name_arabic && (
+                              
+                            </div>
+                            {errors.national_address_district_name_arabic && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.national_address_district_name_arabic}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.district_name_arabic && !errors.national_address_district_name_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
+
                         </div>
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">City Name</label>
 
                             <div className="input-group mb-3">
@@ -1238,22 +1228,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="City Name"
                                 />
 
-                                {errors.national_address_city_name && (
+                               
+
+                            </div>
+                            {errors.national_address_city_name && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                      
                                         {errors.national_address_city_name}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.city_name && !errors.national_address_city_name && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">City Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -1272,22 +1258,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="City Name(Arabic)"
                                 />
 
-                                {errors.national_address_city_name_arabic && (
+                              
+
+                            </div>
+                            {errors.national_address_city_name_arabic && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                      
                                         {errors.national_address_city_name_arabic}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.city_name_arabic && !errors.national_address_city_name_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Zipcode</label>
 
                             <div className="input-group mb-3">
@@ -1306,22 +1288,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Zipcode"
                                 />
 
-                                {errors.national_address_zipcode && (
+                              
+
+                            </div>
+                            {errors.national_address_zipcode && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                      
                                         {errors.national_address_zipcode}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.zipcode && !errors.national_address_zipcode && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Additional Number</label>
 
                             <div className="input-group mb-3">
@@ -1340,22 +1318,18 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Additional Number"
                                 />
 
-                                {errors.national_address_additional_no && (
+                               
+
+                            </div>
+                            {errors.national_address_additional_no && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.national_address_additional_no}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.additional_no && !errors.national_address_additional_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             <label className="form-label">Unit Number</label>
 
                             <div className="input-group mb-3">
@@ -1374,20 +1348,451 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Unit Number"
                                 />
 
-                                {errors.national_address_unit_no && (
+                              
+
+                            </div>
+                            {errors.national_address_unit_no && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.national_address_unit_no}
                                     </div>
                                 )}
-                                {formData.national_address && formData.national_address.unit_no && !errors.national_address_unit_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
+                        </div>
+
+                        <h2>Serial Numbers</h2>
+                        <h5>Sales ID's: {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h5>
+                        <div className="col-md-4">
+                            <label className="form-label">Prefix*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.sales_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["formData.sales_serial_number.prefix"] = "";
+                                        formData.sales_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.sales_serial_number.prefix"
+                                    placeholder="S-INV-UMLJ"
+                                />
+
+                                {errors.sales_serial_number_prefix && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.sales_serial_number_prefix}
                                     </div>
                                 )}
                             </div>
                         </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Padding count*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.sales_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["formData.sales_serial_number.padding_count"] = "";
+                                        formData.sales_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.sales_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+
+                                {errors.formData?.sales_serial_number.padding_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.sales_serial_number_padding_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Counting start from*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.sales_serial_number?.start_from_count ? formData.sales_serial_number.start_from_count : ""}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["formData.sales_serial_number.start_from_count"] = "";
+                                        formData.sales_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.sales_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+
+                                {errors.sales_serial_number_start_from_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.sales_serial_number_start_from_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <h5>Sales Return ID's: {formData.sales_return_serial_number.prefix.toUpperCase()}-{String(formData.sales_return_serial_number.start_from_count).padStart(formData.sales_return_serial_number.padding_count, '0')}, {formData.sales_return_serial_number.prefix.toUpperCase()}-{String((formData.sales_return_serial_number.start_from_count + 1)).padStart(formData.sales_return_serial_number.padding_count, '0')}...</h5>
+                        <div className="col-md-4">
+                            <label className="form-label">Prefix*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.sales_return_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["formData.sales_serial_number.prefix"] = "";
+                                        formData.sales_return_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.sales_return_serial_number.prefix"
+                                    placeholder="S-INV-UMLJ"
+                                />
+
+                                {errors.sales_return_serial_number_prefix && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.sales_return_serial_number_prefix}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Padding count*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.sales_return_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["formData.sales_serial_number.padding_count"] = "";
+                                        formData.sales_return_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.sales_return_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+
+                                {errors.sales_return_serial_number_padding_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.sales_return_serial_number_padding_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Counting start from*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.sales_return_serial_number.start_from_count}
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.sales_return_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["formData.sales_serial_number.start_from_count"] = "";
+                                        formData.sales_return_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.sales_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+
+                                {errors.sales_return_serial_number_start_from_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.sales_return_serial_number_start_from_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <h5>Purchase ID's: {formData.purchase_serial_number.prefix.toUpperCase()}-{String(formData.purchase_serial_number.start_from_count).padStart(formData.purchase_serial_number.padding_count, '0')}, {formData.purchase_serial_number.prefix.toUpperCase()}-{String((formData.purchase_serial_number.start_from_count + 1)).padStart(formData.purchase_serial_number.padding_count, '0')}...</h5>
+                        <div className="col-md-4">
+                            <label className="form-label">Prefix*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.purchase_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["formData.purchase_serial_number.prefix"] = "";
+                                        formData.purchase_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.purchase_serial_number.prefix"
+                                    placeholder="S-INV-UMLJ"
+                                />
+
+                                {errors.purchase_serial_number_prefix && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.purchase_serial_number_prefix}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Padding count*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.purchase_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["formData.purchase_serial_number.padding_count"] = "";
+                                        formData.purchase_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.purchase_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+
+                                {errors.purchase_serial_number_padding_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.purchase_serial_number_padding_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Counting start from*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.purchase_serial_number.start_from_count}
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.purchase_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["formData.purchase_serial_number.start_from_count"] = "";
+                                        formData.purchase_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.purchase_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+
+                                {errors.purchase_serial_number_start_from_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.purchase_serial_number_start_from_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <h5>Purchase Return ID's: {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String(formData.purchase_return_serial_number.start_from_count).padStart(formData.purchase_return_serial_number.padding_count, '0')}, {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String((formData.purchase_return_serial_number.start_from_count + 1)).padStart(formData.purchase_return_serial_number.padding_count, '0')}...</h5>
+                        <div className="col-md-4">
+                            <label className="form-label">Prefix*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.purchase_return_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["formData.purchase_return_serial_number.prefix"] = "";
+                                        formData.purchase_return_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.purchase_return_serial_number.prefix"
+                                    placeholder="PR-INV-UMLJ"
+                                />
+
+                                {errors.purchase_return_serial_number_prefix && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.purchase_return_serial_number_prefix}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Padding count*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.purchase_return_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["formData.purchase_return_serial_number.padding_count"] = "";
+                                        formData.purchase_return_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.purchase_return_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+
+                                {errors.purchase_return_serial_number_padding_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.purchase_return_serial_number_padding_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Counting start from*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.purchase_return_serial_number.start_from_count}
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.purchase_return_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["formData.purchase_return_serial_number.start_from_count"] = "";
+                                        formData.purchase_return_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.purchase_return_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+
+                                {errors.purchase_return_serial_number_start_from_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.purchase_return_serial_number_start_from_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+                        <h5>Quotation ID's: {formData.quotation_serial_number.prefix.toUpperCase()}-{String(formData.quotation_serial_number.start_from_count).padStart(formData.quotation_serial_number.padding_count, '0')}, {formData.quotation_serial_number.prefix.toUpperCase()}-{String((formData.quotation_serial_number.start_from_count + 1)).padStart(formData.quotation_serial_number.padding_count, '0')}...</h5>
+                        <div className="col-md-4">
+                            <label className="form-label">Prefix*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.quotation_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["formData.quotation_serial_number.prefix"] = "";
+                                        formData.quotation_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.quotation_serial_number.prefix"
+                                    placeholder="PR-INV-UMLJ"
+                                />
+
+                                {errors.quotation_serial_number_prefix && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.quotation_serial_number_prefix}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Padding count*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.quotation_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["formData.quotation_serial_number.padding_count"] = "";
+                                        formData.quotation_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.quotation_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+
+                                {errors.quotation_serial_number_padding_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.quotation_serial_number_padding_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Counting start from*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.quotation_serial_number.start_from_count}
+
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.quotation_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["formData.quotation_serial_number.start_from_count"] = "";
+                                        formData.quotation_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.quotation_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+
+                                {errors.quotation_serial_number_start_from_count && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.quotation_serial_number_start_from_count}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+
+
+
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
