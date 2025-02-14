@@ -561,7 +561,7 @@ function StoreIndex(props) {
                                                                 <span className="badge bg-success">
                                                                     {"Phase " + store.zatca.phase}
                                                                 </span> : <span className="badge bg-warning">
-                                                                    {"Phase " + store.zatca.phase}
+                                                                    {"Phase " + store.zatca.phase?store.zatca.phase:"1"}
                                                                 </span>}
                                                             <br />
                                                             {store.zatca.phase === "2" && store.zatca.connected ?
