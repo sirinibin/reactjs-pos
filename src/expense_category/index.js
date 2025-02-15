@@ -169,6 +169,10 @@ function ExpenseCategoryIndex(props) {
         let Select =
             "select=id,name,parent_name,parent_id,created_by_name,created_at";
 
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);

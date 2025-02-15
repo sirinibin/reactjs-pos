@@ -150,6 +150,8 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
         if (formData.id) {
             endPoint = "/v1/expense-category/" + formData.id;
             method = "PUT";
+        } else if (cookies.get("store_id")) {
+            formData.store_id = cookies.get("store_id");
         }
 
 

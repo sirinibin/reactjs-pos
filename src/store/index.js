@@ -283,7 +283,7 @@ function StoreIndex(props) {
                             className="btn btn-primary mb-3"
                             onClick={selectAllStore}
                         >
-                             Select All Stores
+                            Select All Stores
                         </Button>
                     </div>
                 </div>
@@ -561,14 +561,12 @@ function StoreIndex(props) {
                                                                 <span className="badge bg-success">
                                                                     {"Phase " + store.zatca.phase}
                                                                 </span> : <span className="badge bg-warning">
-                                                                    {"Phase " + store.zatca.phase?store.zatca.phase:"1"}
+                                                                    {"Phase " + store.zatca.phase ? store.zatca.phase : "1"}
                                                                 </span>}
                                                             <br />
                                                             {store.zatca.phase === "2" && store.zatca.connected ?
                                                                 <span className="badge bg-success">
                                                                     {"Connected"}
-
-
                                                                 </span> : ""}
                                                             <br />
                                                             {store.zatca.phase === "2" && store.zatca.last_connected_at ? <TimeAgo datetime={store.zatca.last_connected_at} /> : ""}
