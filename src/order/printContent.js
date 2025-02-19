@@ -2,6 +2,7 @@ import { React, forwardRef } from "react";
 import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
+import { QRCodeCanvas } from "qrcode.react";
 
 const OrderPrintContent = forwardRef((props, ref) => {
     //Non-A4
@@ -207,7 +208,8 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </h4>
 
                 {page.lastPage ? <div style={{ position: "absolute", left: "600px", top: (670 + page.top) + "px" }} >
-                    {props.model.QRImageData && <img style={{ width: "102px", height: "94px" }} src={props.model.QRImageData} alt="Invoice QR Code" />}
+                    {!props.model.zatca?.qr_code && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "102px", height: "94px" }} alt="Invoice QR Code" /> : ""}
+                    {props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "102px", height: "94px" }} size={100} /> : ""}
                 </div> : ""}
             </div >
         ))}

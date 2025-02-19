@@ -8,16 +8,57 @@ const CustomerCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
-            formData = {};
+            errors = {};
+            setErrors({ ...errors });
+            formData = {
+                national_address: {},
+            };
             setFormData({ ...formData });
             if (id) {
                 getCustomer(id);
             }
             SetShow(true);
 
+            if (cookies.get("store_id")) {
+                getStore(cookies.get("store_id"));
+            }
         },
 
     }));
+
+    let [store, setStore] = useState({});
+
+    function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                store = data.result;
+                setStore({ ...store });
+            })
+            .catch(error => {
+                // setErrors(error);
+            });
+    }
 
     useEffect(() => {
         const listener = event => {
@@ -51,7 +92,9 @@ const CustomerCreate = forwardRef((props, ref) => {
     const cookies = new Cookies();
 
     //fields
-    let [formData, setFormData] = useState({});
+    let [formData, setFormData] = useState({
+        national_address: {},
+    });
 
     const [show, SetShow] = useState(false);
 
@@ -109,8 +152,38 @@ const CustomerCreate = forwardRef((props, ref) => {
         });
     }
 
+    function isValidNDigitNumber(str, n) {
+        const regex = new RegExp(`^\\d{${n}}$`); // Dynamically create regex
+        return regex.test(str);
+    }
+
+
+    const NumberStartAndEndWith = (num, startAndEndWithNo) => {
+        //const regex = /^3\d*3$/; // Starts (^) with 3, ends ($) with 3, and has digits (\d*) in between.
+        const regex = new RegExp(`^${startAndEndWithNo}\\d*${startAndEndWithNo}$`);
+        return regex.test(num);
+    };
+
+    function IsAlphanumeric(str) {
+        const regex = /^[a-zA-Z0-9]+$/; // Allows only letters and numbers
+        return regex.test(str);
+    }
+
+
+    const validateSaudiPhone = (phone) => {
+        const regex = /^(?:\+9665|05)[0-9]{8}$/;
+        return regex.test(phone);
+    }
+
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
+
+
     function handleCreate(event) {
         event.preventDefault();
+
         console.log("Inside handle Create");
 
 
@@ -122,6 +195,77 @@ const CustomerCreate = forwardRef((props, ref) => {
 
         formData.phone_in_arabic = convertToArabicNumber(formData.phone);
         formData.vat_no_in_arabic = convertToArabicNumber(formData.vat_no);
+
+        let haveErrors = false;
+        setErrors({ ...errors });
+        if (!formData.name) {
+            errors["name"] = "Name is required";
+            haveErrors = true;
+        }
+
+        if (!formData.phone) {
+            errors["phone"] = "Phone is required";
+            haveErrors = true;
+        } else if (!validateSaudiPhone(formData.phone)) {
+            errors["phone"] = "Invalid phone no.";
+            haveErrors = true;
+        }
+
+        if (formData.vat_no && !isValidNDigitNumber(formData.vat_no, 15)) {
+            errors["vat_no"] = "VAT No. should be 15 digits";
+            haveErrors = true;
+        } else if (formData.vat_no && !NumberStartAndEndWith(formData.vat_no, 3)) {
+            errors["vat_no"] = "VAT No should start and end with 3";
+            haveErrors = true;
+        }
+
+        if (formData.vat_no && store.zatca?.phase === "2") {
+            if (!formData.national_address?.building_no) {
+                errors["national_address_building_no"] = "Building number is required";
+                haveErrors = true;
+            } else {
+                if (!isValidNDigitNumber(formData.national_address?.building_no, 4)) {
+                    errors["national_address_building_no"] = "Building number should be 4 digits";
+                    haveErrors = true;
+                }
+            }
+
+            if (!formData.national_address?.street_name) {
+                errors["national_address_street_name"] = "Street name is required";
+                haveErrors = true;
+            }
+
+            if (!formData.national_address?.district_name) {
+                errors["national_address_district_name"] = "District name is required";
+                haveErrors = true;
+            }
+
+            if (!formData.national_address?.city_name) {
+                errors["national_address_city_name"] = "City name is required";
+                haveErrors = true;
+            }
+
+
+            if (!formData.national_address?.zipcode) {
+                errors["national_address_zipcode"] = "Zipcode is required";
+                haveErrors = true;
+            } else {
+                if (!isValidNDigitNumber(formData.national_address?.zipcode, 5)) {
+                    errors["national_address_zipcode"] = "Zipcode should be 5 digits";
+                    haveErrors = true;
+                }
+            }
+        }
+
+        if (formData.registration_number && !IsAlphanumeric(formData.registration_number)) {
+            errors["registration_number"] = "CRN should be alpha numeric(a-zA-Z0-9)";
+            haveErrors = true;
+        }
+
+        if (formData.email && !validateEmail(formData.email)) {
+            errors["email"] = "E-mail is not valid";
+            haveErrors = true;
+        }
 
         if (formData.registration_number) {
             formData.registration_number_in_arabic = convertToArabicNumber(formData.registration_number.toString());
@@ -142,6 +286,13 @@ const CustomerCreate = forwardRef((props, ref) => {
         if (formData.national_address?.unit_no) {
             formData.national_address.unit_no_arabic = convertToArabicNumber(formData.national_address.unit_no.toString());
         }
+
+        if (haveErrors) {
+            setErrors({ ...errors });
+            console.log("Errors: ", errors);
+            return;
+        }
+
 
         let endPoint = "/v1/customer";
         let method = "POST";
@@ -219,7 +370,7 @@ const CustomerCreate = forwardRef((props, ref) => {
     return (
         <>
             {/*  <CustomerView ref={DetailsViewRef} />*/}
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Customer #" + formData.name : "Create New Customer"}
@@ -258,8 +409,8 @@ const CustomerCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-
-                        <div className="col-md-6">
+                        <h6><b>General details</b></h6>
+                        <div className="col-md-3">
                             <label className="form-label">Name*</label>
 
                             <div className="input-group mb-3">
@@ -277,23 +428,17 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="name"
                                     placeholder="Name"
                                 />
-                                {errors.name && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.name}
-                                    </div>
-                                )}
-                                {formData.name && !errors.name && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.name && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.name}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Name In Arabic (Optional)</label>
+                        <div className="col-md-3">
+                            <label className="form-label">Name in arabic</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -308,25 +453,19 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="name_in_arabic"
-                                    placeholder="Name In Arabic"
+                                    placeholder="Name in Arabic"
                                 />
-                                {errors.name_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.name_in_arabic}
-                                    </div>
-                                )}
-                                {formData.name_in_arabic && !errors.name_in_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.name_in_arabic && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.name_in_arabic}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Phone*</label>
+                        <div className="col-md-2">
+                            <label className="form-label">Phone* ( 05.. / +966..)</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -343,89 +482,19 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="phone"
                                     placeholder="Phone"
                                 />
-                                {errors.phone && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.phone}
-                                    </div>
-                                )}
-                                {formData.phone && !errors.phone && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.phone && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.phone}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Address(Optional)</label>
 
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["address"] = "";
-                                        setErrors({ ...errors });
-                                        formData.address = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address"
-                                    placeholder="Address"
-                                />
-                                {errors.address && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.address}
-                                    </div>
-                                )}
-                                {formData.address && !errors.address && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Address In Arabic(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address_in_arabic}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["address_in_arabic"] = "";
-                                        setErrors({ ...errors });
-                                        formData.address_in_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address_in_arabic"
-                                    placeholder="Address In Arabic"
-                                />
-                                {errors.address_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.address_in_arabic}
-                                    </div>
-                                )}
-                                {formData.address_in_arabic && !errors.address_in_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">VAT NO.(Optional)</label>
+                        <div className="col-md-2">
+                            <label className="form-label">VAT NO.(15 digits)</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -442,28 +511,22 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="vat_no"
                                     placeholder="VAT NO."
                                 />
-                                {errors.vat_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.vat_no}
-                                    </div>
-                                )}
-                                {formData.vat_no && !errors.vat_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.vat_no && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.vat_no}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">Registration Number(CRN)</label>
 
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.registration_number ? formData.registration_number : ""}
-                                    type='number'
+                                    type='string'
                                     onChange={(e) => {
                                         errors["registration_number"] = "";
                                         setErrors({ ...errors });
@@ -473,26 +536,19 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="registration_number"
-                                    placeholder="Registration Number(C.R NO.)"
+                                    placeholder="CRN"
                                 />
-                                {errors.registration_number && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.registration_number}
-                                    </div>
-                                )}
-                                {formData.registration_number && !errors.registration_number && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.registration_number && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.registration_number}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Email (Optional)</label>
-
+                        <div className="col-md-3">
+                            <label className="form-label">Email</label>
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.email ? formData.email : ""}
@@ -508,24 +564,69 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="email"
                                     placeholder="Email"
                                 />
-
-                                {errors.email && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.email}
-                                    </div>
-                                )}
-                                {formData.email && !errors.email && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.email && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.email}
+                                </div>
+                            )}
                         </div>
 
-                        <h2>National Address:</h2>
-                        <div className="col-md-6">
+                        <div className="col-md-3">
+                            <label className="form-label">Address</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.address}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address"
+                                    placeholder="Address"
+                                />
+                            </div>
+                            {errors.address && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Address In Arabic</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.address_in_arabic}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address_in_arabic"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address_in_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address_in_arabic"
+                                    placeholder="Address In Arabic"
+                                />
+                            </div>
+                            {errors.address_in_arabic && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address_in_arabic}
+                                </div>
+                            )}
+                        </div>
+
+                        <h6><b>National Address</b></h6>
+                        <div className="col-md-2">
                             <label className="form-label">Building Number</label>
 
                             <div className="input-group mb-3">
@@ -544,22 +645,16 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     placeholder="Building Number"
                                 />
 
-                                {errors.national_address_building_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_building_no}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.building_no && !errors.national_address_building_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_building_no && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_building_no}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">Street Name</label>
 
                             <div className="input-group mb-3">
@@ -577,23 +672,16 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="national_address.street_name"
                                     placeholder="Street Name"
                                 />
-
-                                {errors.national_address_street_name && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_street_name}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.street_name && !errors.national_address_street_name && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_street_name && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_street_name}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">Street Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -611,24 +699,17 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="national_address.street_name_arabic"
                                     placeholder="Street Name(Arabic)"
                                 />
-
-                                {errors.national_address_street_name_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_street_name_arabic}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.street_name_arabic && !errors.national_address_street_name_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_street_name_arabic && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_street_name_arabic}
+                                </div>
+                            )}
                         </div>
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">District Name</label>
 
                             <div className="input-group mb-3">
@@ -646,23 +727,16 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="national_address.district_name"
                                     placeholder="District Name"
                                 />
-
-                                {errors.national_address_district_name && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_district_name}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.district_name && !errors.national_address_district_name && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_district_name && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_district_name}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">District Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -680,24 +754,17 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="national_address.district_name_arabic"
                                     placeholder="District Name(Arabic)"
                                 />
-
-                                {errors.national_address_district_name_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_district_name_arabic}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.district_name_arabic && !errors.national_address_district_name_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_district_name_arabic && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_district_name_arabic}
+                                </div>
+                            )}
                         </div>
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">City Name</label>
 
                             <div className="input-group mb-3">
@@ -715,23 +782,16 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="national_address.city_name"
                                     placeholder="City Name"
                                 />
-
-                                {errors.national_address_city_name && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_city_name}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.city_name && !errors.national_address_city_name && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_city_name && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_city_name}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">City Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -749,23 +809,16 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="national_address.city_name_arabic"
                                     placeholder="City Name(Arabic)"
                                 />
-
-                                {errors.national_address_city_name_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_city_name_arabic}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.city_name_arabic && !errors.national_address_city_name_arabic && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_city_name_arabic && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_city_name_arabic}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">Zipcode</label>
 
                             <div className="input-group mb-3">
@@ -783,23 +836,16 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="national_address.zipcode"
                                     placeholder="Zipcode"
                                 />
-
-                                {errors.national_address_zipcode && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_zipcode}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.zipcode && !errors.national_address_zipcode && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_zipcode && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_zipcode}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">Additional Number</label>
 
                             <div className="input-group mb-3">
@@ -817,23 +863,15 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="national_address.additional_no"
                                     placeholder="Additional Number"
                                 />
-
-                                {errors.national_address_additional_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_additional_no}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.additional_no && !errors.national_address_additional_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_additional_no && (
+                                <div style={{ color: "red" }}>
+                                    {errors.national_address_additional_no}
+                                </div>
+                            )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-2">
                             <label className="form-label">Unit Number</label>
 
                             <div className="input-group mb-3">
@@ -851,20 +889,12 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     id="national_address.unit_no"
                                     placeholder="Unit Number"
                                 />
-
-                                {errors.national_address_unit_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_unit_no}
-                                    </div>
-                                )}
-                                {formData.national_address && formData.national_address.unit_no && !errors.national_address_unit_no && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.national_address_unit_no && (
+                                <div style={{ color: "red" }}>
+                                    {errors.national_address_unit_no}
+                                </div>
+                            )}
                         </div>
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>

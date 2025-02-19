@@ -171,6 +171,8 @@ const OrderPreview = forwardRef((props, ref) => {
                     invoiceTimestamp: model.date,
                     invoiceTotal: model.net_total,
                     invoiceVatTotal: model.vat_price,
+                    // uuid: model.uuid,
+                    invoiceHash: model.hash ? model.hash : "",
                 });
 
                 model.QRImageData = await invoice.render();

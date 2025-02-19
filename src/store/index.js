@@ -559,24 +559,28 @@ function StoreIndex(props) {
                                                         <td>
                                                             {store.zatca.phase === "2" ?
                                                                 <span className="badge bg-success">
-                                                                    {"Phase " + store.zatca.phase}
-                                                                </span> : <span className="badge bg-warning">
-                                                                    {"Phase " + store.zatca.phase ? store.zatca.phase : "1"}
-                                                                </span>}
-                                                            <br />
-                                                            {store.zatca.phase === "2" && store.zatca.connected ?
-                                                                <span className="badge bg-success">
-                                                                    {"Connected"}
+                                                                    {"Phase 2"}
                                                                 </span> : ""}
-                                                            <br />
-                                                            {store.zatca.phase === "2" && store.zatca.last_connected_at ? <TimeAgo datetime={store.zatca.last_connected_at} /> : ""}
-                                                            <br />
-                                                            {store.zatca.phase === "2" && !store.zatca.connected ? <Button style={{ marginTop: "3px" }} className="btn btn-danger btn-sm" onClick={() => {
+                                                            {store.zatca.phase === "1" ?
+                                                                <span className="badge bg-warning">
+                                                                    {"Phase 1"}
+                                                                </span> : ""}
+
+                                                            {store.zatca.phase === "2" && store.zatca.connected ?
+                                                                <span>
+                                                                    <br />
+                                                                    <span className="badge bg-success">
+                                                                        {"Connected"}
+                                                                    </span> </span> : ""}
+
+                                                            {store.zatca.phase === "2" && store.zatca.last_connected_at ? <span><br /><TimeAgo datetime={store.zatca.last_connected_at} /></span> : ""}
+
+                                                            {store.zatca.phase === "2" && !store.zatca.connected ? <span> <br /><Button style={{ marginTop: "3px" }} className="btn btn-danger btn-sm" onClick={() => {
                                                                 openZatcaConnectForm(store.id);
                                                             }}>
                                                                 <i className="bi bi-power"></i>&nbsp;
                                                                 Connect to Zatca
-                                                            </Button> : ""}
+                                                            </Button></span> : ""}
 
                                                             {store.zatca.phase === "2" && store.zatca.connected ? <Button style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
                                                                 openZatcaConnectForm(store.id);

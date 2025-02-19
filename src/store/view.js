@@ -1,6 +1,7 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Table, Button } from 'react-bootstrap';
 import Cookies from "universal-cookie";
+import { format } from "date-fns";
 
 const StoreView = forwardRef((props, ref) => {
 
@@ -61,7 +62,7 @@ const StoreView = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
+        <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Store #{model.name} </Modal.Title>
 
@@ -91,55 +92,49 @@ const StoreView = forwardRef((props, ref) => {
             <Modal.Body>
                 <Table striped bordered hover responsive="lg">
                     <tbody>
+
                         <tr>
-                            <th>Zatca Phase:</th><td> {model.zatca?.phase ? "Phase " + model.zatca?.phase : "Phase 1"}</td>
-                            <th>Name:</th><td> {model.name}</td>
-                            <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
+                            <td><b>Zatca Phase</b><br />{model.zatca?.phase ? "Phase " + model.zatca?.phase : "Phase 1"}</td>
+                            <td><b>Name</b><br /> {model.name}</td>
+                            <td><b>Name(in Arabic)</b><br />{model.name_in_arabic}</td>
+                            <td><b>Business category</b><br /> {model.business_category}</td>
+                            <td><b>Branch Code</b><br />{model.code}</td>
+                            <td><b>Branch Name</b><br />{model.branch_name}</td>
                         </tr>
                         <tr>
-                            <th>Business category:</th><td> {model.business_category}</td>
-                            <th>Branch Code:</th><td> {model.code}</td>
-                            <th>Branch Name:</th><td> {model.branch_name}</td>
+                            <td><b>Title</b><br /> {model.title}</td>
+                            <td><b>Title(in Arabic)</b><br /> {model.title_in_arabic}</td>
+                            <td><b>Registration Number(C.R NO.)</b><br /> {model.registration_number}</td>
+                            <td><b>Registration Number(C.R NO.)(in Arabic)</b><br />{model.registration_number_in_arabic}</td>
+                            <td><b>Address</b><br />{model.address}</td>
+                            <td><b>Address in Arabic</b><br /> {model.address_in_arabic}</td>
                         </tr>
                         <tr>
-                            <th>Title:</th><td> {model.title}</td>
-                            <th>Title(in Arabic):</th><td> {model.title_in_arabic}</td>
+                            <td><b>Zipcode</b><br />{model.zipcode}</td>
+                            <td><b>Zipcode in arabic</b><br />{model.zipcode_in_arabic}</td>
+                            <td><b>Phone</b><br />{model.phone}</td>
+                            <td><b>Phone in Arabic</b><br />{model.phone_in_arabic}</td>
+                            <td><b>VAT No</b><br /> {model.vat_no}</td>
+                            <td><b>VAT No(in Arabic)</b><br /> {model.vat_no_in_arabic}</td>
                         </tr>
                         <tr>
-                            <th>Registration Number(C.R NO.):</th><td> {model.registration_number}</td>
-                            <th>Registration Number(C.R NO.)(in Arabic):</th><td> {model.registration_number_in_arabic}</td>
+                            <td><b>Created At</b><br /> {model.created_at}</td>
+                            <td><b>Updated At</b><br /> {model.updated_at}</td>
+                            <td><b>Created By</b><br />{model.created_by_name}</td>
+                            <td><b>Updated By</b><br />{model.updated_by_name}</td>
+                            <td><b>E-mail</b><br />{model.email}</td>
+                            <td><b>VAT %</b><br />{model.vat_percent + "%"}</td>
                         </tr>
                         <tr>
-                            <th>Address:</th><td> {model.address}</td>
-                            <th>Address in Arabic:</th><td> {model.address_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>ZIP/PIN Code:</th><td> {model.zipcode}</td>
-                            <th>ZIP/PIN Code in Arabic:</th><td> {model.zipcode_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>Phone:</th><td> {model.phone}</td>
-                            <th>Phone in Arabic:</th><td> {model.phone_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>VAT No:</th><td> {model.vat_no}</td>
-                            <th>VAT No(in Arabic):</th><td> {model.vat_no_in_arabic}</td>
-                        </tr>
-                        <tr>
-                            <th>Created At:</th><td> {model.created_at}</td>
-                            <th>Updated At:</th><td> {model.updated_at}</td>
-                        </tr>
-                        <tr>
-                            <th>Created By:</th><td> {model.created_by_name}</td>
-                            <th>Updated By:</th><td> {model.updated_by_name}</td>
-                        </tr>
-                        <tr>
-                            <th>E-mail:</th><td> {model.email}</td>
-                            <th>VAT %:</th><td> {model.vat_percent + "%"}</td>
+                            <td><b>Connected to ZATCA</b><br />{model.zatca?.connected ? "YES" : "NO"}</td>
+                            <td><b>Last connected at</b><br />{model.zatca?.last_connected_at ? format(
+                                new Date(model.zatca?.last_connected_at),
+                                "MMM dd yyyy h:mm:ssa"
+                            ) : "Not set"}</td>
                         </tr>
                     </tbody>
                 </Table>
-                <div>Logo:<img alt="Logo" src={process.env.REACT_APP_API_URL + model.logo + "?" + (Date.now())} key={model.logo} style={{ width: 100, height: 100 }} ></img></div>
+                <div>Logo:<br /><img alt="Logo" src={process.env.REACT_APP_API_URL + model.logo + "?" + (Date.now())} key={model.logo} style={{ width: 100, height: 100 }} ></img></div>
 
                 {model.national_address &&
                     <span>
@@ -148,32 +143,32 @@ const StoreView = forwardRef((props, ref) => {
                         <Table striped bordered hover responsive="lg">
                             <tbody>
                                 <tr>
-                                    <th>Building Number: </th><td> {model.national_address.building_no}</td>
-                                    <th>Building Number(Arabic): </th><td> {model.national_address.building_no_arabic}</td>
+                                    <th>Building Number<br /> </th><td> {model.national_address.building_no}</td>
+                                    <th>Building Number(Arabic)<br /> </th><td> {model.national_address.building_no_arabic}</td>
                                 </tr>
                                 <tr>
-                                    <th>Street Name: </th><td> {model.national_address.street_name}</td>
-                                    <th>Street Name(Arabic): </th><td> {model.national_address.street_name_arabic}</td>
+                                    <th>Street Name<br /> </th><td> {model.national_address.street_name}</td>
+                                    <th>Street Name(Arabic)<br /> </th><td> {model.national_address.street_name_arabic}</td>
                                 </tr>
                                 <tr>
-                                    <th>District Name: </th><td> {model.national_address.district_name}</td>
-                                    <th>District Name(Arabic): </th><td> {model.national_address.district_name_arabic}</td>
+                                    <th>District Name<br /> </th><td> {model.national_address.district_name}</td>
+                                    <th>District Name(Arabic)<br /> </th><td> {model.national_address.district_name_arabic}</td>
                                 </tr>
                                 <tr>
-                                    <th>City Name: </th><td> {model.national_address.city_name}</td>
-                                    <th>City Name(Arabic): </th><td> {model.national_address.city_name_arabic}</td>
+                                    <th>City Name:<br /> </th><td> {model.national_address.city_name}</td>
+                                    <th>City Name(Arabic)<br /> </th><td> {model.national_address.city_name_arabic}</td>
                                 </tr>
                                 <tr>
-                                    <th>ZipCode: </th><td> {model.national_address.zipcode}</td>
-                                    <th>ZipCode(Arabic): </th><td> {model.national_address.zipcode_arabic}</td>
+                                    <th>ZipCode<br /> </th><td> {model.national_address.zipcode}</td>
+                                    <th>ZipCode(Arabic)<br /> </th><td> {model.national_address.zipcode_arabic}</td>
                                 </tr>
                                 <tr>
-                                    <th>Additional Number: </th><td> {model.national_address.additional_no}</td>
-                                    <th>Additional Number(Arabic): </th><td> {model.national_address.additional_no_arabic}</td>
+                                    <th>Additional Number<br /> </th><td> {model.national_address.additional_no}</td>
+                                    <th>Additional Number(Arabic)<br /> </th><td> {model.national_address.additional_no_arabic}</td>
                                 </tr>
                                 <tr>
-                                    <th>Unit Number: </th><td> {model.national_address.unit_no}</td>
-                                    <th>Unit Number(Arabic): </th><td> {model.national_address.unit_no_arabic}</td>
+                                    <th>Unit Number<br /> </th><td> {model.national_address.unit_no}</td>
+                                    <th>Unit Number(Arabic)<br /> </th><td> {model.national_address.unit_no_arabic}</td>
                                 </tr>
                             </tbody>
                         </Table>
@@ -225,6 +220,35 @@ const StoreView = forwardRef((props, ref) => {
                         </tbody>
                     </Table>
                 </span>
+                <h5> Zatca connection failures</h5>
+
+                <span>
+                    <Table striped bordered hover responsive="lg">
+
+                        <tbody>
+                            <tr>
+                                <td><b>Zatca Connection failed count</b><br />{model.zatca?.connection_failed_count}</td>
+                                <td><b>Zatca Connection last failed at</b><br />{model.zatca?.connection_last_failed_at ? format(
+                                    new Date(model.zatca?.connection_last_failed_at),
+                                    "MMM dd yyyy h:mm:ssa"
+                                ) : "Not set"}</td>
+                                <td>
+                                    <b>Connection errors:</b>
+                                    <ol>
+                                        {model.zatca?.connection_errors &&
+                                            model.zatca?.connection_errors.map((error) => (
+                                                <li>{error}</li>
+                                            ))}
+                                    </ol>
+                                </td>
+
+                            </tr>
+
+                        </tbody>
+                    </Table>
+                </span>
+
+
 
                 {/*
                     <form className="row g-3 needs-validation" >

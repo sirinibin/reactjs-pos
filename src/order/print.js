@@ -170,6 +170,8 @@ const OrderPrint = forwardRef((props, ref) => {
                     invoiceTimestamp: d2,
                     invoiceTotal: model.net_total,
                     invoiceVatTotal: model.vat_price,
+                    uuid: model.uuid,
+                    hash: model.hash ? model.hash : "",
                 });
 
                 model.QRImageData = await invoice.render();

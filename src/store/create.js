@@ -3,22 +3,27 @@ import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
-import { Typeahead } from "react-bootstrap-typeahead";
+//import { Typeahead } from "react-bootstrap-typeahead";
 //import { DebounceInput } from 'react-debounce-input';
 
 const StoreCreate = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(id) {
-            selectedStores = [];
-            setSelectedStores(selectedStores);
+            errors = {};
+            setErrors({ ...errors });
+            //selectedStores = [];
+            //setSelectedStores(selectedStores);
 
             formData = {
                 national_address: {},
-                zatca: {},
+                zatca: {
+                    phase: "1",
+                },
                 business_category: "Supply Activities",
                 branch_name: "",
                 code: "",
+                vat_percent: 15.00,
                 sales_serial_number: {
                     prefix: "S-INV",
                     start_from_count: 1,
@@ -85,12 +90,21 @@ const StoreCreate = forwardRef((props, ref) => {
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
     const cookies = new Cookies();
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
+    };
+
+
 
     //fields
     let [formData, setFormData] = useState({
         national_address: {},
-        zatca: {},
+        zatca: {
+            phase: "1",
+        },
         branch_name: "",
+        vat_percent: 15.00,
         business_category: "Supply Activities",
         sales_serial_number: {
             prefix: "S-INV-",
@@ -161,9 +175,10 @@ const StoreCreate = forwardRef((props, ref) => {
                 let storeData = data.result;
                 storeData.logo = "";
 
-                let storeIds = data.result.use_products_from_store_id;
-                let storeNames = data.result.use_products_from_store_names;
+                //let storeIds = data.result.use_products_from_store_id;
+                //let storeNames = data.result.use_products_from_store_names;
 
+                /*
                 selectedStores = [];
                 if (storeIds && storeNames) {
                     for (var i = 0; i < storeIds.length; i++) {
@@ -174,6 +189,7 @@ const StoreCreate = forwardRef((props, ref) => {
                     }
                 }
                 setSelectedStores(selectedStores);
+                */
 
                 setFormData({ ...storeData });
             })
@@ -199,15 +215,39 @@ const StoreCreate = forwardRef((props, ref) => {
         );
     }
 
+    function isValidNDigitNumber(str, n) {
+        const regex = new RegExp(`^\\d{${n}}$`); // Dynamically create regex
+        return regex.test(str);
+    }
+
+
+    const NumberStartAndEndWith = (num, startAndEndWithNo) => {
+        //const regex = /^3\d*3$/; // Starts (^) with 3, ends ($) with 3, and has digits (\d*) in between.
+        const regex = new RegExp(`^${startAndEndWithNo}\\d*${startAndEndWithNo}$`);
+        return regex.test(num);
+    };
+
+
+    function IsAlphanumeric(str) {
+        const regex = /^[a-zA-Z0-9]+$/; // Allows only letters and numbers
+        return regex.test(str);
+    }
+
+    const validateSaudiPhone = (phone) => {
+        const regex = /^(?:\+9665|05)[0-9]{8}$/;
+        return regex.test(phone);
+    }
 
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
 
         formData.use_products_from_store_id = [];
+        /*
         for (var i = 0; i < selectedStores.length; i++) {
             formData.use_products_from_store_id.push(selectedStores[i].id);
         }
+        */
 
 
         if (formData.vat_percent) {
@@ -260,6 +300,163 @@ const StoreCreate = forwardRef((props, ref) => {
             formData.national_address.unit_no_arabic = convertToArabicNumber(formData.national_address.unit_no.toString());
         }
 
+        let haveErrors = false;
+        errors = {};
+        setErrors({ ...errors });
+
+        if (!formData.business_category) {
+            errors["business_category"] = "Business category is required";
+            haveErrors = true;
+        }
+
+
+        if (!formData.name) {
+            errors["name"] = "Name is required";
+            haveErrors = true;
+        }
+
+        if (!formData.name_in_arabic) {
+            errors["name_in_arabic"] = "Name in arabic is required";
+            haveErrors = true;
+        }
+
+        if (!formData.code) {
+            errors["code"] = "Branch code is required";
+            haveErrors = true;
+        }
+
+        if (!formData.branch_name) {
+            errors["branch_name"] = "Branch name is required";
+            haveErrors = true;
+        }
+
+        if (!formData.phone) {
+            errors["phone"] = "Phone is required";
+            haveErrors = true;
+        } else if (!validateSaudiPhone(formData.phone)) {
+            errors["phone"] = "Invalid phone no.";
+            haveErrors = true;
+        }
+
+        if (!formData.registration_number) {
+            errors["registration_number"] = "CRN is required";
+            haveErrors = true;
+        } else if (!IsAlphanumeric(formData.registration_number)) {
+            errors["registration_number"] = "CRN should be alpha numeric(a-zA-Z0-9)";
+            haveErrors = true;
+        }
+
+        if (!formData.zipcode) {
+            errors["zipcode"] = "Zipcode is required";
+            haveErrors = true;
+        } else {
+            if (!isValidNDigitNumber(formData.zipcode, 5)) {
+                errors["zipcode"] = "Zipcode should be 5 digits";
+                haveErrors = true;
+            }
+        }
+
+        if (!formData.vat_no) {
+            errors["vat_no"] = "VAT No. is required";
+            haveErrors = true;
+        } else if (!isValidNDigitNumber(formData.vat_no, 15)) {
+            errors["vat_no"] = "VAT No should be 15 digits";
+            haveErrors = true;
+        } else if (!NumberStartAndEndWith(formData.vat_no, 3)) {
+            errors["vat_no"] = "VAT No should start and end with 3";
+            haveErrors = true;
+        }
+
+        if (!formData.vat_percent) {
+            errors["vat_percent"] = "VAT % is required";
+            haveErrors = true;
+        }
+
+        if (!formData.email) {
+            errors["email"] = "E-mail is required";
+            haveErrors = true;
+        } else if (!validateEmail(formData.email)) {
+            errors["email"] = "E-mail is not valid";
+            haveErrors = true;
+        }
+
+        if (!formData.address) {
+            errors["address"] = "Address is required";
+            haveErrors = true;
+        }
+
+        if (!formData.address_in_arabic) {
+            errors["address_in_arabic"] = "Address in arabic is required";
+            haveErrors = true;
+        }
+
+        if (!formData.logo && !formData.id) {
+            errors["logo_content"] = "Logo is required";
+            haveErrors = true;
+        }
+
+
+
+
+
+        if (!formData.national_address?.building_no) {
+            errors["national_address_building_no"] = "Building number is required";
+            haveErrors = true;
+        } else {
+            if (!isValidNDigitNumber(formData.national_address?.building_no, 4)) {
+                errors["national_address_building_no"] = "Building number should be 4 digits";
+                haveErrors = true;
+            }
+        }
+
+        if (!formData.national_address?.street_name) {
+            errors["national_address_street_name"] = "Street name is required";
+            haveErrors = true;
+        }
+
+        if (!formData.national_address?.district_name) {
+            errors["national_address_district_name"] = "District name is required";
+            haveErrors = true;
+        }
+
+        if (!formData.national_address?.city_name) {
+            errors["national_address_city_name"] = "City name is required";
+            haveErrors = true;
+        }
+
+        if (!formData.national_address?.street_name_arabic) {
+            errors["national_address_street_name_arabic"] = "Street name arabic is required";
+            haveErrors = true;
+        }
+
+        if (!formData.national_address?.district_name_arabic) {
+            errors["national_address_district_name_arabic"] = "District name arabic is required";
+            haveErrors = true;
+        }
+
+        if (!formData.national_address?.city_name_arabic) {
+            errors["national_address_city_name_arabic"] = "City name arabic is required";
+            haveErrors = true;
+        }
+
+
+
+        if (!formData.national_address?.zipcode) {
+            errors["national_address_zipcode"] = "Zip code is required";
+            haveErrors = true;
+        } else {
+            if (!isValidNDigitNumber(formData.national_address?.zipcode, 5)) {
+                errors["national_address_zipcode"] = "Zip code should be 5 digits";
+                haveErrors = true;
+            }
+        }
+
+
+        if (haveErrors) {
+            setErrors({ ...errors });
+            console.log("Errors: ", errors);
+            return;
+        }
         console.log("formData.logo:", formData.logo);
 
 
@@ -349,17 +546,18 @@ const StoreCreate = forwardRef((props, ref) => {
         });
     }
 
-    let [selectedStores, setSelectedStores] = useState([]);
-    let [storeOptions, setStoreOptions] = useState([]);
+    //   let [selectedStores, setSelectedStores] = useState([]);
+    //    let [storeOptions, setStoreOptions] = useState([]);
 
+    /*
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
             .map(function (key) {
                 return `search[${key}]=${object[key]}`;
             })
             .join("&");
-    }
-
+    }*/
+    /*
     async function suggestStores(searchTerm) {
         console.log("Inside handle suggest stores");
 
@@ -396,11 +594,11 @@ const StoreCreate = forwardRef((props, ref) => {
         }
 
         setStoreOptions(data.result);
-    }
+    }*/
 
     return (
         <>
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Store #" + formData.name : "Create New Store"}
@@ -439,7 +637,8 @@ const StoreCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <div className="col-md-4">
+                        <h6><b>General details:</b></h6>
+                        <div className="col-md-2">
                             <label className="form-label">Zatca phase*</label>
 
                             <div className="input-group mb-3">
@@ -475,7 +674,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Business category*</label>
 
                             <div className="input-group mb-3">
@@ -555,7 +754,7 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Branch Code*</label>
 
                             <div className="input-group mb-3">
@@ -615,7 +814,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Branch Name*</label>
 
                             <div className="input-group mb-3">
@@ -643,7 +842,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Title(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -671,7 +870,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Title In Arabic(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -700,66 +899,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-
-
-                        <div className="col-md-4">
-                            <label className="form-label">Address*</label>
-
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["address"] = "";
-                                        setErrors({ ...errors });
-                                        formData.address = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address"
-                                    placeholder="Address"
-                                />
-
-                            </div>
-                            {errors.address && (
-                                <div style={{ color: "red" }}>
-
-                                    {errors.address}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-4">
-                            <label className="form-label">Address In Arabic*</label>
-
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address_in_arabic}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["address_in_arabic"] = "";
-                                        setErrors({ ...errors });
-                                        formData.address_in_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address_in_arabic"
-                                    placeholder="Address In Arabic"
-                                />
-
-                            </div>
-                            {errors.address_in_arabic && (
-                                <div style={{ color: "red" }}>
-
-                                    {errors.address_in_arabic}
-                                </div>
-                            )}
-
-                        </div>
-
-                        <div className="col-md-4">
+                        {/*<div className="col-md-4">
                             <label className="form-label">Use products from other stores(Optional)</label>
 
                             <div className="input-group mb-3">
@@ -798,15 +938,15 @@ const StoreCreate = forwardRef((props, ref) => {
                                     {errors.use_products_from_store_id}
                                 </div>
                             )}
-                        </div>
+                        </div>*/}
 
-                        <div className="col-md-4">
-                            <label className="form-label">Registration Number(C.R NO.)*</label>
+                        <div className="col-md-2">
+                            <label className="form-label">Registration Number(CRN)*</label>
 
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.registration_number ? formData.registration_number : ""}
-                                    type='number'
+                                    type='string'
                                     onChange={(e) => {
                                         errors["registration_number"] = "";
                                         setErrors({ ...errors });
@@ -816,7 +956,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="registration_number"
-                                    placeholder="Registration Number(C.R NO.)"
+                                    placeholder="CRN"
                                 />
 
 
@@ -830,8 +970,8 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-4">
-                            <label className="form-label">Zipcode*</label>
+                        <div className="col-md-2">
+                            <label className="form-label">Zipcode*(5 digits)</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -853,14 +993,13 @@ const StoreCreate = forwardRef((props, ref) => {
                             </div>
                             {errors.zipcode && (
                                 <div style={{ color: "red" }}>
-
                                     {errors.zipcode}
                                 </div>
                             )}
                         </div>
 
-                        <div className="col-md-4">
-                            <label className="form-label">Phone*</label>
+                        <div className="col-md-2">
+                            <label className="form-label">Phone* ( 05.. / +966..)</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -889,8 +1028,8 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-4">
-                            <label className="form-label">VAT NO.*</label>
+                        <div className="col-md-2">
+                            <label className="form-label">VAT NO.* (15 digits)</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -918,7 +1057,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-1">
                             <label className="form-label">VAT %*</label>
 
                             <div className="input-group mb-3">
@@ -942,7 +1081,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="vat_percent"
-                                    placeholder="Vat %"
+                                    placeholder="%"
                                 />
 
 
@@ -955,10 +1094,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-
-
-
-                        <div className="col-md-4">
+                        <div className="col-md-3">
                             <label className="form-label">Email*</label>
 
                             <div className="input-group mb-3">
@@ -988,7 +1124,65 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-3">
+                            <label className="form-label">Address*</label>
+
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.address}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address"
+                                    placeholder="Address"
+                                />
+
+                            </div>
+                            {errors.address && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Address In Arabic*</label>
+
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.address_in_arabic}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address_in_arabic"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address_in_arabic = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address_in_arabic"
+                                    placeholder="Address In Arabic"
+                                />
+
+                            </div>
+                            {errors.address_in_arabic && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address_in_arabic}
+                                </div>
+                            )}
+
+                        </div>
+
+
+                        <div className="col-md-2">
                             <label className="form-label">Logo*</label>
 
                             <div className="input-group mb-3">
@@ -1058,9 +1252,9 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <h2>National Address:</h2>
-                        <div className="col-md-4">
-                            <label className="form-label">Building Number</label>
+                        <h6><b>National Address:</b></h6>
+                        <div className="col-md-2">
+                            <label className="form-label">Building Number(4 digits)*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -1089,8 +1283,8 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
-                            <label className="form-label">Street Name</label>
+                        <div className="col-md-2">
+                            <label className="form-label">Street Name*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -1118,7 +1312,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Street Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -1137,19 +1331,20 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Street Name(Arabic)"
                                 />
 
-                                {errors.national_address_street_name_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_street_name_arabic}
-                                    </div>
-                                )}
+
 
                             </div>
+                            {errors.national_address_street_name_arabic && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_street_name_arabic}
+                                </div>
+                            )}
                         </div>
 
 
-                        <div className="col-md-4">
-                            <label className="form-label">District Name</label>
+                        <div className="col-md-2">
+                            <label className="form-label">District Name*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -1178,7 +1373,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">District Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -1209,8 +1404,8 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-4">
-                            <label className="form-label">City Name</label>
+                        <div className="col-md-2">
+                            <label className="form-label">City Name*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -1239,7 +1434,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">City Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -1269,8 +1464,8 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
-                            <label className="form-label">Zipcode</label>
+                        <div className="col-md-2">
+                            <label className="form-label">Zipcode(5 digits)*</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -1299,7 +1494,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Additional Number</label>
 
                             <div className="input-group mb-3">
@@ -1329,7 +1524,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Unit Number</label>
 
                             <div className="input-group mb-3">
@@ -1359,9 +1554,9 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <h2>Serial Numbers</h2>
-                        <h5>Sales ID's: {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-4">
+                        <h6><b>Serial Numbers</b></h6>
+                        <h6>Sales ID's: {formData.sales_serial_number.prefix.toUpperCase()}-{String(formData.sales_serial_number.start_from_count).padStart(formData.sales_serial_number.padding_count, '0')}, {formData.sales_serial_number.prefix.toUpperCase()}-{String((formData.sales_serial_number.start_from_count + 1)).padStart(formData.sales_serial_number.padding_count, '0')}...</h6>
+                        <div className="col-md-2">
                             <label className="form-label">Prefix*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1389,7 +1584,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Padding count*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1417,7 +1612,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Counting start from*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1446,7 +1641,7 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
                         <h5>Sales Return ID's: {formData.sales_return_serial_number.prefix.toUpperCase()}-{String(formData.sales_return_serial_number.start_from_count).padStart(formData.sales_return_serial_number.padding_count, '0')}, {formData.sales_return_serial_number.prefix.toUpperCase()}-{String((formData.sales_return_serial_number.start_from_count + 1)).padStart(formData.sales_return_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Prefix*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1474,7 +1669,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Padding count*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1501,7 +1696,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Counting start from*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1532,7 +1727,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                         <h5>Purchase ID's: {formData.purchase_serial_number.prefix.toUpperCase()}-{String(formData.purchase_serial_number.start_from_count).padStart(formData.purchase_serial_number.padding_count, '0')}, {formData.purchase_serial_number.prefix.toUpperCase()}-{String((formData.purchase_serial_number.start_from_count + 1)).padStart(formData.purchase_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Prefix*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1559,7 +1754,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Padding count*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1584,7 +1779,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Counting start from*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1617,7 +1812,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                         <h5>Purchase Return ID's: {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String(formData.purchase_return_serial_number.start_from_count).padStart(formData.purchase_return_serial_number.padding_count, '0')}, {formData.purchase_return_serial_number.prefix.toUpperCase()}-{String((formData.purchase_return_serial_number.start_from_count + 1)).padStart(formData.purchase_return_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Prefix*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1645,7 +1840,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Padding count*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1673,7 +1868,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Counting start from*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1707,7 +1902,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
 
                         <h5>Quotation ID's: {formData.quotation_serial_number.prefix.toUpperCase()}-{String(formData.quotation_serial_number.start_from_count).padStart(formData.quotation_serial_number.padding_count, '0')}, {formData.quotation_serial_number.prefix.toUpperCase()}-{String((formData.quotation_serial_number.start_from_count + 1)).padStart(formData.quotation_serial_number.padding_count, '0')}...</h5>
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Prefix*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1735,7 +1930,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Padding count*</label>
                             <div className="input-group mb-3">
                                 <input
@@ -1761,7 +1956,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-4">
+                        <div className="col-md-2">
                             <label className="form-label">Counting start from*</label>
                             <div className="input-group mb-3">
                                 <input

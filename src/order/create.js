@@ -346,6 +346,11 @@ const OrderCreate = forwardRef((props, ref) => {
         var params = {
             name: searchTerm,
         };
+
+        if (cookies.get("store_id")) {
+            params.store_id = cookies.get("store_id");
+        }
+
         var queryString = ObjectToSearchQueryParams(params);
         if (queryString !== "") {
             queryString = "&" + queryString;
@@ -1328,7 +1333,6 @@ const OrderCreate = forwardRef((props, ref) => {
                             <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                             {errors.customer_id && (
                                 <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
                                     {errors.customer_id}
                                 </div>
                             )}
