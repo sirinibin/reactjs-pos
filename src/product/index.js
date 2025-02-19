@@ -61,9 +61,9 @@ function ProductIndex(props) {
 
     useEffect(() => {
         console.log("before docs");
-        list("0","0"); //load  only documents
+        list("0", "0"); //load  only documents
         console.log("after docs");
-        list("1","1"); //load only stats
+        list("1", "1"); //load only stats
         console.log("after stats");
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -92,7 +92,7 @@ function ProductIndex(props) {
         var params = {
             name: searchTerm,
         };
-        
+
         if (cookies.get("store_id")) {
             params.store_id = cookies.get("store_id");
         }
@@ -162,8 +162,8 @@ function ProductIndex(props) {
 
         page = 1;
         setPage(page);
-        list("0","0"); //load  only documents
-        list("1","1"); //load only stats
+        list("0", "0"); //load  only documents
+        list("1", "1"); //load only stats
     }
 
     /*
@@ -230,8 +230,8 @@ function ProductIndex(props) {
         page = 1;
         setPage(page);
 
-        list("0","0"); //load  only documents
-        list("1","1"); //load only stats
+        list("0", "0"); //load  only documents
+        list("1", "1"); //load only stats
     }
 
     let [stock, setStock] = useState(0.00);
@@ -239,7 +239,7 @@ function ProductIndex(props) {
     let [wholesaleStockValue, setWholesaleStockValue] = useState(0.00);
     let [purchaseStockValue, setPurchaseStockValue] = useState(0.00);
 
-    function list(loadStats,noData) {
+    function list(loadStats, noData) {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -250,15 +250,15 @@ function ProductIndex(props) {
         /*let Select =
             "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
         */
-       let Select = "";
+        let Select = "";
 
-       if (cookies.get("store_id")) {
-         Select =
-        "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + cookies.get("store_id") + ".stock,product_stores." + cookies.get("store_id") + ".purchase_unit_price,product_stores." + cookies.get("store_id") + ".wholesale_unit_price,product_stores." + cookies.get("store_id") + ".retail_unit_price,product_stores." + cookies.get("store_id") + ".store_id";
-       }else {
-         Select =
-            "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores";
-       }
+        if (cookies.get("store_id")) {
+            Select =
+                "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + cookies.get("store_id") + ".stock,product_stores." + cookies.get("store_id") + ".purchase_unit_price,product_stores." + cookies.get("store_id") + ".wholesale_unit_price,product_stores." + cookies.get("store_id") + ".retail_unit_price,product_stores." + cookies.get("store_id") + ".store_id";
+        } else {
+            Select =
+                "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores";
+        }
 
 
         if (cookies.get("store_id")) {
@@ -271,14 +271,14 @@ function ProductIndex(props) {
         searchParams["stats"] = "0";
         searchParams["no_data"] = "0";
 
-        if(loadStats==="1"){
+        if (loadStats === "1") {
             searchParams["stats"] = "1"
         }
 
-        if(noData==="1"){
+        if (noData === "1") {
             searchParams["no_data"] = "1"
         }
-      
+
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -318,10 +318,10 @@ function ProductIndex(props) {
 
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
-               
-        
-                if(noData!=="1"){
-                    setProductList(data.result);    
+
+
+                if (noData !== "1") {
+                    setProductList(data.result);
                     let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
                     setTotalPages(pageCount);
@@ -330,25 +330,25 @@ function ProductIndex(props) {
                     setCurrentPageItemsCount(data.result.length);
                     console.log("docs loaded");
                 }
-                
 
-              
 
-                if(loadStats==="1"){
+
+
+                if (loadStats === "1") {
                     stock = data.meta.stock;
                     setStock(stock);
-    
+
                     retailStockValue = data.meta.retail_stock_value;
                     setRetailStockValue(retailStockValue);
-    
+
                     wholesaleStockValue = data.meta.wholesale_stock_value;
                     setWholesaleStockValue(wholesaleStockValue);
-    
+
                     purchaseStockValue = data.meta.purchase_stock_value;
                     setPurchaseStockValue(purchaseStockValue);
                     console.log("stats loaded");
                 }
-              
+
 
             })
             .catch((error) => {
@@ -363,19 +363,19 @@ function ProductIndex(props) {
         setSortField(sortField);
         sortProduct = sortProduct === "-" ? "" : "-";
         setSortProduct(sortProduct);
-        list("0","0"); //load only documents
+        list("0", "0"); //load only documents
     }
 
     function changePageSize(size) {
         pageSize = parseInt(size);
         setPageSize(pageSize);
-        list("0","0"); //load  only documents
+        list("0", "0"); //load  only documents
     }
 
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list("0","0"); //load  only documents
+        list("0", "0"); //load  only documents
     }
 
     const CreateFormRef = useRef();
@@ -624,8 +624,8 @@ function ProductIndex(props) {
                                         <Button
                                             onClick={() => {
                                                 setIsRefreshInProcess(true);
-                                                list("0","0"); //load  only documents
-                                                list("1","1"); //load only stats
+                                                list("0", "0"); //load  only documents
+                                                list("1", "1"); //load only stats
                                             }}
                                             variant="primary"
                                             disabled={isRefreshInProcess}
@@ -633,7 +633,7 @@ function ProductIndex(props) {
                                             {isRefreshInProcess ? (
                                                 <Spinner
                                                     as="span"
-                                                    animation="bproduct"
+                                                    animation="border"
                                                     size="sm"
                                                     role="status"
                                                     aria-hidden={true}

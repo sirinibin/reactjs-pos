@@ -103,7 +103,7 @@ function Dashboard() {
     return (<Router>
         <ToastContainer position="top-end" className="p-3" style={{
             zIndex: 1,
-            position: "absolute",
+            position: "relative",
         }}>
             {toastMessages.map((message, index) =>
 
