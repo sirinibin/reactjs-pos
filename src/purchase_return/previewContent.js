@@ -58,7 +58,7 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
                     </div>
                     <div className="col">
                         <div className="invoice-logo text-center">
-                            {props.model.store && props.model.store.logo ? <img width="70" height="70" src={process.env.REACT_APP_API_URL + props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
+                            {props.model.store && props.model.store.logo ? <img width="70" height="70" src={props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
                         </div>
                     </div>
                     <div className="col">
@@ -374,7 +374,7 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                         <th style={{ width: "30%", height: "30px" }}>
                                             {props.model.delivered_by_signature ?
-                                                <img alt="Signature" src={process.env.REACT_APP_API_URL + props.model.delivered_by_signature.signature + "?" + (Date.now())} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
+                                                <img alt="Signature" src={props.model.delivered_by_signature.signature + "?" + (Date.now())} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
                                                 : null}
                                         </th>
                                         <th className="text-end" style={{ padding: "2px" }} >

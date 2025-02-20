@@ -200,21 +200,21 @@ const ProductView = forwardRef((props, ref) => {
                         </button>
                         <ul class="dropdown-menu">
                             <li>
-                                <div class="dropdown-item" style={{cursor: "pointer"}} onClick={() => {
+                                <div class="dropdown-item" style={{ cursor: "pointer" }} onClick={() => {
                                     openSalesHistory(model);
                                 }}>
                                     <i className="bi bi-clock-history"></i> Sales History
                                 </div>
                             </li>
                             <li>
-                                <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
+                                <div class="dropdown-item" style={{ cursor: "pointer" }} onClick={() => {
                                     openPurchaseHistory(model);
                                 }}>
                                     <i className="bi bi-clock-history"></i> Purchase History
                                 </div>
                             </li>
                             <li>
-                                <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
+                                <div class="dropdown-item" style={{ cursor: "pointer" }} onClick={() => {
                                     openSalesReturnHistory(model);
                                 }}>
                                     <i className="bi bi-clock-history"></i> Sales Return History
@@ -222,19 +222,19 @@ const ProductView = forwardRef((props, ref) => {
                             </li>
 
                             <li>
-                                <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
+                                <div class="dropdown-item" style={{ cursor: "pointer" }} onClick={() => {
                                     openPurchaseReturnHistory(model);
                                 }}>
                                     <i className="bi bi-clock-history"></i> Purchase Return History
                                 </div>
                             </li>
-                            <li> <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
+                            <li> <div class="dropdown-item" style={{ cursor: "pointer" }} onClick={() => {
                                 openQuotationHistory(model);
                             }}>
                                 <i className="bi bi-clock-history"></i> Quotation History
                             </div>
                             </li>
-                            <li> <div class="dropdown-item" style={{cursor: "pointer"}}  onClick={() => {
+                            <li> <div class="dropdown-item" style={{ cursor: "pointer" }} onClick={() => {
                                 openDeliveryNoteHistory(model);
                             }}>
                                 <i className="bi bi-clock-history"></i> Delivery Note History
@@ -418,7 +418,7 @@ const ProductView = forwardRef((props, ref) => {
                                 <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>
-                                        <img alt="Product" src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
+                                        <img alt="Product" src={image + "?" + (Date.now())} key={image} style={{ width: 300, height: 300 }} />
                                     </td>
                                 </tr>
                             ))}

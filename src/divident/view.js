@@ -138,7 +138,7 @@ const DividentView = forwardRef((props, ref) => {
                                 <tr key={index} className="text-center">
                                     <td>{index + 1}</td>
                                     <td>
-                                        <img alt="Divident" src={process.env.REACT_APP_API_URL + image + "?" + (Date.now())} key={process.env.REACT_APP_API_URL + image} style={{ width: 300, height: 300 }} />
+                                        <img alt="Divident" src={image + "?" + (Date.now())} key={image} style={{ width: 300, height: 300 }} />
                                     </td>
                                 </tr>
                             ))}

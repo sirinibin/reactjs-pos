@@ -134,7 +134,7 @@ const StoreView = forwardRef((props, ref) => {
                         </tr>
                     </tbody>
                 </Table>
-                <div>Logo:<br /><img alt="Logo" src={process.env.REACT_APP_API_URL + model.logo + "?" + (Date.now())} key={model.logo} style={{ width: 100, height: 100 }} ></img></div>
+                <div>Logo:<br /><img alt="Logo" src={model.logo + "?" + (Date.now())} key={model.logo} style={{ width: 100, height: 100 }} ></img></div>
 
                 {model.national_address &&
                     <span>
