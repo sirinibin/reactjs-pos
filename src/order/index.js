@@ -2237,6 +2237,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     aria-hidden={true}
                                                                 /> : ""}
                                                             </Button></span> : ""}
+                                                            <span>
+                                                                <br />
+                                                                <Button onClick={() => {
+                                                                    window.open("/zatca/xml/" + order.code + ".xml", "_blank");
+                                                                }}><i class="bi bi-filetype-xml"></i> XML
+                                                                </Button>
+                                                            </span>
                                                         </td> : ""}
                                                         <td>{order.discount?.toFixed(2)} </td>
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
@@ -2358,7 +2365,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div >
 
 
             <Modal show={showOrderPaymentHistory} size="lg" onHide={handleOrderPaymentHistoryClose} animation={false} scrollable={true}>
