@@ -2237,13 +2237,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     aria-hidden={true}
                                                                 /> : ""}
                                                             </Button></span> : ""}
-                                                            <span>
+                                                            {order.zatca?.reporting_passed ? <span>
                                                                 <br />
                                                                 <Button onClick={() => {
                                                                     window.open("/zatca/xml/" + order.code + ".xml", "_blank");
                                                                 }}><i class="bi bi-filetype-xml"></i> XML
                                                                 </Button>
-                                                            </span>
+                                                            </span> : ""}
                                                         </td> : ""}
                                                         <td>{order.discount?.toFixed(2)} </td>
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
