@@ -128,8 +128,8 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     </div>
 
                     <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "20%", padding: "0px" }}>
-                        {!props.model.zatca?.qr_code && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "70px", height: "72px" }} alt="Invoice QR Code" /> : ""}
-                        {props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "128px", height: "128px" }} size={128} /> : ""}
+                        {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "108px", height: "108px" }} alt="Invoice QR Code" /> : ""}
+                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "108px", height: "108px" }} size={108} /> : ""}
                     </div>
 
                     {/*
