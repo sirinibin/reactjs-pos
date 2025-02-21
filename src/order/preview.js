@@ -5,6 +5,7 @@ import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
 
+
 const OrderPreview = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
@@ -85,6 +86,9 @@ const OrderPreview = forwardRef((props, ref) => {
 
                 console.log("model.pages:", model.pages);
                 console.log("model.products:", model.products);
+
+
+
                 getQRCodeContents();
                 //model.qr_content = getQRCodeContents();
                 //setModel({ ...model });
@@ -208,7 +212,7 @@ const OrderPreview = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                console.log("Response:");
+                console.log("Customer Response:");
                 console.log(data);
                 let customerData = data.result;
                 model.customer = customerData;
@@ -310,7 +314,7 @@ const OrderPreview = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
+        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">

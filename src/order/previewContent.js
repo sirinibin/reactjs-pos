@@ -9,7 +9,11 @@ const OrderPreviewContent = forwardRef((props, ref) => {
     let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
     let persianMap = persianDigits.split("");
 
-    function convertToPersianNumber(input) {
+    function convertToArabicNumber(input) {
+        if (Number.isInteger(input)) {
+            input = input.toString();
+        }
+
         return input.replace(/\d/g, function (m) {
             return persianMap[parseInt(m)];
         });
@@ -84,52 +88,72 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     <div className="col">
                         <u
                         ><h1 className="text-center" style={{ fontSize: "3mm" }}>
-                                TAX INVOICE / فاتورة ضريبية
+                                {props.model.store?.zatca?.phase === "1" ? "TAX INVOICE | الفاتورة الضريبية" : ""}
+                                {props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed && props.model.zatca?.is_simplified ? "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة" : ""}
+                                {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.is_simplified ? "STANDARD TAX INVOICE | فاتورة ضريبية قياسية" : ""}
                             </h1>
                         </u>
                     </div>
                 </div>
 
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
-                    <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
+                    <div className="col-md-5" style={{ border: "solid 0px", width: "80%" }}>
                         <ul className="list-unstyled mb0 text-start">
-                            <li><strong>Invoice No.: </strong>{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                            <li><strong>Invoice Date: </strong> {props.model.date ? format(
+                            <li><strong>Invoice Count Value | قيمة عدد الفاتورة (ICV): </strong>{props.model.invoice_count_value ? props.model.invoice_count_value : "<ICV_NUMBER>"}</li>
+                            <li><strong>UUID: </strong>{props.model.uuid ? props.model.uuid : "<UUID_STRING>"}</li>
+                            <li><strong>Invoice No. | رقم الفاتورة: </strong>{props.model.code ? props.model.code : "<ID_STRING>"}</li>
+                            <li><strong>Invoice Date | تاريخ الفاتورة: </strong> <span dir="ltr"> {props.model.date ? format(
                                 new Date(props.model.date),
                                 "yyyy-MM-dd h:mma"
-                            ) : "<DATETIME>"} </li>
+                            ) : "<DATETIME>"}
+                            </span>
+                            </li>
                             <li>
-                                <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "N/A"}
+                                <strong>Customer Name | اسم العميل: </strong>{props.model.customer ? props.model.customer.name : "N/A"}
                             </li>
-                            <li><strong>VAT Number: </strong>{props.model.customer ? props.model.customer.vat_no : "N/A"}
+                            <li><strong>Customer VAT  | ضريبة القيمة المضافة للعملاء: </strong> <span dir="ltr">{props.model.customer?.vat_no ? "#" + props.model.customer.vat_no : "N/A"}</span></li>
+                            <li><strong>Customer Address  | عنوان العميل: </strong>
+                                <span dir="ltr">
+                                    {!props.model.customer?.national_address?.building_no ? props.model.customer?.address : ""}
+                                    {props.model.customer?.national_address?.building_no ? `Building #${props.model.customer.national_address.building_no}` : ""}
+                                    {props.model.customer?.national_address?.street_name ? `, ${props.model.customer.national_address.street_name}` : ""}
+                                    {props.model.customer?.national_address?.district_name ? `, ${props.model.customer.national_address.district_name} dist.` : ""}
+                                    {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
+                                    {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
+                                </span>
                             </li>
+
                         </ul>
                     </div>
 
                     <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "20%", padding: "0px" }}>
                         {!props.model.zatca?.qr_code && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "70px", height: "72px" }} alt="Invoice QR Code" /> : ""}
-                        {props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "90px", height: "92px" }} size={100} /> : ""}
+                        {props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "128px", height: "128px" }} size={128} /> : ""}
                     </div>
 
+                    {/*
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-end">
+                            <li>{props.model.invoice_count_value ? convertToArabicNumber(props.model.invoice_count_value) : "<ICV_NUMBER_ARABIC>"}<strong> :(ICV) قيمة عدد الفواتير </strong></li>
+                            <li>{props.model.uuid ? props.model.uuid : "<UUID_STRING_ARABIC>"}<strong> :(UUID) المعرف الفريد العالمي </strong></li>
                             <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :رقم الفاتورة </strong></li>
-                            <li><strong>تاريخ الفاتورة:  </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
+                            <li> <strong>تاريخ الفاتورة</strong> {props.model.date ? " :" + getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
                             <li>
-                                <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
+                                {props.model.customer?.name_in_arabic ? props.model.customer.name_in_arabic : props.model.customer?.name ? props.model.customer.name : ""}<strong> :اسم العميل</strong>
                             </li>
-                            <li><strong>الرقم الضريبي للعميل: </strong>{props.model.customer ? props.model.customer.vat_no_in_arabic : "<CUSTOMER_VAT_NO_ARABIC>"}</li>
+                            <li><strong>الرقم الضريبي للعميل</strong>{props.model.customer ? ": " + props.model.customer.vat_no_in_arabic : "<CUSTOMER_VAT_NO_ARABIC>"}</li>
 
 
                         </ul>
                     </div>
+                    */}
                 </div>
                 <div className="row" style={{ fontSize: "3.5mm" }}>
                     <div className="col text-start">
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </div>
                     <div className="col text-end">
-                        {props.model.total_pages ? convertToPersianNumber(props.model.total_pages.toString()) + " الصفحة " + convertToPersianNumber((pageIndex + 1).toString()) + " من " : ""}
+                        {props.model.total_pages ? convertToArabicNumber(props.model.total_pages.toString()) + " الصفحة " + convertToArabicNumber((pageIndex + 1).toString()) + " من " : ""}
                     </div>
                 </div>
                 <div className="row">

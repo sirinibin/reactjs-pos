@@ -573,6 +573,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        {/*
                         <div className="col-md-3">
                             <label className="form-label">Address</label>
                             <div className="input-group mb-3">
@@ -624,6 +625,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
+                        */}
 
                         <h6><b>National Address</b></h6>
                         <div className="col-md-2">
