@@ -510,7 +510,7 @@ const OrderView = forwardRef((props, ref) => {
                                 "MMM dd yyyy h:mm:ssa"
                             ) : "Not set"}</td>
                             <td>
-                                {model.zatca?.qr_code ? <QRCodeCanvas value={model.zatca?.qr_code} style={{ width: "100px", height: "102px" }} size={100} /> : ""}
+                                {model.zatca?.qr_code ? <QRCodeCanvas value={model.zatca?.qr_code} style={{ width: "128px", height: "128px" }} size={128} /> : ""}
                             </td>
                             <td><b>Previous Invoice Hash(PIH)</b><br /> {model.prev_hash}</td>
                         </tr>

@@ -5,6 +5,7 @@ import NumberFormat from "react-number-format";
 import SalesReturnPreview from './preview.js';
 import SalesReturnPrint from './print.js';
 import { format } from "date-fns";
+import { QRCodeCanvas } from "qrcode.react";
 
 const SalesReturnView = forwardRef((props, ref) => {
 
@@ -430,6 +431,71 @@ const SalesReturnView = forwardRef((props, ref) => {
                         </tbody>
                     </table>
                 </div>
+
+                <h4>Zatca Info</h4>
+                <Table striped bordered hover responsive="xl">
+                    <tbody>
+                        <tr>
+                            <td><b>Zatca compliance passed</b><br /> {model.zatca?.compliance_passed ? "YES" : "NO"}</td>
+                            <td><b>Zatca compliance passed At</b><br /> {model.zatca?.compliance_passed_at ? format(
+                                new Date(model.zatca?.compliance_passed_at),
+                                "MMM dd yyyy h:mm:ssa"
+                            ) : "Not set"}</td>
+                            <td><b>Compliance Invoice Hash</b><br /> {model.zatca?.compliance_invoice_hash} </td>
+
+                        </tr>
+                        <tr>
+                            <td><b>Zatca reporting/clearance passed</b><br /> {model.zatca?.reporting_passed ? "YES" : "NO"}</td>
+                            <td><b>Zatca reporting/clearance passed At</b><br /> {model.zatca?.reporting_passed_at ? format(
+                                new Date(model.zatca?.compliance_passed_at),
+                                "MMM dd yyyy h:mm:ssa"
+                            ) : "Not set"} </td>
+                            <td><b>Reported Invoice Hash</b><br />{model.zatca?.reporting_invoice_hash}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Signing time</b><br />{model.zatca?.signing_time ? format(
+                                new Date(model.zatca?.signing_time),
+                                "MMM dd yyyy h:mm:ssa"
+                            ) : "Not set"}</td>
+                            <td>
+                                {model.zatca?.qr_code ? <QRCodeCanvas value={model.zatca?.qr_code} style={{ width: "128px", height: "128px" }} size={128} /> : ""}
+                            </td>
+                            <td><b>Previous Invoice Hash(PIH)</b><br /> {model.prev_hash}</td>
+                        </tr>
+                        <tr>
+                            <td><b>Compliance check failed count</b><br />{model.zatca?.compliance_check_failed_count}</td>
+                            <td><b>Compliance check last failed at</b><br />{model.zatca?.compliance_check_last_failed_at ? format(
+                                new Date(model.zatca?.compliance_check_last_failed_at),
+                                "MMM dd yyyy h:mm:ssa"
+                            ) : "Not set"}</td>
+                            <td>
+                                <b>Compliance check errors:</b>
+                                <ol>
+                                    {model.zatca?.compliance_check_errors &&
+                                        model.zatca?.compliance_check_errors.map((error) => (
+                                            <li>{error}</li>
+                                        ))}
+                                </ol>
+                            </td>
+                            <td><b>Reporting failed count</b><br />{model.zatca?.reporting_failed_count}</td>
+                            <td><b>Reporting last failed at</b><br />{model.zatca?.reporting_last_failed_at ? format(
+                                new Date(model.zatca?.reporting_last_failed_at),
+                                "MMM dd yyyy h:mm:ssa"
+                            ) : "Not set"}</td>
+                            <td>
+                                <b>Reporting errors:</b>
+                                <ol>
+                                    {model.zatca?.reporting_errors &&
+                                        model.zatca?.reporting_errors.map((error) => (
+                                            <li>{error}</li>
+                                        ))}
+                                </ol>
+                            </td>
+                        </tr>
+
+
+                    </tbody>
+                </Table>
 
                 <Table striped bordered hover responsive="lg">
                     <tbody>

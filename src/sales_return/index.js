@@ -6,18 +6,22 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge, Modal } from "react-bootstrap";
+import { Button, Spinner, Badge, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
 import SalesReturnPaymentCreate from "./../sales_return_payment/create.js";
 import SalesReturnPaymentDetailsView from "./../sales_return_payment/view.js";
 import SalesReturnPaymentIndex from "./../sales_return_payment/index.js";
-
+import { formatDistanceToNow } from "date-fns";
 
 import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
+
+const TimeAgo = ({ datetime }) => {
+    return <span>{formatDistanceToNow(new Date(datetime), { addSuffix: true })}</span>;
+};
 
 
 function SalesReturnIndex(props) {
@@ -78,8 +82,107 @@ function SalesReturnIndex(props) {
 
     useEffect(() => {
         list();
+        if (cookies.get("store_id")) {
+            getStore(cookies.get("store_id"));
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+
+    const [showErrors, setShowErrors] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [successMessage, setSuccessMessage] = useState(false);
+
+    let [reportingInProgress, setReportingInProgress] = useState(false);
+
+    function ReportInvoiceToZatca(id) {
+        // event.preventDefault();
+
+        let endPoint = "/v1/sales-return/zatca/report/" + id;
+        let method = "POST";
+        const requestOptions = {
+            method: method,
+            headers: {
+                'Accept': 'application/json',
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        reportingInProgress = true;
+        setReportingInProgress(true);
+        fetch(endPoint, requestOptions)
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    // get error message from body or default to response status
+                    const error = data && data.errors;
+                    //const error = data.errors
+                    return Promise.reject(error);
+                }
+
+                //setErrors({});
+                reportingInProgress = false;
+                setReportingInProgress(false);
+
+                console.log("Response:");
+                console.log(data);
+                props.showToastMessage("Sales return invoice reported successfully to Zatca!", "success");
+                setShowSuccess(true);
+                setSuccessMessage("Successfully Reported to Zatca!")
+                list();
+            })
+            .catch((error) => {
+                reportingInProgress = false;
+                setReportingInProgress(false);
+                setShowErrors(true);
+                console.log("Inside catch");
+                console.log(error);
+                // setErrors({ ...error });
+                console.error("There was an error!", error);
+                props.showToastMessage("Sales return invoice reporting to Zatca failed!", "danger");
+            });
+    }
+
+
+    let [store, setStore] = useState({});
+
+    function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                store = data.result;
+                setStore({ ...store });
+            })
+            .catch(error => {
+                // setErrors(error);
+            });
+    }
 
 
     let [allSalesReturns, setAllSalesReturns] = useState([]);
@@ -567,12 +670,12 @@ function SalesReturnIndex(props) {
             name: searchTerm,
         };
 
-         
+
         if (cookies.get("store_id")) {
             params.store_id = cookies.get("store_id");
         }
 
-        
+
         var queryString = ObjectToSearchQueryParams(params);
         if (queryString !== "") {
             queryString = `&${queryString}`;
@@ -731,7 +834,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,net_loss,cash_discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=zatca.reporting_passed,zatca.reporting_passed_at,zatca.reporting_last_failed_at,id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,net_loss,cash_discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -955,6 +1058,39 @@ function SalesReturnIndex(props) {
 
             <SalesReturnPaymentCreate ref={SalesReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openSalesReturnPaymentDetailsView} />
             <SalesReturnPaymentDetailsView ref={SalesReturnPaymentDetailsViewRef} openUpdateForm={openSalesReturnPaymentUpdateForm} showToastMessage={props.showToastMessage} />
+
+            {/* Error Modal */}
+            <Modal show={showErrors} onHide={() => setShowErrors(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Error</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Alert variant="danger">
+                        ❌ Oops! Something went wrong. Please try again later.
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowErrors(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            <Modal show={showSuccess} onHide={() => setShowSuccess(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Success</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Alert variant="success">
+                        {successMessage}
+                    </Alert>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowSuccess(false)}>
+                        Close
+                    </Button>
+                </Modal.Footer>
+            </Modal>
 
             <div className="container-fluid p-0">
                 <div className="row">
@@ -1383,7 +1519,7 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
+                                                {/*<th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1401,7 +1537,7 @@ function SalesReturnIndex(props) {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
+                                                </th>*/}
                                                 <th>
                                                     <b
                                                         style={{
@@ -1440,6 +1576,25 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("zatca.reporting_passed");
+                                                        }}
+                                                    >
+                                                        Reported to Zatca
+                                                        {sortField === "zatca.reporting_passed" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "zatca.reporting_passed" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th> : ""}
 
 
                                                 {cookies.get('admin') === "true" ? <th>
@@ -1684,7 +1839,7 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
+                                                {/*<th>
                                                     <input
                                                         type="text"
                                                         id="payments_count"
@@ -1693,7 +1848,7 @@ function SalesReturnIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th>
+                                                </th>*/}
                                                 <th>
                                                     <Typeahead
                                                         id="payment_status"
@@ -1728,6 +1883,17 @@ function SalesReturnIndex(props) {
                                                         multiple
                                                     />
                                                 </th>
+                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("zatca.reporting_passed", e.target.value);
+                                                        }}
+                                                    >
+                                                        <option value="" SELECTED>Select</option>
+                                                        <option value="1">YES</option>
+                                                        <option value="0">NO</option>
+                                                    </select>
+                                                </th> : ""}
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
@@ -1894,7 +2060,7 @@ function SalesReturnIndex(props) {
 
                                                         </td>
                                                         <td>{salesreturn.balance_amount?.toFixed(2)}</td>
-                                                        <td>
+                                                        {/*<td>
 
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(salesreturn);
@@ -1902,7 +2068,7 @@ function SalesReturnIndex(props) {
                                                                 {salesreturn.payments_count}
                                                             </Button>
 
-                                                        </td>
+                                                        </td>*/}
                                                         <td>
                                                             {salesreturn.payment_status === "paid" ?
                                                                 <span className="badge bg-success">
@@ -1925,6 +2091,35 @@ function SalesReturnIndex(props) {
                                                                 ))}
 
                                                         </td>
+                                                        {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ minWidth: "120px" }}>
+                                                            {salesreturn.zatca?.reporting_passed ? <span className="badge bg-success">
+                                                                Reported
+                                                            </span> : ""}
+                                                            {salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_passed_at ? <span><br /><TimeAgo datetime={salesreturn.zatca.reporting_passed_at} /></span> : ""}
+                                                            {!salesreturn.zatca?.reporting_passed ? <span className="badge bg-danger">
+                                                                Reporting failed
+                                                            </span> : ""}
+                                                            {!salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_last_failed_at ? <span><br /><TimeAgo datetime={salesreturn.zatca.reporting_last_failed_at} /></span> : ""}
+                                                            {!salesreturn.zatca.reporting_passed ? <span><br /><Button style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                ReportInvoiceToZatca(salesreturn.id);
+                                                            }}>
+                                                                {!reportingInProgress ? "Retry" : ""}
+                                                                {reportingInProgress ? <Spinner
+                                                                    as="span"
+                                                                    animation="border"
+                                                                    size="sm"
+                                                                    role="status"
+                                                                    aria-hidden={true}
+                                                                /> : ""}
+                                                            </Button></span> : ""}
+                                                            {salesreturn.zatca?.reporting_passed ? <span>
+                                                                <br />
+                                                                <Button onClick={() => {
+                                                                    window.open("/zatca/returns/xml/" + salesreturn.code + ".xml", "_blank");
+                                                                }}><i class="bi bi-filetype-xml"></i> XML
+                                                                </Button>
+                                                            </span> : ""}
+                                                        </td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{salesreturn.net_profit?.toFixed(2)}</td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{salesreturn.net_loss?.toFixed(2)}</td> : ""}
                                                         <td>{salesreturn.created_by_name}</td>
