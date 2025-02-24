@@ -17,6 +17,10 @@ const SalesReturnPreview = forwardRef((props, ref) => {
                     getStore(model.store_id);
                 }
 
+                if (model.order_id) {
+                    getOrder(model.order_id);
+                }
+
                 if (model.customer_id) {
                     getCustomer(model.customer_id);
                 }
@@ -183,6 +187,39 @@ const SalesReturnPreview = forwardRef((props, ref) => {
             });
     }
 
+    function getOrder(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/order/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                model.order = data.result;
+
+                setModel({ ...model });
+            })
+            .catch(error => {
+
+            });
+    }
+
 
 
     function getCustomer(id) {
@@ -308,9 +345,9 @@ const SalesReturnPreview = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
+        <Modal show={show} fullscreen scrollable={true} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Invoice Preview</Modal.Title>
+                <Modal.Title>Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
                         <i className="bi bi-printer"></i> Print

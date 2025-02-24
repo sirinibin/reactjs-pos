@@ -98,6 +98,64 @@ const OrderPreviewContent = forwardRef((props, ref) => {
 
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "80%" }}>
+                        <div class="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2mm" }}>
+                            <div class="row" style={{ border: "solid 0px" }}>
+                                <div class="col-7 text-start fw-bold" style={{ border: "solid 0px" }} dir="ltr">Invoice Count Value | قيمة عدد الفاتورة (ICV):</div>
+                                <div class="col-5" style={{ border: "solid 0px", marginLeft: "-80px" }} dir="ltr">
+                                    {props.model.invoice_count_value ? props.model.invoice_count_value : ""}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" dir="ltr">UUID:</div>
+                                <div class="col-6 " style={{ marginLeft: "-80px" }} dir="ltr">
+                                    {props.model.uuid ? props.model.uuid : ""}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" dir="ltr">Invoice No. | رقم الفاتورة:</div>
+                                <div class="col-6" style={{ marginLeft: "-80px" }} dir="ltr">
+                                    {props.model.code ? props.model.code : ""}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" dir="ltr">Invoice Date | تاريخ الفاتورة:</div>
+                                <div class="col-6 " style={{ marginLeft: "-80px" }} dir="ltr">
+                                    <span dir="ltr"> {props.model.date ? format(
+                                        new Date(props.model.date),
+                                        "yyyy-MM-dd h:mma"
+                                    ) : "<DATETIME>"}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                                    {props.model.customer ? props.model.customer.name : "N/A"}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                                    <span dir="ltr">{props.model.customer?.vat_no ? "#" + props.model.customer.vat_no : "N/A"}</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" dir="ltr" >Customer Address | عنوان العميل:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+
+                                    <span dir="ltr">
+                                        {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
+                                        {props.model.customer?.national_address?.unit_no ? `Unit #${props.model.customer.national_address.unit_no}, ` : ""}
+                                        {props.model.customer?.national_address?.building_no ? `Building #${props.model.customer.national_address.building_no}` : ""}
+                                        {props.model.customer?.national_address?.street_name ? `, ${props.model.customer.national_address.street_name}` : ""}
+                                        {props.model.customer?.national_address?.district_name ? `, ${props.model.customer.national_address.district_name} dist.` : ""}
+                                        {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
+                                        {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {/*
                         <ul className="list-unstyled mb0 text-start">
                             <li><strong>Invoice Count Value | قيمة عدد الفاتورة (ICV): </strong>{props.model.invoice_count_value ? props.model.invoice_count_value : "<ICV_NUMBER>"}</li>
                             <li><strong>UUID: </strong>{props.model.uuid ? props.model.uuid : "<UUID_STRING>"}</li>
@@ -124,7 +182,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                 </span>
                             </li>
 
-                        </ul>
+                        </ul>*/}
                     </div>
 
                     <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "20%", padding: "0px" }}>
