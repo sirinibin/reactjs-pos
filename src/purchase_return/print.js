@@ -170,7 +170,7 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
                 );
                 console.log("d2:", d2);
 
-                
+
                 const invoice = new Invoice({
                     sellerName: model.store_name,
                     vatRegistrationNumber: model.store.vat_no,
@@ -203,6 +203,14 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
 
 
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
+
     function getVendor(id) {
         console.log("inside get Vendor");
         const requestOptions = {
@@ -213,7 +221,13 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/vendor/' + id, requestOptions)
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -278,7 +292,13 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/signature/' + id, requestOptions)
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/signature/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();

@@ -23,6 +23,13 @@ const DeliveryNoteView = forwardRef((props, ref) => {
     let [model, setModel] = useState({});
     const cookies = new Cookies();
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
 
     function getDeliveryNote(id) {
         console.log("inside get DeliveryNote");
@@ -33,9 +40,14 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                 'Authorization': cookies.get('access_token'),
             },
         };
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
 
 
-        fetch('/v1/delivery-note/' + id, requestOptions)
+        fetch('/v1/delivery-note/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
 
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -125,8 +137,8 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                             <th>Delivered by:</th><td> {model.delivered_by_name}</td>
                         </tr>
                         <tr>
-                            <th>Date:</th><td> 
-                            {model.date ? format(
+                            <th>Date:</th><td>
+                                {model.date ? format(
                                     new Date(model.date),
                                     "MMM dd yyyy h:mma"
                                 ) : "Not set"}

@@ -259,22 +259,22 @@ function SalesPaymentIndex(props) {
                 totalPayments = data.meta.total_payment;
                 setTotalPayments(totalPayments);
 
-                if(props.order && !deleted){
-                    balanceAmount = (props.order.net_total-props.order.cash_discount) - totalPayments;
+                if (props.order && !deleted) {
+                    balanceAmount = (props.order.net_total - props.order.cash_discount) - totalPayments;
                     setBalanceAmount(balanceAmount);
-    
-                    if (balanceAmount === (props.order.net_total-props.order.cash_discount)) {
+
+                    if (balanceAmount === (props.order.net_total - props.order.cash_discount)) {
                         paymentStatus = "not_paid";
                         setPaymentStatus(paymentStatus);
                     } else if (balanceAmount <= 0) {
                         paymentStatus = "paid";
                         setPaymentStatus(paymentStatus);
-                    } else if (balanceAmount > 0){
+                    } else if (balanceAmount > 0) {
                         paymentStatus = "paid_partially";
                         setPaymentStatus(paymentStatus);
                     }
                 }
-               
+
 
             })
             .catch((error) => {
@@ -344,8 +344,14 @@ function SalesPaymentIndex(props) {
             },
         };
 
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
         fetch(
-            "/v1/sales-payment/" + id,
+            "/v1/sales-payment/" + id + "?" + queryParams,
             requestOptions
         )
             .then(async (response) => {
@@ -415,7 +421,7 @@ function SalesPaymentIndex(props) {
                                 />
                             </Badge>
                         </h1>
-                        {props.order?<h4 className="text-end">
+                        {props.order ? <h4 className="text-end">
                             Balance amount: <Badge bg="secondary">
                                 <NumberFormat
                                     value={balanceAmount.toFixed(2)}
@@ -425,7 +431,7 @@ function SalesPaymentIndex(props) {
                                     renderText={(value, props) => value}
                                 />
                             </Badge>
-                        </h4>:""}
+                        </h4> : ""}
                     </div>
                 </div>
                 <div className="row">
@@ -648,7 +654,7 @@ function SalesPaymentIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                               
+
 
                                                 <th>
                                                     <b
@@ -790,7 +796,7 @@ function SalesPaymentIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                        
+
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -884,10 +890,10 @@ function SalesPaymentIndex(props) {
                                                         onChange={(e) => {
                                                             searchByFieldValue("deleted", e.target.value);
                                                             if (e.target.value === "1") {
-                                                                deleted=true;
+                                                                deleted = true;
                                                                 setDeleted(deleted);
                                                             } else {
-                                                                deleted=false;
+                                                                deleted = false;
                                                                 setDeleted(deleted);
                                                             }
                                                         }}

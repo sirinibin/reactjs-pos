@@ -73,6 +73,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=` + encodeURIComponent(object[key]);
+            })
+            .join("&");
+    }
+
     function getSalesReturn(id) {
         console.log("inside getSalesReturn id:", id);
         const requestOptions = {
@@ -83,9 +91,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             },
         };
 
-        setProcessing(true);
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
 
-        fetch('/v1/sales-return/' + id, requestOptions)
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        setProcessing(true);
+        fetch('/v1/sales-return/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -206,8 +220,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             },
         };
 
+
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
         setProcessing(true);
-        fetch('/v1/order/' + id, requestOptions)
+        fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 setProcessing(false);
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -506,8 +528,16 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         console.log("formData:", formData);
 
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+
         setProcessing(true);
-        fetch(endPoint, requestOptions)
+        fetch(endPoint + "?" + queryParams, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -934,14 +964,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     {Object.keys(errors).length > 0 ?
                         <div>
                             <ul>
-
                                 {errors && Object.keys(errors).map((key, index) => {
                                     return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
                                 })}
                             </ul></div> : ""}
                     {selectedProducts?.length > 0 && <div className="col-md-3">
                         <label className="form-label">Date*</label>
-
                         <div className="input-group mb-3">
                             <DatePicker
                                 id="date_str"

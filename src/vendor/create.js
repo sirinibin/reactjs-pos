@@ -85,7 +85,13 @@ const VendorCreate = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/vendor/' + id, requestOptions)
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -119,6 +125,14 @@ const VendorCreate = forwardRef((props, ref) => {
             });
     }
 
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
 
     function handleCreate(event) {
         event.preventDefault();
@@ -167,6 +181,11 @@ const VendorCreate = forwardRef((props, ref) => {
             formData.national_address.unit_no_arabic = convertToArabicNumber(formData.national_address.unit_no.toString());
         }
 
+        if (cookies.get("store_id")) {
+            formData.store_id = cookies.get("store_id");
+        }
+
+
         let endPoint = "/v1/vendor";
         let method = "POST";
         if (formData.id) {
@@ -187,8 +206,14 @@ const VendorCreate = forwardRef((props, ref) => {
 
         console.log("formData:", formData);
 
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
         setProcessing(true);
-        fetch(endPoint, requestOptions)
+        fetch(endPoint + "?" + queryParams, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")

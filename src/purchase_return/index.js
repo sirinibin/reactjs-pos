@@ -6,7 +6,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge,Modal } from "react-bootstrap";
+import { Button, Spinner, Badge, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 
@@ -341,6 +341,12 @@ function PurchaseReturnIndex(props) {
         var params = {
             name: searchTerm,
         };
+
+        if (cookies.get("store_id")) {
+            params.store_id = cookies.get("store_id");
+        }
+
+
         var queryString = ObjectToSearchQueryParams(params);
         if (queryString !== "") {
             queryString = `&${queryString}`;
@@ -710,7 +716,7 @@ function PurchaseReturnIndex(props) {
 
     return (
         <>
-            <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} refreshPurchaseList={props.refreshPurchaseList}  showToastMessage={props.showToastMessage} />
+            <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} />
             <PurchaseReturnView ref={DetailsViewRef} />
 
             <PurchaseReturnPaymentCreate ref={PurchaseReturnPaymentCreateRef} showToastMessage={props.showToastMessage} openDetailsView={openPurchaseReturnPaymentDetailsView} />
@@ -1298,79 +1304,79 @@ function PurchaseReturnIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
-                                                <div style={{ minWidth: "125px" }}>
-                                                    <DatePicker
-                                                        id="date_str"
-                                                        value={dateValue}
-                                                        selected={selectedDate}
-                                                        className="form-control"
-                                                        dateFormat="MMM dd yyyy"
-                                                        isClearable={true}
-                                                        onChange={(date) => {
-                                                            if (!date) {
-                                                                setDateValue("");
-                                                                searchByDateField("date_str", "");
-                                                                return;
-                                                            }
-                                                            searchByDateField("date_str", date);
-                                                            selectedDate = date;
-                                                            setSelectedDate(date);
-                                                        }}
-                                                    />
-                                                    <small
-                                                        style={{
-                                                            color: "blue",
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={(e) => setShowDateRange(!showDateRange)}
-                                                    >
-                                                        {showDateRange ? "Less.." : "More.."}
-                                                    </small>
-                                                    <br />
+                                                    <div style={{ minWidth: "125px" }}>
+                                                        <DatePicker
+                                                            id="date_str"
+                                                            value={dateValue}
+                                                            selected={selectedDate}
+                                                            className="form-control"
+                                                            dateFormat="MMM dd yyyy"
+                                                            isClearable={true}
+                                                            onChange={(date) => {
+                                                                if (!date) {
+                                                                    setDateValue("");
+                                                                    searchByDateField("date_str", "");
+                                                                    return;
+                                                                }
+                                                                searchByDateField("date_str", date);
+                                                                selectedDate = date;
+                                                                setSelectedDate(date);
+                                                            }}
+                                                        />
+                                                        <small
+                                                            style={{
+                                                                color: "blue",
+                                                                textDecoration: "underline",
+                                                                cursor: "pointer",
+                                                            }}
+                                                            onClick={(e) => setShowDateRange(!showDateRange)}
+                                                        >
+                                                            {showDateRange ? "Less.." : "More.."}
+                                                        </small>
+                                                        <br />
 
-                                                    {showDateRange ? (
-                                                        <span className="text-left">
-                                                            From:{" "}
-                                                            <DatePicker
-                                                                id="from_date"
-                                                                value={fromDateValue}
-                                                                selected={selectedFromDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                isClearable={true}
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setFromDateValue("");
-                                                                        searchByDateField("from_date", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("from_date", date);
-                                                                    selectedFromDate = date;
-                                                                    setSelectedFromDate(date);
-                                                                }}
-                                                            />
-                                                            To:{" "}
-                                                            <DatePicker
-                                                                id="to_date"
-                                                                value={toDateValue}
-                                                                selected={selectedToDate}
-                                                                className="form-control"
-                                                                dateFormat="MMM dd yyyy"
-                                                                isClearable={true}
-                                                                onChange={(date) => {
-                                                                    if (!date) {
-                                                                        setToDateValue("");
-                                                                        searchByDateField("to_date", "");
-                                                                        return;
-                                                                    }
-                                                                    searchByDateField("to_date", date);
-                                                                    selectedToDate = date;
-                                                                    setSelectedToDate(date);
-                                                                }}
-                                                            />
-                                                        </span>
-                                                    ) : null}
+                                                        {showDateRange ? (
+                                                            <span className="text-left">
+                                                                From:{" "}
+                                                                <DatePicker
+                                                                    id="from_date"
+                                                                    value={fromDateValue}
+                                                                    selected={selectedFromDate}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    isClearable={true}
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setFromDateValue("");
+                                                                            searchByDateField("from_date", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("from_date", date);
+                                                                        selectedFromDate = date;
+                                                                        setSelectedFromDate(date);
+                                                                    }}
+                                                                />
+                                                                To:{" "}
+                                                                <DatePicker
+                                                                    id="to_date"
+                                                                    value={toDateValue}
+                                                                    selected={selectedToDate}
+                                                                    className="form-control"
+                                                                    dateFormat="MMM dd yyyy"
+                                                                    isClearable={true}
+                                                                    onChange={(date) => {
+                                                                        if (!date) {
+                                                                            setToDateValue("");
+                                                                            searchByDateField("to_date", "");
+                                                                            return;
+                                                                        }
+                                                                        searchByDateField("to_date", date);
+                                                                        selectedToDate = date;
+                                                                        setSelectedToDate(date);
+                                                                    }}
+                                                                />
+                                                            </span>
+                                                        ) : null}
                                                     </div>
                                                 </th>
                                                 <th>

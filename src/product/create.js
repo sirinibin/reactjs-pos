@@ -114,7 +114,13 @@ const ProductCreate = forwardRef((props, ref) => {
       },
     };
 
-    fetch("/v1/product/" + id, requestOptions)
+    let searchParams = {};
+    if (cookies.get("store_id")) {
+      searchParams.store_id = cookies.get("store_id");
+    }
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+
+    fetch("/v1/product/" + id + "?" + queryParams, requestOptions)
       .then(async (response) => {
         const isJson = response.headers
           .get("content-type")
@@ -217,6 +223,11 @@ const ProductCreate = forwardRef((props, ref) => {
     var params = {
       name: searchTerm,
     };
+
+    if (cookies.get("store_id")) {
+      params.store_id = cookies.get("store_id");
+    }
+
     var queryString = ObjectToSearchQueryParams(params);
     if (queryString !== "") {
       queryString = "&" + queryString;
@@ -355,8 +366,14 @@ const ProductCreate = forwardRef((props, ref) => {
       body: JSON.stringify(formData),
     };
 
+    let searchParams = {};
+    if (cookies.get("store_id")) {
+      searchParams.store_id = cookies.get("store_id");
+    }
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+
     setProcessing(true);
-    fetch(endPoint, requestOptions)
+    fetch(endPoint + "?" + queryParams, requestOptions)
       .then(async (response) => {
         const isJson = response.headers
           .get("content-type")

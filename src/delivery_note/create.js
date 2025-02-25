@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import DeliveryNotePreview from "./preview.js";
-import { Modal, Button} from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "../customer/create.js";
 import ProductCreate from "../product/create.js";
@@ -161,7 +161,14 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       },
     };
 
-    fetch('/v1/delivery-note/' + id, requestOptions)
+    let searchParams = {};
+    if (cookies.get("store_id")) {
+      searchParams.store_id = cookies.get("store_id");
+    }
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+
+
+    fetch('/v1/delivery-note/' + id + "?" + queryParams, requestOptions)
       .then(async response => {
         const isJson = response.headers.get('content-type')?.includes('application/json');
         const data = isJson && await response.json();
@@ -227,7 +234,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           }
         ];
 
-    
+
         setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
 
         setSelectedStores([...selectedStores]);
@@ -301,6 +308,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     var params = {
       name: searchTerm,
     };
+
+    if (cookies.get("store_id")) {
+      params.store_id = cookies.get("store_id");
+    }
+
     var queryString = ObjectToSearchQueryParams(params);
     if (queryString !== "") {
       queryString = "&" + queryString;
@@ -433,8 +445,19 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
 
     let Select = "select=id,item_code,bar_code,ean_12,part_number,name,product_stores,unit,part_number,name_in_arabic";
+
+    let searchParams = {};
+    if (cookies.get("store_id")) {
+      searchParams.store_id = cookies.get("store_id");
+    }
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+
+    if (queryParams !== "") {
+      queryParams = "&" + queryParams;
+    }
+
     let result = await fetch(
-      "/v1/product/barcode/" + formData.barcode + "?" + Select,
+      "/v1/product/barcode/" + formData.barcode + "?" + Select + queryParams,
       requestOptions
     );
     let data = await result.json();
@@ -503,8 +526,14 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
     console.log("formData:", formData);
 
+    let searchParams = {};
+    if (cookies.get("store_id")) {
+      searchParams.store_id = cookies.get("store_id");
+    }
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+
     setProcessing(true);
-    fetch(endPoint, requestOptions)
+    fetch(endPoint + "?" + queryParams, requestOptions)
       .then(async (response) => {
         const isJson = response.headers
           .get("content-type")
@@ -807,14 +836,14 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           </div>
         </Modal.Header>
         <Modal.Body>
-        {Object.keys(errors).length > 0 ?
-                        <div>
-                            <ul>
+          {Object.keys(errors).length > 0 ?
+            <div>
+              <ul>
 
-                                {errors && Object.keys(errors).map((key, index) => {
-                                    return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
-                                })}
-                            </ul></div> : ""}
+                {errors && Object.keys(errors).map((key, index) => {
+                  return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                })}
+              </ul></div> : ""}
           <form className="row g-3 needs-validation" onSubmit={handleCreate}>
             {!cookies.get('store_name') ? <div className="col-md-6">
               <label className="form-label">Store*</label>

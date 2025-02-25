@@ -1032,8 +1032,13 @@ const OrderIndex = forwardRef((props, ref) => {
 
     function ReportInvoiceToZatca(id) {
         // event.preventDefault();
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
 
-        let endPoint = "/v1/order/zatca/report/" + id;
+        let endPoint = "/v1/order/zatca/report/" + id + "?" + queryParams;
         let method = "POST";
         const requestOptions = {
             method: method,

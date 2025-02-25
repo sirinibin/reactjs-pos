@@ -51,10 +51,10 @@ function LedgerIndex(props) {
 
 
     function moveToLastPage() {
-        if(totalPages){
-            sortField="journals.date"
+        if (totalPages) {
+            sortField = "journals.date"
             setSortField(sortField)
-            sortLedger=""
+            sortLedger = ""
             setSortLedger(sortLedger)
             page = totalPages;
             setPage(page);
@@ -115,18 +115,18 @@ function LedgerIndex(props) {
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-           
+
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-        
+
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-          
- 
+
+
             searchParams["created_at"] = "";
             searchParams[field] = value;
         }
@@ -140,7 +140,7 @@ function LedgerIndex(props) {
     const [selectedAccounts, setSelectedAccounts] = useState([]);
 
     function searchByMultipleValuesField(field, values) {
-       if (field === "account_id") {
+        if (field === "account_id") {
             setSelectedAccounts(values);
         }
 
@@ -224,7 +224,7 @@ function LedgerIndex(props) {
                 setCurrentPageItemsCount(data.result.length);
 
                 //totalExpenses = data.meta.total;
-               
+
 
             })
             .catch((error) => {
@@ -293,8 +293,6 @@ function LedgerIndex(props) {
 
 
     function openBalanceSheetDialogue(id) {
-
-
         console.log("inside get User");
         const requestOptions = {
             method: 'GET',
@@ -304,7 +302,13 @@ function LedgerIndex(props) {
             },
         };
 
-        fetch('/v1/account/' + id, requestOptions)
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/account/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
 
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -321,8 +325,8 @@ function LedgerIndex(props) {
 
                 // model = data.result;
 
-    
-              
+
+
                 AccountBalanceSheetRef.current.open(data.result);
 
                 //setModel({ ...model });
@@ -884,11 +888,11 @@ function LedgerIndex(props) {
                                                                             <Button variant="link" onClick={() => {
                                                                                 openBalanceSheetDialogue(journal.account_id);
                                                                             }}>
-                                                                                {journal.debit_or_credit === "credit" ? "     To " + journal.account_name + " A/c #"+journal.account_number+"  Cr." : "" + journal.account_name + " A/c #"+journal.account_number+" Dr."}
+                                                                                {journal.debit_or_credit === "credit" ? "     To " + journal.account_name + " A/c #" + journal.account_number + "  Cr." : "" + journal.account_name + " A/c #" + journal.account_number + " Dr."}
                                                                             </Button>
                                                                         </td>
-                                                                        <td style={{ border: "solid 1px", minWidth: "165px",  }}>{journal.debit_or_credit === "debit" ? journal.debit : ""}</td>
-                                                                        <td style={{ border: "solid 1px", minWidth: "160px",  }}>{journal.debit_or_credit === "credit" ? journal.credit : ""}</td>
+                                                                        <td style={{ border: "solid 1px", minWidth: "165px", }}>{journal.debit_or_credit === "debit" ? journal.debit : ""}</td>
+                                                                        <td style={{ border: "solid 1px", minWidth: "160px", }}>{journal.debit_or_credit === "credit" ? journal.credit : ""}</td>
                                                                     </tr>))}
 
 
@@ -929,7 +933,7 @@ function LedgerIndex(props) {
                 </div>
             </div>
 
-            <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage}  refreshLedgerList={list} />
+            <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} refreshLedgerList={list} />
         </>
     );
 }

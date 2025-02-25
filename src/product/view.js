@@ -41,6 +41,14 @@ const ProductView = forwardRef((props, ref) => {
     };
 
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=` + object[key];
+            })
+            .join("&");
+    }
+
     function getProduct(id) {
         console.log("inside get Product");
         const requestOptions = {
@@ -51,15 +59,13 @@ const ProductView = forwardRef((props, ref) => {
             },
         };
 
-        let storeParam = "";
-
-        let store_id = cookies.get("store_id");
-        if (store_id) {
-            storeParam = "?store_id=" + store_id;
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
         }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
 
-
-        fetch('/v1/product/' + id + storeParam, requestOptions)
+        fetch('/v1/product/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();

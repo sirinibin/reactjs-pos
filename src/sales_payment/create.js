@@ -86,6 +86,14 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
     });
 
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=` + encodeURIComponent(object[key]);
+            })
+            .join("&");
+    }
+
     function getSalesPayment(id) {
         console.log("inside get Product Category");
         const requestOptions = {
@@ -99,7 +107,14 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
         selectedParentCategories = [];
         setSelectedParentCategories([...selectedParentCategories]);
-        fetch('/v1/sales-payment/' + id, requestOptions)
+
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/sales-payment/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -182,9 +197,14 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
         };
 
         console.log("formData:", formData);
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
 
         setProcessing(true);
-        fetch(endPoint, requestOptions)
+        fetch(endPoint + "?" + queryParams, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")

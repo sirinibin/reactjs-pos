@@ -172,6 +172,9 @@ function SignatureIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);

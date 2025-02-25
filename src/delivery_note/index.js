@@ -74,6 +74,11 @@ function DeliveryNoteIndex(props) {
     var params = {
       name: searchTerm,
     };
+
+    if (cookies.get("store_id")) {
+      params.store_id = cookies.get("store_id");
+    }
+
     var queryString = ObjectToSearchQueryParams(params);
     if (queryString !== "") {
       queryString = `&${queryString}`;
@@ -197,7 +202,7 @@ function DeliveryNoteIndex(props) {
       setSelectedCreatedByUsers(values);
     } else if (field === "customer_id") {
       setSelectedCustomers(values);
-    } 
+    }
 
     searchParams[field] = Object.values(values)
       .map(function (model) {

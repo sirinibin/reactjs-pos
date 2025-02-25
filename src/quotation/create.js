@@ -171,7 +171,14 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    fetch("/v1/quotation/" + id, requestOptions)
+
+    let searchParams = {};
+    if (cookies.get("store_id")) {
+      searchParams.store_id = cookies.get("store_id");
+    }
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+
+    fetch("/v1/quotation/" + id + "?" + queryParams, requestOptions)
       .then(async (response) => {
         const isJson = response.headers
           .get("content-type")
@@ -314,6 +321,12 @@ const QuotationCreate = forwardRef((props, ref) => {
     var params = {
       name: searchTerm,
     };
+
+    if (cookies.get("store_id")) {
+      params.store_id = cookies.get("store_id");
+    }
+
+
     var queryString = ObjectToSearchQueryParams(params);
     if (queryString !== "") {
       queryString = "&" + queryString;
@@ -424,8 +437,20 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     let Select =
       "select=id,item_code,bar_code,ean_12,part_number,name,product_stores,unit,part_number,name_in_arabic";
+
+    let searchParams = {};
+    if (cookies.get("store_id")) {
+      searchParams.store_id = cookies.get("store_id");
+    }
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+
+    if (queryParams !== "") {
+      queryParams = "&" + queryParams;
+    }
+
+
     let result = await fetch(
-      "/v1/product/barcode/" + formData.barcode + "?" + Select,
+      "/v1/product/barcode/" + formData.barcode + "?" + Select + queryParams,
       requestOptions
     );
     let data = await result.json();
@@ -496,8 +521,14 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     console.log("formData:", formData);
 
+    let searchParams = {};
+    if (cookies.get("store_id")) {
+      searchParams.store_id = cookies.get("store_id");
+    }
+    let queryParams = ObjectToSearchQueryParams(searchParams);
+
     setProcessing(true);
-    fetch(endPoint, requestOptions)
+    fetch(endPoint + "?" + queryParams, requestOptions)
       .then(async (response) => {
         const isJson = response.headers
           .get("content-type")

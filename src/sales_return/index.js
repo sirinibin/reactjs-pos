@@ -98,7 +98,14 @@ function SalesReturnIndex(props) {
     function ReportInvoiceToZatca(id) {
         // event.preventDefault();
 
-        let endPoint = "/v1/sales-return/zatca/report/" + id;
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        let endPoint = "/v1/sales-return/zatca/report/" + id + "?" + queryParams;
         let method = "POST";
         const requestOptions = {
             method: method,

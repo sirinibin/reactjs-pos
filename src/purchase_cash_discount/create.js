@@ -62,7 +62,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
     const [isProcessing, setProcessing] = useState(false);
     const cookies = new Cookies();
 
-   
+
     let [selectedParentCategories, setSelectedParentCategories] = useState([]);
 
     //fields
@@ -81,6 +81,15 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
         }
     });
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=` + encodeURIComponent(object[key]);
+            })
+            .join("&");
+    }
+
+
     function getPurchaseCashDiscount(id) {
         console.log("inside get Product Category");
         const requestOptions = {
@@ -96,7 +105,13 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
         selectedParentCategories = [];
         setSelectedParentCategories([...selectedParentCategories]);
 
-        fetch('/v1/purchase-cash-discount/' + id, requestOptions)
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/purchase-cash-discount/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -164,9 +179,14 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
         };
 
         console.log("formData:", formData);
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
 
         setProcessing(true);
-        fetch(endPoint, requestOptions)
+        fetch(endPoint + "?" + queryParams, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
                     .get("content-type")
@@ -183,7 +203,7 @@ const PurchaseCashDiscountCreate = forwardRef((props, ref) => {
 
                 setErrors({});
                 setProcessing(false);
-              
+
 
                 console.log("Response:");
                 console.log(data);

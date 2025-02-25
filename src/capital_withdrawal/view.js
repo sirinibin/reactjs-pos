@@ -29,6 +29,14 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=` + object[key];
+            })
+            .join("&");
+    }
+
     function getCapitalWithdrawal(id) {
         console.log("inside get CapitalWithdrawal");
         const requestOptions = {
@@ -39,15 +47,14 @@ const CapitalWithdrawalView = forwardRef((props, ref) => {
             },
         };
 
-        let storeParam = "";
-
-        let store_id = cookies.get("store_id");
-        if (store_id) {
-            storeParam = "?store_id=" + store_id;
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
         }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
 
 
-        fetch('/v1/capital-withdrawal/' + id + storeParam, requestOptions)
+        fetch('/v1/capital-withdrawal/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();

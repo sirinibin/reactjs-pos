@@ -231,16 +231,16 @@ function PurchasePaymentIndex(props) {
                 setTotalPayments(totalPayments);
 
                 if (props.purchase && !deleted) {
-                    balanceAmount = (props.purchase.net_total-props.purchase.cash_discount) - totalPayments;
+                    balanceAmount = (props.purchase.net_total - props.purchase.cash_discount) - totalPayments;
                     setBalanceAmount(balanceAmount);
 
-                    if (balanceAmount === (props.purchase.net_total-props.purchase.cash_discount)) {
+                    if (balanceAmount === (props.purchase.net_total - props.purchase.cash_discount)) {
                         paymentStatus = "not_paid";
                         setPaymentStatus(paymentStatus);
                     } else if (balanceAmount <= 0) {
                         paymentStatus = "paid";
                         setPaymentStatus(paymentStatus);
-                    } else if (balanceAmount > 0){
+                    } else if (balanceAmount > 0) {
                         paymentStatus = "paid_partially";
                         setPaymentStatus(paymentStatus);
                     }
@@ -379,8 +379,14 @@ function PurchasePaymentIndex(props) {
             },
         };
 
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
         fetch(
-            "/v1/purchase-payment/" + id,
+            "/v1/purchase-payment/" + id + "?" + queryParams,
             requestOptions
         )
             .then(async (response) => {
@@ -921,10 +927,10 @@ function PurchasePaymentIndex(props) {
                                                         onChange={(e) => {
                                                             searchByFieldValue("deleted", e.target.value)
                                                             if (e.target.value === "1") {
-                                                                deleted=true;
+                                                                deleted = true;
                                                                 setDeleted(deleted);
                                                             } else {
-                                                                deleted=false;
+                                                                deleted = false;
                                                                 setDeleted(deleted);
                                                             }
                                                         }}

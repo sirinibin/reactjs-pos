@@ -26,6 +26,14 @@ const SalesCashDiscountView = forwardRef((props, ref) => {
         SetShow(false);
     };
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=` + encodeURIComponent(object[key]);
+            })
+            .join("&");
+    }
+
     function getSalesCashDiscount(id) {
         console.log("inside get SalesCashDiscount");
         const requestOptions = {
@@ -36,7 +44,13 @@ const SalesCashDiscountView = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/sales-cash-discount/' + id, requestOptions)
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/sales-cash-discount/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -98,7 +112,7 @@ const SalesCashDiscountView = forwardRef((props, ref) => {
                             <th>Payment Method:</th><td> {model.method}</td>
                         </tr>
                         <tr>
-                        <th>Date :</th><td>  {model.date ? format(new Date(model.date), "MMM dd yyyy h:mma") : ""} </td>
+                            <th>Date :</th><td>  {model.date ? format(new Date(model.date), "MMM dd yyyy h:mma") : ""} </td>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Created At:</th><td> {model.created_at}</td>
                             <th>Updated At:</th><td> {model.updated_at}</td>

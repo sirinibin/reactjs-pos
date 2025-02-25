@@ -255,7 +255,7 @@ function SalesReturnPaymentIndex(props) {
                     } else if (balanceAmount <= 0) {
                         paymentStatus = "paid";
                         setPaymentStatus(paymentStatus);
-                    } else if (balanceAmount > 0){
+                    } else if (balanceAmount > 0) {
                         paymentStatus = "paid_partially";
                         setPaymentStatus(paymentStatus);
                     }
@@ -340,8 +340,14 @@ function SalesReturnPaymentIndex(props) {
             },
         };
 
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
         fetch(
-            "/v1/sales-return-payment/" + id,
+            "/v1/sales-return-payment/" + id + "?" + queryParams,
             requestOptions
         )
             .then(async (response) => {

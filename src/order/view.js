@@ -98,7 +98,7 @@ const OrderView = forwardRef((props, ref) => {
         let Select =
             "select=id,amount,method,store_name,order_code,order_id,created_by_name,created_at";
         if (cookies.get("store_id")) {
-            // searchParams.store_id = cookies.get("store_id");
+            searchParams.store_id = cookies.get("store_id");
         }
         searchParams["order_id"] = order_id;
         setSearchParams(searchParams);
@@ -147,7 +147,15 @@ const OrderView = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/order/' + id, requestOptions)
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+
+        fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
