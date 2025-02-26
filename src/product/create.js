@@ -305,6 +305,8 @@ const ProductCreate = forwardRef((props, ref) => {
   function handleCreate(event) {
     event.preventDefault();
     console.log("Inside handle Create");
+    let haveErrors = false;
+    setErrors({ ...errors });
 
     formData.category_id = [];
     for (var i = 0; i < selectedCategories.length; i++) {
@@ -316,6 +318,18 @@ const ProductCreate = forwardRef((props, ref) => {
 
     let storesData = {};
     for (let i = 0; i < productStores.length; i++) {
+
+      if (productStores[i]?.retail_unit_price) {
+        if (/^\d*\.?\d{0,2}$/.test(productStores[i]?.retail_unit_price) === false) {
+          errors["retail_unit_price_" + i] = "Only 2 decimal points are allowed";
+          haveErrors = true;
+          setErrors({ ...errors });
+        }
+      }
+
+
+
+
       storesData[productStores[i].store_id] = {
         "store_id": productStores[i].store_id,
         "store_name": productStores[i].store_name,
@@ -347,14 +361,23 @@ const ProductCreate = forwardRef((props, ref) => {
 
     console.log("Formdata:", formData);
 
+    if (haveErrors) {
+      console.log("Errors: ", errors);
+      return;
+    }
+
     let endPoint = "/v1/product";
     let method = "POST";
     if (formData.id) {
       endPoint = "/v1/product/" + formData.id;
       method = "PUT";
-    } else if (cookies.get("store_id")) {
+    }
+
+    if (cookies.get("store_id")) {
       formData.store_id = cookies.get("store_id");
     }
+
+
 
     const requestOptions = {
       method: method,
@@ -391,7 +414,7 @@ const ProductCreate = forwardRef((props, ref) => {
         setErrors({});
         setProcessing(false);
 
-        console.log("Response:");
+        console.log("Response after creating  product:");
         console.log(data);
         props.showToastMessage("Product Created Successfully!", "success");
         if (props.refreshList) {

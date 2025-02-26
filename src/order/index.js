@@ -15,7 +15,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Badge, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
+import { enUS } from "date-fns/locale";
 
 
 import ReactExport from 'react-data-export';
@@ -23,10 +24,24 @@ const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 
-const TimeAgo = ({ datetime }) => {
-    return <span>{formatDistanceToNow(new Date(datetime), { addSuffix: true })}</span>;
+const shortLocale = {
+    ...enUS,
+    formatDistance: (token, count) => {
+        const format = {
+            xSeconds: `${count}s`,
+            xMinutes: `${count}m`,
+            xHours: `${count}h`,
+            xDays: `${count}d`,
+            xMonths: `${count}mo`,
+            xYears: `${count}y`,
+        };
+        return format[token] || "";
+    },
 };
 
+const TimeAgo = ({ date }) => {
+    return <span>{formatDistanceToNowStrict(new Date(date), { locale: shortLocale })} ago</span>;
+};
 
 
 const OrderIndex = forwardRef((props, ref) => {
@@ -511,7 +526,7 @@ const OrderIndex = forwardRef((props, ref) => {
     const [orderList, setOrderList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -659,7 +674,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setStore({ ...store });
             })
             .catch(error => {
-                // setErrors(error);
+
             });
     }
 
@@ -846,7 +861,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=zatca.reporting_passed,zatca.reporting_passed_at,zatca.reporting_last_failed_at,id,code,date,net_total,return_count,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total";
+            "select=zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,return_count,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -1028,9 +1043,11 @@ const OrderIndex = forwardRef((props, ref) => {
         SalesReturnCreateRef.current.open(undefined, id);
     }
 
-    let [reportingInProgress, setReportingInProgress] = useState(false);
+    //let [reportingInProgress, setReportingInProgress] = useState(false);
 
-    function ReportInvoiceToZatca(id) {
+
+    let [errors, setErrors] = useState({});
+    function ReportInvoiceToZatca(id, index) {
         // event.preventDefault();
         let searchParams = {};
         if (cookies.get("store_id")) {
@@ -1049,8 +1066,11 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
 
-        reportingInProgress = true;
-        setReportingInProgress(true);
+        // reportingInProgress = true;
+        //setReportingInProgress(true);
+        orderList[index].zatca.reportingInProgress = true;
+        setOrderList([...orderList]);
+
         fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
@@ -1066,9 +1086,12 @@ const OrderIndex = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                //setErrors({});
-                reportingInProgress = false;
-                setReportingInProgress(false);
+
+                //reportingInProgress = false;
+                //setReportingInProgress(false);
+
+                orderList[index].zatca.reportingInProgress = false;
+                setOrderList([...orderList]);
 
                 console.log("Response:");
                 console.log(data);
@@ -1078,14 +1101,18 @@ const OrderIndex = forwardRef((props, ref) => {
                 list();
             })
             .catch((error) => {
-                reportingInProgress = false;
-                setReportingInProgress(false);
+                //reportingInProgress = false;
+                //setReportingInProgress(false);
+                orderList[index].zatca.reportingInProgress = false;
+                setOrderList([...orderList]);
                 setShowErrors(true);
                 console.log("Inside catch");
                 console.log(error);
+                setErrors({ ...error });
                 // setErrors({ ...error });
                 console.error("There was an error!", error);
                 props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
+                list();
             });
     }
 
@@ -1108,6 +1135,20 @@ const OrderIndex = forwardRef((props, ref) => {
                     <Alert variant="danger">
                         ❌ Oops! Something went wrong. Please try again later.
                     </Alert>
+                    {Object.keys(errors).length > 0 ?
+                        <div>
+                            <ul>
+
+                                {errors && Object.keys(errors).map((key, index) => {
+                                    console.log("Key", key);
+                                    if (Array.isArray(errors[key])) {
+                                        return (errors[key][0] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                    } else {
+                                        return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                    }
+
+                                })}
+                            </ul></div> : ""}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowErrors(false)}>
@@ -1588,6 +1629,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>
+
                                                 {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
                                                     <b
                                                         style={{
@@ -2168,10 +2210,10 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                         <tbody className="text-center">
                                             {orderList &&
-                                                orderList.map((order) => (
-                                                    <tr key={order.code}>
-                                                        <td>{order.code}</td>
-                                                        <td >
+                                                orderList.map((order, index) => (
+                                                    <tr key={index}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{order.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
 
                                                             {format(new Date(order.date), "MMM dd yyyy h:mma")}
 
@@ -2221,20 +2263,48 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 ))}
 
                                                         </td>
-                                                        {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ minWidth: "120px" }}>
+                                                        {/*store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ minWidth: "120px" }}>
+                                                            {order.zatca?.compliance_passed ? <span className="badge bg-success">
+                                                                Compliance check passed
+                                                            </span> : ""}
+                                                            {order.zatca.compliance_passed && order.zatca.compliance_passed_at ? <span><br /><TimeAgo datetime={order.zatca.compliance_check_passed_at} /></span> : ""}
+
+
+                                                            {!order.zatca?.compliance_passed && !order.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
+                                                                Not Reported
+                                                            </span> : ""}
+                                                            {!order.zatca.compliance_passed && order.zatca.compliance_check_last_failed_at ? <span><br /><TimeAgo datetime={order.zatca.compliance_check_last_failed_at} /></span> : ""}
+                                                        </td> : ""*/}
+
+                                                        {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+
+                                                            {!order.zatca?.compliance_passed && order.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
+                                                                Compliance check failed
+                                                                {!order.zatca.compliance_passed && !order.zatca.reporting_passed && order.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={order.zatca.compliance_check_last_failed_at} /></span> : ""}
+                                                            </span> : ""}
+
+                                                            {!order.zatca?.reporting_passed && order.zatca?.reporting_failed_count > 0 ? <span> &nbsp;<span className="badge bg-danger">
+                                                                Reporting failed
+                                                                {!order.zatca.reporting_passed && order.zatca.reporting_last_failed_at ? <span>&nbsp;<TimeAgo date={order.zatca.reporting_last_failed_at} /></span> : ""}
+                                                            </span> </span> : ""}
+
                                                             {order.zatca?.reporting_passed ? <span className="badge bg-success">
                                                                 Reported
+                                                                {order.zatca.reporting_passed && order.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={order.zatca.reporting_passed_at} /></span> : ""}
                                                             </span> : ""}
-                                                            {order.zatca.reporting_passed && order.zatca.reporting_passed_at ? <span><br /><TimeAgo datetime={order.zatca.reporting_passed_at} /></span> : ""}
-                                                            {!order.zatca?.reporting_passed ? <span className="badge bg-danger">
-                                                                Reporting failed
+
+                                                            {!order.zatca?.reporting_passed && !order.zatca?.compliance_passed && !order.zatca?.reporting_failed_count && !order.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
+                                                                Not Reported
                                                             </span> : ""}
-                                                            {!order.zatca.reporting_passed && order.zatca.reporting_last_failed_at ? <span><br /><TimeAgo datetime={order.zatca.reporting_last_failed_at} /></span> : ""}
-                                                            {!order.zatca.reporting_passed ? <span><br /><Button style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
-                                                                ReportInvoiceToZatca(order.id);
+
+                                                            {!order.zatca.reporting_passed ? <span> &nbsp; <Button style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                ReportInvoiceToZatca(order.id, index);
                                                             }}>
-                                                                {!reportingInProgress ? "Retry" : ""}
-                                                                {reportingInProgress ? <Spinner
+
+                                                                {!order.zatca?.reportingInProgress && (order.zatca?.reporting_failed_count > 0 || order.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
+                                                                {!order.zatca?.reportingInProgress && (!order.zatca?.reporting_failed_count > 0 && !order.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
+
+                                                                {order.zatca?.reportingInProgress ? <Spinner
                                                                     as="span"
                                                                     animation="border"
                                                                     size="sm"
@@ -2242,8 +2312,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                     aria-hidden={true}
                                                                 /> : ""}
                                                             </Button></span> : ""}
-                                                            {order.zatca?.reporting_passed ? <span>
-                                                                <br />
+                                                            {order.zatca?.reporting_passed ? <span>&nbsp;
+
                                                                 <Button onClick={() => {
                                                                     window.open("/zatca/xml/" + order.code + ".xml", "_blank");
                                                                 }}><i class="bi bi-filetype-xml"></i> XML
@@ -2254,7 +2324,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td>{order.discount_percent.toFixed(2)} %</td>
                                                         {cookies.get('admin') === "true" ? <td>{order.net_profit?.toFixed(2)} </td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{order.net_loss?.toFixed(2)} </td> : ""}
-                                                        <td>{order.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{order.created_by_name}</td>
                                                         <td>
 
 
@@ -2265,8 +2335,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             </Button>
 
                                                         </td>
-                                                        <td>{order.customer_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{order.customer_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {format(
                                                                 new Date(order.created_at),
                                                                 "MMM dd yyyy h:mma"
@@ -2279,7 +2349,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             </span>
                                                             </td>*/}
 
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {/*
                                                         <OrderUpdate id={order.id} showUpdateButton={{true}} refreshList={list} showToastMessage={props.showToastMessage} />
                                                           <OrderView id={order.id} showViewButton={{true}} show={false} />
@@ -2289,15 +2359,15 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 openUpdateForm(order.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
-                                                            </Button>
+                                                            </Button>&nbsp;
 
 
                                                             <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                 openDetailsView(order.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
-                                                            </Button>
-                                                            <button
+                                                            </Button>&nbsp;
+                                                            <Button
                                                                 className="btn btn-dark btn-sm"
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"
@@ -2307,7 +2377,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 }}
                                                             >
                                                                 <i className="bi bi-arrow-left"></i> Return
-                                                            </button>
+                                                            </Button>
 
 
                                                             {/*<button
@@ -2369,7 +2439,7 @@ const OrderIndex = forwardRef((props, ref) => {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div >
             </div >
 
 
