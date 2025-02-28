@@ -319,13 +319,14 @@ const ProductCreate = forwardRef((props, ref) => {
     let storesData = {};
     for (let i = 0; i < productStores.length; i++) {
 
+      /*
       if (productStores[i]?.retail_unit_price) {
         if (/^\d*\.?\d{0,2}$/.test(productStores[i]?.retail_unit_price) === false) {
           errors["retail_unit_price_" + i] = "Only 2 decimal points are allowed";
           haveErrors = true;
           setErrors({ ...errors });
         }
-      }
+      }*/
 
 
 
@@ -767,6 +768,8 @@ const ProductCreate = forwardRef((props, ref) => {
                 <option value="set">Set</option>
                 <option value="Kg">Kg</option>
                 <option value="Meter(s)">Meter(s)</option>
+                <option value="CMT">Centi Meter(s)</option>
+                <option value="MMT">Milli Meter(s)</option>
                 <option value="Gm">Gm</option>
                 <option value="L">Liter (L)</option>
                 <option value="Mg">Mg</option>

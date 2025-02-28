@@ -6,6 +6,7 @@ import OrderPreview from './preview.js';
 import OrderPrint from './print.js';
 import { format } from "date-fns";
 import { QRCodeCanvas } from "qrcode.react";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 const OrderView = forwardRef((props, ref) => {
 
@@ -204,6 +205,15 @@ const OrderView = forwardRef((props, ref) => {
             .join("&");
     }
 
+
+    /*
+    function trimTo2Decimals(value) {
+        return Math.trunc(value * 100) / 100;
+    }
+        */
+
+
+
     return (<>
         <OrderPreview ref={PreviewRef} />
         <OrderPrint ref={PrintRef} />
@@ -268,7 +278,7 @@ const OrderView = forwardRef((props, ref) => {
                                     <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.unit_price?.toFixed(2)}
+                                            value={product.unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -277,7 +287,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.unit_discount ? (product.unit_discount * product.quantity)?.toFixed(2) : 0.00}
+                                            value={product.unit_discount ? trimTo2Decimals(product.unit_discount * product.quantity) : 0.00}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -286,7 +296,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.unit_discount_percent?.toFixed(2)}
+                                            value={trimTo2Decimals(product.unit_discount_percent)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={"%"}
@@ -295,7 +305,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={((product.unit_price - product.unit_discount) * product.quantity).toFixed(2)}
+                                            value={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -305,7 +315,7 @@ const OrderView = forwardRef((props, ref) => {
                                     <td>{product.quantity_returned}  {product.unit ? product.unit : ""} </td>
                                     {cookies.get('admin') === "true" ? <td className="text-end">
                                         <NumberFormat
-                                            value={product.purchase_unit_price?.toFixed(2)}
+                                            value={product.purchase_unit_price}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -314,7 +324,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td> : ""}
                                     {cookies.get('admin') === "true" ? <td className="text-end">
                                         <NumberFormat
-                                            value={(product.purchase_unit_price * product.quantity).toFixed(2)}
+                                            value={trimTo2Decimals(product.purchase_unit_price * product.quantity)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -323,7 +333,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td> : ""}
                                     {cookies.get('admin') === "true" ? <td className="text-end">
                                         <NumberFormat
-                                            value={product.profit?.toFixed(2)}
+                                            value={trimTo2Decimals(product.profit)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -332,7 +342,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td> : ""}
                                     {cookies.get('admin') === "true" ? <td className="text-end">
                                         <NumberFormat
-                                            value={product.loss?.toFixed(2)}
+                                            value={trimTo2Decimals(product.loss)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -345,7 +355,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <th colSpan="7" className="text-end">Total</th>
                                 <td className="text-end">
                                     {model.total ? <NumberFormat
-                                        value={model.total.toFixed(2)}
+                                        value={trimTo2Decimals(model.total)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" "}
@@ -356,7 +366,7 @@ const OrderView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={model.profit?.toFixed(2)}
+                                            value={trimTo2Decimals(model.profit)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -365,7 +375,7 @@ const OrderView = forwardRef((props, ref) => {
                                     </td> : ""}
                                 {cookies.get('admin') === "true" ? <td className="text-end">
                                     <NumberFormat
-                                        value={model.loss?.toFixed(2)}
+                                        value={trimTo2Decimals(model.loss)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" "}
@@ -379,7 +389,7 @@ const OrderView = forwardRef((props, ref) => {
                                 </th>
                                 <td className="text-end">
                                     {model.shipping_handling_fees ? <NumberFormat
-                                        value={model.shipping_handling_fees.toFixed(2)}
+                                        value={trimTo2Decimals(model.shipping_handling_fees)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" "}
@@ -396,7 +406,7 @@ const OrderView = forwardRef((props, ref) => {
                                 </th>
                                 <td className="text-end">
                                     {model.discount ? <NumberFormat
-                                        value={model.discount?.toFixed(2)}
+                                        value={trimTo2Decimals(model.discount)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" "}
@@ -407,7 +417,7 @@ const OrderView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={(model.discount - model.return_discount).toFixed(2)}
+                                            value={trimTo2Decimals(model.discount - model.return_discount)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -420,10 +430,10 @@ const OrderView = forwardRef((props, ref) => {
                                     </td> : ""}
                             </tr>
                             <tr>
-                                <th colSpan="7" className="text-end">VAT {model.vat_percent?.toFixed(2) + "%"}</th>
+                                <th colSpan="7" className="text-end">VAT {trimTo2Decimals(model.vat_percent) + "%"}</th>
                                 <td className="text-end">
                                     <NumberFormat
-                                        value={model.vat_price?.toFixed(2)}
+                                        value={trimTo2Decimals(model.vat_price)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={" "}
@@ -442,7 +452,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <th colSpan="7" className="text-end">Net Total</th>
                                 <th className="text-end">
                                     <NumberFormat
-                                        value={model.net_total?.toFixed(2)}
+                                        value={trimTo2Decimals(model.net_total)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={""}
@@ -452,7 +462,7 @@ const OrderView = forwardRef((props, ref) => {
                                 <th colSpan={3} className="text-end">Cash discount</th>
                                 <td className="text-end">
                                     <NumberFormat
-                                        value={model.cash_discount?.toFixed(2)}
+                                        value={trimTo2Decimals(model.cash_discount)}
                                         displayType={"text"}
                                         suffix={""}
                                         thousandSeparator={true}
@@ -469,7 +479,7 @@ const OrderView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <th className="text-end">
                                         <NumberFormat
-                                            value={model.net_profit?.toFixed(2)}
+                                            value={trimTo2Decimals(model.net_profit)}
                                             displayType={"text"}
                                             suffix={""}
                                             thousandSeparator={true}
@@ -480,7 +490,7 @@ const OrderView = forwardRef((props, ref) => {
                                 {cookies.get('admin') === "true" ?
                                     <th className="text-end">
                                         <NumberFormat
-                                            value={model.net_loss?.toFixed(2)}
+                                            value={trimTo2Decimals(model.net_loss)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={""}
@@ -618,7 +628,7 @@ const OrderView = forwardRef((props, ref) => {
                                                 {salesCashDiscountList &&
                                                     salesCashDiscountList.map((salescashdiscount) => (
                                                         <tr key={salescashdiscount.id}>
-                                                            <td>{salescashdiscount.amount.toFixed(2) + " "}</td>
+                                                            <td>{trimTo2Decimals(salescashdiscount.amount) + " "}</td>
                                                             <td>{salescashdiscount.created_by_name}</td>
                                                             <td>
                                                                 {format(
@@ -659,7 +669,7 @@ const OrderView = forwardRef((props, ref) => {
                                                 {salesPaymentList &&
                                                     salesPaymentList.map((payment) => (
                                                         <tr key={payment.id}>
-                                                            <td>{payment.amount.toFixed(2)}</td>
+                                                            <td>{trimTo2Decimals(payment.amount)}</td>
                                                             <td>{payment.method}</td>
                                                             <td>{payment.created_by_name}</td>
                                                             <td>

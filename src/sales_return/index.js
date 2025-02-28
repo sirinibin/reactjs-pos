@@ -13,16 +13,32 @@ import NumberFormat from "react-number-format";
 import SalesReturnPaymentCreate from "./../sales_return_payment/create.js";
 import SalesReturnPaymentDetailsView from "./../sales_return_payment/view.js";
 import SalesReturnPaymentIndex from "./../sales_return_payment/index.js";
-import { formatDistanceToNow } from "date-fns";
-
+import { formatDistanceToNowStrict } from "date-fns";
+import { enUS } from "date-fns/locale";
 import ReactExport from 'react-data-export';
+import { trimTo2Decimals } from "../utils/numberUtils";
+
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
-const TimeAgo = ({ datetime }) => {
-    return <span>{formatDistanceToNow(new Date(datetime), { addSuffix: true })}</span>;
+const shortLocale = {
+    ...enUS,
+    formatDistance: (token, count) => {
+        const format = {
+            xSeconds: `${count}s`,
+            xMinutes: `${count}m`,
+            xHours: `${count}h`,
+            xDays: `${count}d`,
+            xMonths: `${count}mo`,
+            xYears: `${count}y`,
+        };
+        return format[token] || "";
+    },
 };
 
+const TimeAgo = ({ date }) => {
+    return <span>{formatDistanceToNowStrict(new Date(date), { locale: shortLocale })} ago</span>;
+};
 
 function SalesReturnIndex(props) {
     const cookies = new Cookies();
@@ -41,7 +57,7 @@ function SalesReturnIndex(props) {
     const [salesreturnList, setSalesReturnList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -95,14 +111,17 @@ function SalesReturnIndex(props) {
 
     let [reportingInProgress, setReportingInProgress] = useState(false);
 
-    function ReportInvoiceToZatca(id) {
+    let [errors, setErrors] = useState({});
+    function ReportInvoiceToZatca(id, index) {
         // event.preventDefault();
+        if (reportingInProgress === true) {
+            return;
+        }
 
         let searchParams = {};
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
-
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
         let endPoint = "/v1/sales-return/zatca/report/" + id + "?" + queryParams;
@@ -118,6 +137,10 @@ function SalesReturnIndex(props) {
 
         reportingInProgress = true;
         setReportingInProgress(true);
+
+        salesreturnList[index].zatca.reportingInProgress = true;
+        setSalesReturnList([...salesreturnList]);
+
         fetch(endPoint, requestOptions)
             .then(async (response) => {
                 const isJson = response.headers
@@ -133,13 +156,16 @@ function SalesReturnIndex(props) {
                     return Promise.reject(error);
                 }
 
-                //setErrors({});
+
                 reportingInProgress = false;
                 setReportingInProgress(false);
 
+                salesreturnList[index].zatca.reportingInProgress = false;
+                setSalesReturnList([...salesreturnList]);
+
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Sales return invoice reported successfully to Zatca!", "success");
+                props.showToastMessage("Invoice reported successfully to Zatca!", "success");
                 setShowSuccess(true);
                 setSuccessMessage("Successfully Reported to Zatca!")
                 list();
@@ -147,12 +173,16 @@ function SalesReturnIndex(props) {
             .catch((error) => {
                 reportingInProgress = false;
                 setReportingInProgress(false);
+                salesreturnList[index].zatca.reportingInProgress = false;
+                setSalesReturnList([...salesreturnList]);
                 setShowErrors(true);
                 console.log("Inside catch");
                 console.log(error);
+                setErrors({ ...error });
                 // setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Sales return invoice reporting to Zatca failed!", "danger");
+                props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
+                list();
             });
     }
 
@@ -279,31 +309,31 @@ function SalesReturnIndex(props) {
                             value: product.name
                         },
                         {
-                            value: product.quantity.toFixed(2),
+                            value: product.quantity,
                         },
                         {
                             value: product.unit ? product.unit : "PCs",
                         },
                         {
-                            value: product.unit_price ? product.unit_price.toFixed(2) : 0.00,
+                            value: product.unit_price ? trimTo2Decimals(product.unit_price) : 0.00,
                         },
                         {
-                            value: (gross_amount)?.toFixed(2)
+                            value: trimTo2Decimals(gross_amount)
                         },
                         {
-                            value: product.unit_discount_percent ? product.unit_discount_percent.toFixed(2) : "0.00",
+                            value: product.unit_discount_percent ? trimTo2Decimals(product.unit_discount_percent) : "0.00",
                         },
                         {
-                            value: product.unit_discount ? (product.unit_discount * product.quantity)?.toFixed(2) : "0.00",
+                            value: product.unit_discount ? trimTo2Decimals(product.unit_discount * product.quantity) : "0.00",
                         },
                         {
-                            value: vat_percent.toFixed(2),
+                            value: trimTo2Decimals(vat_percent),
                         },
                         {
-                            value: tax_amount.toFixed(2),
+                            value: trimTo2Decimals(tax_amount),
                         },
                         {
-                            value: net_amount.toFixed(2),
+                            value: trimTo2Decimals(net_amount),
                         },
                     ]);
                 }
@@ -320,7 +350,7 @@ function SalesReturnIndex(props) {
                     {
                         value: "Shipping/Handling Fees",
                     }, {
-                        value: salesReturn.shipping_handling_fees.toFixed(2),
+                        value: trimTo2Decimals(salesReturn.shipping_handling_fees),
                     },
                 ]);
 
@@ -336,7 +366,7 @@ function SalesReturnIndex(props) {
                     {
                         value: "Discount",
                     }, {
-                        value: salesReturn.discount?.toFixed(2),
+                        value: trimTo2Decimals(salesReturn.discount),
                     },
                 ]);
 
@@ -352,7 +382,7 @@ function SalesReturnIndex(props) {
                     {
                         value: "Total Amount After Discount",
                     }, {
-                        value: totalAmountAfterDiscount.toFixed(2),
+                        value: trimTo2Decimals(totalAmountAfterDiscount),
                     },
                 ]);
 
@@ -368,7 +398,7 @@ function SalesReturnIndex(props) {
                     {
                         value: "Total Amount Before VAT",
                     }, {
-                        value: totalAmountBeforeVat.toFixed(2),
+                        value: trimTo2Decimals(totalAmountBeforeVat),
                     },
                 ]);
 
@@ -385,7 +415,7 @@ function SalesReturnIndex(props) {
                     {
                         value: "VAT Amount",
                     }, {
-                        value: salesReturn.vat_price.toFixed(2),
+                        value: trimTo2Decimals(salesReturn.vat_price),
                     },
                 ]);
 
@@ -403,7 +433,7 @@ function SalesReturnIndex(props) {
                     {
                         value: "Total Amount After VAT",
                     }, {
-                        value: totalAmountAfterVat.toFixed(2),
+                        value: trimTo2Decimals(totalAmountAfterVat),
                     },
                 ]);
 
@@ -425,7 +455,7 @@ function SalesReturnIndex(props) {
                 {
                     value: "Day Total Before VAT",
                 }, {
-                    value: dayTotalBeforeVAT.toFixed(2),
+                    value: trimTo2Decimals(dayTotalBeforeVAT),
                 },
             ]);
 
@@ -441,7 +471,7 @@ function SalesReturnIndex(props) {
                 {
                     value: "Day VAT",
                 }, {
-                    value: dayVAT.toFixed(2),
+                    value: trimTo2Decimals(dayVAT),
                 },
             ]);
 
@@ -457,7 +487,7 @@ function SalesReturnIndex(props) {
                 {
                     value: "Day Total After VAT",
                 }, {
-                    value: dayTotalAfterVAT.toFixed(2),
+                    value: trimTo2Decimals(dayTotalAfterVAT),
                 },
             ]);
 
@@ -499,7 +529,7 @@ function SalesReturnIndex(props) {
             {
                 value: "Total Amount Before VAT",
             }, {
-                value: totalAmountBeforeVAT.toFixed(2),
+                value: trimTo2Decimals(totalAmountBeforeVAT),
             },
         ]);
 
@@ -515,7 +545,7 @@ function SalesReturnIndex(props) {
             {
                 value: "Total VAT",
             }, {
-                value: totalVAT.toFixed(2),
+                value: trimTo2Decimals(totalVAT),
             },
         ]);
 
@@ -531,7 +561,7 @@ function SalesReturnIndex(props) {
             {
                 value: "Total Amount After VAT",
             }, {
-                value: totalAmountAfterVAT.toFixed(2),
+                value: trimTo2Decimals(totalAmountAfterVAT),
             },
         ]);
 
@@ -841,7 +871,7 @@ function SalesReturnIndex(props) {
             },
         };
         let Select =
-            "select=zatca.reporting_passed,zatca.reporting_passed_at,zatca.reporting_last_failed_at,id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,net_loss,cash_discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
+            "select=zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,net_loss,cash_discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
@@ -1075,6 +1105,20 @@ function SalesReturnIndex(props) {
                     <Alert variant="danger">
                         ❌ Oops! Something went wrong. Please try again later.
                     </Alert>
+                    {Object.keys(errors).length > 0 ?
+                        <div>
+                            <ul>
+
+                                {errors && Object.keys(errors).map((key, index) => {
+                                    console.log("Key", key);
+                                    if (Array.isArray(errors[key])) {
+                                        return (errors[key][0] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                    } else {
+                                        return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
+                                    }
+
+                                })}
+                            </ul></div> : ""}
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowErrors(false)}>
@@ -1099,6 +1143,8 @@ function SalesReturnIndex(props) {
                 </Modal.Footer>
             </Modal>
 
+
+
             <div className="container-fluid p-0">
                 <div className="row">
 
@@ -1117,7 +1163,7 @@ function SalesReturnIndex(props) {
                         <h1 className="text-end">
                             Paid Sales Return: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalPaidSalesReturn.toFixed(2)}
+                                    value={trimTo2Decimals(totalPaidSalesReturn)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1128,7 +1174,7 @@ function SalesReturnIndex(props) {
                         <h4 className="text-end">
                             Cash Sales Return: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalCashSalesReturn.toFixed(2)}
+                                    value={trimTo2Decimals(totalCashSalesReturn)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1139,7 +1185,7 @@ function SalesReturnIndex(props) {
                         <h4 className="text-end">
                             Bank Account Sales Return: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalBankAccountSalesReturn.toFixed(2)}
+                                    value={trimTo2Decimals(totalBankAccountSalesReturn)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1150,7 +1196,7 @@ function SalesReturnIndex(props) {
                         <h1 className="text-end">
                             Credit Sales Return: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalUnPaidSalesReturn.toFixed(2)}
+                                    value={trimTo2Decimals(totalUnPaidSalesReturn)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1183,7 +1229,7 @@ function SalesReturnIndex(props) {
                         <h1 className="text-end">
                             Sales Return Discount: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalDiscount.toFixed(2)}
+                                    value={trimTo2Decimals(totalDiscount)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1194,7 +1240,7 @@ function SalesReturnIndex(props) {
                         <h1 className="text-end">
                             Cash Discount: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalCashDiscount.toFixed(2)}
+                                    value={trimTo2Decimals(totalCashDiscount)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1205,7 +1251,7 @@ function SalesReturnIndex(props) {
                         <h1 className="text-end">
                             Shipping/Handling fees: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalShippingHandlingFees.toFixed(2)}
+                                    value={trimTo2Decimals(totalShippingHandlingFees)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1216,7 +1262,7 @@ function SalesReturnIndex(props) {
                         <h1 className="text-end">
                             VAT Return: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={vatPrice.toFixed(2)}
+                                    value={trimTo2Decimals(vatPrice)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1897,8 +1943,10 @@ function SalesReturnIndex(props) {
                                                         }}
                                                     >
                                                         <option value="" SELECTED>Select</option>
-                                                        <option value="1">YES</option>
-                                                        <option value="0">NO</option>
+                                                        <option value="reported">REPORTED</option>
+                                                        <option value="compliance_failed">COMPLIANCE FAILED</option>
+                                                        <option value="reporting_failed">REPORTING FAILED</option>
+                                                        <option value="not_reported">NOT REPORTED</option>
                                                     </select>
                                                 </th> : ""}
                                                 {cookies.get('admin') === "true" ? <th>
@@ -2045,28 +2093,28 @@ function SalesReturnIndex(props) {
 
                                         <tbody className="text-center">
                                             {salesreturnList &&
-                                                salesreturnList.map((salesreturn) => (
-                                                    <tr key={salesreturn.code}>
-                                                        <td>{salesreturn.code}</td>
-                                                        <td>{salesreturn.order_code}</td>
-                                                        <td>
+                                                salesreturnList.map((salesreturn, index) => (
+                                                    <tr key={index}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.order_code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(salesreturn.date),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
                                                         <td>{salesreturn.net_total} </td>
-                                                        <td>{salesreturn.cash_discount?.toFixed(2)}</td>
+                                                        <td>{trimTo2Decimals(salesreturn.cash_discount)}</td>
                                                         <td>
 
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(salesreturn);
                                                             }}>
-                                                                {salesreturn.total_payment_paid?.toFixed(2)}
+                                                                {trimTo2Decimals(salesreturn.total_payment_paid)}
                                                             </Button>
 
                                                         </td>
-                                                        <td>{salesreturn.balance_amount?.toFixed(2)}</td>
+                                                        <td>{trimTo2Decimals(salesreturn.balance_amount)}</td>
                                                         {/*<td>
 
                                                             <Button variant="link" onClick={() => {
@@ -2098,20 +2146,35 @@ function SalesReturnIndex(props) {
                                                                 ))}
 
                                                         </td>
-                                                        {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ minWidth: "120px" }}>
-                                                            {salesreturn.zatca?.reporting_passed ? <span className="badge bg-success">
-                                                                Reported
-                                                            </span> : ""}
-                                                            {salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_passed_at ? <span><br /><TimeAgo datetime={salesreturn.zatca.reporting_passed_at} /></span> : ""}
-                                                            {!salesreturn.zatca?.reporting_passed ? <span className="badge bg-danger">
+                                                        {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+
+                                                            {!salesreturn.zatca?.compliance_passed && salesreturn.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
+                                                                Compliance check failed
+                                                                {!salesreturn.zatca.compliance_passed && salesreturn.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
+                                                                &nbsp;</span> : ""}
+
+                                                            {!salesreturn.zatca?.reporting_passed && salesreturn.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
                                                                 Reporting failed
-                                                            </span> : ""}
-                                                            {!salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_last_failed_at ? <span><br /><TimeAgo datetime={salesreturn.zatca.reporting_last_failed_at} /></span> : ""}
-                                                            {!salesreturn.zatca.reporting_passed ? <span><br /><Button style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
-                                                                ReportInvoiceToZatca(salesreturn.id);
+                                                                {!salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_last_failed_at ? <span><TimeAgo date={salesreturn.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
+                                                            </span> &nbsp;</span> : ""}
+
+                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
+                                                                Reported
+                                                                {salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.reporting_passed_at} />&nbsp;</span> : ""}
+                                                                &nbsp;</span></span> : ""}
+
+                                                            {!salesreturn.zatca?.reporting_passed && !salesreturn.zatca?.compliance_passed && !salesreturn.zatca?.reporting_failed_count && !salesreturn.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
+                                                                Not Reported
+                                                                &nbsp;</span> : ""}
+
+                                                            {!salesreturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                ReportInvoiceToZatca(salesreturn.id, index);
                                                             }}>
-                                                                {!reportingInProgress ? "Retry" : ""}
-                                                                {reportingInProgress ? <Spinner
+
+                                                                {!salesreturn.zatca?.reportingInProgress && (salesreturn.zatca?.reporting_failed_count > 0 || salesreturn.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
+                                                                {!salesreturn.zatca?.reportingInProgress && (!salesreturn.zatca?.reporting_failed_count > 0 && !salesreturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
+
+                                                                {salesreturn.zatca?.reportingInProgress ? <Spinner
                                                                     as="span"
                                                                     animation="border"
                                                                     size="sm"
@@ -2119,25 +2182,25 @@ function SalesReturnIndex(props) {
                                                                     aria-hidden={true}
                                                                 /> : ""}
                                                             </Button></span> : ""}
-                                                            {salesreturn.zatca?.reporting_passed ? <span>
-                                                                <br />
+                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;
+
                                                                 <Button onClick={() => {
                                                                     window.open("/zatca/returns/xml/" + salesreturn.code + ".xml", "_blank");
                                                                 }}><i class="bi bi-filetype-xml"></i> XML
                                                                 </Button>
                                                             </span> : ""}
                                                         </td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.net_profit?.toFixed(2)}</td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{salesreturn.net_loss?.toFixed(2)}</td> : ""}
-                                                        <td>{salesreturn.created_by_name}</td>
-                                                        <td>{salesreturn.customer_name}</td>
-                                                        <td>
+                                                        {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(salesreturn.net_profit)}</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(salesreturn.net_loss)}</td> : ""}
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.customer_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(salesreturn.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {/*
                                                         <SalesReturnUpdate id={salesreturn.id} showUpdateButton={{true}} refreshList={list} showToastMessage={props.showToastMessage} />
                                                           <SalesReturnView id={salesreturn.id} showViewButton={{true}} show={false} />

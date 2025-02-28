@@ -3,6 +3,7 @@ import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
 import { QRCodeCanvas } from "qrcode.react";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 const SalesReturnPreviewContent = forwardRef((props, ref) => {
 
@@ -169,12 +170,6 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </div>
                         </div>
-
-
-
-
-
-
                         {/* 
                         <ul className="list-unstyled mb0 text-start">
                             <li><strong>Invoice Count Value | قيمة عدد الفاتورة (ICV): </strong>{props.model.invoice_count_value ? props.model.invoice_count_value : "<ICV_NUMBER>"}</li>
@@ -326,20 +321,20 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                             <td style={{ padding: "1px" }}>
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }}>{product.quantity ? product.quantity.toFixed(2) : ""}  {product.unit ? product.unit : ""}</td>
+                                            <td style={{ padding: "1px" }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
                                             <td className="text-end" style={{ padding: "1px" }} >
                                                 {product.unit_price ? <NumberFormat
-                                                    value={product.unit_price.toFixed(2)}
+                                                    value={trimTo2Decimals(product.unit_price)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={""}
                                                     renderText={(value, props) => value}
                                                 /> : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }} className="text-end">{product.unit_discount_percent ? "(" + product.unit_discount_percent.toFixed(2) + "%)" : ""}{product.unit_discount ? " " + (product.unit_discount * product.quantity)?.toFixed(2) : ""} </td>
+                                            <td style={{ padding: "1px" }} className="text-end">{product.unit_discount_percent ? "(" + trimTo2Decimals(product.unit_discount_percent) + "%)" : ""}{product.unit_discount ? " " + trimTo2Decimals(product.unit_discount * product.quantity) : ""} </td>
                                             <td style={{ padding: "1px" }} className="text-end">
                                                 <NumberFormat
-                                                    value={((product.unit_price - product.unit_discount) * product.quantity).toFixed(2)}
+                                                    value={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={""}
@@ -359,7 +354,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px", }} >
                                             <NumberFormat
-                                                value={props.model.total.toFixed(2)}
+                                                value={trimTo2Decimals(props.model.total)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}
@@ -374,7 +369,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
-                                                value={props.model.shipping_handling_fees.toFixed(2)}
+                                                value={trimTo2Decimals(props.model.shipping_handling_fees)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}
@@ -388,7 +383,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
-                                                value={props.model.discount?.toFixed(2)}
+                                                value={trimTo2Decimals(props.model.discount)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}
@@ -400,10 +395,10 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                         <th className="text-end" colSpan="5" style={{ padding: "2px" }}>
                                             VAT ضريبة:
                                         </th>
-                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }} >{props.model.vat_percent.toFixed(2)}%</th>
+                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }} >{trimTo2Decimals(props.model.vat_percent)}%</th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
-                                                value={props.model.vat_price.toFixed(2)}
+                                                value={trimTo2Decimals(props.model.vat_price)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}
@@ -418,7 +413,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                         <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
                                             <NumberFormat
-                                                value={props.model.net_total.toFixed(2)}
+                                                value={trimTo2Decimals(props.model.net_total)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={""}

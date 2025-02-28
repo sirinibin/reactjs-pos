@@ -3,6 +3,7 @@ import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
 import { QRCodeCanvas } from "qrcode.react";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 const OrderPrintContent = forwardRef((props, ref) => {
     //Non-A4
@@ -99,21 +100,21 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                     <h4 style={{ fontSize: "3mm" }}>
 
                                         <NumberFormat
-                                            value={(product.unit_price).toFixed(2)}
+                                            value={trimTo2Decimals(product.unit_price)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={""}
                                             renderText={(value, props) => value}
                                         />
 
-                                        {product.unit_discount ? " [" + (product.unit_discount * product.quantity).toFixed(2) + " off]" : ""}
+                                        {product.unit_discount ? " [" + trimTo2Decimals(product.unit_discount * product.quantity) + " off]" : ""}
                                     </h4>
 
                                 </td>
                                 <td className="text-end" style={{ border: "solid 0px", width: "99px", paddingRight: "5px" }} >
                                     <h4 style={{ fontSize: "3mm" }}>
                                         <NumberFormat
-                                            value={((product.unit_price - product.unit_discount) * product.quantity).toFixed(2)}
+                                            value={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={""}
@@ -134,7 +135,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                                 <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                     <NumberFormat
                                         displayType={"text"}
-                                        value={props.model.total.toFixed(2)}
+                                        value={trimTo2Decimals(props.model.total)}
                                         thousandSeparator={true}
                                         suffix={""}
                                         renderText={(value, props) => value}
@@ -147,7 +148,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
                                 <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                     <NumberFormat
-                                        value={props.model.vat_price.toFixed(2)}
+                                        value={trimTo2Decimals(props.model.vat_price)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={""}
@@ -160,7 +161,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
                                 <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                     <NumberFormat
-                                        value={props.model.discount?.toFixed(2)}
+                                        value={trimTo2Decimals(props.model.discount)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={""}
@@ -173,7 +174,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                             <td style={{ width: "99px", paddingRight: "5px", paddingTop: "10px" }}>
                                 <h4 style={{ fontSize: "3mm", height: "9px", }}>
                                     <NumberFormat
-                                        value={props.model.net_total.toFixed(2)}
+                                        value={trimTo2Decimals(props.model.net_total)}
                                         displayType={"text"}
                                         thousandSeparator={true}
                                         suffix={""}
@@ -192,7 +193,7 @@ const OrderPrintContent = forwardRef((props, ref) => {
                 </h4> : ""}
 
                 {page.lastPage && props.model.shipping_handling_fees ? <h4 style={{ fontSize: "3mm", position: "absolute", left: "686px", top: (513 + page.top) + "px" }}>
-                    {props.model.shipping_handling_fees.toFixed(2)}
+                    {trimTo2Decimals(props.model.shipping_handling_fees)}
                 </h4> : ""}
 
 

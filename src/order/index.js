@@ -17,6 +17,7 @@ import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import { formatDistanceToNowStrict } from "date-fns";
 import { enUS } from "date-fns/locale";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 
 import ReactExport from 'react-data-export';
@@ -144,31 +145,31 @@ const OrderIndex = forwardRef((props, ref) => {
                             value: product.name
                         },
                         {
-                            value: product.quantity.toFixed(2),
+                            value: product.quantity,
                         },
                         {
                             value: product.unit ? product.unit : "PCs",
                         },
                         {
-                            value: product.unit_price ? product.unit_price.toFixed(2) : 0.00,
+                            value: product.unit_price ? product.unit_price : 0.00,
                         },
                         {
-                            value: gross_amount?.toFixed(2)
+                            value: trimTo2Decimals(gross_amount),
                         },
                         {
-                            value: product.unit_discount_percent ? product.unit_discount_percent.toFixed(2) : "0.00",
+                            value: product.unit_discount_percent ? trimTo2Decimals(product.unit_discount_percent) : "0.00",
                         },
                         {
-                            value: product.unit_discount ? (product.unit_discount * product.quantity)?.toFixed(2) : "0.00",
+                            value: product.unit_discount ? trimTo2Decimals(product.unit_discount * product.quantity) : "0.00",
                         },
                         {
-                            value: vat_percent.toFixed(2),
+                            value: trimTo2Decimals(vat_percent),
                         },
                         {
-                            value: tax_amount.toFixed(2),
+                            value: trimTo2Decimals(tax_amount),
                         },
                         {
-                            value: net_amount.toFixed(2),
+                            value: trimTo2Decimals(net_amount),
                         },
                     ]);
                 } //end for
@@ -185,7 +186,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "Shipping/Handling Fees",
                     }, {
-                        value: order.shipping_handling_fees.toFixed(2),
+                        value: trimTo2Decimals(order.shipping_handling_fees),
                     },
                 ]);
 
@@ -201,7 +202,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "Discount",
                     }, {
-                        value: order.discount?.toFixed(2),
+                        value: trimTo2Decimals(order.discount),
                     },
                 ]);
 
@@ -217,7 +218,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "Total Amount After Discount",
                     }, {
-                        value: totalAmountAfterDiscount.toFixed(2),
+                        value: trimTo2Decimals(totalAmountAfterDiscount),
                     },
                 ]);
 
@@ -233,7 +234,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "Total Amount Before VAT",
                     }, {
-                        value: totalAmountBeforeVat.toFixed(2),
+                        value: trimTo2Decimals(totalAmountBeforeVat),
                     },
                 ]);
 
@@ -249,7 +250,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "VAT Amount",
                     }, {
-                        value: order.vat_price.toFixed(2),
+                        value: trimTo2Decimals(order.vat_price),
                     },
                 ]);
 
@@ -267,7 +268,7 @@ const OrderIndex = forwardRef((props, ref) => {
                     {
                         value: "Total Amount After VAT",
                     }, {
-                        value: totalAmountAfterVat.toFixed(2),
+                        value: trimTo2Decimals(totalAmountAfterVat),
                     },
                 ]);
 
@@ -290,7 +291,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 {
                     value: "Day Total Before VAT",
                 }, {
-                    value: dayTotalBeforeVAT.toFixed(2),
+                    value: trimTo2Decimals(dayTotalBeforeVAT),
                 },
             ]);
 
@@ -306,7 +307,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 {
                     value: "Day VAT",
                 }, {
-                    value: dayVAT.toFixed(2),
+                    value: trimTo2Decimals(dayVAT),
                 },
             ]);
 
@@ -322,7 +323,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 {
                     value: "Day Total After VAT",
                 }, {
-                    value: dayTotalAfterVAT.toFixed(2),
+                    value: trimTo2Decimals(dayTotalAfterVAT),
                 },
             ]);
 
@@ -362,7 +363,7 @@ const OrderIndex = forwardRef((props, ref) => {
             {
                 value: "Total Amount Before VAT",
             }, {
-                value: totalAmountBeforeVAT.toFixed(2),
+                value: trimTo2Decimals(totalAmountBeforeVAT),
             },
         ]);
 
@@ -378,7 +379,7 @@ const OrderIndex = forwardRef((props, ref) => {
             {
                 value: "Total VAT",
             }, {
-                value: totalVAT.toFixed(2),
+                value: trimTo2Decimals(totalVAT),
             },
         ]);
 
@@ -394,7 +395,7 @@ const OrderIndex = forwardRef((props, ref) => {
             {
                 value: "Total Amount After VAT",
             }, {
-                value: totalAmountAfterVAT.toFixed(2),
+                value: trimTo2Decimals(totalAmountAfterVAT),
             },
         ]);
 
@@ -1043,12 +1044,16 @@ const OrderIndex = forwardRef((props, ref) => {
         SalesReturnCreateRef.current.open(undefined, id);
     }
 
-    //let [reportingInProgress, setReportingInProgress] = useState(false);
+    let [reportingInProgress, setReportingInProgress] = useState(false);
 
 
     let [errors, setErrors] = useState({});
     function ReportInvoiceToZatca(id, index) {
         // event.preventDefault();
+        if (reportingInProgress === true) {
+            return;
+        }
+
         let searchParams = {};
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -1066,8 +1071,8 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
 
-        // reportingInProgress = true;
-        //setReportingInProgress(true);
+        reportingInProgress = true;
+        setReportingInProgress(true);
         orderList[index].zatca.reportingInProgress = true;
         setOrderList([...orderList]);
 
@@ -1087,8 +1092,8 @@ const OrderIndex = forwardRef((props, ref) => {
                 }
 
 
-                //reportingInProgress = false;
-                //setReportingInProgress(false);
+                reportingInProgress = false;
+                setReportingInProgress(false);
 
                 orderList[index].zatca.reportingInProgress = false;
                 setOrderList([...orderList]);
@@ -1101,8 +1106,8 @@ const OrderIndex = forwardRef((props, ref) => {
                 list();
             })
             .catch((error) => {
-                //reportingInProgress = false;
-                //setReportingInProgress(false);
+                reportingInProgress = false;
+                setReportingInProgress(false);
                 orderList[index].zatca.reportingInProgress = false;
                 setOrderList([...orderList]);
                 setShowErrors(true);
@@ -1179,7 +1184,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalSales.toFixed(2)}
+                                    value={trimTo2Decimals(totalSales)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1190,7 +1195,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             Paid Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalPaidSales.toFixed(2)}
+                                    value={trimTo2Decimals(totalPaidSales)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1201,7 +1206,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h4 className="text-end">
                             Cash Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalCashSales.toFixed(2)}
+                                    value={trimTo2Decimals(totalCashSales)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1212,7 +1217,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h4 className="text-end">
                             Bank Account Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalBankAccountSales.toFixed(2)}
+                                    value={trimTo2Decimals(totalBankAccountSales)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1223,7 +1228,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             Credit Sales: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalUnPaidSales.toFixed(2)}
+                                    value={trimTo2Decimals(totalUnPaidSales)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1234,7 +1239,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             Cash Discounts: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalCashDiscount.toFixed(2)}
+                                    value={trimTo2Decimals(totalCashDiscount)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1245,7 +1250,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             Sales Discounts: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalDiscount.toFixed(2)}
+                                    value={trimTo2Decimals(totalDiscount)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1257,7 +1262,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             Shipping/Handling fees: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={totalShippingHandlingFees.toFixed(2)}
+                                    value={trimTo2Decimals(totalShippingHandlingFees)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1268,7 +1273,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         <h1 className="text-end">
                             VAT Collected: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={vatPrice.toFixed(2)}
+                                    value={trimTo2Decimals(vatPrice)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1280,7 +1285,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         {cookies.get('admin') === "true" ? <h1 className="text-end">
                             Net Profit: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={netProfit.toFixed(2)}
+                                    value={trimTo2Decimals(netProfit)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -1291,7 +1296,7 @@ const OrderIndex = forwardRef((props, ref) => {
                         {cookies.get('admin') === "true" ? <h1 className="text-end">
                             Loss: <Badge bg="secondary">
                                 <NumberFormat
-                                    value={loss.toFixed(2)}
+                                    value={trimTo2Decimals(loss)}
                                     displayType={"text"}
                                     thousandSeparator={true}
                                     suffix={" "}
@@ -2012,8 +2017,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         }}
                                                     >
                                                         <option value="" SELECTED>Select</option>
-                                                        <option value="1">YES</option>
-                                                        <option value="0">NO</option>
+                                                        <option value="reported">REPORTED</option>
+                                                        <option value="compliance_failed">COMPLIANCE FAILED</option>
+                                                        <option value="reporting_failed">REPORTING FAILED</option>
+                                                        <option value="not_reported">NOT REPORTED</option>
                                                     </select>
                                                 </th> : ""}
                                                 <th>
@@ -2218,19 +2225,19 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             {format(new Date(order.date), "MMM dd yyyy h:mma")}
 
                                                         </td>
-                                                        <td>{order.net_total?.toFixed(2)}</td>
-                                                        <td>{order.cash_discount?.toFixed(2)}</td>
+                                                        <td>{trimTo2Decimals(order.net_total)}</td>
+                                                        <td>{trimTo2Decimals(order.cash_discount)}</td>
                                                         <td>
 
 
                                                             <Button variant="link" onClick={() => {
                                                                 openOrderPaymentsDialogue(order);
                                                             }}>
-                                                                {order.total_payment_received?.toFixed(2)}
+                                                                {trimTo2Decimals(order.total_payment_received)}
                                                             </Button>
 
                                                         </td>
-                                                        <td>{order.balance_amount?.toFixed(2)}</td>
+                                                        <td>{trimTo2Decimals(order.balance_amount)}</td>
                                                         {/*<td>
 
 
@@ -2280,24 +2287,24 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                                             {!order.zatca?.compliance_passed && order.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
                                                                 Compliance check failed
-                                                                {!order.zatca.compliance_passed && !order.zatca.reporting_passed && order.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={order.zatca.compliance_check_last_failed_at} /></span> : ""}
-                                                            </span> : ""}
+                                                                {!order.zatca.compliance_passed && order.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={order.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
+                                                                &nbsp;</span> : ""}
 
-                                                            {!order.zatca?.reporting_passed && order.zatca?.reporting_failed_count > 0 ? <span> &nbsp;<span className="badge bg-danger">
+                                                            {!order.zatca?.reporting_passed && order.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
                                                                 Reporting failed
-                                                                {!order.zatca.reporting_passed && order.zatca.reporting_last_failed_at ? <span>&nbsp;<TimeAgo date={order.zatca.reporting_last_failed_at} /></span> : ""}
-                                                            </span> </span> : ""}
+                                                                {!order.zatca.reporting_passed && order.zatca.reporting_last_failed_at ? <span><TimeAgo date={order.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
+                                                            </span> &nbsp;</span> : ""}
 
-                                                            {order.zatca?.reporting_passed ? <span className="badge bg-success">
+                                                            {order.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
                                                                 Reported
-                                                                {order.zatca.reporting_passed && order.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={order.zatca.reporting_passed_at} /></span> : ""}
-                                                            </span> : ""}
+                                                                {order.zatca.reporting_passed && order.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={order.zatca.reporting_passed_at} />&nbsp;</span> : ""}
+                                                                &nbsp;</span></span> : ""}
 
                                                             {!order.zatca?.reporting_passed && !order.zatca?.compliance_passed && !order.zatca?.reporting_failed_count && !order.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
                                                                 Not Reported
-                                                            </span> : ""}
+                                                                &nbsp;</span> : ""}
 
-                                                            {!order.zatca.reporting_passed ? <span> &nbsp; <Button style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                            {!order.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
                                                                 ReportInvoiceToZatca(order.id, index);
                                                             }}>
 
@@ -2320,10 +2327,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 </Button>
                                                             </span> : ""}
                                                         </td> : ""}
-                                                        <td>{order.discount?.toFixed(2)} </td>
-                                                        <td>{order.discount_percent.toFixed(2)} %</td>
-                                                        {cookies.get('admin') === "true" ? <td>{order.net_profit?.toFixed(2)} </td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{order.net_loss?.toFixed(2)} </td> : ""}
+                                                        <td>{trimTo2Decimals(order.discount)} </td>
+                                                        <td>{trimTo2Decimals(order.discount_percent)} %</td>
+                                                        {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(order.net_profit)} </td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(order.net_loss)} </td> : ""}
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{order.created_by_name}</td>
                                                         <td>
 

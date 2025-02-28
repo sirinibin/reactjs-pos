@@ -17,6 +17,7 @@ import { DebounceInput } from 'react-debounce-input';
 //import BarcodeScannerComponent from "react-qr-barcode-scanner";
 //import Quagga from 'quagga';
 import ProductView from "./../product/view.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 const OrderCreate = forwardRef((props, ref) => {
 
@@ -509,12 +510,35 @@ const OrderCreate = forwardRef((props, ref) => {
 
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
+
+            let unitPrice = parseFloat(selectedProducts[i].unit_price);
+
+            if (unitPrice && /^\d*\.?\d{0,2}$/.test(unitPrice) === false) {
+                errors["unit_price_" + i] = "Max decimal points allowed is 2";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+
+
+            let unitDiscount = 0.00;
+
+            if (selectedProducts[i].unit_discount) {
+                unitDiscount = parseFloat(selectedProducts[i].unit_discount)
+                if (/^\d*\.?\d{0,2}$/.test(unitDiscount) === false) {
+                    errors["unit_discount_" + i] = "Max decimal points allowed is 2";
+                    setErrors({ ...errors });
+                    haveErrors = true;
+                }
+            }
+
+
+
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
                 quantity: parseFloat(selectedProducts[i].quantity),
-                unit_price: parseFloat(selectedProducts[i].unit_price),
+                unit_price: unitPrice,
                 purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price) : 0,
-                unit_discount: selectedProducts[i].unit_discount ? parseFloat(selectedProducts[i].unit_discount) : 0,
+                unit_discount: unitDiscount,
                 unit_discount_percent: selectedProducts[i].unit_discount_percent ? parseFloat(selectedProducts[i].unit_discount_percent) : 0,
                 unit: selectedProducts[i].unit,
             });
@@ -541,6 +565,36 @@ const OrderCreate = forwardRef((props, ref) => {
 
         if (!formData.shipping_handling_fees && formData.shipping_handling_fees !== 0) {
             errors["shipping_handling_fees"] = "Invalid shipping / handling fees";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
+        if (parseFloat(formData.shipping_handling_fees) < 0) {
+            errors["shipping_handling_fees"] = "shipping cost should not be < 0";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
+        if (/^\d*\.?\d{0,2}$/.test(parseFloat(formData.shipping_handling_fees)) === false) {
+            errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
+        if (/^\d*\.?\d{0,2}$/.test(parseFloat(formData.discount)) === false) {
+            errors["discount"] = "Max. decimal points allowed is 2";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
+        if (parseFloat(formData.discount) < 0) {
+            errors["discount"] = "discount should not be < 0";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
+        if (!formData.discount && formData.discount !== 0) {
+            errors["discount"] = "Invalid discount";
             setErrors({ ...errors });
             haveErrors = true;
         }
@@ -575,11 +629,7 @@ const OrderCreate = forwardRef((props, ref) => {
         */
 
 
-        if (!formData.discount && formData.discount !== 0) {
-            errors["discount"] = "Invalid discount";
-            setErrors({ ...errors });
-            haveErrors = true;
-        }
+
 
         if (!formData.discount_percent && formData.discount_percent !== 0) {
             errors["discount_percent"] = "Invalid discount percent";
@@ -786,9 +836,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 name: product.name,
                 quantity: product.quantity,
                 product_stores: product.product_stores,
-                unit_price: parseFloat(product.unit_price).toFixed(2),
+                unit_price: product.unit_price,
                 unit: product.unit,
-                purchase_unit_price: parseFloat(product.purchase_unit_price).toFixed(2),
+                purchase_unit_price: product.purchase_unit_price,
                 unit_discount: product.unit_discount,
                 unit_discount_percent: product.unit_discount_percent,
 
@@ -827,7 +877,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 (parseFloat(selectedProducts[i].unit_price - productUnitDiscount) *
                     parseFloat(selectedProducts[i].quantity));
         }
-        // totalPrice = totalPrice.toFixed(2);
+
         // totalPrice = Math.round(totalPrice * 100) / 100;
         setTotalPrice(totalPrice);
     }
@@ -877,11 +927,11 @@ const OrderCreate = forwardRef((props, ref) => {
             }];
 
             if (netTotal > 0) {
-                formData.payments_input[0].amount = parseFloat(netTotal.toFixed(2));
+                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(netTotal));
                 if (formData.cash_discount) {
-                    formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(formData.cash_discount?.toFixed(2));
+                    formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
                 }
-                formData.payments_input[0].amount = parseFloat(formData.payments_input[0].amount.toFixed(2));
+                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
             }
         }
 
@@ -933,7 +983,6 @@ const OrderCreate = forwardRef((props, ref) => {
     function findDiscount() {
         if (formData.discount_percent >= 0 && totalPrice > 0) {
             formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100));
-            // formData.discount = parseFloat(formData.discount?.toFixed(2));
             setFormData({ ...formData });
         }
     }
@@ -1029,11 +1078,11 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("totalPaymentAmount:", totalPaymentAmount);
         setTotalPaymentAmount(totalPaymentAmount);
         console.log("totalPayment:", totalPayment)
-        balanceAmount = (parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))) - parseFloat(totalPayment.toFixed(2));
-        balanceAmount = parseFloat(balanceAmount.toFixed(2));
+        balanceAmount = (parseFloat(trimTo2Decimals(netTotal)) - parseFloat(parseFloat(trimTo2Decimals(formData.cash_discount)))) - parseFloat(trimTo2Decimals(totalPayment));
+        balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
         setBalanceAmount(balanceAmount);
 
-        if (balanceAmount === parseFloat((parseFloat(netTotal.toFixed(2)) - parseFloat(parseFloat(formData.cash_discount)?.toFixed(2))).toFixed(2))) {
+        if (balanceAmount === parseFloat((parseFloat(trimTo2Decimals(netTotal)) - parseFloat(trimTo2Decimals(formData.cash_discount))))) {
             paymentStatus = "not_paid"
         } else if (balanceAmount <= 0) {
             paymentStatus = "paid"
@@ -1084,7 +1133,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
-            errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toFixed(2).toString();
+            errors["cash_discount"] = "Cash discount should not be >= " + trimTo2Decimals(netTotal).toString();
             setErrors({ ...errors });
             haveErrors = true
             return false;
@@ -1125,30 +1174,6 @@ const OrderCreate = forwardRef((props, ref) => {
                 errors["payment_method_" + key] = "Payment method is required";
                 setErrors({ ...errors });
                 haveErrors = true;
-            }
-
-
-            if ((formData.payments_input[key].amount || formData.payments_input[key].amount === 0) && !formData.payments_input[key].deleted) {
-                /* let maxAllowedAmount = (netTotal - formData.cash_discount) - (totalPayment - formData.payments_input[key].amount);
- 
-                 if (maxAllowedAmount < 0) {
-                     maxAllowedAmount = 0;
-                 }
- 
-                 /*
-                 
-                 if (maxAllowedAmount === 0) {
-                     errors["payment_amount_" + key] = "Total amount should not exceed " + (netTotal - formData.cash_discount).toFixed(2).toString() + ", Please delete this payment";
-                     setErrors({ ...errors });
-                     haveErrors = true;
-                 } else if (formData.payments_input[key].amount > parseFloat(maxAllowedAmount.toFixed(2))) {
-                     errors["payment_amount_" + key] = "Amount should not be greater than " + maxAllowedAmount.toFixed(2);
-                     setErrors({ ...errors });
-                     haveErrors = true;
-                 }
-                 */
-
-
             }
         }
 
@@ -1373,7 +1398,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     onChange={event => getProductByBarCode(event.target.value)} />
                                 {errors.bar_code && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+
                                         {errors.bar_code}
                                     </div>
                                 )}
@@ -1405,7 +1430,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 {errors.date_str && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+
                                         {errors.date_str}
                                     </div>
                                 )}
@@ -1476,7 +1501,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                             {errors.product_id ? (
                                 <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
+
                                     {errors.product_id}
                                 </div>
                             ) : ""}
@@ -1488,7 +1513,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
-                                        <th style={{ width: "3%" }}>Remove</th>
+                                        <th style={{ width: "3%" }}></th>
                                         <th style={{ width: "5%" }}>SI No.</th>
                                         <th style={{ width: "10%" }}>Part No.</th>
                                         <th style={{ width: "23%" }} className="text-start">Name</th>
@@ -1511,7 +1536,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         removeProduct(product);
                                                     }}
                                                 >
-                                                    <i className="bi bi-x-lg"> </i>
+                                                    <i className="bi bi-trash"> </i>
                                                 </div>
                                             </td>
                                             <td >{index + 1}</td>
@@ -1538,7 +1563,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             <td>
 
                                                 <div className="input-group mb-3">
-                                                    <input type="number" value={product.purchase_unit_price} disabled={!selectedProducts[index].can_edit} className="form-control text-end"
+                                                    <input type="number" onWheel={(e) => e.target.blur()} value={product.purchase_unit_price} disabled={!selectedProducts[index].can_edit} className="form-control text-end"
 
                                                         placeholder="Purchase Unit Price" onChange={(e) => {
                                                             errors["purchase_unit_price_" + index] = "";
@@ -1589,7 +1614,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 </div>
                                                 {errors["purchase_unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i className="bi bi-x-lg"> </i>
+
                                                         {errors["purchase_unit_price_" + index]}
                                                     </div>
                                                 )}
@@ -1598,7 +1623,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             <td >
 
                                                 <div className="input-group mb-3">
-                                                    <input type="number" value={product.quantity} className="form-control text-end"
+                                                    <input type="number" onWheel={(e) => e.target.blur()} value={product.quantity} className="form-control text-end"
 
                                                         placeholder="Quantity" onChange={(e) => {
                                                             errors["quantity_" + index] = "";
@@ -1655,7 +1680,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" value={product.unit_price} className="form-control text-end"
+                                                    <input type="number" onWheel={(e) => e.target.blur()} value={product.unit_price} className="form-control text-end"
 
                                                         placeholder="Unit Price" onChange={(e) => {
                                                             errors["unit_price_" + index] = "";
@@ -1679,6 +1704,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             }
 
 
+                                                            if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                                errors["unit_price_" + index] = "Max. decimal points allowed is 2";
+                                                                setErrors({ ...errors });
+                                                            }
+
                                                             selectedProducts[index].unit_price = parseFloat(e.target.value);
                                                             console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
                                                             setSelectedProducts([...selectedProducts]);
@@ -1689,7 +1719,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 </div>
                                                 {errors["unit_price_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["unit_price_" + index]}
                                                     </div>
                                                 )}
@@ -1697,7 +1726,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" className="form-control text-end" value={selectedProducts[index].unit_discount} onChange={(e) => {
+                                                    <input type="number" onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount} onChange={(e) => {
                                                         selectedProducts[index].is_discount_percent = false;
                                                         if (parseFloat(e.target.value) === 0) {
                                                             selectedProducts[index].unit_discount = parseFloat(e.target.value);
@@ -1732,6 +1761,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         errors["unit_discount_percent_" + index] = "";
                                                         setErrors({ ...errors });
 
+
+                                                        if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                            errors["unit_discount_" + index] = "Max. decimal points allowed is 2";
+                                                            setErrors({ ...errors });
+                                                        }
+
                                                         selectedProducts[index].unit_discount = parseFloat(e.target.value);
                                                         setFormData({ ...formData });
                                                         reCalculate(index);
@@ -1746,7 +1781,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                                                    <input type="number" onWheel={(e) => e.target.blur()} disabled={true} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                                         selectedProducts[index].is_discount_percent = true;
                                                         if (parseFloat(e.target.value) === 0) {
                                                             selectedProducts[index].unit_discount_percent = parseFloat(e.target.value);
@@ -1794,7 +1829,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td className="text-end" >
                                                 <NumberFormat
-                                                    value={((product.unit_price - product.unit_discount) * product.quantity).toFixed(2)}
+                                                    value={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)}
                                                     displayType={"text"}
                                                     thousandSeparator={true}
                                                     suffix={" "}
@@ -1815,7 +1850,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th colSpan="8" className="text-end">Total</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
-                                                value={totalPrice?.toFixed(2)}
+                                                value={trimTo2Decimals(totalPrice)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -1828,7 +1863,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                             Shipping & Handling Fees
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" style={{ width: "150px" }} className="text-start" value={formData.shipping_handling_fees} onChange={(e) => {
+                                            <input type="number" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={formData.shipping_handling_fees} onChange={(e) => {
+                                                errors["shipping_handling_fees"] = "";
+                                                setErrors({ ...errors });
 
                                                 if (parseFloat(e.target.value) === 0) {
                                                     formData.shipping_handling_fees = parseFloat(e.target.value);
@@ -1856,8 +1893,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     return;
                                                 }
 
-                                                errors["shipping_handling_fees"] = "";
-                                                setErrors({ ...errors });
+
+                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                    errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
+                                                    setErrors({ ...errors });
+                                                }
 
                                                 formData.shipping_handling_fees = parseFloat(e.target.value);
                                                 setFormData({ ...formData });
@@ -1873,7 +1913,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Discount  <input type="number" style={{ width: "50px" }} className="text-start" value={formData.discount_percent} onChange={(e) => {
+                                            Discount  <input type="number" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={formData.discount_percent} onChange={(e) => {
                                                 formData.is_discount_percent = true;
                                                 if (parseFloat(e.target.value) === 0) {
                                                     formData.discount_percent = parseFloat(e.target.value);
@@ -1918,7 +1958,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                             )}
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" style={{ width: "150px" }} className="text-start" value={formData.discount} onChange={(e) => {
+                                            <input type="number" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={formData.discount} onChange={(e) => {
                                                 formData.is_discount_percent = false;
                                                 if (parseFloat(e.target.value) === 0) {
                                                     formData.discount = parseFloat(e.target.value);
@@ -1953,6 +1993,12 @@ const OrderCreate = forwardRef((props, ref) => {
                                                 errors["discount_percent"] = "";
                                                 setErrors({ ...errors });
 
+
+                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                    errors["discount"] = "Max. decimal points allowed is 2";
+                                                    setErrors({ ...errors });
+                                                }
+
                                                 formData.discount = parseFloat(e.target.value);
                                                 setFormData({ ...formData });
                                                 reCalculate();
@@ -1967,7 +2013,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end"> VAT  <input type="number" className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
+                                        <th colSpan="8" className="text-end"> VAT  <input type="number" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
                                             console.log("Inside onchange vat percent");
                                             if (parseFloat(e.target.value) === 0) {
                                                 formData.vat_percent = parseFloat(e.target.value);
@@ -2015,7 +2061,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </th>
                                         <td className="text-end">
                                             <NumberFormat
-                                                value={vatPrice?.toFixed(2)}
+                                                value={trimTo2Decimals(vatPrice)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -2028,7 +2074,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th colSpan="8" className="text-end">Net Total</th>
                                         <th className="text-end">
                                             <NumberFormat
-                                                value={netTotal?.toFixed(2)}
+                                                value={trimTo2Decimals(netTotal)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -2078,7 +2124,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 <Button hide={true.toString()} onClick={openSignatureCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                                 {errors.delivered_by_signature_id ? (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>{" "}
+                                      
                                         {errors.delivered_by_signature_id}
                                     </div>
                                 ) : ""}
@@ -2103,7 +2149,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 {errors.signature_date_str && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
+                                       
                                         {errors.signature_date_str}
                                     </div>
                                 )}
@@ -2136,7 +2182,6 @@ const OrderCreate = forwardRef((props, ref) => {
                             />
                             {errors.cash_discount && (
                                 <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
                                     {errors.cash_discount}
                                 </div>
                             )}
@@ -2190,7 +2235,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         />
                                                         {errors["payment_date_" + key] && (
                                                             <div style={{ color: "red" }}>
-                                                                <i className="bi bi-x-lg"> </i>
+
                                                                 {errors["payment_date_" + key]}
                                                             </div>
                                                         )}
@@ -2217,7 +2262,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         />
                                                         {errors["payment_amount_" + key] && (
                                                             <div style={{ color: "red" }}>
-                                                                <i className="bi bi-x-lg"> </i>
+
                                                                 {errors["payment_amount_" + key]}
                                                             </div>
                                                         )}
@@ -2257,7 +2302,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
-                                                                <i className="bi bi-x-lg"> </i>
+
                                                                 {errors["payment_method_" + key]}
                                                             </div>
                                                         )}
@@ -2276,11 +2321,11 @@ const OrderCreate = forwardRef((props, ref) => {
                                             <td class="text-end">
                                                 <b>Total</b>
                                             </td>
-                                            <td><b style={{ marginLeft: "14px" }}>{totalPaymentAmount?.toFixed(2)}</b>
+                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
 
                                             </td>
                                             <td>
-                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {balanceAmount?.toFixed(2)}</b>
+                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {trimTo2Decimals(balanceAmount)}</b>
                                             </td>
                                             <td colSpan={1}>
                                                 <b>Payment status: </b>
