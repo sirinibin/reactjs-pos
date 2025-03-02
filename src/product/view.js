@@ -16,6 +16,7 @@ import PurchaseReturnHistory from "./purchase_return_history.js";
 import QuotationHistory from "./quotation_history.js";
 
 import DeliveryNoteHistory from "./delivery_note_history.js";
+import Dropdown from 'react-bootstrap/Dropdown';
 
 const ProductView = forwardRef((props, ref) => {
 
@@ -194,12 +195,70 @@ const ProductView = forwardRef((props, ref) => {
 
         <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
-        <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
+        <Modal show={show} fullscreen onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Product #{model.name} {model.name_in_arabic ? " / " + model.name_in_arabic : ""} </Modal.Title>
 
+
+                <span style={{ marginLeft: "10px" }}>
+                    <Dropdown >
+                        <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
+                            History
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu>
+                            <Dropdown.Item onClick={() => {
+                                openSalesHistory(model);
+                            }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Sales History
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => {
+                                openSalesReturnHistory(model);
+                            }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Sales Return History
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => {
+                                openPurchaseHistory(model);
+                            }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Purchase History
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => {
+                                openPurchaseReturnHistory(model);
+                            }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Purchase Return History
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => {
+                                openDeliveryNoteHistory(model);
+                            }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Delivery Note History
+                            </Dropdown.Item>
+                            <Dropdown.Item onClick={() => {
+                                openQuotationHistory(model);
+                            }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Quotation History
+                            </Dropdown.Item>
+
+                        </Dropdown.Menu>
+                    </Dropdown>
+                </span>
+
                 <div className="col align-self-end text-end">
 
+
+
+                    {/*                                            
                     <div class="btn-group">
                         <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                             History
@@ -247,21 +306,16 @@ const ProductView = forwardRef((props, ref) => {
                             </div>
                             </li>
                         </ul>
-                    </div>
+                    </div>*/}
 
-
-
-
-                    &nbsp;&nbsp;
-
-                    {props.openCreateForm ? <Button variant="primary" onClick={() => {
+                    {props.openCreateForm ? <Button variant="primary" style={{ marginTop: "3px" }} onClick={() => {
                         handleClose();
                         props.openCreateForm();
                     }}>
                         <i className="bi bi-plus"></i> Create
                     </Button> : ""}
                     &nbsp;&nbsp;
-                    {props.openUpdateForm ? <Button variant="primary" onClick={() => {
+                    {props.openUpdateForm ? <Button variant="primary" style={{ marginTop: "3px" }} onClick={() => {
                         handleClose();
                         props.openUpdateForm(model.id);
                     }}>

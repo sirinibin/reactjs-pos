@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function VendorIndex(props) {
     const cookies = new Cookies();
@@ -18,7 +19,7 @@ function VendorIndex(props) {
     const [vendorList, setVendorList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -210,7 +211,7 @@ function VendorIndex(props) {
                     return Promise.reject(error);
                 }
 
-                console.log("data.result:",data.result);
+                console.log("data.result:", data.result);
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
                 setVendorList(data.result);
@@ -1088,7 +1089,7 @@ function VendorIndex(props) {
                                             {vendorList &&
                                                 vendorList.map((vendor) => (
                                                     <tr key={vendor.id}>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
 
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(vendor.id);
@@ -1102,9 +1103,12 @@ function VendorIndex(props) {
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
                                                         </td>
-                                                        <td>{vendor.name}</td>
-                                                        <td>
-                                                            {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+
+                                                            <OverflowTooltip value={vendor.name} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_count}</b>
@@ -1115,8 +1119,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_amount?.toFixed(2)}</b>
@@ -1127,8 +1131,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_paid_amount?.toFixed(2)}</b>
@@ -1139,8 +1143,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_balance_amount?.toFixed(2)}</b>
@@ -1151,8 +1155,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_retail_profit?.toFixed(2)}</b>
@@ -1163,8 +1167,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_retail_loss?.toFixed(2)}</b>
@@ -1175,8 +1179,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_wholesale_profit?.toFixed(2)}</b>
@@ -1187,8 +1191,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_wholesale_loss?.toFixed(2)}</b>
@@ -1199,8 +1203,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_paid_count}</b>
@@ -1211,8 +1215,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_not_paid_count}</b>
@@ -1223,8 +1227,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_paid_partially_count}</b>
@@ -1235,8 +1239,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_count}</b>
@@ -1247,8 +1251,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_amount?.toFixed(2)}</b>
@@ -1259,8 +1263,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_paid_amount?.toFixed(2)}</b>
@@ -1271,8 +1275,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_balance_amount?.toFixed(2)}</b>
@@ -1283,8 +1287,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_paid_count}</b>
@@ -1295,8 +1299,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_not_paid_count}</b>
@@ -1307,8 +1311,8 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {vendor.stores && Object.keys(vendor.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{vendor.stores[key].purchase_return_paid_partially_count}</b>
@@ -1319,14 +1323,14 @@ function VendorIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>{vendor.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(vendor.created_at),
                                                                 "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
 
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(vendor.id);

@@ -13,6 +13,7 @@ import NumberFormat from "react-number-format";
 
 import PurchasePaymentIndex from "./../purchase_payment/index.js";
 import PurchaseReturnIndex from "./../purchase_return/index.js";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 
 import ReactExport from 'react-data-export';
@@ -34,7 +35,7 @@ function PurchaseIndex(props) {
     const [purchaseList, setPurchaseList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -1861,13 +1862,15 @@ function PurchaseIndex(props) {
                                             {purchaseList &&
                                                 purchaseList.map((purchase) => (
                                                     <tr key={purchase.code}>
-                                                        <td>{purchase.code}</td>
-                                                        <td>{purchase.vendor_invoice_no}</td>
-                                                        <td>{purchase.vendor_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.vendor_invoice_no}</td>
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={purchase.vendor_name} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(purchase.date), "MMM dd yyyy h:mma")}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <NumberFormat
                                                                 value={purchase.net_total}
                                                                 displayType={"text"}
@@ -1876,23 +1879,23 @@ function PurchaseIndex(props) {
                                                                 renderText={(value, props) => value}
                                                             />
                                                         </td>
-                                                        <td>{purchase.cash_discount?.toFixed(2)}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.cash_discount?.toFixed(2)}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchase);
                                                             }}>
                                                                 {purchase.total_payment_paid?.toFixed(2)}
                                                             </Button>
                                                         </td>
-                                                        <td>{purchase.balance_amount?.toFixed(2)}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.balance_amount?.toFixed(2)}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchase);
                                                             }}>
                                                                 {purchase.payments_count}
                                                             </Button>
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {purchase.payment_status === "paid" ?
                                                                 <span className="badge bg-success">
                                                                     Paid
@@ -1906,13 +1909,13 @@ function PurchaseIndex(props) {
                                                                     Not Paid
                                                                 </span> : ""}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {purchase.payment_methods &&
                                                                 purchase.payment_methods.map((name) => (
                                                                     <span className="badge bg-info">{name}</span>
                                                                 ))}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <NumberFormat
                                                                 value={purchase.discount}
                                                                 displayType={"text"}
@@ -1921,7 +1924,7 @@ function PurchaseIndex(props) {
                                                                 renderText={(value, props) => value}
                                                             />
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <NumberFormat
                                                                 value={purchase.vat_price}
                                                                 displayType={"text"}
@@ -1930,7 +1933,7 @@ function PurchaseIndex(props) {
                                                                 renderText={(value, props) => value}
                                                             />
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPurchaseReturnsDialogue(purchase);
                                                             }}>
@@ -1938,7 +1941,7 @@ function PurchaseIndex(props) {
                                                             </Button>
                                                         </td>
                                                         {cookies.get('admin') === "true" ?
-                                                            <td>
+                                                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                 <NumberFormat
                                                                     value={purchase.net_retail_profit}
                                                                     displayType={"text"}
@@ -1949,7 +1952,7 @@ function PurchaseIndex(props) {
                                                             </td>
                                                             : ""}
                                                         {cookies.get('admin') === "true" ?
-                                                            <td>
+                                                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                 <NumberFormat
                                                                     value={purchase.net_wholesale_profit}
                                                                     displayType={"text"}
@@ -1961,33 +1964,33 @@ function PurchaseIndex(props) {
                                                             : ""}
 
 
-                                                        <td>{purchase.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(purchase.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {purchase.updated_at ? format(
                                                                 new Date(purchase.updated_at),
                                                                 "MMM dd yyyy h:mma"
                                                             ) : ""}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(purchase.id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>
 
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                            &nbsp;<Button className="btn btn-primary btn-sm" onClick={() => {
                                                                 openDetailsView(purchase.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
 
-                                                            <button
+                                                            &nbsp;<button
                                                                 className="btn btn-dark btn-sm"
                                                                 data-bs-toggle="tooltip"
                                                                 data-bs-placement="top"

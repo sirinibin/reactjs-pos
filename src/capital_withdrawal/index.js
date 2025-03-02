@@ -918,26 +918,26 @@ function CapitalWithdrawalIndex(props) {
                                             {capitalwithdrawalList &&
                                                 capitalwithdrawalList.map((capitalwithdrawal) => (
                                                     <tr key={capitalwithdrawal.code}>
-                                                        <td>{capitalwithdrawal.code}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capitalwithdrawal.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(capitalwithdrawal.date), "MMM dd yyyy h:mma")}
                                                         </td>
 
 
-                                                        <td>{capitalwithdrawal.amount.toFixed(2)} SAR</td>
-                                                        <td>{capitalwithdrawal.payment_method}</td>
-                                                        <td>{capitalwithdrawal.description}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capitalwithdrawal.amount.toFixed(2)} SAR</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capitalwithdrawal.payment_method}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capitalwithdrawal.description}</td>
+                                                        <td> style={{ width: "auto", whiteSpace: "nowrap" }}
                                                             {capitalwithdrawal.withdrawn_by_user_name}
                                                         </td>
-                                                        <td>{capitalwithdrawal.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capitalwithdrawal.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(capitalwithdrawal.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(capitalwithdrawal.id);
                                                             }}>

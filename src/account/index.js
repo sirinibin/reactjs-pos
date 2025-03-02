@@ -6,6 +6,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import PostingIndex from "./../posting/index.js";
+import Amount from "../utils/amount.js";
 
 function AccountIndex(props) {
 
@@ -262,7 +263,7 @@ function AccountIndex(props) {
     function openBalanceSheetDialogue(account) {
         AccountBalanceSheetRef.current.open(account);
     }
-    
+
 
     return (
         <>
@@ -902,34 +903,35 @@ function AccountIndex(props) {
                                             {accountList &&
                                                 accountList.map((account) => (
                                                     <tr key={account.id}>
-                                                        <td style={{ minWidth: "155px", maxWidth: "155px" }} >{account.number}</td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{account.number}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             <Button variant="link" onClick={() => {
                                                                 openBalanceSheetDialogue(account);
                                                             }}>
                                                                 {account.name}
                                                             </Button>
                                                         </td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.debit_or_credit_balance === "debit_balance" ? account.balance : "0"}</td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.debit_or_credit_balance === "credit_balance" ? account.balance : "0"}</td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.phone}</td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.type}</td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.debit_or_credit_balance === "debit_balance" ? <Amount amount={account.balance} /> : "0"}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.debit_or_credit_balance === "credit_balance" ? <Amount amount={account.balance} /> : "0"}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.phone}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.type}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             <Button variant="link" onClick={() => {
                                                                 openBalanceSheetDialogue(account);
                                                             }}>
-                                                                {account.balance}
+
+                                                                <Amount amount={account.balance} />
                                                             </Button>
                                                         </td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.open ? "Open" : "Closed"}</td>
-                                                        <td style={{ minWidth: "120px", maxWidth: "120px" }}>{account.reference_model}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.open ? "Open" : "Closed"}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.reference_model}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(account.updated_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {format(
                                                                 new Date(account.created_at),
                                                                 "MMM dd yyyy h:mma"
@@ -939,8 +941,12 @@ function AccountIndex(props) {
                                                 ))}
                                             <tr>
                                                 <td colSpan={2}></td>
-                                                <td><b>{debitBalanceTotal}</b></td>
-                                                <td><b>{creditBalanceTotal}</b></td>
+                                                <td><b>
+                                                    <Amount amount={debitBalanceTotal} />
+                                                </b></td>
+                                                <td><b>
+                                                    <Amount amount={creditBalanceTotal} />
+                                                </b></td>
                                                 <td colSpan={7}></td>
                                             </tr>
                                         </tbody>
@@ -972,7 +978,7 @@ function AccountIndex(props) {
                     </div>
                 </div>
             </div>
-            <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage}  refreshAccountList={list} />
+            <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} refreshAccountList={list} />
         </>
     );
 }

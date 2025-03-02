@@ -33,7 +33,7 @@ function Sidebar(props) {
             'ledger',
             'accounts',
             'users',
-            'signatures'
+            // 'signatures'
         ],
     });
 
@@ -236,14 +236,14 @@ function Sidebar(props) {
                         <span className="align-middle">Users</span>
                     </Link>
                 </li> : ""}
-                <li onClick={() => {
+                {/*<li onClick={() => {
                     toggleActive(appState.tabs[21]);
                 }} className={toggleActiveStyles(appState.tabs[21])}>
                     <Link to="/dashboard/signatures" className="sidebar-link">
                         <i className="bi bi-fingerprint" />
                         <span className="align-middle">Signatures</span>
                     </Link>
-                </li>
+                </li>*/}
             </ul>
 
             <div className="sidebar-cta">

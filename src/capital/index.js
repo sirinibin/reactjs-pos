@@ -28,7 +28,7 @@ function CapitalIndex(props) {
     const [capitalList, setCapitalList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -917,26 +917,26 @@ function CapitalIndex(props) {
                                             {capitalList &&
                                                 capitalList.map((capital) => (
                                                     <tr key={capital.code}>
-                                                        <td>{capital.code}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}  >{capital.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}  >
                                                             {format(new Date(capital.date), "MMM dd yyyy h:mma")}
                                                         </td>
 
 
-                                                        <td>{capital.amount.toFixed(2)} SAR</td>
-                                                        <td>{capital.payment_method}</td>
-                                                        <td>{capital.description}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capital.amount.toFixed(2)} SAR</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capital.payment_method}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capital.description}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {capital.invested_by_user_name}
                                                         </td>
-                                                        <td>{capital.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{capital.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(capital.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(capital.id);
                                                             }}>

@@ -19,6 +19,8 @@ import PurchaseReturnHistory from "./purchase_return_history.js";
 import QuotationHistory from "./quotation_history.js";
 import DeliveryNoteHistory from "./delivery_note_history.js";
 import NumberFormat from "react-number-format";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
+import Dropdown from 'react-bootstrap/Dropdown';
 
 function ProductIndex(props) {
 
@@ -30,7 +32,7 @@ function ProductIndex(props) {
     const [productList, setProductList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -1892,28 +1894,75 @@ function ProductIndex(props) {
                                         <tbody className="text-center">
                                             {productList &&
                                                 productList.map((product) => (
-                                                    <tr key={product.id} onClick={() => {
+                                                    <tr key={product.id}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}  >
+                                                            <span style={{ marginLeft: "-30px", }}>
+                                                                <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                    openUpdateForm(product.id);
+                                                                }}>
+                                                                    <i className="bi bi-pencil"></i>
+                                                                </Button>&nbsp;
 
-                                                        openUpdateForm(product.id);
-                                                    }} style={{ cursor: "pointer" }}>
-                                                        <td onClick={(e) => {
-                                                            e.stopPropagation();
+                                                                <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                    openDetailsView(product.id);
+                                                                }} style={{ marginRight: "5px" }}>
+                                                                    <i className="bi bi-eye"></i>
+                                                                </Button>
 
-                                                        }} >
-                                                            {/*
-                                                            <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(product.id);
-                                                            }}>
-                                                                <i className="bi bi-pencil"></i>
-                                                        </Button>*/}
+                                                                <Dropdown style={{ marginLeft: "70px", height: "0px" }}>
+                                                                    <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{ marginTop: "-48px", height: "28px" }}>
 
-                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
-                                                                openDetailsView(product.id);
-                                                            }} style={{ marginRight: "5px" }}>
-                                                                <i className="bi bi-eye"></i>
-                                                            </Button>
+                                                                    </Dropdown.Toggle>
+
+                                                                    <Dropdown.Menu>
+                                                                        <Dropdown.Item onClick={() => {
+                                                                            openSalesHistory(product);
+                                                                        }}>
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                            &nbsp;
+                                                                            Sales History
+                                                                        </Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => {
+                                                                            openSalesReturnHistory(product);
+                                                                        }}>
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                            &nbsp;
+                                                                            Sales Return History
+                                                                        </Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => {
+                                                                            openPurchaseHistory(product);
+                                                                        }}>
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                            &nbsp;
+                                                                            Purchase History
+                                                                        </Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => {
+                                                                            openPurchaseReturnHistory(product);
+                                                                        }}>
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                            &nbsp;
+                                                                            Purchase Return History
+                                                                        </Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => {
+                                                                            openDeliveryNoteHistory(product);
+                                                                        }}>
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                            &nbsp;
+                                                                            Delivery Note History
+                                                                        </Dropdown.Item>
+                                                                        <Dropdown.Item onClick={() => {
+                                                                            openQuotationHistory(product);
+                                                                        }}>
+                                                                            <i className="bi bi-clock-history"></i>
+                                                                            &nbsp;
+                                                                            Quotation History
+                                                                        </Dropdown.Item>
+
+                                                                    </Dropdown.Menu>
+                                                                </Dropdown>
 
 
+                                                                {/*
                                                             <button
                                                                 className="btn btn-outline-secondary dropdown-toggle"
                                                                 type="button"
@@ -1977,17 +2026,16 @@ function ProductIndex(props) {
                                                                     </button>
                                                                 </li>
                                                             </ul>
-
+                                                            */}
+                                                            </span>
                                                         </td>
-                                                        <td>{product.part_number}</td>
-                                                        <td >
-
-                                                            {product.name + (product.name_in_arabic ? " / " + product.name_in_arabic : "")}
-
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.part_number}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start">
+                                                            <OverflowTooltip value={product.name + (product.name_in_arabic ? " | " + product.name_in_arabic : "")} maxWidth={300} />
                                                         </td>
-                                                        <td>{product.ean_12}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.ean_12}</td>
                                                         {/*<td>{product.rack}</td>*/}
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
@@ -1999,7 +2047,7 @@ function ProductIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].wholesale_unit_price?.toFixed(2)}</b>);
@@ -2009,7 +2057,7 @@ function ProductIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].retail_unit_price?.toFixed(2)}</b>);
@@ -2020,7 +2068,7 @@ function ProductIndex(props) {
                                                                 return ""
                                                             })}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
                                                                     return (<b>{product.product_stores[key].stock}</b>);
@@ -2140,7 +2188,7 @@ function ProductIndex(props) {
                                                             })}
                                                         </td>*/}
 
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             <ul>
                                                                 {product.category_name &&
                                                                     product.category_name.map((name) => (

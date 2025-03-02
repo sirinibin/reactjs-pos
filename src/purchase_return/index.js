@@ -13,6 +13,7 @@ import NumberFormat from "react-number-format";
 import PurchaseReturnPaymentCreate from "./../purchase_return_payment/create.js";
 import PurchaseReturnPaymentDetailsView from "./../purchase_return_payment/view.js";
 import PurchaseReturnPaymentIndex from "./../purchase_return_payment/index.js";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
@@ -30,7 +31,7 @@ function PurchaseReturnIndex(props) {
     const [purchasereturnList, setPurchaseReturnList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -1151,7 +1152,7 @@ function PurchaseReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
+                                                {/*<th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1169,7 +1170,7 @@ function PurchaseReturnIndex(props) {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
+                                                </th>*/}
 
                                                 <th>
                                                     <b
@@ -1419,7 +1420,7 @@ function PurchaseReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
+                                                {/*<th>
                                                     <input
                                                         type="text"
                                                         id="payments_count"
@@ -1428,7 +1429,7 @@ function PurchaseReturnIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th>
+                                                </th>*/}
                                                 <th>
                                                     <Typeahead
                                                         id="payment_status"
@@ -1567,34 +1568,36 @@ function PurchaseReturnIndex(props) {
                                             {purchasereturnList &&
                                                 purchasereturnList.map((purchasereturn) => (
                                                     <tr key={purchasereturn.code} >
-                                                        <td>{purchasereturn.code}</td>
-                                                        <td>{purchasereturn.vendor_invoice_no}</td>
-                                                        <td>{purchasereturn.vendor_name}</td>
-                                                        <td>{purchasereturn.purchase_code}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.vendor_invoice_no}</td>
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={purchasereturn.vendor_name} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.purchase_code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(purchasereturn.date),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>{purchasereturn.net_total}</td>
-                                                        <td>{purchasereturn.cash_discount?.toFixed(2)}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.net_total}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.cash_discount?.toFixed(2)}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchasereturn);
                                                             }}>
                                                                 {purchasereturn.total_payment_paid?.toFixed(2)}
                                                             </Button>
                                                         </td>
-                                                        <td>{purchasereturn.balance_amount?.toFixed(2)}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.balance_amount?.toFixed(2)}</td>
+                                                        {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchasereturn);
                                                             }}>
                                                                 {purchasereturn.payments_count}
                                                             </Button>
-                                                        </td>
-                                                        <td>
+                                                        </td>*/}
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {purchasereturn.payment_status === "paid" ?
                                                                 <span className="badge bg-success">
                                                                     Paid
@@ -1608,20 +1611,20 @@ function PurchaseReturnIndex(props) {
                                                                     Not Paid
                                                                 </span> : ""}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {purchasereturn.payment_methods &&
                                                                 purchasereturn.payment_methods.map((name) => (
                                                                     <span className="badge bg-info">{name}</span>
                                                                 ))}
                                                         </td>
-                                                        <td>{purchasereturn.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(purchasereturn.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
 
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(purchasereturn.id);

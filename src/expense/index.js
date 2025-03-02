@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function ExpenseIndex(props) {
 
@@ -90,7 +91,7 @@ function ExpenseIndex(props) {
         if (cookies.get("store_id")) {
             params.store_id = cookies.get("store_id");
         }
-        
+
         var queryString = ObjectToSearchQueryParams(params);
         if (queryString !== "") {
             queryString = "&" + queryString;
@@ -818,7 +819,7 @@ function ExpenseIndex(props) {
                                                     <DatePicker
                                                         id="created_at"
                                                         value={createdAtValue}
-                                                        selected={selectedCreatedAtDate }
+                                                        selected={selectedCreatedAtDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         isClearable={true}
@@ -898,15 +899,17 @@ function ExpenseIndex(props) {
                                             {expenseList &&
                                                 expenseList.map((expense) => (
                                                     <tr key={expense.code}>
-                                                        <td>{expense.code}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{expense.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(expense.date), "MMM dd yyyy h:mma")}
                                                         </td>
 
 
-                                                        <td>{expense.amount.toFixed(2)} SAR</td>
-                                                        <td>{expense.description}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{expense.amount.toFixed(2)} SAR</td>
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={expense.description} maxWidth={300} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <ul>
                                                                 {expense.category_name &&
                                                                     expense.category_name.map((name) => (
@@ -914,14 +917,14 @@ function ExpenseIndex(props) {
                                                                     ))}
                                                             </ul>
                                                         </td>
-                                                        <td>{expense.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{expense.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(expense.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(expense.id);
                                                             }}>

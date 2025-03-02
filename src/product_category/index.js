@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function ProductCategoryIndex(props) {
 
@@ -19,7 +20,7 @@ function ProductCategoryIndex(props) {
     const [productcategoryList, setProductCategoryList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -609,16 +610,19 @@ function ProductCategoryIndex(props) {
                                             {productcategoryList &&
                                                 productcategoryList.map((productcategory) => (
                                                     <tr key={productcategory.id}>
-                                                        <td>{productcategory.name}</td>
-                                                        <td>{productcategory.parent_name}</td>
-                                                        <td>{productcategory.created_by_name}</td>
-                                                        <td>
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+
+                                                            <OverflowTooltip value={productcategory.name} maxWidth={250} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{productcategory.parent_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{productcategory.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(productcategory.created_at),
                                                                 "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(productcategory.id);
                                                             }}>

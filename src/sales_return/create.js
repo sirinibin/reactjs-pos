@@ -431,6 +431,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
     function handleCreate(event) {
+        let haveErrors = false;
+
         event.preventDefault();
         console.log("Inside handle Create");
         console.log("selectedProducts:", selectedProducts);
@@ -442,14 +444,35 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             if (selectedProducts[i].selected) {
                 selectedProductsCount++;
             }
+
+            let unitPrice = parseFloat(selectedProducts[i].unit_price);
+
+            if (unitPrice && /^\d*\.?\d{0,2}$/.test(unitPrice) === false) {
+                errors["unit_price_" + i] = "Max decimal points allowed is 2";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+
+
+            let unitDiscount = 0.00;
+
+            if (selectedProducts[i].unit_discount) {
+                unitDiscount = parseFloat(selectedProducts[i].unit_discount)
+                if (/^\d*\.?\d{0,2}$/.test(unitDiscount) === false) {
+                    errors["unit_discount_" + i] = "Max decimal points allowed is 2";
+                    setErrors({ ...errors });
+                    haveErrors = true;
+                }
+            }
+
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
                 quantity: parseFloat(selectedProducts[i].quantity),
-                unit_price: parseFloat(selectedProducts[i].unit_price),
+                unit_price: unitPrice,
                 unit: selectedProducts[i].unit,
                 selected: selectedProducts[i].selected,
                 purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price) : 0,
-                unit_discount: selectedProducts[i].unit_discount ? parseFloat(selectedProducts[i].unit_discount) : 0,
+                unit_discount: unitDiscount,
                 unit_discount_percent: selectedProducts[i].unit_discount_percent ? parseFloat(selectedProducts[i].unit_discount_percent) : 0,
             });
         }
@@ -464,7 +487,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         formData.vat_percent = parseFloat(formData.vat_percent);
         console.log("formData.discount:", formData.discount);
 
-        let haveErrors = false;
 
         errors["products"] = "";
         setErrors({ ...errors });
@@ -482,17 +504,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
-        if (!formData.shipping_handling_fees && formData.shipping_handling_fees !== 0) {
-            errors["shipping_handling_fees"] = "Invalid shipping / handling fees";
-            setErrors({ ...errors });
-            haveErrors = true;
-        }
 
-        if (!formData.discount && formData.discount !== 0) {
-            errors["discount"] = "Invalid discount";
-            setErrors({ ...errors });
-            haveErrors = true;
-        }
+
+
 
         if (!formData.discount_percent && formData.discount_percent !== 0) {
             errors["discount_percent"] = "Invalid discount percent";
@@ -511,12 +525,24 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
+        if (!formData.shipping_handling_fees && formData.shipping_handling_fees !== 0) {
+            errors["shipping_handling_fees"] = "Invalid shipping / handling fees";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
         if (/^\d*\.?\d{0,2}$/.test(parseFloat(formData.shipping_handling_fees)) === false) {
             errors["shipping_handling_fees"] = "Max. decimal points allowed is 2";
             setErrors({ ...errors });
             haveErrors = true;
         }
 
+
+        if (!formData.discount && formData.discount !== 0) {
+            errors["discount"] = "Invalid discount";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
 
         if (/^\d*\.?\d{0,2}$/.test(parseFloat(formData.discount)) === false) {
             errors["discount"] = "Max. decimal points allowed is 2";
@@ -1172,6 +1198,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 return;
                                                             }
 
+                                                            if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                                errors["unit_price_" + index] = "Max. decimal points allowed is 2";
+                                                                setErrors({ ...errors });
+                                                            }
+
 
                                                             selectedProducts[index].unit_price = parseFloat(e.target.value);
                                                             console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
@@ -1225,6 +1256,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         errors["unit_discount_" + index] = "";
                                                         errors["unit_discount_percent_" + index] = "";
                                                         setErrors({ ...errors });
+
+                                                        if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                            errors["unit_discount_" + index] = "Max. decimal points allowed is 2";
+                                                            setErrors({ ...errors });
+                                                        }
 
                                                         selectedProducts[index].unit_discount = parseFloat(e.target.value);
                                                         setFormData({ ...formData });

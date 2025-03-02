@@ -16,7 +16,9 @@ import SalesReturnPaymentIndex from "./../sales_return_payment/index.js";
 import { formatDistanceToNowStrict } from "date-fns";
 import { enUS } from "date-fns/locale";
 import ReactExport from 'react-data-export';
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+
 
 const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
@@ -1468,7 +1470,7 @@ function SalesReturnIndex(props) {
                                                             sort("order_code");
                                                         }}
                                                     >
-                                                        Order ID
+                                                        Sales ID
                                                         {sortField === "order_code" && sortSalesReturn === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -1515,25 +1517,7 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("cash_discount");
-                                                        }}
-                                                    >
-                                                        Cash Discount
-                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "cash_discount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1572,6 +1556,26 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("customer_name");
+                                                        }}
+                                                    >
+                                                        Customer
+                                                        {sortField === "customer_name" &&
+                                                            sortSalesReturn === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "customer_name" && sortSalesReturn === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                 {/*<th>
                                                     <b
                                                         style={{
@@ -1591,6 +1595,25 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>*/}
+                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("zatca.reporting_passed");
+                                                        }}
+                                                    >
+                                                        Reported to Zatca
+                                                        {sortField === "zatca.reporting_passed" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "zatca.reporting_passed" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th> : ""}
                                                 <th>
                                                     <b
                                                         style={{
@@ -1629,25 +1652,27 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+
+
+                                                <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("zatca.reporting_passed");
+                                                            sort("cash_discount");
                                                         }}
                                                     >
-                                                        Reported to Zatca
-                                                        {sortField === "zatca.reporting_passed" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        Cash Discount
+                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
-                                                        {sortField === "zatca.reporting_passed" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        {sortField === "cash_discount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th> : ""}
+                                                </th>
 
 
                                                 {cookies.get('admin') === "true" ? <th>
@@ -1689,6 +1714,10 @@ function SalesReturnIndex(props) {
                                                     </b>
                                                 </th> : ""}
 
+
+
+
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1708,29 +1737,6 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("customer_name");
-                                                        }}
-                                                    >
-                                                        Customer
-                                                        {sortField === "customer_name" &&
-                                                            sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "customer_name" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-
-
-
                                                 <th>
                                                     <b
                                                         style={{
@@ -1862,16 +1868,7 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="cash_discount"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("cash_discount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1892,6 +1889,26 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="customer_id"
+                                                        labelKey="search_label"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "customer_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={customerOptions}
+                                                        placeholder="name or mob"
+                                                        selected={selectedCustomers}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestCustomers(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
                                                 {/*<th>
                                                     <input
                                                         type="text"
@@ -1902,6 +1919,19 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>*/}
+                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("zatca.reporting_passed", e.target.value);
+                                                        }}
+                                                    >
+                                                        <option value="" SELECTED>Select</option>
+                                                        <option value="reported">REPORTED</option>
+                                                        <option value="compliance_failed">COMPLIANCE FAILED</option>
+                                                        <option value="reporting_failed">REPORTING FAILED</option>
+                                                        <option value="not_reported">NOT REPORTED</option>
+                                                    </select>
+                                                </th> : ""}
                                                 <th>
                                                     <Typeahead
                                                         id="payment_status"
@@ -1936,19 +1966,17 @@ function SalesReturnIndex(props) {
                                                         multiple
                                                     />
                                                 </th>
-                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
-                                                    <select
-                                                        onChange={(e) => {
-                                                            searchByFieldValue("zatca.reporting_passed", e.target.value);
-                                                        }}
-                                                    >
-                                                        <option value="" SELECTED>Select</option>
-                                                        <option value="reported">REPORTED</option>
-                                                        <option value="compliance_failed">COMPLIANCE FAILED</option>
-                                                        <option value="reporting_failed">REPORTING FAILED</option>
-                                                        <option value="not_reported">NOT REPORTED</option>
-                                                    </select>
-                                                </th> : ""}
+
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="cash_discount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("cash_discount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
@@ -1989,26 +2017,7 @@ function SalesReturnIndex(props) {
                                                         multiple
                                                     />
                                                 </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="customer_id"
-                                                        labelKey="search_label"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "customer_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={customerOptions}
-                                                        placeholder="name or mob"
-                                                        selected={selectedCustomers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestCustomers(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
+
 
 
                                                 <th>
@@ -2104,7 +2113,6 @@ function SalesReturnIndex(props) {
                                                             )}
                                                         </td>
                                                         <td>{salesreturn.net_total} </td>
-                                                        <td>{trimTo2Decimals(salesreturn.cash_discount)}</td>
                                                         <td>
 
                                                             <Button variant="link" onClick={() => {
@@ -2115,6 +2123,52 @@ function SalesReturnIndex(props) {
 
                                                         </td>
                                                         <td>{trimTo2Decimals(salesreturn.balance_amount)}</td>
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={salesreturn.customer_name} />
+                                                        </td>
+                                                        {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+
+                                                            {!salesreturn.zatca?.compliance_passed && salesreturn.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
+                                                                Compliance check failed
+                                                                {!salesreturn.zatca.compliance_passed && salesreturn.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
+                                                                &nbsp;</span> : ""}
+
+                                                            {!salesreturn.zatca?.reporting_passed && salesreturn.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
+                                                                Reporting failed
+                                                                {!salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_last_failed_at ? <span><TimeAgo date={salesreturn.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
+                                                            </span> &nbsp;</span> : ""}
+
+                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
+                                                                Reported
+                                                                {salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.reporting_passed_at} />&nbsp;</span> : ""}
+                                                                &nbsp;</span></span> : ""}
+
+                                                            {!salesreturn.zatca?.reporting_passed && !salesreturn.zatca?.compliance_passed && !salesreturn.zatca?.reporting_failed_count && !salesreturn.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
+                                                                Not Reported
+                                                                &nbsp;</span> : ""}
+
+                                                            {!salesreturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
+                                                                ReportInvoiceToZatca(salesreturn.id, index);
+                                                            }}>
+
+                                                                {!salesreturn.zatca?.reportingInProgress && (salesreturn.zatca?.reporting_failed_count > 0 || salesreturn.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
+                                                                {!salesreturn.zatca?.reportingInProgress && (!salesreturn.zatca?.reporting_failed_count > 0 && !salesreturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
+                                                                {salesreturn.zatca?.reportingInProgress ? <Spinner
+                                                                    as="span"
+                                                                    animation="border"
+                                                                    size="sm"
+                                                                    role="status"
+                                                                    aria-hidden={true}
+                                                                /> : ""}
+                                                            </Button></span> : ""}
+                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;
+
+                                                                <Button onClick={() => {
+                                                                    window.open("/zatca/returns/xml/" + salesreturn.code + ".xml", "_blank");
+                                                                }}><i class="bi bi-filetype-xml"></i> XML
+                                                                </Button>
+                                                            </span> : ""}
+                                                        </td> : ""}
                                                         {/*<td>
 
                                                             <Button variant="link" onClick={() => {
@@ -2146,54 +2200,11 @@ function SalesReturnIndex(props) {
                                                                 ))}
 
                                                         </td>
-                                                        {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-
-                                                            {!salesreturn.zatca?.compliance_passed && salesreturn.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
-                                                                Compliance check failed
-                                                                {!salesreturn.zatca.compliance_passed && salesreturn.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
-                                                                &nbsp;</span> : ""}
-
-                                                            {!salesreturn.zatca?.reporting_passed && salesreturn.zatca?.reporting_failed_count > 0 ? <span> <span className="badge bg-danger">
-                                                                Reporting failed
-                                                                {!salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_last_failed_at ? <span><TimeAgo date={salesreturn.zatca.reporting_last_failed_at} />&nbsp;</span> : ""}
-                                                            </span> &nbsp;</span> : ""}
-
-                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;<span className="badge bg-success">
-                                                                Reported
-                                                                {salesreturn.zatca.reporting_passed && salesreturn.zatca.reporting_passed_at ? <span>&nbsp;<TimeAgo date={salesreturn.zatca.reporting_passed_at} />&nbsp;</span> : ""}
-                                                                &nbsp;</span></span> : ""}
-
-                                                            {!salesreturn.zatca?.reporting_passed && !salesreturn.zatca?.compliance_passed && !salesreturn.zatca?.reporting_failed_count && !salesreturn.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
-                                                                Not Reported
-                                                                &nbsp;</span> : ""}
-
-                                                            {!salesreturn.zatca.reporting_passed ? <span> &nbsp; <Button disabled={reportingInProgress} style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
-                                                                ReportInvoiceToZatca(salesreturn.id, index);
-                                                            }}>
-
-                                                                {!salesreturn.zatca?.reportingInProgress && (salesreturn.zatca?.reporting_failed_count > 0 || salesreturn.zatca?.compliance_check_failed_count > 0) ? <i class="bi bi-bootstrap-reboot"></i> : ""}
-                                                                {!salesreturn.zatca?.reportingInProgress && (!salesreturn.zatca?.reporting_failed_count > 0 && !salesreturn.zatca?.compliance_check_failed_count) ? <span class="bi-arrow-right-circle">&nbsp;Report</span> : ""}
-
-                                                                {salesreturn.zatca?.reportingInProgress ? <Spinner
-                                                                    as="span"
-                                                                    animation="border"
-                                                                    size="sm"
-                                                                    role="status"
-                                                                    aria-hidden={true}
-                                                                /> : ""}
-                                                            </Button></span> : ""}
-                                                            {salesreturn.zatca?.reporting_passed ? <span>&nbsp;
-
-                                                                <Button onClick={() => {
-                                                                    window.open("/zatca/returns/xml/" + salesreturn.code + ".xml", "_blank");
-                                                                }}><i class="bi bi-filetype-xml"></i> XML
-                                                                </Button>
-                                                            </span> : ""}
-                                                        </td> : ""}
+                                                        <td>{trimTo2Decimals(salesreturn.cash_discount)}</td>
                                                         {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(salesreturn.net_profit)}</td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(salesreturn.net_loss)}</td> : ""}
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.created_by_name}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.customer_name}</td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(salesreturn.created_at),

@@ -7,6 +7,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import BalanceSheetPrintPreview from './printPreview.js';
+import Amount from "../utils/amount.js";
 
 const PostingIndex = forwardRef((props, ref) => {
 
@@ -135,20 +136,20 @@ const PostingIndex = forwardRef((props, ref) => {
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-      
-          
+
+
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-           
-          
+
+
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-          
-          
+
+
             searchParams["created_at"] = "";
             searchParams[field] = value;
         }
@@ -413,7 +414,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
 
                 //totalExpenses = data.meta.total;
-              
+
 
             })
             .catch((error) => {
@@ -494,12 +495,12 @@ const PostingIndex = forwardRef((props, ref) => {
         console.log(" account.posts", account.posts);
         console.log("opening")
 
-        account.dateRangeStr="";
+        account.dateRangeStr = "";
 
-        account.dateValue=dateValue;
-        account.fromDateValue=fromDateValue;
-        account.toDateValue=toDateValue;
-       
+        account.dateValue = dateValue;
+        account.fromDateValue = fromDateValue;
+        account.toDateValue = toDateValue;
+
 
         /*
         if (dateValue) {
@@ -529,7 +530,7 @@ const PostingIndex = forwardRef((props, ref) => {
                         <Button variant="primary" onClick={() => {
                             openPreview(selectedAccount);
                         }} >
-                            <i className="bi bi-display"></i> 
+                            <i className="bi bi-display"></i>
                             {fettingAllRecordsInProgress ? "Preparing.." : " Print Preview"}
                         </Button>
 
@@ -1114,8 +1115,8 @@ const PostingIndex = forwardRef((props, ref) => {
                                                 <tbody className="text-center">
                                                     {selectedAccount && (debitBalanceBoughtDown > 0 || creditBalanceBoughtDown > 0) ? <tr>
                                                         <td></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To balance b/d " + debitBalanceBoughtDown : ""}</b></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalanceBoughtDown > 0 ? "By balance b/d " + creditBalanceBoughtDown : ""}</b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalanceBoughtDown > 0 ? "To balance b/d " : ""} {debitBalanceBoughtDown > 0 ? <Amount amount={debitBalanceBoughtDown} /> : ""}</b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalanceBoughtDown > 0 ? "By balance b/d " : ""} {creditBalanceBoughtDown > 0 ? <Amount amount={creditBalanceBoughtDown} /> : ""} </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
 
@@ -1144,7 +1145,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                             {post.debit_or_credit === "debit" ? "To " + post.account_name + " A/c #" + post.account_number + " Dr." : ""}
                                                                                         </td>
                                                                                         <td style={{ textAlign: "right", border: "solid 0px", minWidth: "140px" }}>
-                                                                                            {post.debit ? post.debit : ""}
+                                                                                            {post.debit ? <Amount amount={post.debit} /> : ""}
                                                                                         </td>
                                                                                     </td>
                                                                                     <td style={{ border: "solid 0px", paddingLeft: "5px", borderLeft: "solid 1px" }}>
@@ -1152,7 +1153,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                                             {post.debit_or_credit === "credit" ? "By " + post.account_name + " A/c #" + post.account_number + "  Cr." : ""}
                                                                                         </td>
                                                                                         <td style={{ textAlign: "right", border: "solid 0px", minWidth: "105px" }}>
-                                                                                            {post.credit ? post.credit : ""}
+                                                                                            {post.credit ? <Amount amount={post.credit} /> : ""}
                                                                                         </td>
                                                                                     </td>
                                                                                 </td>
@@ -1187,14 +1188,14 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         ))}
                                                     {selectedAccount && (debitBalance > 0 || creditBalance > 0) ? <tr>
                                                         <td></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To balance c/d " + debitBalance : ""}</b></td>
-                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By balance c/d " + creditBalance : ""}</b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To balance c/d " : ""} {debitBalance > 0 ? <Amount amount={debitBalance} /> : ""} </b></td>
+                                                        <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By balance c/d " : ""} {creditBalance > 0 ? <Amount amount={creditBalance} /> : ""}  </b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
                                                     {selectedAccount ? <tr>
                                                         <td></td>
-                                                        <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? creditTotal : debitTotal}</b></td>
-                                                        <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? creditTotal : debitTotal}</b></td>
+                                                        <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
+                                                        <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
                                                 </tbody>

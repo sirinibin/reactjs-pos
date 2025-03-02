@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function CustomerWithdrawalIndex(props) {
 
@@ -902,26 +903,28 @@ function CustomerWithdrawalIndex(props) {
                                             {customerwithdrawalList &&
                                                 customerwithdrawalList.map((customerwithdrawal) => (
                                                     <tr key={customerwithdrawal.code}>
-                                                        <td>{customerwithdrawal.code}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(customerwithdrawal.date), "MMM dd yyyy h:mma")}
                                                         </td>
 
 
-                                                        <td>{customerwithdrawal.amount.toFixed(2)} SAR</td>
-                                                        <td>{customerwithdrawal.payment_method}</td>
-                                                        <td>{customerwithdrawal.description}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.amount.toFixed(2)} SAR</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.payment_method}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={customerwithdrawal.description} maxWidth={300} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customerwithdrawal.customer_name}
                                                         </td>
-                                                        <td>{customerwithdrawal.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(customerwithdrawal.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(customerwithdrawal.id);
                                                             }}>

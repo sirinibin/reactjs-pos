@@ -17,6 +17,7 @@ import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import { formatDistanceToNowStrict } from "date-fns";
 import { enUS } from "date-fns/locale";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 
 
@@ -1519,25 +1520,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("cash_discount");
-                                                        }}
-                                                    >
-                                                        Cash Discount
-                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-numeric-down"></i>
-                                                        ) : null}
-                                                        {sortField === "cash_discount" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-numeric-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1576,6 +1559,26 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("customer_name");
+                                                        }}
+                                                    >
+                                                        Customer
+                                                        {sortField === "customer_name" &&
+                                                            sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "customer_name" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                 {/*
                                                 <th>
                                                     <b
@@ -1596,6 +1599,25 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>*/}
+                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("zatca.reporting_passed");
+                                                        }}
+                                                    >
+                                                        Reported to Zatca
+                                                        {sortField === "zatca.reporting_passed" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "zatca.reporting_passed" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th> : ""}
                                                 <th>
                                                     <b
                                                         style={{
@@ -1635,25 +1657,26 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     </b>
                                                 </th>
 
-                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+
+                                                <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("zatca.reporting_passed");
+                                                            sort("cash_discount");
                                                         }}
                                                     >
-                                                        Reported to Zatca
-                                                        {sortField === "zatca.reporting_passed" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        Cash Discount
+                                                        {sortField === "cash_discount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
-                                                        {sortField === "zatca.reporting_passed" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        {sortField === "cash_discount" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th> : ""}
+                                                </th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1673,7 +1696,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
+                                                {/*<th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1691,7 +1714,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th>
+                                                </th>*/}
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <b
                                                         style={{
@@ -1730,25 +1753,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th> : ""}
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("created_by");
-                                                        }}
-                                                    >
-                                                        Created By
-                                                        {sortField === "created_by" && sortOrder === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "created_by" && sortOrder === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1768,6 +1773,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1775,20 +1781,18 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("customer_name");
+                                                            sort("created_by");
                                                         }}
                                                     >
-                                                        Customer
-                                                        {sortField === "customer_name" &&
-                                                            sortOrder === "-" ? (
+                                                        Created By
+                                                        {sortField === "created_by" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "customer_name" && sortOrder === "" ? (
+                                                        {sortField === "created_by" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
-
 
                                                 <th>
                                                     <b
@@ -1935,16 +1939,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="cash_discount"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("cash_discount", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1965,6 +1960,26 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <Typeahead
+                                                        id="customer_id"
+                                                        labelKey="search_label"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "customer_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={customerOptions}
+                                                        placeholder="name or mob"
+                                                        selected={selectedCustomers}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestCustomers(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
                                                 {/*
                                                 <th>
                                                     <input
@@ -1976,6 +1991,19 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th>*/}
+                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("zatca.reporting_passed", e.target.value);
+                                                        }}
+                                                    >
+                                                        <option value="" SELECTED>Select</option>
+                                                        <option value="reported">REPORTED</option>
+                                                        <option value="compliance_failed">COMPLIANCE FAILED</option>
+                                                        <option value="reporting_failed">REPORTING FAILED</option>
+                                                        <option value="not_reported">NOT REPORTED</option>
+                                                    </select>
+                                                </th> : ""}
                                                 <th>
                                                     <Typeahead
                                                         id="payment_status"
@@ -2010,19 +2038,17 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         multiple
                                                     />
                                                 </th>
-                                                {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
-                                                    <select
-                                                        onChange={(e) => {
-                                                            searchByFieldValue("zatca.reporting_passed", e.target.value);
-                                                        }}
-                                                    >
-                                                        <option value="" SELECTED>Select</option>
-                                                        <option value="reported">REPORTED</option>
-                                                        <option value="compliance_failed">COMPLIANCE FAILED</option>
-                                                        <option value="reporting_failed">REPORTING FAILED</option>
-                                                        <option value="not_reported">NOT REPORTED</option>
-                                                    </select>
-                                                </th> : ""}
+
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="cash_discount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("cash_discount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -2033,7 +2059,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
+                                                {/*<th>
                                                     <input
                                                         type="text"
                                                         id="discount_percent"
@@ -2042,7 +2068,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th>
+                                                </th>*/}
                                                 {cookies.get('admin') === "true" ? <th>
                                                     <input
                                                         type="text"
@@ -2063,6 +2089,18 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th> : ""}
+
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="return_count"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("return_count", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -2079,36 +2117,6 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="return_count"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("return_count", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="customer_id"
-                                                        labelKey="search_label"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "customer_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={customerOptions}
-                                                        placeholder="name or mob"
-                                                        selected={selectedCustomers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestCustomers(searchTerm);
                                                         }}
                                                         multiple
                                                     />
@@ -2226,7 +2234,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                                         </td>
                                                         <td>{trimTo2Decimals(order.net_total)}</td>
-                                                        <td>{trimTo2Decimals(order.cash_discount)}</td>
+
                                                         <td>
 
 
@@ -2238,51 +2246,9 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                                         </td>
                                                         <td>{trimTo2Decimals(order.balance_amount)}</td>
-                                                        {/*<td>
-
-
-                                                            <Button variant="link" onClick={() => {
-                                                                openOrderPaymentsDialogue(order);
-                                                            }}>
-                                                                {order.payments_count}
-                                                            </Button>
-
-                                                        </td>*/}
-                                                        <td>
-                                                            {order.payment_status === "paid" ?
-                                                                <span className="badge bg-success">
-                                                                    Paid
-                                                                </span> : ""}
-                                                            {order.payment_status === "paid_partially" ?
-                                                                <span className="badge bg-warning">
-                                                                    Paid Partially
-                                                                </span> : ""}
-                                                            {order.payment_status === "not_paid" ?
-                                                                <span className="badge bg-danger">
-                                                                    Not Paid
-                                                                </span> : ""}
+                                                        <td className="text-start" >
+                                                            <OverflowTooltip value={order.customer_name} />
                                                         </td>
-                                                        <td>
-
-                                                            {order.payment_methods &&
-                                                                order.payment_methods.map((name) => (
-                                                                    <span className="badge bg-info">{name}</span>
-                                                                ))}
-
-                                                        </td>
-                                                        {/*store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ minWidth: "120px" }}>
-                                                            {order.zatca?.compliance_passed ? <span className="badge bg-success">
-                                                                Compliance check passed
-                                                            </span> : ""}
-                                                            {order.zatca.compliance_passed && order.zatca.compliance_passed_at ? <span><br /><TimeAgo datetime={order.zatca.compliance_check_passed_at} /></span> : ""}
-
-
-                                                            {!order.zatca?.compliance_passed && !order.zatca?.compliance_check_failed_count ? <span className="badge bg-warning">
-                                                                Not Reported
-                                                            </span> : ""}
-                                                            {!order.zatca.compliance_passed && order.zatca.compliance_check_last_failed_at ? <span><br /><TimeAgo datetime={order.zatca.compliance_check_last_failed_at} /></span> : ""}
-                                                        </td> : ""*/}
-
                                                         {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
 
                                                             {!order.zatca?.compliance_passed && order.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
@@ -2327,11 +2293,45 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 </Button>
                                                             </span> : ""}
                                                         </td> : ""}
+                                                        {/*<td>
+
+
+                                                            <Button variant="link" onClick={() => {
+                                                                openOrderPaymentsDialogue(order);
+                                                            }}>
+                                                                {order.payments_count}
+                                                            </Button>
+
+                                                        </td>*/}
+                                                        <td>
+                                                            {order.payment_status === "paid" ?
+                                                                <span className="badge bg-success">
+                                                                    Paid
+                                                                </span> : ""}
+                                                            {order.payment_status === "paid_partially" ?
+                                                                <span className="badge bg-warning">
+                                                                    Paid Partially
+                                                                </span> : ""}
+                                                            {order.payment_status === "not_paid" ?
+                                                                <span className="badge bg-danger">
+                                                                    Not Paid
+                                                                </span> : ""}
+                                                        </td>
+                                                        <td>
+
+                                                            {order.payment_methods &&
+                                                                order.payment_methods.map((name) => (
+                                                                    <span className="badge bg-info">{name}</span>
+                                                                ))}
+
+                                                        </td>
+
+                                                        <td>{trimTo2Decimals(order.cash_discount)}</td>
                                                         <td>{trimTo2Decimals(order.discount)} </td>
-                                                        <td>{trimTo2Decimals(order.discount_percent)} %</td>
+                                                        {/*<td>{trimTo2Decimals(order.discount_percent)} %</td>*/}
                                                         {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(order.net_profit)} </td> : ""}
                                                         {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(order.net_loss)} </td> : ""}
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{order.created_by_name}</td>
+
                                                         <td>
 
 
@@ -2342,7 +2342,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             </Button>
 
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{order.customer_name}</td>
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{order.created_by_name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {format(
                                                                 new Date(order.created_at),

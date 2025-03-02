@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function CustomerIndex(props) {
 
@@ -19,7 +20,7 @@ function CustomerIndex(props) {
     const [customerList, setCustomerList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -410,7 +411,7 @@ function CustomerIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-                                            <th>Actions</th>
+                                                <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -929,9 +930,9 @@ function CustomerIndex(props) {
                                                     </b>
                                                 </th>
 
-                                                
 
-                                              
+
+
 
                                                 <th>
                                                     <b
@@ -977,7 +978,7 @@ function CustomerIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
-                                            <th></th>
+                                                <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1298,7 +1299,7 @@ function CustomerIndex(props) {
                                             {customerList &&
                                                 customerList.map((customer) => (
                                                     <tr key={customer.id}>
-                                                           <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(customer.id);
                                                             }}>
@@ -1311,11 +1312,13 @@ function CustomerIndex(props) {
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
                                                         </td>
-                                                        <td>{customer.phone}</td>
-                                                        <td>{customer.name}</td>
-                                                        <td>{customer.email}</td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.phone}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
+                                                            <OverflowTooltip value={customer.name} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.email}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_count}</b>
@@ -1326,8 +1329,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_amount?.toFixed(2)}</b>
@@ -1338,8 +1341,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_paid_amount?.toFixed(2)}</b>
@@ -1350,8 +1353,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_balance_amount?.toFixed(2)}</b>
@@ -1362,8 +1365,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_profit?.toFixed(2)}</b>
@@ -1374,8 +1377,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_loss?.toFixed(2)}</b>
@@ -1386,8 +1389,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_paid_count}</b>
@@ -1398,8 +1401,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_not_paid_count}</b>
@@ -1410,8 +1413,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_paid_partially_count}</b>
@@ -1422,8 +1425,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_return_count}</b>
@@ -1434,8 +1437,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_return_amount?.toFixed(2)}</b>
@@ -1446,8 +1449,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_return_paid_amount?.toFixed(2)}</b>
@@ -1458,8 +1461,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_return_balance_amount?.toFixed(2)}</b>
@@ -1470,8 +1473,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_return_profit?.toFixed(2)}</b>
@@ -1482,8 +1485,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_return_loss?.toFixed(2)}</b>
@@ -1494,8 +1497,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_return_paid_count}</b>
@@ -1506,8 +1509,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_return_not_paid_count}</b>
@@ -1518,8 +1521,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].sales_return_paid_partially_count}</b>
@@ -1530,8 +1533,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].quotation_count}</b>
@@ -1542,8 +1545,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].quotation_amount?.toFixed(2)}</b>
@@ -1554,8 +1557,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].quotation_profit?.toFixed(2)}</b>
@@ -1566,8 +1569,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].quotation_loss?.toFixed(2)}</b>
@@ -1578,8 +1581,8 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>
-                                                        {customer.stores && Object.keys(customer.stores).map((key,index) => {
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
                                                                     return (
                                                                         <b>{customer.stores[key].delivery_note_count}</b>
@@ -1590,14 +1593,14 @@ function CustomerIndex(props) {
                                                                 return "";
                                                             })}
                                                         </td>
-                                                        <td>{customer.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(customer.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(customer.id);
                                                             }}>

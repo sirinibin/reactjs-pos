@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function ExpenseCategoryIndex(props) {
 
@@ -19,7 +20,7 @@ function ExpenseCategoryIndex(props) {
     const [expensecategoryList, setExpenseCategoryList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(5);
+    let [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -608,16 +609,18 @@ function ExpenseCategoryIndex(props) {
                                             {expensecategoryList &&
                                                 expensecategoryList.map((expensecategory) => (
                                                     <tr key={expensecategory.id}>
-                                                        <td>{expensecategory.name}</td>
-                                                        <td>{expensecategory.parent_name}</td>
-                                                        <td>{expensecategory.created_by_name}</td>
-                                                        <td>
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={expensecategory.name} maxWidth={250} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{expensecategory.parent_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{expensecategory.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(expensecategory.created_at),
                                                                 "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(expensecategory.id);
                                                             }}>

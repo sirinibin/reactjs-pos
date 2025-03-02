@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function CustomerDepositIndex(props) {
 
@@ -900,26 +901,28 @@ function CustomerDepositIndex(props) {
                                             {customerdepositList &&
                                                 customerdepositList.map((customerdeposit) => (
                                                     <tr key={customerdeposit.code}>
-                                                        <td>{customerdeposit.code}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(customerdeposit.date), "MMM dd yyyy h:mma")}
                                                         </td>
 
 
-                                                        <td>{customerdeposit.amount.toFixed(2)} SAR</td>
-                                                        <td>{customerdeposit.payment_method}</td>
-                                                        <td>{customerdeposit.description}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.amount.toFixed(2)} SAR</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.payment_method}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={customerdeposit.description} maxWidth={300} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customerdeposit.customer_name}
                                                         </td>
-                                                        <td>{customerdeposit.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(customerdeposit.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(customerdeposit.id);
                                                             }}>

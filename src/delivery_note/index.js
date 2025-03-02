@@ -8,6 +8,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function DeliveryNoteIndex(props) {
   const cookies = new Cookies();
@@ -20,7 +21,7 @@ function DeliveryNoteIndex(props) {
   const [deliverynoteList, setDeliveryNoteList] = useState([]);
 
   //pagination
-  let [pageSize, setPageSize] = useState(5);
+  let [pageSize, setPageSize] = useState(20);
   let [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   let [totalItems, setTotalItems] = useState(0);
@@ -477,7 +478,7 @@ function DeliveryNoteIndex(props) {
                   )}
                 </div>
                 <div className="table-responsive" style={{ overflowX: "auto" }}>
-                  <table className="table table-striped table-sm table-bordered">
+                  <table className="table table-striped table-bordered table-sm">
                     <thead>
                       <tr className="text-center">
                         <th>
@@ -673,16 +674,18 @@ function DeliveryNoteIndex(props) {
                       {deliverynoteList &&
                         deliverynoteList.map((deliverynote) => (
                           <tr key={deliverynote.code}>
-                            <td>{deliverynote.code}</td>
-                            <td>{deliverynote.customer_name}</td>
-                            <td>{deliverynote.created_by_name}</td>
-                            <td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >{deliverynote.code}</td>
+                            <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                              <OverflowTooltip value={deliverynote.customer_name} />
+                            </td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >{deliverynote.created_by_name}</td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               {format(
                                 new Date(deliverynote.created_at),
                                 "MMM dd yyyy h:mma"
                               )}
                             </td>
-                            <td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               <Button className="btn btn-light btn-sm" onClick={() => {
                                 openUpdateForm(deliverynote.id);
                               }}>
@@ -694,42 +697,6 @@ function DeliveryNoteIndex(props) {
                               }}>
                                 <i className="bi bi-eye"></i>
                               </Button>
-                              {/* 
-                              <button
-                                className="btn btn-default btn-sm"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                title="Download"
-                              >
-                                <i className="bi bi-download"></i>
-                              </button>
-
-                           
-                              <button
-                                className="btn btn-outline-secondary dropdown-toggle"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                              ></button>
-                                  */}
-                              <ul className="dropdown-menu">
-                                {/*
-                                <li>
-                                  <a href="/" className="dropdown-item">
-                                    <i className="bi bi-download"></i>
-                                    Download
-                                  </a>
-                                </li>
-                               */}
-                                {/*
-                              <li>
-                                <a href="/" className="dropdown-item">
-                                  <i className="bi bi-trash"></i>
-                                  Delete
-                                </a>
-                              </li>
-                              */}
-                              </ul>
                             </td>
                           </tr>
                         ))}

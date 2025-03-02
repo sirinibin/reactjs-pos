@@ -1,0 +1,52 @@
+
+.overflow-tooltip-container {
+  position: relative;
+  display: inline-block;
+  max-width: 300px;
+}
+
+.overflow-tooltip {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 20px; /* Space for the icon */
+  position: relative;
+  cursor: pointer;
+}
+
+.copy-btn {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #999;
+  padding: 0;
+}
+
+.copy-btn:hover {
+  color: #000;
+}
+
+.copied-text {
+  position: absolute;
+  top: -20px;
+  right: 0;
+  background: #000;
+  color: #fff;
+  padding: 2px 6px;
+  font-size: 10px;
+  border-radius: 4px;
+  animation: fadeOut 2s forwards;
+}
+
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    display: none;
+  }
+}

@@ -9,6 +9,8 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 function QuotationIndex(props) {
   const cookies = new Cookies();
@@ -21,7 +23,7 @@ function QuotationIndex(props) {
   const [quotationList, setQuotationList] = useState([]);
 
   //pagination
-  let [pageSize, setPageSize] = useState(5);
+  let [pageSize, setPageSize] = useState(20);
   let [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(1);
@@ -978,31 +980,33 @@ function QuotationIndex(props) {
                       {quotationList &&
                         quotationList.map((quotation) => (
                           <tr key={quotation.code}>
-                            <td>{quotation.code}</td>
-                            <td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.code}</td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               {format(new Date(quotation.date), "MMM dd yyyy h:mma")}
                             </td>
-                            <td>{quotation.net_total} </td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.net_total} </td>
                             {cookies.get('admin') === "true" ?
-                              <td>{quotation.profit ? quotation.profit : 0.00} </td>
+                              <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? trimTo2Decimals(quotation.profit) : 0.00} </td>
                               : ""}
                             {cookies.get('admin') === "true" ?
-                              <td>{quotation.loss ? quotation.loss : 0.00} </td>
+                              <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.loss ? trimTo2Decimals(quotation.loss) : 0.00} </td>
                               : ""}
-                            <td>{quotation.created_by_name}</td>
-                            <td>{quotation.customer_name}</td>
-                            <td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.created_by_name}</td>
+                            <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                              <OverflowTooltip value={quotation.customer_name} />
+                            </td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               <span className="badge bg-success">
                                 {quotation.status}
                               </span>
                             </td>
-                            <td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               {format(
                                 new Date(quotation.created_at),
                                 "MMM dd yyyy h:mma"
                               )}
                             </td>
-                            <td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               <Button className="btn btn-light btn-sm" onClick={() => {
                                 openUpdateForm(quotation.id);
                               }}>
@@ -1014,38 +1018,6 @@ function QuotationIndex(props) {
                               }}>
                                 <i className="bi bi-eye"></i>
                               </Button>
-
-                              <button
-                                className="btn btn-default btn-sm"
-                                data-bs-toggle="tooltip"
-                                data-bs-placement="top"
-                                title="Download"
-                              >
-                                <i className="bi bi-download"></i>
-                              </button>
-
-                              <button
-                                className="btn btn-outline-secondary dropdown-toggle"
-                                type="button"
-                                data-bs-toggle="dropdown"
-                                aria-expanded="false"
-                              ></button>
-                              <ul className="dropdown-menu">
-                                <li>
-                                  <a href="/" className="dropdown-item">
-                                    <i className="bi bi-download"></i>
-                                    Download
-                                  </a>
-                                </li>
-                                {/*
-                              <li>
-                                <a href="/" className="dropdown-item">
-                                  <i className="bi bi-trash"></i>
-                                  Delete
-                                </a>
-                              </li>
-                              */}
-                              </ul>
                             </td>
                           </tr>
                         ))}

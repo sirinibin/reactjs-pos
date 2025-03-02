@@ -7,10 +7,28 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 //import { confirm } from 'react-bootstrap-confirmation';
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
+import { enUS } from "date-fns/locale";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
-const TimeAgo = ({ datetime }) => {
-    return <span>{formatDistanceToNow(new Date(datetime), { addSuffix: true })}</span>;
+
+const shortLocale = {
+    ...enUS,
+    formatDistance: (token, count) => {
+        const format = {
+            xSeconds: `${count}s`,
+            xMinutes: `${count}m`,
+            xHours: `${count}h`,
+            xDays: `${count}d`,
+            xMonths: `${count}mo`,
+            xYears: `${count}y`,
+        };
+        return format[token] || "";
+    },
+};
+
+const TimeAgo = ({ date }) => {
+    return <span>{formatDistanceToNowStrict(new Date(date), { locale: shortLocale })} ago</span>;
 };
 
 function StoreIndex(props) {
@@ -23,12 +41,13 @@ function StoreIndex(props) {
         window.location = "/dashboard/stores";
     }
 
+    /*
     function selectAllStore() {
         cookies.remove('store_name', { path: '/' });
         cookies.remove('store_id', { path: '/' });
         cookies.remove('vat_percent', { path: '/' });
         window.location = "/dashboard/stores";
-    }
+    }*/
 
 
     //list
@@ -274,7 +293,8 @@ function StoreIndex(props) {
                     </div>
                 </div>
 
-                <div className="row">
+
+                {/*<div className="row">
 
                     <div className="col text-end">
                         <Button
@@ -286,7 +306,7 @@ function StoreIndex(props) {
                             Select All Stores
                         </Button>
                     </div>
-                </div>
+                </div>*/}
 
                 <div className="row">
                     <div className="col-12">
@@ -544,7 +564,7 @@ function StoreIndex(props) {
                                             {storeList &&
                                                 storeList.map((store) => (
                                                     <tr key={store.id}>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {cookies.get('store_id') !== store.id ?
                                                                 <Button className="btn btn-danger btn-sm" onClick={() => {
                                                                     selectStore(store);
@@ -553,14 +573,12 @@ function StoreIndex(props) {
                                                                     SELECT
                                                                 </Button> : <span className="badge bg-success">SELECTED</span>}
                                                         </td>
-                                                        <td>{store.name}</td>
-                                                        <td>{store.code}</td>
-                                                        <td>{store.branch_name}</td>
-                                                        <td>
-                                                            {store.zatca.phase === "2" ?
-                                                                <span className="badge bg-success">
-                                                                    {"Phase 2"}
-                                                                </span> : ""}
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={store.name} maxWidth={300} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{store.code}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{store.branch_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {store.zatca.phase === "1" ?
                                                                 <span className="badge bg-warning">
                                                                     {"Phase 1"}
@@ -568,14 +586,10 @@ function StoreIndex(props) {
 
                                                             {store.zatca.phase === "2" && store.zatca.connected ?
                                                                 <span>
-                                                                    <br />
                                                                     <span className="badge bg-success">
-                                                                        {"Connected"}
+                                                                        {"Connected to Phase2 "}<TimeAgo date={store.zatca.last_connected_at} />
                                                                     </span> </span> : ""}
-
-                                                            {store.zatca.phase === "2" && store.zatca.last_connected_at ? <span><br /><TimeAgo datetime={store.zatca.last_connected_at} /></span> : ""}
-
-                                                            {store.zatca.phase === "2" && !store.zatca.connected ? <span> <br /><Button style={{ marginTop: "3px" }} className="btn btn-danger btn-sm" onClick={() => {
+                                                            {store.zatca.phase === "2" && !store.zatca.connected ? <span><Button style={{ marginTop: "3px" }} className="btn btn-danger btn-sm" onClick={() => {
                                                                 openZatcaConnectForm(store.id);
                                                             }}>
                                                                 <i className="bi bi-power"></i>&nbsp;
@@ -585,22 +599,10 @@ function StoreIndex(props) {
                                                             {store.zatca.phase === "2" && store.zatca.connected ? <Button style={{ marginTop: "3px" }} className="btn btn btn-sm" onClick={() => {
                                                                 openZatcaConnectForm(store.id);
                                                             }}>
-                                                                <i className="fa fa-refresh"></i>&nbsp;
-                                                                Refresh Connection
+                                                                <i className="fa fa-refresh"></i>
                                                             </Button> : ""}
-
-
-
-                                                            {/*store.zatca.phase === "2"&&store.zatca.connected ? <Button style={{marginTop:"3px"}} className="btn btn-danger btn-sm" onClick={() => {
-                                                                confirmZatcaDisconnection(store.id);
-                                                            }}>
-                                                                <i className="bi bi-power"></i>&nbsp;
-                                                                Disconnect from Zatca
-                                                        </Button>:""*/}
-
-
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(store.id);
                                                             }}>

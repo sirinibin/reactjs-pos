@@ -634,17 +634,17 @@ function UserIndex(props) {
                                             {userList &&
                                                 userList.map((user) => (
                                                     <tr key={user.id}>
-                                                        <td>{user.mob}</td>
-                                                        <td>{user.name}</td>
-                                                        <td>{user.email}</td>
-                                                        <td>{user.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{user.mob}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{user.name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{user.email}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{user.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(user.created_at),
                                                                 "MMM dd yyyy H:mma"
                                                             )}
                                                         </td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(user.id);
                                                             }}>
