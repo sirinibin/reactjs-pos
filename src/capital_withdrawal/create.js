@@ -375,7 +375,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                     size="sm"
                                     role="status"
                                     aria-hidden={true}
-                                /> + " Creating..."
+                                />
 
                                 : ""
                             }

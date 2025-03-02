@@ -171,7 +171,7 @@ const UserCreate = forwardRef((props, ref) => {
                     props.refreshList();
                 }
                 handleClose();
-                
+
 
                 props.openDetailsView(data.result.id);
             })
@@ -210,7 +210,7 @@ const UserCreate = forwardRef((props, ref) => {
                                     size="sm"
                                     role="status"
                                     aria-hidden={true}
-                                /> + " Creating..."
+                                />
 
                                 : ""
                             }
@@ -390,7 +390,7 @@ const UserCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
-                                    /> + " Creating..."
+                                    />
 
                                     : formData.id ? "Update" : "Create"
                                 }

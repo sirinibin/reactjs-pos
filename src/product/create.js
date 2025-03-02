@@ -518,7 +518,7 @@ const ProductCreate = forwardRef((props, ref) => {
                     role="status"
                     aria-hidden={true}
                   />
-                ) + " Creating..."
+                )
                 : ""}
               {formData.id ? "Update" : "Create"}
             </Button>

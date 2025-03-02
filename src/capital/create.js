@@ -376,7 +376,7 @@ const CapitalCreate = forwardRef((props, ref) => {
                                     size="sm"
                                     role="status"
                                     aria-hidden={true}
-                                /> + " Creating..."
+                                />
 
                                 : ""
                             }

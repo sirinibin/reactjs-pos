@@ -1069,7 +1069,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     size="sm"
                                     role="status"
                                     aria-hidden={true}
-                                /> + " Creating..."
+                                />
 
                                 : ""
                             }
@@ -2101,7 +2101,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         size="sm"
                                         role="status"
                                         aria-hidden={true}
-                                    /> + " Creating..."
+                                    />
 
                                     : formData.id ? "Update" : "Create"
                                 }
