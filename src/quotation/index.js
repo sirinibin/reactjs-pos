@@ -11,6 +11,7 @@ import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import Amount from "../utils/amount.js";
 
 function QuotationIndex(props) {
   const cookies = new Cookies();
@@ -984,12 +985,12 @@ function QuotationIndex(props) {
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               {format(new Date(quotation.date), "MMM dd yyyy h:mma")}
                             </td>
-                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.net_total} </td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
                             {cookies.get('admin') === "true" ?
-                              <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? trimTo2Decimals(quotation.profit) : 0.00} </td>
+                              <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? <Amount amount={trimTo2Decimals(quotation.profit)} /> : 0.00} </td>
                               : ""}
                             {cookies.get('admin') === "true" ?
-                              <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.loss ? trimTo2Decimals(quotation.loss) : 0.00} </td>
+                              <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.loss ? <Amount amount={trimTo2Decimals(quotation.loss)} /> : 0.00} </td>
                               : ""}
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.created_by_name}</td>
                             <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >

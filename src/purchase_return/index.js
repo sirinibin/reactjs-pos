@@ -14,6 +14,7 @@ import PurchaseReturnPaymentCreate from "./../purchase_return_payment/create.js"
 import PurchaseReturnPaymentDetailsView from "./../purchase_return_payment/view.js";
 import PurchaseReturnPaymentIndex from "./../purchase_return_payment/index.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import Amount from "../utils/amount.js";
 
 import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
@@ -1580,16 +1581,20 @@ function PurchaseReturnIndex(props) {
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.net_total}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.cash_discount?.toFixed(2)}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={purchasereturn.net_total} /> </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={purchasereturn.cash_discount?.toFixed(2)} /> </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchasereturn);
                                                             }}>
-                                                                {purchasereturn.total_payment_paid?.toFixed(2)}
+                                                                <Amount amount={purchasereturn.total_payment_paid?.toFixed(2)} />
+
                                                             </Button>
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.balance_amount?.toFixed(2)}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Amount amount={purchasereturn.balance_amount?.toFixed(2)} />
+
+                                                        </td>
                                                         {/*<td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchasereturn);

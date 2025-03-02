@@ -18,6 +18,7 @@ import { enUS } from "date-fns/locale";
 import ReactExport from 'react-data-export';
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import Amount from "../utils/amount.js";
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -2112,17 +2113,17 @@ function SalesReturnIndex(props) {
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        <td>{salesreturn.net_total} </td>
+                                                        <td> <Amount amount={salesreturn.net_total} /> </td>
                                                         <td>
 
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(salesreturn);
                                                             }}>
-                                                                {trimTo2Decimals(salesreturn.total_payment_paid)}
+                                                                <Amount amount={trimTo2Decimals(salesreturn.total_payment_paid)} />
                                                             </Button>
 
                                                         </td>
-                                                        <td>{trimTo2Decimals(salesreturn.balance_amount)}</td>
+                                                        <td> <Amount amount={trimTo2Decimals(salesreturn.balance_amount)} /></td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={salesreturn.customer_name} />
                                                         </td>
@@ -2201,8 +2202,8 @@ function SalesReturnIndex(props) {
 
                                                         </td>
                                                         <td>{trimTo2Decimals(salesreturn.cash_discount)}</td>
-                                                        {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(salesreturn.net_profit)}</td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(salesreturn.net_loss)}</td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td> <Amount amount={trimTo2Decimals(salesreturn.net_profit)} /> </td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td> <Amount amount={trimTo2Decimals(salesreturn.net_loss)} />  </td> : ""}
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.created_by_name}</td>
 
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >

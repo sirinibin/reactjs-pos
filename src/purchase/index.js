@@ -14,6 +14,7 @@ import NumberFormat from "react-number-format";
 import PurchasePaymentIndex from "./../purchase_payment/index.js";
 import PurchaseReturnIndex from "./../purchase_return/index.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import Amount from "../utils/amount.js";
 
 
 import ReactExport from 'react-data-export';
@@ -1871,23 +1872,18 @@ function PurchaseIndex(props) {
                                                             {format(new Date(purchase.date), "MMM dd yyyy h:mma")}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <NumberFormat
-                                                                value={purchase.net_total}
-                                                                displayType={"text"}
-                                                                thousandSeparator={true}
-                                                                suffix={" "}
-                                                                renderText={(value, props) => value}
-                                                            />
+                                                            <Amount amount={purchase.net_total} />
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.cash_discount?.toFixed(2)}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >  <Amount amount={purchase.cash_discount?.toFixed(2)} /> </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchase);
                                                             }}>
-                                                                {purchase.total_payment_paid?.toFixed(2)}
+                                                                <Amount amount={purchase.total_payment_paid?.toFixed(2)} />
+
                                                             </Button>
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.balance_amount?.toFixed(2)}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={purchase.balance_amount?.toFixed(2)} /> </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
                                                                 openPaymentsDialogue(purchase);
@@ -1916,22 +1912,12 @@ function PurchaseIndex(props) {
                                                                 ))}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <NumberFormat
-                                                                value={purchase.discount}
-                                                                displayType={"text"}
-                                                                thousandSeparator={true}
-                                                                suffix={" "}
-                                                                renderText={(value, props) => value}
-                                                            />
+                                                            <Amount amount={purchase.discount} />
+
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <NumberFormat
-                                                                value={purchase.vat_price}
-                                                                displayType={"text"}
-                                                                thousandSeparator={true}
-                                                                suffix={" "}
-                                                                renderText={(value, props) => value}
-                                                            />
+                                                            <Amount amount={purchase.vat_price} />
+
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button variant="link" onClick={() => {
@@ -1942,24 +1928,14 @@ function PurchaseIndex(props) {
                                                         </td>
                                                         {cookies.get('admin') === "true" ?
                                                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                <NumberFormat
-                                                                    value={purchase.net_retail_profit}
-                                                                    displayType={"text"}
-                                                                    thousandSeparator={true}
-                                                                    suffix={" "}
-                                                                    renderText={(value, props) => value}
-                                                                />
+                                                                <Amount amount={purchase.net_retail_profit} />
+
                                                             </td>
                                                             : ""}
                                                         {cookies.get('admin') === "true" ?
                                                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                <NumberFormat
-                                                                    value={purchase.net_wholesale_profit}
-                                                                    displayType={"text"}
-                                                                    thousandSeparator={true}
-                                                                    suffix={" "}
-                                                                    renderText={(value, props) => value}
-                                                                />
+                                                                <Amount amount={purchase.net_wholesale_profit} />
+
                                                             </td>
                                                             : ""}
 

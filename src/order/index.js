@@ -19,6 +19,7 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { enUS } from "date-fns/locale";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import Amount from "../utils/amount.js";
 
 
 import ReactExport from 'react-data-export';
@@ -2233,7 +2234,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             {format(new Date(order.date), "MMM dd yyyy h:mma")}
 
                                                         </td>
-                                                        <td>{trimTo2Decimals(order.net_total)}</td>
+                                                        <td> <Amount amount={trimTo2Decimals(order.net_total)} /> </td>
 
                                                         <td>
 
@@ -2241,11 +2242,12 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             <Button variant="link" onClick={() => {
                                                                 openOrderPaymentsDialogue(order);
                                                             }}>
-                                                                {trimTo2Decimals(order.total_payment_received)}
+                                                                <Amount amount={trimTo2Decimals(order.total_payment_received)} />
+
                                                             </Button>
 
                                                         </td>
-                                                        <td>{trimTo2Decimals(order.balance_amount)}</td>
+                                                        <td> <Amount amount={trimTo2Decimals(order.balance_amount)} /> </td>
                                                         <td className="text-start" >
                                                             <OverflowTooltip value={order.customer_name} />
                                                         </td>
@@ -2326,11 +2328,11 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                                         </td>
 
-                                                        <td>{trimTo2Decimals(order.cash_discount)}</td>
+                                                        <td><Amount amount={trimTo2Decimals(order.cash_discount)} /> </td>
                                                         <td>{trimTo2Decimals(order.discount)} </td>
                                                         {/*<td>{trimTo2Decimals(order.discount_percent)} %</td>*/}
-                                                        {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(order.net_profit)} </td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td>{trimTo2Decimals(order.net_loss)} </td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td><Amount amount={trimTo2Decimals(order.net_profit)} /> </td> : ""}
+                                                        {cookies.get('admin') === "true" ? <td><Amount amount={trimTo2Decimals(order.net_loss)} />  </td> : ""}
 
                                                         <td>
 
