@@ -114,7 +114,7 @@ const QuotationView = forwardRef((props, ref) => {
 
                     &nbsp;&nbsp;
                     <Button variant="primary" onClick={openPreview}>
-                        <i className="bi bi-display"></i> E-Invoice
+                        <i className="bi bi-display"></i> Print PDF
                     </Button>
                     <button
                         type="button"
