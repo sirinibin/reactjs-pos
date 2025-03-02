@@ -431,7 +431,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             </ul>
                                         </th> : ""}
                                     </tr>
-                                    {props.model.pages.length === (pageIndex + 1) ? <tr >
+                                    {props.model.pages.length === (pageIndex + 1) && props.model.store?.bank_account ? <tr >
                                         <td colSpan="7" style={{ padding: "0px" }}>
 
                                             <table
@@ -516,19 +516,24 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 <tbody style={{ fontSize: "3mm" }} >
                                                     <tr>
                                                         <td style={{ width: "5%" }}>
-                                                            NATIONAL COMMERCIAL BANK(NCB)
+
+                                                            {props.model.store?.bank_account?.bank_name}
                                                         </td>
                                                         <td style={{ width: "5%" }}>
-                                                            57560905
+
+                                                            {props.model.store?.bank_account?.customer_no}
                                                         </td>
                                                         <td style={{ maxWidth: "100px" }}>
-                                                            SA751000001 4600000922202
+
+                                                            {props.model.store?.bank_account?.iban}
                                                         </td>
                                                         <td style={{ width: "10%" }}>
-                                                            GULF UNION OZONE CO.
+
+                                                            {props.model.store?.bank_account?.account_name}
                                                         </td>
                                                         <td style={{ width: "5%" }}>
-                                                            14600000922202
+
+                                                            {props.model.store?.bank_account?.account_no}
                                                         </td>
                                                     </tr>
                                                 </tbody>

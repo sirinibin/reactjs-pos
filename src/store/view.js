@@ -248,6 +248,24 @@ const StoreView = forwardRef((props, ref) => {
                     </Table>
                 </span>
 
+                {model.bank_account &&
+                    <span>
+                        <h2> Bank Account</h2>
+
+                        <Table striped bordered hover responsive="lg">
+                            <tbody>
+                                <tr>
+                                    <th>Bank Name<br /> </th><td> {model.bank_account.bank_name}</td>
+                                    <th>Customer No.<br /> </th><td> {model.bank_account.customer_no}</td>
+                                    <th>IBAN<br /> </th><td> {model.bank_account.iban}</td>
+                                    <th>Account Name<br /> </th><td> {model.bank_account.account_name}</td>
+                                    <th>Account No.<br /> </th><td> {model.bank_account.account_no}</td>
+                                </tr>
+                            </tbody>
+                        </Table>
+                    </span>
+                }
+
 
 
                 {/*

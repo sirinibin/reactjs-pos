@@ -823,6 +823,8 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   const PreviewRef = useRef();
+
+  /*
   function openPreview() {
     let model = {};
     model = JSON.parse(JSON.stringify(formData));
@@ -834,6 +836,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     //setFormData({ ...formData });
     PreviewRef.current.open(model);
   }
+*/
 
   return (
     <>
@@ -883,13 +886,6 @@ const QuotationCreate = forwardRef((props, ref) => {
           </Modal.Title>
 
           <div className="col align-self-end text-end">
-            <Button variant="primary" onClick={openPreview}>
-              <i className="bi bi-display"></i> Preview
-            </Button>
-            &nbsp;&nbsp;
-            <Button variant="primary" onClick={openPreview}>
-              <i className="bi bi-display"></i> Preview
-            </Button>
             &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
             {formData.id ? (
               <Button

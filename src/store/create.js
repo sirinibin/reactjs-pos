@@ -17,6 +17,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
             formData = {
                 national_address: {},
+                bank_account: {},
                 zatca: {
                     phase: "1",
                 },
@@ -100,6 +101,7 @@ const StoreCreate = forwardRef((props, ref) => {
     //fields
     let [formData, setFormData] = useState({
         national_address: {},
+        bank_account: {},
         zatca: {
             phase: "1",
         },
@@ -1988,8 +1990,139 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
 
+                        <h6><b>Bank Account:</b></h6>
+                        <div className="col-md-4">
+                            <label className="form-label">Bank Name</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.bank_account.bank_name ? formData.bank_account.bank_name : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["bank_account_bank_name"] = "";
+                                        formData.bank_account.bank_name = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="bank_account_bank_name"
+                                    placeholder="Bank Name"
+                                />
 
 
+
+                            </div>
+                            {errors.bank_account_bank_name && (
+                                <div style={{ color: "red" }}>
+                                    {errors.bank_account_bank_name}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Customer No.</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.bank_account.customer_no ? formData.bank_account.customer_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["bank_account_customer_no"] = "";
+                                        formData.bank_account.customer_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="bank_account_customer_no"
+                                    placeholder="Customer No"
+                                />
+                            </div>
+                            {errors.bank_account_customer_no && (
+                                <div style={{ color: "red" }}>
+                                    {errors.bank_account_customer_no}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">IBAN</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.bank_account.iban ? formData.bank_account.iban : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["bank_account_iban"] = "";
+                                        formData.bank_account.iban = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="bank_account_iban"
+                                    placeholder="IBAN"
+                                />
+                            </div>
+                            {errors.bank_account_iban && (
+                                <div style={{ color: "red" }}>
+                                    {errors.bank_account_iban}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Account Name</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.bank_account.account_name ? formData.bank_account.account_name : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["bank_account_account_name"] = "";
+                                        formData.bank_account.account_name = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="bank_account_account_name"
+                                    placeholder="Account Name"
+                                />
+                            </div>
+                            {errors.bank_account_account_name && (
+                                <div style={{ color: "red" }}>
+                                    {errors.bank_account_account_name}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-4">
+                            <label className="form-label">Account No.</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.bank_account.account_no ? formData.bank_account.account_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["bank_account_account_no"] = "";
+                                        formData.bank_account.account_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="bank_account_account_no"
+                                    placeholder="Account No."
+                                />
+                            </div>
+                            {errors.bank_account_account_no && (
+                                <div style={{ color: "red" }}>
+                                    {errors.bank_account_account_no}
+                                </div>
+                            )}
+                        </div>
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
