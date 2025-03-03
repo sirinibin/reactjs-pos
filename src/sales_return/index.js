@@ -1354,6 +1354,7 @@ function SalesReturnIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
+                                                <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1675,6 +1676,7 @@ function SalesReturnIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1930,9 +1932,6 @@ function SalesReturnIndex(props) {
                                                         multiple
                                                     />
                                                 </th>
-
-
-
                                                 <th>
                                                     <DatePicker
                                                         id="created_at"
@@ -2017,6 +2016,20 @@ function SalesReturnIndex(props) {
                                             {salesreturnList &&
                                                 salesreturnList.map((salesreturn, index) => (
                                                     <tr key={index}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(salesreturn.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+
+
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openDetailsView(salesreturn.id);
+                                                            }}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.order_code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
@@ -2125,11 +2138,6 @@ function SalesReturnIndex(props) {
                                                             )}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {/*
-                                                        <SalesReturnUpdate id={salesreturn.id} showUpdateButton={{true}} refreshList={list} showToastMessage={props.showToastMessage} />
-                                                          <SalesReturnView id={salesreturn.id} showViewButton={{true}} show={false} />
-                                                        */}
-
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(salesreturn.id);
                                                             }}>
@@ -2142,26 +2150,6 @@ function SalesReturnIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
-
-                                                            {/*
-                                                            <button
-                                                                className="btn btn-outline-secondary dropdown-toggle"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                aria-expanded="false"
-                                                            ></button>
-                                                            <ul className="dropdown-menu">
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openSalesReturnPaymentCreateForm(salesreturn);
-                                                                    }}>
-                                                                        <i className="bi bi-plus"></i>
-                                                                        &nbsp;
-                                                                        Add Payment
-                                                                    </button>
-                                                                </li>
-                                                            </ul>
-                                                                */}
                                                         </td>
                                                     </tr>
                                                 ))}

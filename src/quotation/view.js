@@ -108,13 +108,13 @@ const QuotationView = forwardRef((props, ref) => {
                     </Button> : ""}
                     &nbsp;&nbsp;
 
-                    <Button variant="primary" onClick={openPrint}>
-                        <i className="bi bi-printer"></i> Print
+                    <Button variant="secondary" onClick={openPrint}>
+                        <i className="bi bi-printer"></i> Print Only Data
                     </Button>
 
                     &nbsp;&nbsp;
                     <Button variant="primary" onClick={openPreview}>
-                        <i className="bi bi-display"></i> Print PDF
+                        <i className="bi bi-printer"></i> Print Full Quotation
                     </Button>
                     <button
                         type="button"

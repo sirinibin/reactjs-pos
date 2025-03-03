@@ -1380,6 +1380,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     <table className="table table-striped table-bordered table-sm" style={{}}>
                                         <thead>
                                             <tr className="text-center">
+                                                <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1760,6 +1761,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th >
                                                     <input
                                                         type="text"
@@ -2146,6 +2148,31 @@ const OrderIndex = forwardRef((props, ref) => {
                                             {orderList &&
                                                 orderList.map((order, index) => (
                                                     <tr key={index}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(order.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>&nbsp;
+
+
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openDetailsView(order.id);
+                                                            }}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>&nbsp;
+                                                            <Button
+                                                                className="btn btn-dark btn-sm"
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top"
+                                                                title="Create Sales Return"
+                                                                onClick={() => {
+                                                                    openSalesReturnCreateForm(order.id);
+                                                                }}
+                                                            >
+                                                                <i className="bi bi-arrow-left"></i> Return
+                                                            </Button>
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{order.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
 
@@ -2270,19 +2297,9 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                        {/*
-                                                        <td>
-                                                            <span className="badge bg-success">
-                                                                {order.status}
-                                                            </span>
-                                                            </td>*/}
+
 
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
-                                                            {/*
-                                                        <OrderUpdate id={order.id} showUpdateButton={{true}} refreshList={list} showToastMessage={props.showToastMessage} />
-                                                          <OrderView id={order.id} showViewButton={{true}} show={false} />
-                                                        */}
-
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(order.id);
                                                             }}>
@@ -2306,37 +2323,6 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             >
                                                                 <i className="bi bi-arrow-left"></i> Return
                                                             </Button>
-
-
-                                                            {/*<button
-                                                                className="btn btn-outline-secondary dropdown-toggle"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                aria-expanded="false"
-                                                            ></button>
-                                                            <ul className="dropdown-menu">
-
-                                                                
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openSalesCashDiscountCreateForm(order);
-                                                                    }}>
-                                                                        <i className="bi bi-plus"></i>
-                                                                        &nbsp;
-                                                                        Add Cash Discount
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openSalesPaymentCreateForm(order);
-                                                                    }}>
-                                                                        <i className="bi bi-plus"></i>
-                                                                        &nbsp;
-                                                                        Add Payment
-                                                                    </button>
-                                                                </li>
-
-                                                                </ul>*/}
                                                         </td>
                                                     </tr>
                                                 ))}

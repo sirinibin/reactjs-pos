@@ -271,7 +271,7 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
                             {isProcessing ?
                                 <Spinner
                                     as="span"
-                                    animation="bpurchasereturn"
+                                    animation="border"
                                     size="sm"
                                     role="status"
                                     aria-hidden={true}
@@ -279,7 +279,7 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {formData.id ? "Update" : "Create"}
+                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
 
                         </Button>
                         <button

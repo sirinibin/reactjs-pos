@@ -555,6 +555,7 @@ function QuotationIndex(props) {
                   <table className="table table-striped table-sm table-bordered">
                     <thead>
                       <tr className="text-center">
+                        <th>Actions</th>
                         <th>
                           <b
                             style={{
@@ -735,6 +736,7 @@ function QuotationIndex(props) {
 
                     <thead>
                       <tr className="text-center">
+                        <th></th>
                         <th>
                           <input
                             type="text"
@@ -974,6 +976,19 @@ function QuotationIndex(props) {
                       {quotationList &&
                         quotationList.map((quotation) => (
                           <tr key={quotation.code}>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                              <Button className="btn btn-light btn-sm" onClick={() => {
+                                openUpdateForm(quotation.id);
+                              }}>
+                                <i className="bi bi-pencil"></i>
+                              </Button>
+
+                              <Button className="btn btn-primary btn-sm" onClick={() => {
+                                openDetailsView(quotation.id);
+                              }}>
+                                <i className="bi bi-eye"></i>
+                              </Button>
+                            </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.code}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               {format(new Date(quotation.date), "MMM dd yyyy h:mma")}

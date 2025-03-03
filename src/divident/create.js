@@ -381,8 +381,7 @@ const DividentCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-                            {formData.id ? "Update" : "Create"}
-
+                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
                         </Button>
                         <button
                             type="button"

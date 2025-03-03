@@ -230,13 +230,13 @@ const OrderView = forwardRef((props, ref) => {
                     </Button> : ""}
                     &nbsp;&nbsp;
 
-                    <Button variant="primary" onClick={openPrint}>
-                        <i className="bi bi-printer"></i> Print
+                    <Button variant="secondary" onClick={openPrint}>
+                        <i className="bi bi-printer"></i> Print Only Data
                     </Button>
 
                     &nbsp;&nbsp;
                     <Button variant="primary" onClick={openPreview}>
-                        <i className="bi bi-display"></i> E-Invoice
+                        <i className="bi bi-printer"></i> Print Full Invoice
                     </Button>
                     <button
                         type="button"
@@ -278,7 +278,7 @@ const OrderView = forwardRef((props, ref) => {
                                     <td>{product.quantity}  {product.unit ? product.unit : ""} </td>
                                     <td className="text-end">
                                         <NumberFormat
-                                            value={product.unit_price}
+                                            value={trimTo2Decimals(product.unit_price)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}
@@ -315,7 +315,7 @@ const OrderView = forwardRef((props, ref) => {
                                     <td>{product.quantity_returned}  {product.unit ? product.unit : ""} </td>
                                     {cookies.get('admin') === "true" ? <td className="text-end">
                                         <NumberFormat
-                                            value={product.purchase_unit_price}
+                                            value={trimTo2Decimals(product.purchase_unit_price)}
                                             displayType={"text"}
                                             thousandSeparator={true}
                                             suffix={" "}

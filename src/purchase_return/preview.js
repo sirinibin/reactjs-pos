@@ -1,4 +1,4 @@
-import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
+import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useEffect } from "react";
 import { Modal, Button } from 'react-bootstrap';
 import PurchaseReturnPreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
@@ -324,11 +324,26 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
     const handlePrint = useReactToPrint({
         content: () => printAreaRef.current,
         documentTitle: getFileName(),
+        onAfterPrint: () => {
+            handleClose();
+        }
     });
 
 
+    // Wrap handlePrint in useCallback to avoid unnecessary re-creations
+    const autoPrint = useCallback(() => {
+        handlePrint();
+    }, [handlePrint]);
+
+
+    useEffect(() => {
+        // Automatically trigger print when component is mounted
+        autoPrint();
+    }, [autoPrint]);
+
+
     return (<>
-        <Modal show={show} scrollable={true} size="xl" onHide={handleClose} animation={false}>
+        <Modal show={show} scrollable={true} fullscreen onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">

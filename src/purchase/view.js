@@ -209,12 +209,12 @@ const PurchaseView = forwardRef((props, ref) => {
 
 
                 <div className="col align-self-end text-end">
-                    <Button variant="primary" onClick={openPrint}>
-                        <i className="bi bi-printer"></i> Print
+                    <Button variant="secondary" onClick={openPrint}>
+                        <i className="bi bi-printer"></i> Print Only Data
                     </Button>
                     &nbsp;&nbsp;
                     <Button variant="primary" onClick={openPreview}>
-                        <i className="bi bi-display"></i> E-Purchase Invoice
+                        <i className="bi bi-printer"></i> Print Full Invoice
                     </Button>
                     &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {

@@ -64,7 +64,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     </div>
                     <div className="col">
                         <div className="invoice-logo text-center">
-                            {props.model.store && props.model.store.logo ? <img width="70" height="70" src={props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
+                            {props.model?.store?.logo ? <img width="70" height="70" src={props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
                         </div>
                     </div>
                     <div className="col">

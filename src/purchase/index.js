@@ -957,7 +957,7 @@ function PurchaseIndex(props) {
                                         <thead>
                                             <tr className="text-center">
 
-
+                                                <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1335,6 +1335,7 @@ function PurchaseIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1774,6 +1775,31 @@ function PurchaseIndex(props) {
                                             {purchaseList &&
                                                 purchaseList.map((purchase) => (
                                                     <tr key={purchase.code}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(purchase.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+
+                                                            &nbsp;<Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openDetailsView(purchase.id);
+                                                            }}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>
+
+                                                            &nbsp;<button
+                                                                className="btn btn-dark btn-sm"
+                                                                data-bs-toggle="tooltip"
+                                                                data-bs-placement="top"
+                                                                title="Create Purchase Return"
+                                                                onClick={() => {
+                                                                    openPurchaseReturnForm(purchase.id);
+                                                                }}
+                                                            >
+                                                                <i className="bi bi-arrow-left"></i> Return
+                                                            </button>
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.vendor_invoice_no}</td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >

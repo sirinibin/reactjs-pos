@@ -2138,8 +2138,9 @@ const StoreCreate = forwardRef((props, ref) => {
                                         aria-hidden={true}
                                     />
 
-                                    : formData.id ? "Update" : "Create"
+                                    : ""
                                 }
+                                {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
                             </Button>
                         </Modal.Footer>
                     </form>

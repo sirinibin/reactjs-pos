@@ -646,9 +646,11 @@ function PurchaseReturnIndex(props) {
 
     //Purchase Return Payments
     const PurchaseReturnPaymentCreateRef = useRef();
-    function openPurchaseReturnPaymentCreateForm(purchaseReturn) {
-        PurchaseReturnPaymentCreateRef.current.open(undefined, purchaseReturn);
-    }
+    /*
+        function openPurchaseReturnPaymentCreateForm(purchaseReturn) {
+            PurchaseReturnPaymentCreateRef.current.open(undefined, purchaseReturn);
+        }
+            */
 
     const PurchaseReturnPaymentDetailsViewRef = useRef();
     function openPurchaseReturnPaymentDetailsView(id) {
@@ -936,6 +938,7 @@ function PurchaseReturnIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
+                                                <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1210,6 +1213,7 @@ function PurchaseReturnIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1524,6 +1528,18 @@ function PurchaseReturnIndex(props) {
                                             {purchasereturnList &&
                                                 purchasereturnList.map((purchasereturn) => (
                                                     <tr key={purchasereturn.code} >
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(purchasereturn.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openDetailsView(purchasereturn.id);
+                                                            }}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.vendor_invoice_no}</td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
@@ -1598,29 +1614,6 @@ function PurchaseReturnIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
-
-
-
-
-                                                            <button
-                                                                className="btn btn-outline-secondary dropdown-toggle"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                aria-expanded="false"
-                                                            ></button>
-                                                            <ul className="dropdown-menu">
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openPurchaseReturnPaymentCreateForm(purchasereturn);
-                                                                    }}>
-                                                                        <i className="bi bi-plus"></i>
-                                                                        &nbsp;
-                                                                        Add Payment
-                                                                    </button>
-                                                                </li>
-
-                                                            </ul>
-
                                                         </td>
                                                     </tr>
                                                 ))}

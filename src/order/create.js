@@ -18,6 +18,7 @@ import { DebounceInput } from 'react-debounce-input';
 //import Quagga from 'quagga';
 import ProductView from "./../product/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import { Spinner } from "react-bootstrap";
 
 const OrderCreate = forwardRef((props, ref) => {
 
@@ -1221,8 +1222,20 @@ const OrderCreate = forwardRef((props, ref) => {
                     <div className="col align-self-end text-end">
                         <OrderPreview />
                         <Button variant="primary" onClick={handleCreate}>
-                            {isProcessing ? formData.id ? "Updating...." : "Creating.." : formData.id ? "Update" : "Create"
+                            {isProcessing ?
+                                <Spinner
+                                    as="span"
+                                    animation="border"
+                                    size="sm"
+                                    role="status"
+                                    aria-hidden={true}
+                                />
+
+                                : ""
                             }
+
+                            {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
+
                         </Button>
 
                         <button

@@ -509,18 +509,18 @@ const ProductCreate = forwardRef((props, ref) => {
             )}
             &nbsp;&nbsp;
             <Button variant="primary" onClick={handleCreate}>
-              {isProcessing
-                ? (
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden={true}
-                  />
-                )
-                : ""}
-              {formData.id ? "Update" : "Create"}
+              {isProcessing ?
+                <Spinner
+                  as="span"
+                  animation="border"
+                  size="sm"
+                  role="status"
+                  aria-hidden={true}
+                />
+
+                : ""
+              }
+              {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
             </Button>
             <button
               type="button"

@@ -1,4 +1,4 @@
-import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
+import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback } from "react";
 import { Modal, Button } from 'react-bootstrap';
 import OrderPreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
@@ -331,7 +331,31 @@ const OrderPreview = forwardRef((props, ref) => {
     const handlePrint = useReactToPrint({
         content: () => printAreaRef.current,
         documentTitle: getFileName(),
+        onAfterPrint: () => {
+            handleClose();
+        }
     });
+
+
+    // Wrap handlePrint in useCallback to avoid unnecessary re-creations
+    const autoPrint = useCallback(() => {
+        handlePrint();
+    }, [handlePrint]);
+
+
+    useEffect(() => {
+        // Automatically trigger print when component is mounted
+        autoPrint();
+    }, [autoPrint]);
+
+
+
+    /*
+    const handlePrint = useReactToPrint({
+        content: () => printAreaRef.current,
+        documentTitle: getFileName(),
+    });
+    */
 
 
     return (<>

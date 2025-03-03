@@ -157,18 +157,16 @@ const PurchaseReturnView = forwardRef((props, ref) => {
             <Modal.Header>
                 <Modal.Title>Details of Purchase Return #{model.code} </Modal.Title>
 
+
                 <div className="col align-self-end text-end">
-                    <Button variant="primary" className="btn btn-primary mb-3" onClick={openPrint}>
-                        <i className="bi bi-printer"></i> Print
+                    <Button variant="secondary" className="btn btn-primary mb-3" onClick={openPrint}>
+                        <i className="bi bi-printer"></i> Print Only Data
                     </Button>
-
-
-                </div>
-
-                <div className="col align-self-end text-end">
+                    &nbsp;&nbsp;&nbsp;&nbsp;
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={openPreview}>
-                        <i className="bi bi-display"></i> E-Purchase Return Invoice
+                        <i className="bi bi-printer"></i> Print Full Invoice
                     </Button>
+
                     <button
                         type="button"
                         className="btn-close"
