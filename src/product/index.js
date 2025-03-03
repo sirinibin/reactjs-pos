@@ -8,7 +8,7 @@ import { Typeahead } from "react-bootstrap-typeahead";
 //import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 //import { Button, Spinner, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
-import { Button, Spinner, Badge } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import SalesHistory from "./sales_history.js";
 import SalesReturnHistory from "./sales_return_history.js";
@@ -18,9 +18,9 @@ import PurchaseReturnHistory from "./purchase_return_history.js";
 
 import QuotationHistory from "./quotation_history.js";
 import DeliveryNoteHistory from "./delivery_note_history.js";
-import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
+import StatsSummary from "../utils/StatsSummary.js";
 
 function ProductIndex(props) {
 
@@ -62,11 +62,7 @@ function ProductIndex(props) {
 
 
     useEffect(() => {
-        console.log("before docs");
-        list("0", "0"); //load  only documents
-        console.log("after docs");
-        list("1", "1"); //load only stats
-        console.log("after stats");
+        list();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -164,8 +160,7 @@ function ProductIndex(props) {
 
         page = 1;
         setPage(page);
-        list("0", "0"); //load  only documents
-        list("1", "1"); //load only stats
+        list(); //load  only documents
     }
 
     /*
@@ -232,8 +227,7 @@ function ProductIndex(props) {
         page = 1;
         setPage(page);
 
-        list("0", "0"); //load  only documents
-        list("1", "1"); //load only stats
+        list(); //load  only documents
     }
 
     let [stock, setStock] = useState(0.00);
@@ -241,7 +235,7 @@ function ProductIndex(props) {
     let [wholesaleStockValue, setWholesaleStockValue] = useState(0.00);
     let [purchaseStockValue, setPurchaseStockValue] = useState(0.00);
 
-    function list(loadStats, noData) {
+    function list() {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -270,17 +264,12 @@ function ProductIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        searchParams["stats"] = "0";
-        searchParams["no_data"] = "0";
 
-        if (loadStats === "1") {
-            searchParams["stats"] = "1"
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
         }
-
-        if (noData === "1") {
-            searchParams["no_data"] = "1"
-        }
-
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -321,37 +310,27 @@ function ProductIndex(props) {
                 setIsListLoading(false);
                 setIsRefreshInProcess(false);
 
+                setProductList(data.result);
+                let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
 
-                if (noData !== "1") {
-                    setProductList(data.result);
-                    let pageCount = parseInt((data.total_count + pageSize - 1) / pageSize);
+                setTotalPages(pageCount);
+                setTotalItems(data.total_count);
+                setOffset((page - 1) * pageSize);
+                setCurrentPageItemsCount(data.result.length);
+                console.log("docs loaded");
 
-                    setTotalPages(pageCount);
-                    setTotalItems(data.total_count);
-                    setOffset((page - 1) * pageSize);
-                    setCurrentPageItemsCount(data.result.length);
-                    console.log("docs loaded");
-                }
+                stock = data.meta.stock;
+                setStock(stock);
 
+                retailStockValue = data.meta.retail_stock_value;
+                setRetailStockValue(retailStockValue);
 
+                wholesaleStockValue = data.meta.wholesale_stock_value;
+                setWholesaleStockValue(wholesaleStockValue);
 
-
-                if (loadStats === "1") {
-                    stock = data.meta.stock;
-                    setStock(stock);
-
-                    retailStockValue = data.meta.retail_stock_value;
-                    setRetailStockValue(retailStockValue);
-
-                    wholesaleStockValue = data.meta.wholesale_stock_value;
-                    setWholesaleStockValue(wholesaleStockValue);
-
-                    purchaseStockValue = data.meta.purchase_stock_value;
-                    setPurchaseStockValue(purchaseStockValue);
-                    console.log("stats loaded");
-                }
-
-
+                purchaseStockValue = data.meta.purchase_stock_value;
+                setPurchaseStockValue(purchaseStockValue);
+                console.log("stats loaded");
             })
             .catch((error) => {
                 setIsListLoading(false);
@@ -365,19 +344,19 @@ function ProductIndex(props) {
         setSortField(sortField);
         sortProduct = sortProduct === "-" ? "" : "-";
         setSortProduct(sortProduct);
-        list("0", "0"); //load only documents
+        list(); //load only documents
     }
 
     function changePageSize(size) {
         pageSize = parseInt(size);
         setPageSize(pageSize);
-        list("0", "0"); //load  only documents
+        list(); //load  only documents
     }
 
     function changePage(newPage) {
         page = parseInt(newPage);
         setPage(page);
-        list("0", "0"); //load  only documents
+        list(); //load  only documents
     }
 
     const CreateFormRef = useRef();
@@ -498,6 +477,15 @@ function ProductIndex(props) {
         DeliveryNoteHistoryRef.current.open(model);
     }
 
+    let [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        statsOpen = isOpen
+        setStatsOpen(statsOpen)
+
+        if (isOpen) {
+            list(); // Fetch stats only if it's opened and not fetched before
+        }
+    };
 
     return (
         <>
@@ -519,54 +507,19 @@ function ProductIndex(props) {
 
                 <div className="row">
                     <div className="col">
-                        <h1 className="text-end">
-                            Stock: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={stock}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" Units"}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Retail Stock value: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={retailStockValue}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-
-                        <h1 className="text-end">
-                            Wholesale Stock value: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={wholesaleStockValue}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-
-                        <h1 className="text-end">
-                            Purchase Stock value: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={purchaseStockValue}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Products"
+                                stats={{
+                                    "Stock": stock,
+                                    "Retail stock value": retailStockValue,
+                                    "Wholesale stock value": wholesaleStockValue,
+                                    "Purchase stock value": purchaseStockValue,
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
                     </div>
-
                 </div>
 
                 <div className="row">
@@ -626,8 +579,7 @@ function ProductIndex(props) {
                                         <Button
                                             onClick={() => {
                                                 setIsRefreshInProcess(true);
-                                                list("0", "0"); //load  only documents
-                                                list("1", "1"); //load only stats
+                                                list(); //load  only documents
                                             }}
                                             variant="primary"
                                             disabled={isRefreshInProcess}

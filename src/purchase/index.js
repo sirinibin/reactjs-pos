@@ -6,15 +6,15 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge, Modal } from "react-bootstrap";
+import { Button, Spinner, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import PurchaseReturnCreate from "./../purchase_return/create.js";
-import NumberFormat from "react-number-format";
 
 import PurchasePaymentIndex from "./../purchase_payment/index.js";
 import PurchaseReturnIndex from "./../purchase_return/index.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
+import StatsSummary from "../utils/StatsSummary.js";
 
 
 import ReactExport from 'react-data-export';
@@ -302,7 +302,12 @@ function PurchaseIndex(props) {
         let diff = d.getTimezoneOffset();
         console.log("Timezone:", parseFloat(diff / 60));
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        searchParams["stats"] = "1";
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -761,6 +766,16 @@ function PurchaseIndex(props) {
 
     const PurchaseReturnListRef = useRef();
 
+    let [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        statsOpen = isOpen
+        setStatsOpen(statsOpen)
+
+        if (isOpen) {
+            list(); // Fetch stats only if it's opened and not fetched before
+        }
+    };
+
     return (
         <>
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
@@ -771,129 +786,25 @@ function PurchaseIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <h1 className="text-end">
-                            Purchase: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalPurchase}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={""}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Paid Purchase: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalPaidPurchase.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h4 className="text-end">
-                            Cash Purchase: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalCashPurchase.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h4>
-                        <h4 className="text-end">
-                            Bank Account Purchase: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalBankAccountPurchase.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h4>
-                        <h1 className="text-end">
-                            Credit Purchase: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalUnPaidPurchase.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Cash Discounts: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalCashDiscount.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Purchase Discounts: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalDiscount.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Shipping/Handling fees: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalShippingHandlingFees.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            VAT paid: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={vatPrice.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        {cookies.get('admin') === "true" ?
-                            <h1 className="text-end">
-                                Expected Net Retail Profit: <Badge bg="secondary">
-                                    <NumberFormat
-                                        value={netRetailProfit}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    />
-                                </Badge>
-                            </h1> : ""}
-                        {cookies.get('admin') === "true" ?
-                            <h1 className="text-end">
-                                Expected Net Wholesale Profit: <Badge bg="secondary">
-                                    <NumberFormat
-                                        value={netWholesaleProfit}
-                                        displayType={"text"}
-                                        thousandSeparator={true}
-                                        suffix={" "}
-                                        renderText={(value, props) => value}
-                                    />
-                                </Badge>
-                            </h1> : ""}
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Purchase"
+                                stats={{
+                                    "Purchase": totalPurchase,
+                                    "Paid purchase": totalPaidPurchase,
+                                    "Cash purchase": totalCashPurchase,
+                                    "Bank account purchase": totalBankAccountPurchase,
+                                    "Credit purchase": totalUnPaidPurchase,
+                                    "Purchase discount": totalDiscount,
+                                    "Cash discount": totalCashDiscount,
+                                    "Shipping/Handling fees": totalShippingHandlingFees,
+                                    "VAT paid": vatPrice,
+                                    "Net retail profit": netRetailProfit,
+                                    "Net wholesale profit": netWholesaleProfit,
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
                     </div>
 
                 </div>

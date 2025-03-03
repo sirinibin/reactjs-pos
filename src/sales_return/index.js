@@ -6,9 +6,8 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge, Modal, Alert } from "react-bootstrap";
+import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 
 import SalesReturnPaymentCreate from "./../sales_return_payment/create.js";
 import SalesReturnPaymentDetailsView from "./../sales_return_payment/view.js";
@@ -19,6 +18,7 @@ import ReactExport from 'react-data-export';
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
+import StatsSummary from "../utils/StatsSummary.js";
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -886,7 +886,13 @@ function SalesReturnIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        searchParams["stats"] = "1"
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
+
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -1091,6 +1097,16 @@ function SalesReturnIndex(props) {
 
     const SalesReturnPaymentListRef = useRef();
 
+    let [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        statsOpen = isOpen
+        setStatsOpen(statsOpen)
+
+        if (isOpen) {
+            list(); // Fetch stats only if it's opened and not fetched before
+        }
+    };
+
     return (
         <>
             <SalesReturnCreate ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />
@@ -1152,127 +1168,25 @@ function SalesReturnIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <h1 className="text-end">
-                            Sales Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalSalesReturn}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Paid Sales Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalPaidSalesReturn)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h4 className="text-end">
-                            Cash Sales Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalCashSalesReturn)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h4>
-                        <h4 className="text-end">
-                            Bank Account Sales Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalBankAccountSalesReturn)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h4>
-                        <h1 className="text-end">
-                            Credit Sales Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalUnPaidSalesReturn)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        {cookies.get('admin') === "true" ? <h1 className="text-end">
-                            Net Profit: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={netProfit}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1> : ""}
-                        {cookies.get('admin') === "true" ? <h1 className="text-end">
-                            Net Loss: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={loss}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1> : ""}
-                        <h1 className="text-end">
-                            Sales Return Discount: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalDiscount)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Cash Discount: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalCashDiscount)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Shipping/Handling fees: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalShippingHandlingFees)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            VAT Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(vatPrice)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Sales Return"
+                                stats={{
+                                    "Sales Return": totalSalesReturn,
+                                    "Paid Sales Return": totalPaidSalesReturn,
+                                    "Cash Sales Return": totalCashSalesReturn,
+                                    "Bank Account Sales Return": totalBankAccountSalesReturn,
+                                    "Credit Sales Return": totalUnPaidSalesReturn,
+                                    "Sales Discount Return": totalDiscount,
+                                    "Cash Discount Return": totalCashDiscount,
+                                    "Shipping/Handling fees Return": totalShippingHandlingFees,
+                                    "VAT Return": vatPrice,
+                                    "Net Profit Return": netProfit,
+                                    "Net Loss Return": loss,
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
                     </div>
 
                 </div>
@@ -1281,8 +1195,6 @@ function SalesReturnIndex(props) {
                     <div className="col">
                         <h1 className="h3">Sales Returns</h1>
                     </div>
-
-
 
                     <div className="col text-end">
                         <ExcelFile filename={salesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Return Report</Button> : ""}>

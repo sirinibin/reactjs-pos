@@ -6,15 +6,15 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge, Modal } from "react-bootstrap";
+import { Button, Spinner, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 
 import PurchaseReturnPaymentCreate from "./../purchase_return_payment/create.js";
 import PurchaseReturnPaymentDetailsView from "./../purchase_return_payment/view.js";
 import PurchaseReturnPaymentIndex from "./../purchase_return_payment/index.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
+import StatsSummary from "../utils/StatsSummary.js";
 
 import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
@@ -243,7 +243,12 @@ function PurchaseReturnIndex(props) {
         let diff = d.getTimezoneOffset();
         console.log("Timezone:", parseFloat(diff / 60));
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        searchParams["stats"] = "1";
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -498,6 +503,7 @@ function PurchaseReturnIndex(props) {
     let [totalUnPaidPurchaseReturn, setTotalUnPaidPurchaseReturn] = useState(0.00);
     let [totalCashPurchaseReturn, setTotalCashPurchaseReturn] = useState(0.00);
     let [totalBankAccountPurchaseReturn, setTotalBankAccountPurchaseReturn] = useState(0.00);
+    let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
 
     function list() {
         excelData = [];
@@ -522,7 +528,11 @@ function PurchaseReturnIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        searchParams["stats"] = "1";
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        }
+
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -590,6 +600,9 @@ function PurchaseReturnIndex(props) {
 
                 totalBankAccountPurchaseReturn = data.meta.bank_account_purchase_return
                 setTotalBankAccountPurchaseReturn(totalBankAccountPurchaseReturn);
+
+                totalShippingHandlingFees = data.meta.shipping_handling_fees;
+                setTotalShippingHandlingFees(totalShippingHandlingFees);
 
             })
             .catch((error) => {
@@ -715,6 +728,16 @@ function PurchaseReturnIndex(props) {
         CreateFormRef.current.open(undefined, props.purchase.id);
     }
 
+    let [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        statsOpen = isOpen
+        setStatsOpen(statsOpen)
+
+        if (isOpen) {
+            list(); // Fetch stats only if it's opened and not fetched before
+        }
+    };
+
 
     return (
         <>
@@ -728,94 +751,26 @@ function PurchaseReturnIndex(props) {
                 <div className="row">
 
                     <div className="col">
-                        <h1 className="text-end">
-                            Purchase Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalPurchaseReturn}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Paid Purchase Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalPaidPurchaseReturn?.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h4 className="text-end">
-                            Cash Purchase Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalCashPurchaseReturn.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h4>
-                        <h4 className="text-end">
-                            Bank Account Purchase Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalBankAccountPurchaseReturn.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h4>
-                        <h1 className="text-end">
-                            Credit Purchase Return: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalUnPaidPurchaseReturn.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Cash Discounts: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalCashDiscount.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Purchase return Discounts: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={totalDiscount.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            VAT Collected: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={vatPrice.toFixed(2)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
+
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Purchase Return"
+                                stats={{
+                                    "Purchase Return": totalPurchaseReturn,
+                                    "Paid Purchase Return": totalPaidPurchaseReturn,
+                                    "Cash Purchase Return": totalCashPurchaseReturn,
+                                    "Bank Account Purchase Return": totalBankAccountPurchaseReturn,
+                                    "Credit Purchase Return": totalUnPaidPurchaseReturn,
+                                    "Purchase Discount Return": totalDiscount,
+                                    "Cash Discount Return": totalCashDiscount,
+                                    "Shipping/Handling fees": totalShippingHandlingFees,
+                                    "VAT": vatPrice,
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
+
+
                     </div>
 
                 </div>

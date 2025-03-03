@@ -12,14 +12,14 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge, Modal, Alert } from "react-bootstrap";
+import { Button, Spinner, Modal, Alert } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 import { formatDistanceToNowStrict } from "date-fns";
 import { enUS } from "date-fns/locale";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
+import StatsSummary from "../utils/StatsSummary.js";
 
 
 import ReactExport from 'react-data-export';
@@ -443,7 +443,11 @@ const OrderIndex = forwardRef((props, ref) => {
         let diff = d.getTimezoneOffset();
         console.log("Timezone:", parseFloat(diff / 60));
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        searchParams["stats"] = "1";
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        }
+
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -874,7 +878,13 @@ const OrderIndex = forwardRef((props, ref) => {
         let diff = d.getTimezoneOffset();
         console.log("Timezone:", parseFloat(diff / 60));
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        searchParams["stats"] = "1";
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
+
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -1127,6 +1137,19 @@ const OrderIndex = forwardRef((props, ref) => {
     const [showSuccess, setShowSuccess] = useState(false);
     const [successMessage, setSuccessMessage] = useState(false);
 
+
+    let [statsOpen, setStatsOpen] = useState(false);
+    const handleSummaryToggle = (isOpen) => {
+        console.log("isOpen:" + isOpen);
+        statsOpen = isOpen
+        setStatsOpen(statsOpen)
+
+        if (isOpen) {
+            list(); // Fetch stats only if it's opened and not fetched before
+        }
+    };
+
+
     return (
         <>
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
@@ -1183,130 +1206,25 @@ const OrderIndex = forwardRef((props, ref) => {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="text-end">
-                            Sales: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalSales)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Paid Sales: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalPaidSales)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h4 className="text-end">
-                            Cash Sales: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalCashSales)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h4>
-                        <h4 className="text-end">
-                            Bank Account Sales: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalBankAccountSales)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h4>
-                        <h1 className="text-end">
-                            Credit Sales: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalUnPaidSales)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Cash Discounts: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalCashDiscount)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            Sales Discounts: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalDiscount)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-
-                        <h1 className="text-end">
-                            Shipping/Handling fees: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(totalShippingHandlingFees)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-                        <h1 className="text-end">
-                            VAT Collected: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(vatPrice)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1>
-
-                        {cookies.get('admin') === "true" ? <h1 className="text-end">
-                            Net Profit: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(netProfit)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1> : ""}
-                        {cookies.get('admin') === "true" ? <h1 className="text-end">
-                            Loss: <Badge bg="secondary">
-                                <NumberFormat
-                                    value={trimTo2Decimals(loss)}
-                                    displayType={"text"}
-                                    thousandSeparator={true}
-                                    suffix={" "}
-                                    renderText={(value, props) => value}
-                                />
-                            </Badge>
-                        </h1> : ""}
-
+                        <span className="text-end">
+                            <StatsSummary
+                                title="Sales"
+                                stats={{
+                                    "Sales": totalSales,
+                                    "Paid Sales": totalPaidSales,
+                                    "Cash Sales": totalCashSales,
+                                    "Bank Account Sales": totalBankAccountSales,
+                                    "Credit Sales": totalUnPaidSales,
+                                    "Sales Discount": totalDiscount,
+                                    "Cash Discount": totalCashDiscount,
+                                    "Shipping/Handling fees": totalShippingHandlingFees,
+                                    "VAT Collected": vatPrice,
+                                    "Net Profit": netProfit,
+                                    "Net Loss": loss,
+                                }}
+                                onToggle={handleSummaryToggle}
+                            />
+                        </span>
                     </div>
 
                 </div>

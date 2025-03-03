@@ -6,12 +6,12 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button, Spinner, Badge } from "react-bootstrap";
+import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
+import StatsSummary from "../utils/StatsSummary.js";
 
 function QuotationIndex(props) {
   const cookies = new Cookies();
@@ -279,12 +279,19 @@ function QuotationIndex(props) {
     const d = new Date();
     let diff = d.getTimezoneOffset();
     searchParams["timezone_offset"] = parseFloat(diff / 60);
+    if (statsOpen) {
+      searchParams["stats"] = "1";
+    } else {
+      searchParams["stats"] = "0";
+    }
 
     setSearchParams(searchParams);
     let queryParams = ObjectToSearchQueryParams(searchParams);
     if (queryParams !== "") {
       queryParams = "&" + queryParams;
     }
+
+
 
     setIsListLoading(true);
     fetch(
@@ -374,6 +381,16 @@ function QuotationIndex(props) {
     CreateFormRef.current.open();
   }
 
+  let [statsOpen, setStatsOpen] = useState(false);
+  const handleSummaryToggle = (isOpen) => {
+    statsOpen = isOpen
+    setStatsOpen(statsOpen)
+
+    if (isOpen) {
+      list(); // Fetch stats only if it's opened and not fetched before
+    }
+  };
+
   return (
     <>
       <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
@@ -382,41 +399,17 @@ function QuotationIndex(props) {
         <div className="row">
 
           <div className="col">
-            <h1 className="text-end">
-              Quotation: <Badge bg="secondary">
-                <NumberFormat
-                  value={totalQuotation}
-                  displayType={"text"}
-                  thousandSeparator={true}
-                  suffix={" "}
-                  renderText={(value, props) => value}
-                />
-              </Badge>
-            </h1>
-            {cookies.get('admin') === "true" ?
-              <h1 className="text-end">
-                Expected Profit: <Badge bg="secondary">
-                  <NumberFormat
-                    value={profit}
-                    displayType={"text"}
-                    thousandSeparator={true}
-                    suffix={" "}
-                    renderText={(value, props) => value}
-                  />
-                </Badge>
-              </h1> : ""}
-            {cookies.get('admin') === "true" ?
-              <h1 className="text-end">
-                Expected Loss: <Badge bg="secondary">
-                  <NumberFormat
-                    value={loss}
-                    displayType={"text"}
-                    thousandSeparator={true}
-                    suffix={" "}
-                    renderText={(value, props) => value}
-                  />
-                </Badge>
-              </h1> : ""}
+            <span className="text-end">
+              <StatsSummary
+                title="Quotation"
+                stats={{
+                  "Quotation": totalQuotation,
+                  "Profit": profit,
+                  "Loss": loss,
+                }}
+                onToggle={handleSummaryToggle}
+              />
+            </span>
           </div>
 
         </div>
