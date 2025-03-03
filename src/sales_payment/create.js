@@ -225,7 +225,12 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Product Category Created Successfully!", "success");
+                if (formData.id) {
+                    props.showToastMessage("Payment updated successfully!", "success");
+                } else {
+                    props.showToastMessage("Payment created successfully!", "success");
+                }
+
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -241,7 +246,7 @@ const SalesPaymentCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating SalesPayment!", "danger");
+                props.showToastMessage("Failed to process payment", "danger");
             });
     }
 

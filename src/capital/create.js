@@ -303,7 +303,11 @@ const CapitalCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Capital Created Successfully!", "success");
+                if (formData.id) {
+                    props.showToastMessage("Capital updated successfully!", "success");
+                } else {
+                    props.showToastMessage("Capital created successfully!", "success");
+                }
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -320,7 +324,7 @@ const CapitalCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating Capital!", "danger");
+                props.showToastMessage("Failed to process capital!", "danger");
             });
     }
 

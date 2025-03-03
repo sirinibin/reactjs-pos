@@ -322,7 +322,11 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("CustomerWithdrawal Created Successfully!", "success");
+                if (formData.id) {
+                    props.showToastMessage("Customer drawing updated successfully!", "success");
+                } else {
+                    props.showToastMessage("Customer drawing created successfully!", "success");
+                }
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -336,7 +340,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating CustomerWithdrawal!", "danger");
+                props.showToastMessage("Failed to process customer drawing", "danger");
             });
     }
 

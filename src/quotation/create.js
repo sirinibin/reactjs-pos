@@ -548,7 +548,12 @@ const QuotationCreate = forwardRef((props, ref) => {
 
         console.log("Response:");
         console.log(data);
-        props.showToastMessage("Quotation Created Successfully!", "success");
+        if (formData.id) {
+          props.showToastMessage("Quotation updated successfully!", "success");
+        } else {
+          props.showToastMessage("Quotation created successfully!", "success");
+        }
+
         if (props.refreshList) {
           props.refreshList();
         }
@@ -561,7 +566,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
-        props.showToastMessage("Error Creating Quotation!", "danger");
+        props.showToastMessage("Failed to process quotation!", "danger");
       });
   }
 

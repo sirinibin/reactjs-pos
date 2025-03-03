@@ -166,7 +166,11 @@ const UserCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("User Created Successfully!", "success");
+                if (formData.id) {
+                    props.showToastMessage("User updated successfully!", "success");
+                } else {
+                    props.showToastMessage("User created successfully!", "success");
+                }
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -181,7 +185,7 @@ const UserCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating User!", "danger");
+                props.showToastMessage("Failed to process user!", "danger");
             });
     }
 

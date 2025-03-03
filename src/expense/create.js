@@ -328,7 +328,12 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Expense Created Successfully!", "success");
+                if (formData.id) {
+                    props.showToastMessage("Expense updated successfully!", "success");
+                } else {
+                    props.showToastMessage("Expense created successfully!", "success");
+                }
+
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -342,7 +347,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating Expense!", "danger");
+                props.showToastMessage("Failed to process expense!", "danger");
             });
     }
 

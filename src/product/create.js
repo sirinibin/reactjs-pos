@@ -417,7 +417,13 @@ const ProductCreate = forwardRef((props, ref) => {
 
         console.log("Response after creating  product:");
         console.log(data);
-        props.showToastMessage("Product Created Successfully!", "success");
+        if (formData.id) {
+          props.showToastMessage("Product updated successfully!", "success");
+        } else {
+          props.showToastMessage("Product created successfully!", "success");
+        }
+
+
         if (props.refreshList) {
           props.refreshList();
         }
@@ -431,7 +437,7 @@ const ProductCreate = forwardRef((props, ref) => {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
-        props.showToastMessage("Error Creating Product!", "danger");
+        props.showToastMessage("Failed to process product!", "danger");
       });
   }
 

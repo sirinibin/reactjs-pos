@@ -545,7 +545,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Purchase Created Successfully!", "success");
+                if (formData.id) {
+                    props.showToastMessage("Purchase updated successfully!", "success");
+                } else {
+                    props.showToastMessage("Purchase created successfully!", "success");
+                }
+
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -558,7 +563,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating Purchase!", "danger");
+                props.showToastMessage("Failed to process purchase!", "danger");
             });
     }
 

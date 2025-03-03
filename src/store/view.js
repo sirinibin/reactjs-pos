@@ -95,6 +95,7 @@ const StoreView = forwardRef((props, ref) => {
 
                         <tr>
                             <td><b>Zatca Phase</b><br />{model.zatca?.phase ? "Phase " + model.zatca?.phase : "Phase 1"}</td>
+                            {model.zatca?.phase === "2" ? <td><b>Zatca Environment</b><br />{model.zatca?.env ? model.zatca.env : ""}</td> : ""}
                             <td><b>Name</b><br /> {model.name}</td>
                             <td><b>Name(in Arabic)</b><br />{model.name_in_arabic}</td>
                             <td><b>Business category</b><br /> {model.business_category}</td>

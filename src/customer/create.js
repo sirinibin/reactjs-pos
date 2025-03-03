@@ -356,7 +356,13 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Customer Created Successfully!", "success");
+
+                if (formData.id) {
+                    props.showToastMessage("Customer updated successfully!", "success");
+                } else {
+                    props.showToastMessage("Customer created successfully!", "success");
+                }
+
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -369,7 +375,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating Customer!", "danger");
+                props.showToastMessage("Failed to process customer!", "danger");
             });
     }
 

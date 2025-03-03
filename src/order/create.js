@@ -713,7 +713,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Order Created Successfully!", "success");
+
+                if (formData.id) {
+                    props.showToastMessage("Sale updated successfully!", "success");
+                } else {
+                    props.showToastMessage("Sale created successfully!", "success");
+                }
+
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -735,7 +741,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating Order!", "danger");
+                props.showToastMessage("Failed to process sale!", "danger");
             });
     }
 
@@ -1233,7 +1239,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                 : ""
                             }
-
                             {formData.id && !isProcessing ? "Update" : !isProcessing ? "Create" : ""}
 
                         </Button>

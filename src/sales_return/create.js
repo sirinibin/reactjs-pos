@@ -609,7 +609,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("SalesReturn Created Successfully!", "success");
+                if (formData.id) {
+                    props.showToastMessage("Sales return updated successfully!", "success");
+                } else {
+                    props.showToastMessage("Sales return created successfully!", "success");
+                }
+
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -627,7 +632,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating SalesReturn!", "danger");
+                props.showToastMessage("Failed to process sales return!", "danger");
             });
     }
 

@@ -553,7 +553,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
         console.log("Response:");
         console.log(data);
-        props.showToastMessage("DeliveryNote Created Successfully!", "success");
+        if (formData.id) {
+          props.showToastMessage("Delivery note updated successfully!", "success");
+        } else {
+          props.showToastMessage("Delivery note created successfully!", "success");
+        }
         if (props.refreshList) {
           props.refreshList();
         }
@@ -566,7 +570,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
-        props.showToastMessage("Error Creating DeliveryNote!", "danger");
+        props.showToastMessage("Failed to process delivery note!", "danger");
       });
   }
 

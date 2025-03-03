@@ -20,6 +20,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 bank_account: {},
                 zatca: {
                     phase: "1",
+                    env: "NonProduction",
                 },
                 business_category: "Supply Activities",
                 branch_name: "",
@@ -104,6 +105,7 @@ const StoreCreate = forwardRef((props, ref) => {
         bank_account: {},
         zatca: {
             phase: "1",
+            env: "NonProduction",
         },
         branch_name: "",
         vat_percent: 15.00,
@@ -503,7 +505,13 @@ const StoreCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Store Created Successfully!", "success");
+
+                if (formData.id) {
+                    props.showToastMessage("Store updated successfully!", "success");
+                } else {
+                    props.showToastMessage("Store created successfully!", "success");
+                }
+
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -522,7 +530,7 @@ const StoreCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating Store!", "danger");
+                props.showToastMessage("Failed to process store!", "danger");
             });
     }
 
@@ -675,6 +683,40 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
+                        {formData.zatca?.phase === "2" ? <div className="col-md-2">
+                            <label className="form-label">Zatca environment*</label>
+                            <div className="input-group mb-3">
+                                <select
+                                    value={formData.zatca?.env}
+                                    onChange={(e) => {
+                                        console.log("Inside onchange payment method");
+                                        if (!e.target.value) {
+                                            formData.zatca.env = "";
+                                            errors["zatca_env"] = "Invalid Env.";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        errors["zatca_en."] = "";
+                                        setErrors({ ...errors });
+
+                                        formData.zatca.env = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                >
+                                    <option value="NonProduction" SELECTED>NonProduction</option>
+                                    <option value="Simulation" >Simulation</option>
+                                    <option value="Production" >Production</option>
+                                </select>
+                            </div>
+                            {errors.zatca_env && (
+                                <div style={{ color: "red" }}>
+                                    {errors.zatca_env}
+                                </div>
+                            )}
+                        </div> : ""}
 
                         <div className="col-md-2">
                             <label className="form-label">Business category*</label>
