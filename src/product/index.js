@@ -409,9 +409,7 @@ function ProductIndex(props) {
     function getProductPrice(product) {
         let store_id = cookies.get("store_id");
         let vat_percent = 0.15;
-        if (cookies.get("vat_percent")) {
-            vat_percent = parseFloat(cookies.get("vat_percent") / 100).toFixed(2);
-        }
+       
 
         if (!store_id || !product.stores) {
             return {

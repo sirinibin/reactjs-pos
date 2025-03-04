@@ -228,7 +228,7 @@ function Sidebar(props) {
                         <span className="align-middle">Accounts & Trial balances</span>
                     </Link>
                 </li> : ""}
-                {cookies.get('admin') === "true" ? <li onClick={() => {
+                {cookies.get('user_role') === "Admin" ? <li onClick={() => {
                     toggleActive(appState.tabs[20]);
                 }} className={toggleActiveStyles(appState.tabs[20])}>
                     <Link to="/dashboard/users" className="sidebar-link">

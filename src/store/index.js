@@ -37,7 +37,6 @@ function StoreIndex(props) {
     function selectStore(store) {
         cookies.set('store_name', store.name, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
         cookies.set('store_id', store.id, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
-        cookies.set('vat_percent', store.vat_percent, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
         window.location = "/dashboard/stores";
     }
 
@@ -281,7 +280,7 @@ function StoreIndex(props) {
                         <h1 className="h3">Stores</h1>
                     </div>
 
-                    <div className="col text-end">
+                    {cookies.get('user_role') === "Admin" ? <div className="col text-end">
                         <Button
                             hide={true.toString()}
                             variant="primary"
@@ -290,7 +289,7 @@ function StoreIndex(props) {
                         >
                             <i className="bi bi-plus-lg"></i> Create
                         </Button>
-                    </div>
+                    </div> : ""}
                 </div>
 
 

@@ -20,7 +20,7 @@ function Login() {
             //window.location = "/dashboard/analytics";
             window.location = "/dashboard/sales";
         }
-    },[]);
+    }, []);
 
 
     function me() {
@@ -48,10 +48,27 @@ function Login() {
 
                 console.log("Response:");
                 console.log(data);
+                let storeIDs = data.result.store_ids;
+                let storeNames = data.result.store_names;
 
+                if (data.result.role !== "Admin" && (storeIDs?.length === 0 || !storeIDs)) {
+                    errors.email = "You have no stores assigned to you"
+                    cookies.remove("access_token", { path: '/' });
+                    setProcessing(false);
+                    setErrors({ ...errors });
+                    return;
+                }
+
+                if (data.result.role !== "Admin") {
+                    cookies.set('store_name', storeNames[0], { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                    cookies.set('store_id', storeIDs[0], { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                }
 
                 cookies.set('user_name', data.result.name, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
                 cookies.set('user_id', data.result.id, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                cookies.set('user_role', data.result.role, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+
+
 
                 if (data.result.admin === true) {
                     cookies.set('admin', true, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
@@ -63,7 +80,7 @@ function Login() {
                     cookies.set('user_photo', data.result.photo, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
                 }
 
-               // history.push("/dashboard/analytics");
+                // history.push("/dashboard/analytics");
                 history.push("/dashboard/sales");
             })
             .catch(error => {

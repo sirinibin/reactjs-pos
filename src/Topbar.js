@@ -1,5 +1,7 @@
 import React from 'react';
 import Cookies from 'universal-cookie';
+import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
 
 function Topbar(props) {
 
@@ -27,8 +29,13 @@ function Topbar(props) {
             <i className="hamburger align-self-center"></i>
         </a>
 
-        <div className="navbar-collapse collapse ">
+
+        <div className="navbar-collapse collapse">
+
+
+
             <ul className="navbar-nav navbar-align">
+
                 <li className="nav-item dropdown">
                     <a href="/"
                         className="nav-icon dropdown-toggle d-inline-block d-sm-none"
@@ -38,7 +45,18 @@ function Topbar(props) {
                         <i className="align-middle" data-feather="settings"></i>
                     </a>
 
-                    <a href="/"
+
+                    <DropdownButton
+                        id="dropdown-basic-button"
+                        title={cookies.get('user_name')}
+                        drop={"down"}
+                    >
+                        <Dropdown.Item onClick={(e) => {
+                            logOut(e);
+                        }} >LotOut</Dropdown.Item>
+                    </DropdownButton>
+
+                    {/*<a href="/"
                         className="nav-link dropdown-toggle d-none d-sm-inline-block"
 
                         data-bs-toggle="dropdown"
@@ -51,15 +69,37 @@ function Topbar(props) {
                             />
                             : null}
                         <span className="text-dark">{cookies.get('user_name')}</span>
-                    </a>
-                    <div className="dropdown-menu dropdown-menu-end">
+                    </a>*/}
+
+
+
+                    {/*<Dropdown style={{ marginLeft: "70px", height: "0px" }}>
+                        <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{ marginTop: "-48px", height: "28px" }}>
+
+                        </Dropdown.Toggle>
+
+                        <Dropdown.Menu>
+                            <Dropdown.Item onClick={() => {
+                                logOut();
+                            }}>
+                                <i className="bi bi-box-arrow-right"></i>
+                                &nbsp;
+                                LogOut
+                            </Dropdown.Item>
+
+
+
+
+                        </Dropdown.Menu>
+                    </Dropdown>*/}
+                    {/*<div className="dropdown-menu dropdown-menu-end">
                         <a href="/" onClick={logOut} className="dropdown-item">
                             <i className="align-middle me-1" data-feather="log-out"></i> Log out</a>
-                    </div>
+                    </div>*/}
                 </li>
             </ul>
         </div>
-    </nav>);
+    </nav >);
 }
 
 export default Topbar;

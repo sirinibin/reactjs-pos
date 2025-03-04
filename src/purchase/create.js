@@ -62,6 +62,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
             if (cookies.get('store_id')) {
+                getStore(cookies.get('store_id'));
                 formData.store_id = cookies.get('store_id');
                 formData.store_name = cookies.get('store_name');
             }
@@ -72,7 +73,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     name: cookies.get("user_name"),
                 }];
                 formData.order_placed_by = cookies.get("user_id");
-                formData.vat_percent = parseFloat(cookies.get('vat_percent'));
                 setFormData({ ...formData });
                 setSelectedOrderPlacedByUsers([...selectedOrderPlacedByUsers]);
             }
@@ -87,6 +87,38 @@ const PurchaseCreate = forwardRef((props, ref) => {
         },
 
     }));
+
+    function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+                let store = data.result;
+                formData.vat_percent = parseFloat(store.vat_percent);
+                setFormData({ ...formData });
+            })
+            .catch(error => {
+
+            });
+    }
 
     useEffect(() => {
         const listener = event => {

@@ -252,18 +252,38 @@ const UserCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,name";
+        let Select = "select=id,name,branch_name";
         let result = await fetch(
             "/v1/store?" + Select + queryString,
             requestOptions
         );
         let data = await result.json();
+        console.log("data:", data);
+        if (data.result) {
+            for (var i = 0; i < data.result.length; i++) {
+                data.result[i].name = data.result[i].name + " - " + data.result[i].branch_name;
+            }
+        }
 
         if (formData.id) {
             // data.result = data.result.filter(store => store.id !== formData.id);
         }
 
-        setStoreOptions(data.result);
+        let newStoreOptions = [];
+        for (let i = 0; i < data.result.length; i++) {
+            let storeSelected = false;
+            for (var j = 0; j < selectedStores.length; j++) {
+                if (data.result[i].id === selectedStores[j].id) {
+                    storeSelected = true;
+                    break
+                }
+            }
+            if (!storeSelected) {
+                newStoreOptions.push(data.result[i]);
+            }
+        }
+        // data.result = data.result.filter(store => store.id !== selectedStores.id);
+        setStoreOptions(newStoreOptions);
     }
 
 
@@ -491,7 +511,7 @@ const UserCreate = forwardRef((props, ref) => {
                                         console.log("selectedItems", selectedItems);
                                         setSelectedStores(selectedItems);
                                     }}
-                                    options={storeOptions.filter((store) => !selectedStores.includes(store))}
+                                    options={storeOptions}
                                     placeholder="Select Stores"
                                     selected={selectedStores}
                                     highlightOnlyResult={true}
