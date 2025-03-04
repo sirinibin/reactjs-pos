@@ -1,7 +1,8 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
-import { Modal, Button, Form } from "react-bootstrap";
+import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
+import { Typeahead } from "react-bootstrap-typeahead";
 
 
 const UserCreate = forwardRef((props, ref) => {
@@ -98,11 +99,29 @@ const UserCreate = forwardRef((props, ref) => {
                 console.log(userData);
 
 
+                let storeIds = data.result.store_ids;
+                let storeNames = data.result.store_names;
+
+
+                selectedStores = [];
+                if (storeIds && storeNames) {
+                    for (var i = 0; i < storeIds.length; i++) {
+                        selectedStores.push({
+                            id: storeIds[i],
+                            name: storeNames[i],
+                        });
+                    }
+                }
+                setSelectedStores(selectedStores);
+
+
+
                 formData = {
                     id: userData.id,
                     name: userData.name,
                     email: userData.email,
                     mob: userData.mob,
+                    role: userData.role,
                     log: "",
                 };
 
@@ -120,9 +139,25 @@ const UserCreate = forwardRef((props, ref) => {
             });
     }
 
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
+
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
+
+
+        formData.store_ids = [];
+
+        for (var i = 0; i < selectedStores.length; i++) {
+            formData.store_ids.push(selectedStores[i].id);
+        }
+
 
 
         let endPoint = "/v1/user";
@@ -190,9 +225,51 @@ const UserCreate = forwardRef((props, ref) => {
     }
 
 
+    let [selectedStores, setSelectedStores] = useState([]);
+    let [storeOptions, setStoreOptions] = useState([]);
+
+    async function suggestStores(searchTerm) {
+        console.log("Inside handle suggest stores");
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            return;
+        }
+
+        var params = {
+            name: searchTerm,
+        };
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = "select=id,name";
+        let result = await fetch(
+            "/v1/store?" + Select + queryString,
+            requestOptions
+        );
+        let data = await result.json();
+
+        if (formData.id) {
+            // data.result = data.result.filter(store => store.id !== formData.id);
+        }
+
+        setStoreOptions(data.result);
+    }
+
+
     return (
         <>
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update User #" + formData.name : "Create New User"}
@@ -232,7 +309,7 @@ const UserCreate = forwardRef((props, ref) => {
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Name*</label>
 
                             <div className="input-group mb-3">
@@ -256,16 +333,10 @@ const UserCreate = forwardRef((props, ref) => {
                                         {errors.name}
                                     </div>
                                 )}
-                                {formData.name && !errors.name && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
 
 
-                            <Form.Check
+                            {/*<Form.Check
                                 type="switch"
                                 as="input"
                                 id="admin"
@@ -277,11 +348,10 @@ const UserCreate = forwardRef((props, ref) => {
                                     console.log("formData.admin:", formData.admin);
                                     setFormData({ ...formData });
                                 }}
-                            />
-
+                            />*/}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Email*</label>
 
                             <div className="input-group mb-3">
@@ -306,17 +376,11 @@ const UserCreate = forwardRef((props, ref) => {
                                         {errors.email}
                                     </div>
                                 )}
-                                {formData.email && !errors.email && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Password*</label>
+                        <div className="col-md-3">
+                            <label className="form-label">Password{!formData.id ? "*" : ""}</label>
 
                             <div className="input-group mb-3">
                                 <input
@@ -331,7 +395,7 @@ const UserCreate = forwardRef((props, ref) => {
                                     }}
                                     className="form-control"
                                     id="password1"
-                                    placeholder="Password"
+                                    placeholder={formData.id ? "Change password" : "Password"}
                                 />
 
                                 {errors.password && (
@@ -340,16 +404,10 @@ const UserCreate = forwardRef((props, ref) => {
                                         {errors.password}
                                     </div>
                                 )}
-                                {formData.password && !errors.password && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Mob*</label>
 
                             <div className="input-group mb-3">
@@ -373,13 +431,84 @@ const UserCreate = forwardRef((props, ref) => {
                                         {errors.mob}
                                     </div>
                                 )}
-                                {formData.mob && !errors.mob && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Role*</label>
+                            <div className="input-group mb-3">
+                                <select
+                                    value={formData.role}
+                                    onChange={(e) => {
+
+                                        if (!e.target.value) {
+                                            formData.role = "";
+                                            errors["role"] = "Invalid role";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        errors["role"] = "";
+                                        setErrors({ ...errors });
+
+                                        formData.role = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                >
+                                    <option value="Manager" SELECTED>Manager</option>
+                                    <option value="SalesMan" >Sales Man</option>
+                                    <option value="Admin" >Admin</option>
+                                </select>
+                            </div>
+                            {errors.role && (
+                                <div style={{ color: "red" }}>
+                                    {errors.role}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-6">
+                            <label className="form-label">Stores</label>
+
+                            <div className="input-group mb-3">
+                                <Typeahead
+                                    id="store_ids"
+                                    labelKey="name"
+                                    isInvalid={errors.store_ids ? true : false}
+                                    onChange={(selectedItems) => {
+                                        errors.store_ids = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            // errors.use_products_from_store_id = "Invalid store selected";
+                                            //setErrors(errors);
+                                            //setFormData({ ...formData });
+                                            setSelectedStores([]);
+                                            return;
+                                        }
+                                        //setFormData({ ...formData });
+                                        console.log("selectedItems", selectedItems);
+                                        setSelectedStores(selectedItems);
+                                    }}
+                                    options={storeOptions.filter((store) => !selectedStores.includes(store))}
+                                    placeholder="Select Stores"
+                                    selected={selectedStores}
+                                    highlightOnlyResult={true}
+                                    onInputChange={(searchTerm, e) => {
+                                        suggestStores(searchTerm);
+                                    }}
+                                    multiple
+                                />
+
+
+                            </div>
+                            {errors.store_ids && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.store_ids}
+                                </div>
+                            )}
                         </div>
 
                         <Modal.Footer>

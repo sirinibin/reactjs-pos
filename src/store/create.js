@@ -697,7 +697,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             return;
                                         }
 
-                                        errors["zatca_en."] = "";
+                                        errors["zatca_env"] = "";
                                         setErrors({ ...errors });
 
                                         formData.zatca.env = e.target.value;
