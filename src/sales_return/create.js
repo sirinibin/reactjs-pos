@@ -557,7 +557,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         }
 
 
-        formData.net_total = parseFloat(netTotal);
+        formData.net_total = parseFloat(formData.net_total);
 
 
         let endPoint = "/v1/sales-return";
@@ -637,59 +637,81 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }
 
 
-    let [totalPrice, setTotalPrice] = useState(0.0);
+    async function reCalculate(productIndex) {
+        if (selectedProducts && selectedProducts[productIndex]) {
+            if (selectedProducts[productIndex].is_discount_percent) {
+                findProductUnitDiscount(productIndex);
+            } else {
+                findProductUnitDiscountPercent(productIndex);
+            }
+        }
 
-    function findTotalPrice() {
-        totalPrice = 0.00;
+
+        formData.products = [];
         for (var i = 0; i < selectedProducts?.length; i++) {
-            if (!selectedProducts[i].selected) {
-                continue;
+            let unitPrice = parseFloat(selectedProducts[i].unit_price);
+
+            if (unitPrice && /^\d*\.?\d{0,2}$/.test(unitPrice) === false) {
+                errors["unit_price_" + i] = "Max decimal points allowed is 2";
+                setErrors({ ...errors });
+                return
             }
 
-            let productUnitDiscount = 0.00;
-            if (selectedProducts && selectedProducts[i].unit_discount) {
-                productUnitDiscount = parseFloat(selectedProducts[i].unit_discount);
+
+            let unitDiscount = 0.00;
+
+            if (selectedProducts[i].unit_discount) {
+                unitDiscount = parseFloat(selectedProducts[i].unit_discount)
+                if (/^\d*\.?\d{0,2}$/.test(unitDiscount) === false) {
+                    errors["unit_discount_" + i] = "Max decimal points allowed is 2";
+                    setErrors({ ...errors });
+                    return
+                }
             }
 
-            console.log("productUnitDiscount:", productUnitDiscount);
-            console.log("selectedProducts[i].unit_price:", selectedProducts[i].unit_price);
-
-            totalPrice +=
-                (parseFloat((parseFloat(selectedProducts[i].unit_price) - productUnitDiscount)) *
-                    parseFloat(selectedProducts[i].quantity));
+            formData.products.push({
+                product_id: selectedProducts[i].product_id,
+                quantity: parseFloat(selectedProducts[i].quantity),
+                unit_price: unitPrice,
+                unit: selectedProducts[i].unit,
+                selected: selectedProducts[i].selected,
+                purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price) : 0,
+                unit_discount: unitDiscount,
+                unit_discount_percent: selectedProducts[i].unit_discount_percent ? parseFloat(selectedProducts[i].unit_discount_percent) : 0,
+            });
         }
 
-        setTotalPrice(totalPrice);
-    }
 
-    let [vatPrice, setVatPrice] = useState(0.00);
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+            body: JSON.stringify(formData),
+        };
 
-    function findVatPrice() {
-        vatPrice = 0.00;
-        if (totalPrice > 0) {
-            vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
-            console.log("vatPrice:", vatPrice);
+        let result = await fetch(
+            "/v1/sales-return/calculate-net-total",
+            requestOptions
+        );
+        console.log("Done")
+        let res = await result.json();
+
+        if (res.result) {
+            formData.total = res.result.total;
+            formData.net_total = res.result.net_total;
+            formData.vat_price = res.result.vat_price;
+            formData.discount_percent = res.result.discount_percent;
+            formData.discount = res.result.discount;
+            setFormData({ ...formData });
         }
-        setVatPrice(vatPrice);
-    }
 
-
-
-    let [netTotal, setNetTotal] = useState(0.00);
-
-    function findNetTotal() {
-        // if (totalPrice > 0) {
-        netTotal = (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice));
-        setNetTotal(netTotal);
-        // }
-
-        netTotal = Math.round(netTotal * 100) / 100;
-        console.log("after rounding netTotal:", netTotal);
-        setNetTotal(netTotal);
 
         if (!formData.id) {
             let method = "";
-            if (formData.payments_input[0]) {
+            if (formData.payments_input && formData.payments_input[0]) {
                 method = formData.payments_input[0].method;
             }
 
@@ -700,64 +722,17 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 "deleted": false,
             }];
 
-            if (netTotal > 0) {
-                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(netTotal));
-
+            if (formData.net_total > 0) {
+                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
                 if (formData.cash_discount) {
                     formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
                 }
                 formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
             }
-
         }
+        findTotalPayments();
         setFormData({ ...formData });
         validatePaymentAmounts();
-
-    }
-
-    let [discountPercent, setDiscountPercent] = useState(0.00);
-
-
-
-    function findDiscount() {
-        if (formData.discount_percent >= 0 && totalPrice > 0) {
-            formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100));
-            //formData.discount = Math.round(formData.discount * 100) / 100;
-            formData.discount = parseFloat(trimTo2Decimals(formData.discount));
-            setFormData({ ...formData });
-        }
-    }
-
-    function findDiscountPercent() {
-        if (formData.discount >= 0 && totalPrice > 0) {
-            discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100);
-            setDiscountPercent(discountPercent);
-            formData.discount_percent = discountPercent;
-            //formData.discount_percent = Math.round(formData.discount_percent * 100) / 100;
-            setFormData({ ...formData });
-        }
-    }
-
-    function reCalculate(productIndex) {
-        if (selectedProducts && selectedProducts[productIndex]) {
-            if (selectedProducts[productIndex].is_discount_percent) {
-                findProductUnitDiscount(productIndex);
-            } else {
-                findProductUnitDiscountPercent(productIndex);
-            }
-        }
-
-        findTotalPrice();
-        //findDiscount();
-        //findDiscountPercent();
-
-        if (formData.is_discount_percent) {
-            findDiscount();
-        } else {
-            findDiscountPercent();
-        }
-        findVatPrice();
-        findNetTotal();
     }
 
     function findProductUnitDiscountPercent(productIndex) {
@@ -819,12 +794,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         totalPaymentAmount = totalPayment;
         setTotalPaymentAmount(totalPaymentAmount);
-        // balanceAmount = (netTotal - formData.cash_discount) - totalPayment;
-        balanceAmount = (parseFloat(trimTo2Decimals(netTotal)) - parseFloat(parseFloat(trimTo2Decimals(formData.cash_discount)))) - parseFloat(trimTo2Decimals(totalPayment));
+        balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(parseFloat(trimTo2Decimals(formData.cash_discount)))) - parseFloat(trimTo2Decimals(totalPayment));
         balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
         setBalanceAmount(balanceAmount);
 
-        if (balanceAmount === (parseFloat(trimTo2Decimals(netTotal)) - parseFloat(trimTo2Decimals(formData.cash_discount)))) {
+        if (balanceAmount === (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(formData.cash_discount)))) {
             paymentStatus = "not_paid"
         } else if (balanceAmount <= 0) {
             paymentStatus = "paid"
@@ -847,7 +821,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         errors["cash_discount"] = "";
         setErrors({ ...errors });
         let haveErrors = false;
-        if (!netTotal) {
+        if (!formData.net_total) {
             /*
             removePayment(0,false);
             totalPaymentAmount=0.0;
@@ -862,8 +836,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
 
-        if (netTotal && formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
-            errors["cash_discount"] = "Cash discount should not be >= " + trimTo2Decimals(netTotal).toString();
+        if (formData.net_total && formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
+            errors["cash_discount"] = "Cash discount should not be >= " + trimTo2Decimals(formData.net_total).toString();
             setErrors({ ...errors });
             haveErrors = true
             return false;
@@ -1348,7 +1322,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th colSpan="11" className="text-end">Total</th>
                                         <td className="text-end" style={{ width: "180px" }}>
                                             <NumberFormat
-                                                value={trimTo2Decimals(totalPrice)}
+                                                value={trimTo2Decimals(formData.total)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -1527,7 +1501,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th colSpan="11" className="text-end"> VAT: {trimTo2Decimals(formData.vat_percent) + "%"}</th>
                                         <td className="text-end">
                                             <NumberFormat
-                                                value={trimTo2Decimals(vatPrice)}
+                                                value={trimTo2Decimals(formData.vat_price)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -1539,7 +1513,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         <th colSpan="11" className="text-end">Net Total</th>
                                         <th className="text-end">
                                             <NumberFormat
-                                                value={trimTo2Decimals(netTotal)}
+                                                value={trimTo2Decimals(formData.net_total)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -1564,8 +1538,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         return;
                                     }
                                     formData.cash_discount = parseFloat(e.target.value);
-                                    if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
-                                        errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toString();
+                                    if (formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
+                                        errors["cash_discount"] = "Cash discount should not be >= " + formData.net_total.toString();
                                         setErrors({ ...errors });
                                         return;
                                     }

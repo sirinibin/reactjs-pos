@@ -35,7 +35,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
         return event.toLocaleDateString('ar-EG', options)
     }
 
-    return (<>
+    return (<><span ref={ref}>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
                 className="container"
@@ -520,6 +520,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                 </div>
             </div>
         ))}
+    </span>
     </>);
 
 });

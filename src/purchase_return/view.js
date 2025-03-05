@@ -187,8 +187,8 @@ const PurchaseReturnView = forwardRef((props, ref) => {
                                 <th>Name</th>
                                 <th>Qty</th>
                                 <th>Unit Price</th>
-                                <th>Discount</th>
-                                <th>Discount %</th>
+                                <th>Unit Disc.</th>
+                                <th>Disc. %</th>
                                 <th>Price</th>
                             </tr>
                         </thead>

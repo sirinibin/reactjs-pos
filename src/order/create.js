@@ -53,8 +53,10 @@ const OrderCreate = forwardRef((props, ref) => {
 
             if (cookies.get('store_id')) {
                 getStore(cookies.get('store_id'));
-                formData.store_id = cookies.get('store_id');
-                formData.store_name = cookies.get('store_name');
+                formData["store_id"] = cookies.get('store_id');
+                formData["store_name"] = cookies.get('store_name');
+                setFormData({ ...formData });
+                console.log("formData.store_id:", formData.store_id);
                 console.log("formData.store_id:", formData.store_id);
             }
 
@@ -649,8 +651,8 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
-        if (!formData.id && formData.payment_status === "paid_partially" && formData.partial_payment_amount >= netTotal) {
-            errors["partial_payment_amount"] = "Partial payment cannot be >= " + netTotal;
+        if (!formData.id && formData.payment_status === "paid_partially" && formData.partial_payment_amount >= formData.net_total) {
+            errors["partial_payment_amount"] = "Partial payment cannot be >= " + formData.net_total;
             setErrors({ ...errors });
             return;
         }
@@ -696,7 +698,7 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.discount = parseFloat(formData.discount);
         formData.discount_percent = parseFloat(formData.discount_percent);
         formData.vat_percent = parseFloat(formData.vat_percent);
-        formData.net_total = parseFloat(netTotal);
+        formData.net_total = parseFloat(formData.net_total);
 
         if (cookies.get('store_id')) {
             formData.store_id = cookies.get('store_id');
@@ -803,9 +805,7 @@ const OrderCreate = forwardRef((props, ref) => {
     function addProduct(product) {
         console.log("Inside Add product");
         if (!formData.store_id) {
-            errors.product_id = "Please Select a Store and try again";
-            setErrors({ ...errors });
-            return;
+            formData.store_id = cookies.get("store_id");
         }
 
 
@@ -886,9 +886,11 @@ const OrderCreate = forwardRef((props, ref) => {
                 unit_discount_percent: product.unit_discount_percent,
 
             });
+            console.log("Product added")
         }
         setSelectedProducts([...selectedProducts]);
         reCalculate();
+        console.log("reCalculate")
     }
 
     function removeProduct(product) {
@@ -907,58 +909,64 @@ const OrderCreate = forwardRef((props, ref) => {
         reCalculate();
     }
 
-    let [totalPrice, setTotalPrice] = useState(0.0);
 
-    function findTotalPrice() {
-        totalPrice = 0.00;
+    /*
+    function findFormData.total() {
+        formData.total = 0.00;
         for (var i = 0; i < selectedProducts.length; i++) {
             let productUnitDiscount = 0.00;
             if (selectedProducts[i].unit_discount) {
                 productUnitDiscount = selectedProducts[i].unit_discount;
             }
-            totalPrice +=
+            formData.total +=
                 (parseFloat(selectedProducts[i].unit_price - productUnitDiscount) *
                     parseFloat(selectedProducts[i].quantity));
         }
 
-        // totalPrice = Math.round(totalPrice * 100) / 100;
-        setTotalPrice(totalPrice);
+        // formData.total = Math.round(formData.total * 100) / 100;
+        setFormData.total(formData.total);
     }
+    */
 
-    let [vatPrice, setVatPrice] = useState(0.00);
+    //let [vatPrice, setVatPrice] = useState(0.00);
 
+
+    /*
     function findVatPrice() {
         vatPrice = 0.00;
-        if (totalPrice > 0) {
+        if (formData.total > 0) {
             console.log("formData.vat_percent:", formData.vat_percent);
             //(35.8 / 100) * 10000;
 
-            vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
+            vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(formData.total) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
             console.log("vatPrice:", vatPrice);
         }
         setVatPrice(vatPrice);
     }
+        */
 
-    let [netTotal, setNetTotal] = useState(0.00);
 
+
+    /*
     function RoundFloat(val, precision) {
         var ratio = Math.pow(10, precision);
         return Math.round(val * ratio) / ratio;
-    }
+    }*/
 
+    /*
     function findNetTotal() {
-        netTotal = 0.00;
-        if (totalPrice > 0) {
-            netTotal = (parseFloat(totalPrice) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice));
-            netTotal = parseFloat(netTotal);
+        formData.net_total = 0.00;
+        if (formData.total > 0) {
+            formData.net_total = (parseFloat(formData.total) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount) + parseFloat(vatPrice));
+            formData.net_total = parseFloat(formData.net_total);
         }
-        netTotal = RoundFloat(netTotal, 2);
-        // netTotal = Math.round(netTotal * 100) / 100;
-        setNetTotal(netTotal);
+        formData.net_total = RoundFloat(formData.net_total, 2);
+        // formData.net_total = Math.round(formData.net_total * 100) / 100;
+        setFormData.net_total(formData.net_total);
 
         if (!formData.id) {
             let method = "";
-            if (formData.payments_input[0]) {
+            if (formData.payments_input && formData.payments_input[0]) {
                 method = formData.payments_input[0].method;
             }
 
@@ -969,8 +977,8 @@ const OrderCreate = forwardRef((props, ref) => {
                 "deleted": false,
             }];
 
-            if (netTotal > 0) {
-                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(netTotal));
+            if (formData.net_total > 0) {
+                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
                 if (formData.cash_discount) {
                     formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
                 }
@@ -983,11 +991,10 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.payments_input[0].amount = "";
         }
         */
-        setFormData({ ...formData });
-        validatePaymentAmounts();
-    }
+    // setFormData({ ...formData });
+    // validatePaymentAmounts();
+    //}
 
-    let [discountPercent, setDiscountPercent] = useState(0.00);
 
     function findProductUnitDiscountPercent(productIndex) {
         let unitPrice = parseFloat(selectedProducts[productIndex].unit_price);
@@ -1013,25 +1020,30 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
 
+    /*
     function findDiscountPercent() {
-        if (formData.discount >= 0 && totalPrice > 0) {
-            discountPercent = parseFloat(parseFloat(formData.discount / totalPrice) * 100);
+        if (formData.discount >= 0 && formData.total > 0) {
+            discountPercent = parseFloat(parseFloat(formData.discount / formData.total) * 100);
             setDiscountPercent(discountPercent);
             formData.discount_percent = discountPercent;
             //formData.discount_percent = Math.round(formData.discount_percent * 100) / 100;
             setFormData({ ...formData });
         }
+    }*/
+
+    /*
+function findDiscount() {
+    if (formData.discount_percent >= 0 && formData.total > 0) {
+        formData.discount = parseFloat(formData.total * parseFloat(formData.discount_percent / 100));
+        setFormData({ ...formData });
     }
-
-    function findDiscount() {
-        if (formData.discount_percent >= 0 && totalPrice > 0) {
-            formData.discount = parseFloat(totalPrice * parseFloat(formData.discount_percent / 100));
-            setFormData({ ...formData });
-        }
-    }
+}
+    */
 
 
-    function reCalculate(productIndex) {
+    async function reCalculate(productIndex) {
+        console.log("inside reCalculate");
+
         if (selectedProducts[productIndex]) {
             if (selectedProducts[productIndex].is_discount_percent) {
                 findProductUnitDiscount(productIndex);
@@ -1041,16 +1053,127 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
 
+        formData.products = [];
+        for (var i = 0; i < selectedProducts.length; i++) {
 
-        findTotalPrice();
-        if (formData.is_discount_percent) {
-            findDiscount();
-        } else {
-            findDiscountPercent();
+            let unitPrice = parseFloat(selectedProducts[i].unit_price);
+
+            if (unitPrice && /^\d*\.?\d{0,2}$/.test(unitPrice) === false) {
+                errors["unit_price_" + i] = "Max decimal points allowed is 2";
+                setErrors({ ...errors });
+                return;
+
+            }
+
+
+            let unitDiscount = 0.00;
+
+            if (selectedProducts[i].unit_discount) {
+                unitDiscount = parseFloat(selectedProducts[i].unit_discount)
+                if (/^\d*\.?\d{0,2}$/.test(unitDiscount) === false) {
+                    errors["unit_discount_" + i] = "Max decimal points allowed is 2";
+                    setErrors({ ...errors });
+                    return;
+                }
+            }
+
+
+
+            formData.products.push({
+                product_id: selectedProducts[i].product_id,
+                quantity: parseFloat(selectedProducts[i].quantity),
+                unit_price: unitPrice,
+                purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price) : 0,
+                unit_discount: unitDiscount,
+                unit_discount_percent: selectedProducts[i].unit_discount_percent ? parseFloat(selectedProducts[i].unit_discount_percent) : 0,
+                unit: selectedProducts[i].unit,
+            });
         }
-        findVatPrice();
-        findNetTotal();
+
+
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+            body: JSON.stringify(formData),
+        };
+
+        let result = await fetch(
+            "/v1/order/calculate-net-total",
+            requestOptions
+        );
+        console.log("Done")
+        let res = await result.json();
+
+        if (res.result) {
+            formData.total = res.result.total;
+            formData.net_total = res.result.net_total;
+            formData.vat_price = res.result.vat_price;
+            formData.discount_percent = res.result.discount_percent;
+            formData.discount = res.result.discount;
+            setFormData({ ...formData });
+        }
+
+
+        if (!formData.id) {
+            let method = "";
+            if (formData.payments_input && formData.payments_input[0]) {
+                method = formData.payments_input[0].method;
+            }
+
+            formData.payments_input = [{
+                "date_str": formData.date_str,
+                "amount": 0.00,
+                "method": method,
+                "deleted": false,
+            }];
+
+            if (formData.net_total > 0) {
+                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
+                if (formData.cash_discount) {
+                    formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
+                }
+                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
+            }
+        }
         findTotalPayments();
+        setFormData({ ...formData });
+        validatePaymentAmounts();
+    }
+
+
+
+    function findTotalPayments() {
+        console.log("Inisde findTotalPayments")
+        let totalPayment = 0.00;
+        for (var i = 0; i < formData.payments_input?.length; i++) {
+            if (formData.payments_input[i].amount && !formData.payments_input[i].deleted) {
+                totalPayment += formData.payments_input[i].amount;
+            }
+        }
+
+        totalPaymentAmount = totalPayment;
+        console.log("totalPaymentAmount:", totalPaymentAmount);
+        setTotalPaymentAmount(totalPaymentAmount);
+        console.log("totalPayment:", totalPayment)
+        balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(parseFloat(trimTo2Decimals(formData.cash_discount)))) - parseFloat(trimTo2Decimals(totalPayment));
+        balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
+        setBalanceAmount(balanceAmount);
+
+        if (balanceAmount === parseFloat((parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(formData.cash_discount))))) {
+            paymentStatus = "not_paid"
+        } else if (balanceAmount <= 0) {
+            paymentStatus = "paid"
+        } else if (balanceAmount > 0) {
+            paymentStatus = "paid_partially"
+        }
+
+        setPaymentStatus(paymentStatus);
+
+        return totalPayment;
     }
 
     const DetailsViewRef = useRef();
@@ -1108,35 +1231,6 @@ const OrderCreate = forwardRef((props, ref) => {
         //validatePaymentAmounts((formData.payments_input.filter(payment => !payment.deleted).length - 1));
     }
 
-    function findTotalPayments() {
-        console.log("Inisde findTotalPayments")
-        let totalPayment = 0.00;
-        for (var i = 0; i < formData.payments_input?.length; i++) {
-            if (formData.payments_input[i].amount && !formData.payments_input[i].deleted) {
-                totalPayment += formData.payments_input[i].amount;
-            }
-        }
-
-        totalPaymentAmount = totalPayment;
-        console.log("totalPaymentAmount:", totalPaymentAmount);
-        setTotalPaymentAmount(totalPaymentAmount);
-        console.log("totalPayment:", totalPayment)
-        balanceAmount = (parseFloat(trimTo2Decimals(netTotal)) - parseFloat(parseFloat(trimTo2Decimals(formData.cash_discount)))) - parseFloat(trimTo2Decimals(totalPayment));
-        balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
-        setBalanceAmount(balanceAmount);
-
-        if (balanceAmount === parseFloat((parseFloat(trimTo2Decimals(netTotal)) - parseFloat(trimTo2Decimals(formData.cash_discount))))) {
-            paymentStatus = "not_paid"
-        } else if (balanceAmount <= 0) {
-            paymentStatus = "paid"
-        } else if (balanceAmount > 0) {
-            paymentStatus = "paid_partially"
-        }
-
-        setPaymentStatus(paymentStatus);
-
-        return totalPayment;
-    }
 
     let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
     let [balanceAmount, setBalanceAmount] = useState(0.00);
@@ -1156,12 +1250,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     function validatePaymentAmounts() {
-        console.log("validatePaymentAmount: netTotal:", netTotal)
+        console.log("validatePaymentAmount: formData.net_total:", formData.net_total)
         errors["cash_discount"] = "";
         setErrors({ ...errors });
 
         let haveErrors = false;
-        if (!netTotal) {
+        if (!formData.net_total) {
             /*
             removePayment(0, false);
             totalPaymentAmount = 0.0;
@@ -1175,8 +1269,8 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
 
-        if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
-            errors["cash_discount"] = "Cash discount should not be >= " + trimTo2Decimals(netTotal).toString();
+        if (formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
+            errors["cash_discount"] = "Cash discount should not be >= " + trimTo2Decimals(formData.net_total).toString();
             setErrors({ ...errors });
             haveErrors = true
             return false;
@@ -1530,6 +1624,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                 isLoading={isProductsLoading}
                                 isInvalid={errors.product_id ? true : false}
                                 onChange={(selectedItems) => {
+                                    console.log("Inside onChange product")
                                     if (selectedItems.length === 0) {
                                         errors["product_id"] = "Invalid Product selected";
                                         setErrors(errors);
@@ -1538,10 +1633,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                     errors["product_id"] = "";
                                     setErrors({ ...errors });
 
-                                    if (formData.store_id) {
-                                        addProduct(selectedItems[0]);
+                                    addProduct(selectedItems[0]);
 
-                                    }
                                     setOpenProductSearchResult(false);
                                 }}
                                 options={productOptions}
@@ -1904,7 +1997,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th colSpan="8" className="text-end">Total</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
-                                                value={trimTo2Decimals(totalPrice)}
+                                                value={trimTo2Decimals(formData.total)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -2079,8 +2172,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                             }
                                             if (parseFloat(e.target.value) < 0) {
                                                 formData.vat_percent = parseFloat(e.target.value);
-                                                vatPrice = 0.00;
-                                                setVatPrice(vatPrice);
+                                                formData.vat_price = 0.00;
+
                                                 setFormData({ ...formData });
                                                 errors["vat_percent"] = "Vat percent should be >= 0";
                                                 setErrors({ ...errors });
@@ -2091,8 +2184,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                             if (!e.target.value) {
                                                 formData.vat_percent = "";
-                                                vatPrice = 0.00;
-                                                setVatPrice(vatPrice);
+                                                formData.vat_price = 0.00;
                                                 //formData.discount_percent = 0.00;
                                                 errors["vat_percent"] = "Invalid vat percent";
                                                 setFormData({ ...formData });
@@ -2115,7 +2207,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         </th>
                                         <td className="text-end">
                                             <NumberFormat
-                                                value={trimTo2Decimals(vatPrice)}
+                                                value={trimTo2Decimals(formData.vat_price)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -2128,7 +2220,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                         <th colSpan="8" className="text-end">Net Total</th>
                                         <th className="text-end">
                                             <NumberFormat
-                                                value={trimTo2Decimals(netTotal)}
+                                                value={trimTo2Decimals(formData.net_total)}
                                                 displayType={"text"}
                                                 thousandSeparator={true}
                                                 suffix={" "}
@@ -2223,8 +2315,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                         return;
                                     }
                                     formData.cash_discount = parseFloat(e.target.value);
-                                    if (formData.cash_discount > 0 && formData.cash_discount >= netTotal) {
-                                        errors["cash_discount"] = "Cash discount should not be >= " + netTotal.toString();
+                                    if (formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
+                                        errors["cash_discount"] = "Cash discount should not be >= " + formData.net_total.toString();
                                         setErrors({ ...errors });
                                         return;
                                     }

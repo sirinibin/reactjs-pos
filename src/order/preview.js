@@ -345,17 +345,10 @@ const OrderPreview = forwardRef((props, ref) => {
 
     useEffect(() => {
         // Automatically trigger print when component is mounted
-        autoPrint();
+        setTimeout(() => {
+            autoPrint();
+        }, 500);
     }, [autoPrint]);
-
-
-
-    /*
-    const handlePrint = useReactToPrint({
-        content: () => printAreaRef.current,
-        documentTitle: getFileName(),
-    });
-    */
 
 
     return (<>

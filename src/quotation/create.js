@@ -680,78 +680,9 @@ const QuotationCreate = forwardRef((props, ref) => {
     reCalculate();
   }
 
-  let [totalPrice, setTotalPrice] = useState(0.0);
-
-  function findTotalPrice() {
-    totalPrice = 0.00;
-    for (var i = 0; i < selectedProducts.length; i++) {
-      let productUnitDiscount = 0.00;
-      if (selectedProducts[i].unit_discount) {
-        productUnitDiscount = parseFloat(selectedProducts[i].unit_discount);
-      }
-      totalPrice +=
-        (parseFloat(selectedProducts[i].unit_price - productUnitDiscount) *
-          parseFloat(selectedProducts[i].quantity));
-    }
-    // totalPrice = totalPrice.toFixed(2);
-    // totalPrice = Math.round(totalPrice * 100) / 100;
-    setTotalPrice(totalPrice);
-  }
 
   let [deliveryDays, setDeliveryDays] = useState(7);
   let [validityDays, setValidityDays] = useState(2);
-  let [vatPrice, setVatPrice] = useState(0.0);
-
-  function findVatPrice() {
-    vatPrice = 0.0;
-    if (totalPrice > 0) {
-      vatPrice = (
-        parseFloat(parseFloat(formData.vat_percent) / 100) *
-        (parseFloat(totalPrice) +
-          parseFloat(formData.shipping_handling_fees) -
-          parseFloat(formData.discount))
-      ).toFixed(2);
-      console.log("vatPrice:", vatPrice);
-    }
-    setVatPrice(vatPrice);
-  }
-
-  let [netTotal, setNetTotal] = useState(0.0);
-
-  function findNetTotal() {
-    netTotal = 0.0;
-    if (totalPrice > 0) {
-      netTotal = (
-        parseFloat(totalPrice) +
-        parseFloat(formData.shipping_handling_fees) -
-        parseFloat(formData.discount) +
-        parseFloat(vatPrice)
-      ).toFixed(2);
-    }
-    setNetTotal(netTotal);
-  }
-
-  let [discountPercent, setDiscountPercent] = useState(0.0);
-
-  function findDiscountPercent() {
-    if (formData.discount >= 0 && totalPrice > 0) {
-      discountPercent = parseFloat(
-        parseFloat(formData.discount / totalPrice) * 100
-      ).toFixed(2);
-      setDiscountPercent(discountPercent);
-      formData.discount_percent = discountPercent;
-      setFormData({ ...formData });
-    }
-  }
-
-  function findDiscount() {
-    if (formData.discount_percent >= 0 && totalPrice > 0) {
-      formData.discount = parseFloat(
-        totalPrice * parseFloat(formData.discount_percent / 100)
-      ).toFixed(2);
-      setFormData({ ...formData });
-    }
-  }
 
   function findProductUnitDiscountPercent(productIndex) {
     let unitPrice = parseFloat(selectedProducts[productIndex].unit_price);
@@ -777,7 +708,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
 
-  function reCalculate(productIndex) {
+  async function reCalculate(productIndex) {
     if (selectedProducts[productIndex]) {
       if (selectedProducts[productIndex].is_discount_percent) {
         findProductUnitDiscount(productIndex);
@@ -787,15 +718,51 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
 
 
-
-    findTotalPrice();
-    if (formData.is_discount_percent) {
-      findDiscount();
-    } else {
-      findDiscountPercent();
+    formData.products = [];
+    for (var i = 0; i < selectedProducts.length; i++) {
+      formData.products.push({
+        product_id: selectedProducts[i].product_id,
+        name: selectedProducts[i].name,
+        name_in_arabic: selectedProducts[i].name_in_arabic,
+        quantity: parseFloat(selectedProducts[i].quantity),
+        unit_price: parseFloat(selectedProducts[i].unit_price),
+        purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(
+          selectedProducts[i].purchase_unit_price
+        ) : 0.00,
+        unit: selectedProducts[i].unit,
+        part_number: selectedProducts[i].part_number,
+        unit_discount: selectedProducts[i].unit_discount ? parseFloat(selectedProducts[i].unit_discount) : 0,
+        unit_discount_percent: selectedProducts[i].unit_discount_percent ? parseFloat(selectedProducts[i].unit_discount_percent) : 0,
+      });
     }
-    findVatPrice();
-    findNetTotal();
+
+
+    const requestOptions = {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+        Authorization: cookies.get("access_token"),
+      },
+      body: JSON.stringify(formData),
+    };
+
+    let result = await fetch(
+      "/v1/quotation/calculate-net-total",
+      requestOptions
+    );
+    console.log("Done")
+    let res = await result.json();
+
+    if (res.result) {
+      formData.total = res.result.total;
+      formData.net_total = res.result.net_total;
+      formData.vat_price = res.result.vat_price;
+      formData.discount_percent = res.result.discount_percent;
+      formData.discount = res.result.discount;
+    }
+
+    setFormData({ ...formData });
   }
 
   const StoreCreateFormRef = useRef();
@@ -828,20 +795,6 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   const PreviewRef = useRef();
-
-  /*
-  function openPreview() {
-    let model = {};
-    model = JSON.parse(JSON.stringify(formData));
-    model.products = selectedProducts;
-    model.net_total = netTotal;
-    model.vat_price = vatPrice;
-    model.total = totalPrice;
-
-    //setFormData({ ...formData });
-    PreviewRef.current.open(model);
-  }
-*/
 
   return (
     <>
@@ -1491,7 +1444,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     </th>
                     <td className="text-end" style={{ width: "200px" }}>
                       <NumberFormat
-                        value={totalPrice}
+                        value={formData.total}
                         displayType={"text"}
                         thousandSeparator={true}
                         suffix={" "}
@@ -1695,8 +1648,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           }
                           if (parseFloat(e.target.value) < 0) {
                             formData.vat_percent = parseFloat(e.target.value);
-                            vatPrice = 0.0;
-                            setVatPrice(vatPrice);
+                            formData.vat_price = 0.0;
                             setFormData({ ...formData });
                             errors["vat_percent"] =
                               "Vat percent should be >= 0";
@@ -1707,8 +1659,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
                           if (!e.target.value) {
                             formData.vat_percent = "";
-                            vatPrice = 0.0;
-                            setVatPrice(vatPrice);
+                            formData.vat_price = 0.0;
                             //formData.discount_percent = 0.00;
                             errors["vat_percent"] = "Invalid vat percent";
                             setFormData({ ...formData });
@@ -1731,7 +1682,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     </th>
                     <td className="text-end">
                       <NumberFormat
-                        value={vatPrice}
+                        value={formData.vat_price}
                         displayType={"text"}
                         thousandSeparator={true}
                         suffix={" "}
@@ -1745,7 +1696,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     </th>
                     <th className="text-end">
                       <NumberFormat
-                        value={netTotal}
+                        value={formData.net_total}
                         displayType={"text"}
                         thousandSeparator={true}
                         suffix={" "}

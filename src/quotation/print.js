@@ -336,7 +336,9 @@ const QuotationPrint = forwardRef((props, ref) => {
 
     useEffect(() => {
         // Automatically trigger print when component is mounted
-        autoPrint();
+        setTimeout(() => {
+            autoPrint();
+        }, 500);
     }, [autoPrint]);
 
 
