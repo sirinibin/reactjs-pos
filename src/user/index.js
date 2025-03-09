@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
 import UserCreate from "./create.js";
 import UserView from "./view.js";
 import Cookies from "universal-cookie";
@@ -8,10 +8,16 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
-
+import { WebSocketContext } from "./../utils/WebSocketContext.js";
+import "./styles.css";
+import { formatDistanceToNowStrict } from "date-fns";
+import { enUS } from "date-fns/locale";
 function UserIndex(props) {
+    const { lastMessage } = useContext(WebSocketContext);
 
-    const cookies = new Cookies();
+    //const cookies = new Cookies();
+    // Memoize cookies to ensure it remains stable across renders
+    const cookies = useMemo(() => new Cookies(), []);
 
     const selectedDate = new Date();
 
@@ -40,6 +46,18 @@ function UserIndex(props) {
     //Created By User Auto Suggestion
     const [userOptions, setUserOptions] = useState([]);
     const [selectedCreatedByUsers, setSelectedCreatedByUsers] = useState([]);
+
+    /*
+        getWebSocket.onMessage = (messageEvent) => {
+            const jsonMessage = JSON.parse(messageEvent.data);
+            console.log("Received Message on USeer LIST:", jsonMessage);
+    
+        }
+            */
+
+
+    //getWebSocket.onMessage: (messageEvent) => {};
+
 
 
     useEffect(() => {
@@ -158,8 +176,7 @@ function UserIndex(props) {
 
         list();
     }
-
-    function list() {
+    const list = useCallback(() => {
         const requestOptions = {
             method: "GET",
             headers: {
@@ -168,7 +185,7 @@ function UserIndex(props) {
             },
         };
         let Select =
-            "select=id,name,admin,email,mob,created_by_name,created_at";
+            "select=last_online_at,last_offline_at,online,connected_mobiles,connected_tabs,connected_computers,id,name,admin,email,mob,created_by_name,created_at";
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
@@ -222,7 +239,18 @@ function UserIndex(props) {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [cookies, page, pageSize, searchParams, sortField, sortUser]);
+
+    useEffect(() => {
+        if (lastMessage) {
+            const jsonMessage = JSON.parse(lastMessage.data);
+            console.log("Received Message in User list:", jsonMessage);
+            if (jsonMessage.event === "user_status_change" || jsonMessage.event === "user_device_count_change") {
+                console.log("Refreshing user list")
+                list();
+            }
+        }
+    }, [lastMessage, list]);
 
     function sort(field) {
         sortField = field;
@@ -258,6 +286,52 @@ function UserIndex(props) {
         CreateFormRef.current.open();
     }
 
+
+
+    const shortLocale = {
+        ...enUS,
+        formatDistance: (token, count) => {
+            const format = {
+                xSeconds: `${count}s`,
+                xMinutes: `${count}m`,
+                xHours: `${count}h`,
+                xDays: `${count}d`,
+                xMonths: `${count}mo`,
+                xYears: `${count}y`,
+            };
+            return format[token] || "";
+        },
+    };
+
+
+
+    const TimeSince = ({ date }) => {
+        const [timeAgo, setTimeAgo] = useState(() =>
+            " " + formatDistanceToNowStrict(new Date(date), { locale: shortLocale })
+        );
+
+        useEffect(() => {
+            const interval = setInterval(() => {
+                setTimeAgo(" " + formatDistanceToNowStrict(new Date(date), { locale: shortLocale }));
+            }, 60000); // Update every 60 seconds
+
+            return () => clearInterval(interval); // Cleanup on unmount
+        }, [date]);
+
+        return <span>{timeAgo}</span>;
+    };
+
+    const StatusIndicator = ({ user }) => {
+        const statusClass = user.online ? 'status-online' : 'status-offline';
+
+        return (
+            <li className={`list-unstyled ${statusClass}`}>
+                {user.online ? 'Online' : 'Offline'}
+                {user.online && user.last_offline_at ? <TimeSince date={user.last_offline_at} /> : ""}
+                {!user.online && user.last_online_at ? <TimeSince date={user.last_online_at} /> : ""}
+            </li>
+        );
+    };
 
 
     return (
@@ -414,6 +488,25 @@ function UserIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("online");
+                                                        }}
+                                                    >
+                                                        Online
+                                                        {sortField === "online" && sortUser === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "online" && sortUser === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("mob");
                                                         }}
                                                     >
@@ -509,6 +602,17 @@ function UserIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("online", e.target.value);
+                                                        }}
+                                                    >
+                                                        <option value="0" SELECTED>NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -634,6 +738,39 @@ function UserIndex(props) {
                                             {userList &&
                                                 userList.map((user) => (
                                                     <tr key={user.id}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                            {/* Wrapper to keep everything on the same line */}
+                                                            <div className="d-inline-flex align-items-center">
+                                                                {/* Online/Offline Badge */}
+
+                                                                <StatusIndicator user={user} />
+
+                                                                {/* Device Counts */}
+                                                                {user.online && (
+                                                                    <span style={{ marginLeft: "10px" }}>
+                                                                        {user.connected_computers > 0 && (
+                                                                            <span className="d-inline-flex align-items-center me-2">
+                                                                                <i className="bi bi-display me-1"></i> {user.connected_computers}
+                                                                            </span>
+                                                                        )}
+
+                                                                        {user.connected_mobiles > 0 && (
+                                                                            <span className="d-inline-flex align-items-center me-2">
+                                                                                <i className="bi bi-phone me-1"></i> {user.connected_mobiles}
+                                                                            </span>
+                                                                        )}
+
+                                                                        {user.connected_tabs > 0 && (
+                                                                            <span className="d-inline-flex align-items-center">
+                                                                                <i className="bi bi-tablet me-1"></i> {user.connected_tabs}
+                                                                            </span>
+                                                                        )}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        </td>
+
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{user.mob}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{user.name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{user.email}</td>

@@ -53,7 +53,7 @@ function Topbar(props) {
                     >
                         <Dropdown.Item onClick={(e) => {
                             logOut(e);
-                        }} >LotOut</Dropdown.Item>
+                        }} > <i class="bi bi-box-arrow-right"></i> LotOut</Dropdown.Item>
                     </DropdownButton>
 
                     {/*<a href="/"

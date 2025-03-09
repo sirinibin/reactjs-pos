@@ -1,0 +1,26 @@
+/* Custom Bullet Size for Online and Offline Status */
+.status-online,
+.status-offline {
+  position: relative;
+  padding-left: 25px; /* Add space for the bullet */
+}
+
+.status-online::before,
+.status-offline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 12px;   /* Increase bullet size */
+  height: 12px;  /* Increase bullet size */
+  border-radius: 50%;
+}
+
+.status-online::before {
+  background-color: green;
+}
+
+.status-offline::before {
+  background-color: grey;
+}

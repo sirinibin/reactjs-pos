@@ -3,11 +3,11 @@ import avatar from './../avatar.jpg';
 import React, { useState, useEffect } from "react";
 import Footer from './../Footer.js';
 import Cookies from 'universal-cookie';
-import { useHistory } from "react-router-dom";
+//import { useHistory } from "react-router-dom";
 
 function Login() {
 
-    const history = useHistory();
+    // const history = useHistory();
     const [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
     const cookies = new Cookies();
@@ -81,7 +81,8 @@ function Login() {
                 }
 
                 // history.push("/dashboard/analytics");
-                history.push("/dashboard/sales");
+                //history.push("/dashboard/sales");
+                window.location = "/dashboard/sales";
             })
             .catch(error => {
                 setProcessing(false);
