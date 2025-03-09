@@ -608,6 +608,7 @@ function UserIndex(props) {
                                                             searchByFieldValue("online", e.target.value);
                                                         }}
                                                     >
+                                                        <option value="" SELECTED>Select</option>
                                                         <option value="0" SELECTED>NO</option>
                                                         <option value="1">YES</option>
                                                     </select>
