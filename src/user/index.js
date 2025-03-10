@@ -244,9 +244,9 @@ function UserIndex(props) {
     useEffect(() => {
         if (lastMessage) {
             const jsonMessage = JSON.parse(lastMessage.data);
-            console.log("Received Message in User list:", jsonMessage);
+            // console.log("Received Message in User list:", jsonMessage);
             if (jsonMessage.event === "user_status_change" || jsonMessage.event === "user_device_count_change") {
-                console.log("Refreshing user list")
+                // console.log("Refreshing user list")
                 list();
             }
         }

@@ -145,12 +145,12 @@ export const WebSocketProvider = ({ userId, children }) => {
             },
             onMessage: (messageEvent) => {
                 const jsonMessage = JSON.parse(messageEvent.data);
-                console.log("Received Message:", jsonMessage);
+                //console.log("Received Message:", jsonMessage);
 
                 if (jsonMessage.event === "role_updated") {
-                    console.log("Role Updated:", jsonMessage.data.role);
+                    //console.log("Role Updated:", jsonMessage.data.role);
                 } else if (jsonMessage.event === "pong") {
-                    console.log("Pong received:", jsonMessage.data);
+                    //console.log("Pong received:", jsonMessage.data);
                 }
             },
             onError: (errorEvent) => {
@@ -171,7 +171,7 @@ export const WebSocketProvider = ({ userId, children }) => {
             try {
                 const locationInfo = await getUserLocation();
                 sendMessage(JSON.stringify({ event: "location_update", data: locationInfo }));
-                console.log("Sent Location Update:", locationInfo);
+                //console.log("Sent Location Update:", locationInfo);
             } catch (error) {
                 console.error("Error sending location update:", error);
             }
@@ -180,8 +180,8 @@ export const WebSocketProvider = ({ userId, children }) => {
         // Send ping immediately
         sendLocation();
 
-        // Set interval for every 20 seconds
-        const interval = setInterval(sendLocation, 60000);
+        // Set interval for every 3min
+        const interval = setInterval(sendLocation, 180000);
 
         // Cleanup interval on unmount
         return () => {
@@ -197,7 +197,7 @@ export const WebSocketProvider = ({ userId, children }) => {
         const sendPing = () => {
             try {
                 sendMessage(JSON.stringify({ event: "ping", data: { "message": "ping" } }));
-                console.log("Sent Ping at", new Date().toISOString());
+                //console.log("Sent Ping at", new Date().toISOString());
             } catch (error) {
                 console.error("Error sending ping:", error);
             }
@@ -206,8 +206,8 @@ export const WebSocketProvider = ({ userId, children }) => {
         // Send ping immediately
         sendPing();
 
-        // Set interval for every 20 seconds
-        const interval = setInterval(sendPing, 20000);
+        // Set interval for every 60 secs
+        const interval = setInterval(sendPing, 60000);
 
         // Cleanup interval on unmount
         return () => {
