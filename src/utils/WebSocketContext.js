@@ -181,7 +181,7 @@ export const WebSocketProvider = ({ userId, children }) => {
         sendLocation();
 
         // Set interval for every 3min
-        const interval = setInterval(sendLocation, 180000);
+        const interval = setInterval(sendLocation, 60000 * 30);
 
         // Cleanup interval on unmount
         return () => {
@@ -207,7 +207,7 @@ export const WebSocketProvider = ({ userId, children }) => {
         sendPing();
 
         // Set interval for every 60 secs
-        const interval = setInterval(sendPing, 60000);
+        const interval = setInterval(sendPing, 60000 * 5);
 
         // Cleanup interval on unmount
         return () => {
