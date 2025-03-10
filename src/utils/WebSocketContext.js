@@ -118,6 +118,7 @@ export const WebSocketProvider = ({ userId, children }) => {
             reconnectAttempts: 50,
             reconnectInterval: 3000,
             retryOnError: true,
+            heartbeat: true,
 
             onOpen: async () => {
                 console.log("WebSocket Connection Opened");
@@ -148,6 +149,8 @@ export const WebSocketProvider = ({ userId, children }) => {
 
                 if (jsonMessage.event === "role_updated") {
                     console.log("Role Updated:", jsonMessage.data.role);
+                } else if (jsonMessage.event === "pong") {
+                    console.log("Pong received:", jsonMessage.data);
                 }
             },
             onError: (errorEvent) => {
@@ -159,44 +162,58 @@ export const WebSocketProvider = ({ userId, children }) => {
         }
     );
 
+
     useEffect(() => {
         if (!userId) return;
         console.log("WebSocket initialized for userId:", userId);
 
-        if (lastMessage) {
-            console.log("Last message received:", lastMessage.data);
-        }
-
-        // Send location updates every 3 minutes
-        const sendLocationPeriodically = async () => {
-            const sendLocation = async () => {
-                try {
-                    const locationInfo = await getUserLocation();
-                    sendMessage(JSON.stringify({ event: "location_update", data: locationInfo }));
-                    console.log("Sent Location Update:", locationInfo);
-                } catch (error) {
-                    console.error("Error sending location update:", error);
-                }
-            };
-
-            // Send location immediately
-            sendLocation();
-
-            // Set interval to send every 3 minutes (180000 ms)
-            const interval = setInterval(sendLocation, 600000);
-
-            // Cleanup interval on unmount
-            return () => clearInterval(interval);
+        const sendLocation = async () => {
+            try {
+                const locationInfo = await getUserLocation();
+                sendMessage(JSON.stringify({ event: "location_update", data: locationInfo }));
+                console.log("Sent Location Update:", locationInfo);
+            } catch (error) {
+                console.error("Error sending location update:", error);
+            }
         };
 
-        // const cleanup = sendLocationPeriodically();
-        sendLocationPeriodically();
+        // Send ping immediately
+        sendLocation();
 
+        // Set interval for every 20 seconds
+        const interval = setInterval(sendLocation, 60000);
+
+        // Cleanup interval on unmount
         return () => {
-            didUnmount.current = true;
-            //cleanup();
+            clearInterval(interval);
         };
-    }, [userId, lastMessage, sendMessage]);
+    }, [userId, sendMessage]); // Removed lastMessage to avoid unnecessary re-runs
+
+
+    useEffect(() => {
+        if (!userId) return;
+        console.log("WebSocket initialized for userId:", userId);
+
+        const sendPing = () => {
+            try {
+                sendMessage(JSON.stringify({ event: "ping", data: { "message": "ping" } }));
+                console.log("Sent Ping at", new Date().toISOString());
+            } catch (error) {
+                console.error("Error sending ping:", error);
+            }
+        };
+
+        // Send ping immediately
+        sendPing();
+
+        // Set interval for every 20 seconds
+        const interval = setInterval(sendPing, 20000);
+
+        // Cleanup interval on unmount
+        return () => {
+            clearInterval(interval);
+        };
+    }, [userId, sendMessage]); // Removed lastMessage to avoid unnecessary re-runs
 
     return (
         <WebSocketContext.Provider
