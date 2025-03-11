@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useContext, useCallback, useMemo } from "react";
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
 
@@ -20,6 +20,7 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
+import { WebSocketContext } from "./../utils/WebSocketContext.js";
 
 
 import ReactExport from 'react-data-export';
@@ -48,15 +49,19 @@ const TimeAgo = ({ date }) => {
 
 
 const OrderIndex = forwardRef((props, ref) => {
+    const { lastMessage } = useContext(WebSocketContext);
 
-
-    const cookies = new Cookies();
+    const cookies = useMemo(() => new Cookies(), []);
 
 
     let [allOrders, setAllOrders] = useState([]);
     let [excelData, setExcelData] = useState([]);
     let [salesReportFileName, setSalesReportFileName] = useState("Sales Report");
     let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
+
+
+
+
 
     function prepareExcelData() {
         console.log("Inside prepareExcelData()");
@@ -637,19 +642,17 @@ const OrderIndex = forwardRef((props, ref) => {
     let [sortOrder, setSortOrder] = useState("-");
 
 
-    let [totalSales, setTotalSales] = useState(0.00);
-    let [netProfit, setNetProfit] = useState(0.00);
-    let [vatPrice, setVatPrice] = useState(0.00);
-    let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
-    let [totalDiscount, setTotalDiscount] = useState(0.00);
-    let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
-    let [totalPaidSales, setTotalPaidSales] = useState(0.00);
-    let [totalUnPaidSales, setTotalUnPaidSales] = useState(0.00);
-    let [totalCashSales, setTotalCashSales] = useState(0.00);
-    let [totalBankAccountSales, setTotalBankAccountSales] = useState(0.00);
-
-
-    let [loss, setLoss] = useState(0.00);
+    const [totalSales, setTotalSales] = useState(0.00);
+    const [netProfit, setNetProfit] = useState(0.00);
+    const [vatPrice, setVatPrice] = useState(0.00);
+    const [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
+    const [totalDiscount, setTotalDiscount] = useState(0.00);
+    const [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
+    const [totalPaidSales, setTotalPaidSales] = useState(0.00);
+    const [totalUnPaidSales, setTotalUnPaidSales] = useState(0.00);
+    const [totalCashSales, setTotalCashSales] = useState(0.00);
+    const [totalBankAccountSales, setTotalBankAccountSales] = useState(0.00);
+    const [loss, setLoss] = useState(0.00);
 
     let [store, setStore] = useState({});
 
@@ -857,9 +860,12 @@ const OrderIndex = forwardRef((props, ref) => {
         list();
     }
 
-    function list() {
-        excelData = [];
-        setExcelData(excelData);
+
+    const [statsOpen, setStatsOpen] = useState(false);
+
+    const list = useCallback(() => {
+        setExcelData([]);
+
         const requestOptions = {
             method: "GET",
             headers: {
@@ -879,6 +885,7 @@ const OrderIndex = forwardRef((props, ref) => {
         console.log("Timezone:", parseFloat(diff / 60));
         searchParams["timezone_offset"] = parseFloat(diff / 60);
 
+        console.log("statsOpen:", statsOpen);
         if (statsOpen) {
             searchParams["stats"] = "1";
         } else {
@@ -927,42 +934,18 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalPages(pageCount);
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
-                console.log("data.result.length:", data.result.length);
-                currentPageItemsCount = data.result.length;
                 setCurrentPageItemsCount(data.result.length);
-
-                totalSales = data.meta.total_sales;
-                setTotalSales(totalSales);
-
-                netProfit = data.meta.net_profit;
-                setNetProfit(netProfit);
-
-                loss = data.meta.net_loss;
-                setLoss(loss);
-
-                vatPrice = data.meta.vat_price;
-                setVatPrice(vatPrice);
-
-                totalShippingHandlingFees = data.meta.shipping_handling_fees;
-                setTotalShippingHandlingFees(totalShippingHandlingFees);
-
-                totalDiscount = data.meta.discount;
-                setTotalDiscount(totalDiscount);
-
-                totalCashDiscount = data.meta.cash_discount;
-                setTotalCashDiscount(totalCashDiscount);
-
-                totalPaidSales = data.meta.paid_sales;
-                setTotalPaidSales(totalPaidSales);
-
-                totalUnPaidSales = data.meta.unpaid_sales;
-                setTotalUnPaidSales(totalUnPaidSales);
-
-                totalCashSales = data.meta.cash_sales;
-                setTotalCashSales(totalCashSales);
-
-                totalBankAccountSales = data.meta.bank_account_sales;
-                setTotalBankAccountSales(totalBankAccountSales);
+                setTotalSales(data.meta.total_sales);
+                setNetProfit(data.meta.net_profit);
+                setLoss(data.meta.net_loss);
+                setVatPrice(data.meta.vat_price);
+                setTotalShippingHandlingFees(data.meta.shipping_handling_fees);
+                setTotalDiscount(data.meta.discount);
+                setTotalCashDiscount(data.meta.cash_discount);
+                setTotalPaidSales(data.meta.paid_sales);
+                setTotalUnPaidSales(data.meta.unpaid_sales);
+                setTotalCashSales(data.meta.cash_sales);
+                setTotalBankAccountSales(data.meta.bank_account_sales);
 
             })
             .catch((error) => {
@@ -970,7 +953,30 @@ const OrderIndex = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [sortOrder, sortField, page, pageSize, statsOpen, cookies, searchParams]);
+
+
+    const handleSummaryToggle = (isOpen) => {
+        setStatsOpen(isOpen);
+    };
+
+    useEffect(() => {
+        if (statsOpen) {
+            list();  // Call list() whenever statsOpen changes to true
+        }
+    }, [statsOpen, list]);
+
+
+    useEffect(() => {
+        if (lastMessage) {
+            const jsonMessage = JSON.parse(lastMessage.data);
+            // console.log("Received Message in User list:", jsonMessage);
+            if (jsonMessage.event === "sales_updated") {
+                // console.log("Refreshing user list")
+                list();
+            }
+        }
+    }, [lastMessage, list]);
 
     function sort(field) {
         sortField = field;
@@ -1138,16 +1144,7 @@ const OrderIndex = forwardRef((props, ref) => {
     const [successMessage, setSuccessMessage] = useState(false);
 
 
-    let [statsOpen, setStatsOpen] = useState(false);
-    const handleSummaryToggle = (isOpen) => {
-        console.log("isOpen:" + isOpen);
-        statsOpen = isOpen
-        setStatsOpen(statsOpen)
 
-        if (isOpen) {
-            list(); // Fetch stats only if it's opened and not fetched before
-        }
-    };
 
 
     return (

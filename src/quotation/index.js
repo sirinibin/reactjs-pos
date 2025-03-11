@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useContext, useCallback } from "react";
 import QuotationCreate from "./create.js";
 import QuotationView from "./view.js";
 import Cookies from "universal-cookie";
@@ -12,9 +12,11 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
+import { WebSocketContext } from "./../utils/WebSocketContext.js";
 
 function QuotationIndex(props) {
-  const cookies = new Cookies();
+  const { lastMessage } = useContext(WebSocketContext);
+  const cookies = useMemo(() => new Cookies(), []);
 
   let [totalQuotation, setTotalQuotation] = useState(0.00);
   let [profit, setProfit] = useState(0.00);
@@ -262,7 +264,11 @@ function QuotationIndex(props) {
     list();
   }
 
-  function list() {
+
+  let [statsOpen, setStatsOpen] = useState(false);
+
+
+  const list = useCallback(() => {
     const requestOptions = {
       method: "GET",
       headers: {
@@ -329,15 +335,9 @@ function QuotationIndex(props) {
         setTotalItems(data.total_count);
         setOffset((page - 1) * pageSize);
         setCurrentPageItemsCount(data.result.length);
-
-        totalQuotation = data.meta.total_quotation;
-        setTotalQuotation(totalQuotation);
-
-        profit = data.meta.profit;
-        setProfit(profit);
-
-        loss = data.meta.loss;
-        setLoss(loss);
+        setTotalQuotation(data.meta.total_quotation);
+        setProfit(data.meta.profit);
+        setLoss(data.meta.loss);
 
       })
       .catch((error) => {
@@ -345,7 +345,29 @@ function QuotationIndex(props) {
         setIsRefreshInProcess(false);
         console.log(error);
       });
-  }
+  }, [sortOrder, sortField, page, pageSize, statsOpen, cookies, searchParams]);
+
+  const handleSummaryToggle = (isOpen) => {
+    statsOpen = isOpen
+    setStatsOpen(statsOpen)
+  };
+
+  useEffect(() => {
+    if (statsOpen) {
+      list();  // Call list() whenever statsOpen changes to true
+    }
+  }, [statsOpen, list]);
+
+
+  useEffect(() => {
+    if (lastMessage) {
+      const jsonMessage = JSON.parse(lastMessage.data);
+      console.log("Received Message in User list:", jsonMessage);
+      if (jsonMessage.event === "quotation_updated") {
+        list();
+      }
+    }
+  }, [lastMessage, list]);
 
   function sort(field) {
     sortField = field;
@@ -381,15 +403,7 @@ function QuotationIndex(props) {
     CreateFormRef.current.open();
   }
 
-  let [statsOpen, setStatsOpen] = useState(false);
-  const handleSummaryToggle = (isOpen) => {
-    statsOpen = isOpen
-    setStatsOpen(statsOpen)
 
-    if (isOpen) {
-      list(); // Fetch stats only if it's opened and not fetched before
-    }
-  };
 
   return (
     <>

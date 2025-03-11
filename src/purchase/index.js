@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useContext, useCallback } from "react";
 import PurchaseCreate from "./create.js";
 import PurchaseView from "./view.js";
 import Cookies from "universal-cookie";
@@ -15,6 +15,7 @@ import PurchaseReturnIndex from "./../purchase_return/index.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
+import { WebSocketContext } from "./../utils/WebSocketContext.js";
 
 
 import ReactExport from 'react-data-export';
@@ -22,7 +23,8 @@ const ExcelFile = ReactExport.ExcelFile;
 const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function PurchaseIndex(props) {
-    const cookies = new Cookies();
+    const { lastMessage } = useContext(WebSocketContext);
+    const cookies = useMemo(() => new Cookies(), []);
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
@@ -585,9 +587,12 @@ function PurchaseIndex(props) {
     let [totalCashPurchase, setTotalCashPurchase] = useState(0.00);
     let [totalBankAccountPurchase, setTotalBankAccountPurchase] = useState(0.00);
 
-    function list() {
-        excelData = [];
-        setExcelData(excelData);
+
+    let [statsOpen, setStatsOpen] = useState(false);
+
+
+    const list = useCallback(() => {
+        setExcelData([]);
         const requestOptions = {
             method: "GET",
             headers: {
@@ -604,7 +609,12 @@ function PurchaseIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        searchParams["stats"] = "1";
+
+        if (statsOpen) {
+            searchParams["stats"] = "1";
+        } else {
+            searchParams["stats"] = "0";
+        }
 
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -648,40 +658,17 @@ function PurchaseIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
-
-                totalPurchase = data.meta.total_purchase;
-                setTotalPurchase(totalPurchase);
-
-                vatPrice = data.meta.vat_price;
-                setVatPrice(vatPrice);
-
-                totalShippingHandlingFees = data.meta.shipping_handling_fees;
-                setTotalShippingHandlingFees(totalShippingHandlingFees);
-
-                totalDiscount = data.meta.discount;
-                setTotalDiscount(totalDiscount);
-
-                totalCashDiscount = data.meta.cash_discount;
-                setTotalCashDiscount(totalCashDiscount);
-
-
-                netRetailProfit = data.meta.net_retail_profit;
-                setNetRetailProfit(netRetailProfit);
-
-                netWholesaleProfit = data.meta.net_wholesale_profit;
-                setNetWholesaleProfit(netWholesaleProfit);
-
-                totalPaidPurchase = data.meta.paid_purchase;
-                setTotalPaidPurchase(totalPaidPurchase);
-
-                totalUnPaidPurchase = data.meta.unpaid_purchase;
-                setTotalUnPaidPurchase(totalUnPaidPurchase);
-
-                totalCashPurchase = data.meta.cash_purchase;
-                setTotalCashPurchase(totalCashPurchase);
-
-                totalBankAccountPurchase = data.meta.bank_account_purchase
-                setTotalBankAccountPurchase(totalBankAccountPurchase);
+                setTotalPurchase(data.meta.total_purchase);
+                setVatPrice(data.meta.vat_price);
+                setTotalShippingHandlingFees(data.meta.shipping_handling_fees);
+                setTotalDiscount(data.meta.discount);
+                setTotalCashDiscount(data.meta.cash_discount);
+                setNetRetailProfit(data.meta.net_retail_profit);
+                setNetWholesaleProfit(data.meta.net_wholesale_profit);
+                setTotalPaidPurchase(data.meta.paid_purchase);
+                setTotalUnPaidPurchase(data.meta.unpaid_purchase);
+                setTotalCashPurchase(data.meta.cash_purchase);
+                setTotalBankAccountPurchase(data.meta.bank_account_purchase);
 
             })
             .catch((error) => {
@@ -689,7 +676,29 @@ function PurchaseIndex(props) {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [sortOrder, sortField, page, pageSize, statsOpen, cookies, searchParams]);
+
+    const handleSummaryToggle = (isOpen) => {
+        statsOpen = isOpen
+        setStatsOpen(statsOpen)
+    };
+
+    useEffect(() => {
+        if (statsOpen) {
+            list();  // Call list() whenever statsOpen changes to true
+        }
+    }, [statsOpen, list]);
+
+
+    useEffect(() => {
+        if (lastMessage) {
+            const jsonMessage = JSON.parse(lastMessage.data);
+            console.log("Received Message in User list:", jsonMessage);
+            if (jsonMessage.event === "purchase_updated") {
+                list();
+            }
+        }
+    }, [lastMessage, list]);
 
     function sort(field) {
         sortField = field;
@@ -766,15 +775,7 @@ function PurchaseIndex(props) {
 
     const PurchaseReturnListRef = useRef();
 
-    let [statsOpen, setStatsOpen] = useState(false);
-    const handleSummaryToggle = (isOpen) => {
-        statsOpen = isOpen
-        setStatsOpen(statsOpen)
 
-        if (isOpen) {
-            list(); // Fetch stats only if it's opened and not fetched before
-        }
-    };
 
     return (
         <>

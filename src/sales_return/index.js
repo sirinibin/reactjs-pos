@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useContext, useCallback } from "react";
 import SalesReturnCreate from "./create.js";
 import SalesReturnView from "./view.js";
 import Cookies from "universal-cookie";
@@ -19,6 +19,7 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
+import { WebSocketContext } from "./../utils/WebSocketContext.js";
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -44,7 +45,9 @@ const TimeAgo = ({ date }) => {
 };
 
 function SalesReturnIndex(props) {
-    const cookies = new Cookies();
+    const { lastMessage } = useContext(WebSocketContext);
+    let [statsOpen, setStatsOpen] = useState(false);
+    const cookies = useMemo(() => new Cookies(), []);
 
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
@@ -862,9 +865,8 @@ function SalesReturnIndex(props) {
         list();
     }
 
-    function list() {
-        excelData = [];
-        setExcelData(excelData);
+    const list = useCallback(() => {
+        setExcelData([]);
 
         const requestOptions = {
             method: "GET",
@@ -936,39 +938,17 @@ function SalesReturnIndex(props) {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
-
-                totalSalesReturn = data.meta.total_sales_return;
-                setTotalSalesReturn(totalSalesReturn);
-
-                netProfit = data.meta.net_profit;
-                setNetProfit(netProfit);
-
-                loss = data.meta.net_loss;
-                setLoss(loss);
-
-                vatPrice = data.meta.vat_price;
-                setVatPrice(vatPrice);
-
-                totalShippingHandlingFees = data.meta.shipping_handling_fees;
-                setTotalShippingHandlingFees(totalShippingHandlingFees);
-
-                totalDiscount = data.meta.discount;
-                setTotalDiscount(totalDiscount);
-
-                totalCashDiscount = data.meta.cash_discount;
-                setTotalCashDiscount(totalCashDiscount);
-
-                totalPaidSalesReturn = data.meta.paid_sales_return;
-                setTotalPaidSalesReturn(totalPaidSalesReturn);
-
-                totalUnPaidSalesReturn = data.meta.unpaid_sales_return;
-                setTotalUnPaidSalesReturn(totalUnPaidSalesReturn);
-
-                totalCashSalesReturn = data.meta.cash_sales_return;
-                setTotalCashSalesReturn(totalCashSalesReturn);
-
-                totalBankAccountSalesReturn = data.meta.bank_account_sales_return;
-                setTotalBankAccountSalesReturn(totalBankAccountSalesReturn);
+                setTotalSalesReturn(data.meta.total_sales_return);
+                setNetProfit(data.meta.net_profit);
+                setLoss(data.meta.net_loss);
+                setVatPrice(data.meta.vat_price);
+                setTotalShippingHandlingFees(data.meta.shipping_handling_fees);
+                setTotalDiscount(data.meta.discount);
+                setTotalCashDiscount(data.meta.cash_discount);
+                setTotalPaidSalesReturn(data.meta.paid_sales_return);
+                setTotalUnPaidSalesReturn(data.meta.unpaid_sales_return);
+                setTotalCashSalesReturn(data.meta.cash_sales_return);
+                setTotalBankAccountSalesReturn(data.meta.bank_account_sales_return);
 
             })
             .catch((error) => {
@@ -976,7 +956,25 @@ function SalesReturnIndex(props) {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }
+    }, [sortSalesReturn, sortField, page, pageSize, statsOpen, cookies, searchParams, props.order]);
+
+    useEffect(() => {
+        if (statsOpen) {
+            list();  // Call list() whenever statsOpen changes to true
+        }
+    }, [statsOpen, list]);
+
+
+    useEffect(() => {
+        if (lastMessage) {
+            const jsonMessage = JSON.parse(lastMessage.data);
+            console.log("Received Message in User list:", jsonMessage);
+            if (jsonMessage.event === "sales_return_updated") {
+                // console.log("Refreshing user list")
+                list();
+            }
+        }
+    }, [lastMessage, list]);
 
     function sort(field) {
         sortField = field;
@@ -1097,14 +1095,10 @@ function SalesReturnIndex(props) {
 
     const SalesReturnPaymentListRef = useRef();
 
-    let [statsOpen, setStatsOpen] = useState(false);
+
     const handleSummaryToggle = (isOpen) => {
         statsOpen = isOpen
-        setStatsOpen(statsOpen)
-
-        if (isOpen) {
-            list(); // Fetch stats only if it's opened and not fetched before
-        }
+        setStatsOpen(statsOpen);
     };
 
     return (

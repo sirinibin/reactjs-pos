@@ -392,7 +392,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       "select=id,item_code,bar_code,name,product_stores,unit,part_number,name_in_arabic";
     setIsProductsLoading(true);
     let result = await fetch(
-      "/v1/product?" + Select + queryString + "&limit=200",
+      "/v1/product?" + Select + queryString + "&limit=50",
       requestOptions
     );
     let data = await result.json();
