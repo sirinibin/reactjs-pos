@@ -123,6 +123,7 @@ export const WebSocketProvider = ({ userId, children }) => {
 
             onOpen: async () => {
                 console.log("WebSocket Connection Opened");
+                eventEmitter.emit("socket_connection_open"); // Emit event to other components
 
                 try {
                     const systemInfo = await getDeviceFingerprint();
@@ -141,7 +142,7 @@ export const WebSocketProvider = ({ userId, children }) => {
                     console.error("Error fetching location:", error);
                 }
 
-                eventEmitter.emit("socket_connection_open"); // Emit event to other components
+
             },
             onClose: () => {
                 console.log("WebSocket Connection Closed");
