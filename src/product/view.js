@@ -4,7 +4,7 @@ import Cookies from "universal-cookie";
 import NumberFormat from "react-number-format";
 
 //let ThermalPrinterEncoder = require('thermal-printer-encoder');
-import ThermalPrinterEncoder from 'thermal-printer-encoder';
+//import ThermalPrinterEncoder from 'thermal-printer-encoder';
 
 import { Button } from "react-bootstrap";
 import SalesHistory from "./sales_history.js";
@@ -91,6 +91,7 @@ const ProductView = forwardRef((props, ref) => {
 
 
 
+    /*
     function printBarCode(event) {
         console.log("Clicked:");
 
@@ -150,7 +151,7 @@ const ProductView = forwardRef((props, ref) => {
         });
         */
 
-    }
+    //}
 
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {
@@ -183,6 +184,48 @@ const ProductView = forwardRef((props, ref) => {
     function openDeliveryNoteHistory(model) {
         DeliveryNoteHistoryRef.current.open(model);
     }
+
+
+    const PrintBarcode = ({ base64Barcode, productName }) => {
+        const handlePrint = () => {
+            const printWindow = window.open("", "_blank");
+            printWindow.document.write(`
+            <html>
+              <head>
+              <title>${productName}</title> 
+                <style>
+                  @media print {
+                    @page {
+                      size: 35mm 25mm; /* Label size */
+                      margin: 0; /* No extra margins */
+                    }
+                    body {
+                      margin: 0;
+                      padding: 0;
+                      display: flex;
+                      justify-content: center;
+                      align-items: center;
+                      height: 25mm;
+                    }
+                    img {
+                      width: 35mm;
+                      height: 25mm;
+                      object-fit: contain; /* Ensures it fits perfectly */
+                    }
+                  }
+                </style>
+              </head>
+              <body>
+                <img src="${base64Barcode}" />
+                <script>window.print(); window.close();</script>
+              </body>
+            </html>
+          `);
+            printWindow.document.close();
+        };
+
+        return <button onClick={handlePrint}>Print Barcode</button>;
+    };
 
     return (<>
         <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
@@ -340,9 +383,9 @@ const ProductView = forwardRef((props, ref) => {
                                 <img alt="Barcode" src={model.barcode_base64} style={{
                                     width: "400px",
                                     height: "300px",
-                                }} onClick={printBarCode} />
+                                }} />
 
-
+                                <PrintBarcode base64Barcode={model.barcode_base64} productName={model.name} />
                             </td>
                             <th>Name:</th><td> {model.name}</td>
                             <th>Name(in Arabic):</th><td> {model.name_in_arabic}</td>
