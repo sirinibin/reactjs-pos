@@ -21,6 +21,7 @@
     "http-proxy-middleware": "^2.0.2",
     "js-cookie": "^3.0.5",
     "lucide-react": "^0.477.0",
+    "mitt": "^3.0.1",
     "n2words": "^1.10.1",
     "number-to-words": "^1.2.4",
     "qrcode.react": "^4.2.0",

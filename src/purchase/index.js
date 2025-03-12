@@ -16,6 +16,7 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
+import eventEmitter from "./../utils/eventEmitter";
 
 
 import ReactExport from 'react-data-export';
@@ -699,6 +700,19 @@ function PurchaseIndex(props) {
             }
         }
     }, [lastMessage, list]);
+
+    useEffect(() => {
+        const handleSocketOpen = () => {
+            //console.log("WebSocket Opened in sales list");
+            list();
+        };
+
+        eventEmitter.on("socket_connection_open", handleSocketOpen);
+
+        return () => {
+            eventEmitter.off("socket_connection_open", handleSocketOpen); // Cleanup
+        };
+    }, [list]); // Runs only once when component mounts
 
     function sort(field) {
         sortField = field;

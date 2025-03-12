@@ -1,6 +1,7 @@
 import { createContext, useEffect, useRef } from "react";
 import useWebSocket from "react-use-websocket";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
+import eventEmitter from "./eventEmitter"; // Import event emitter
 
 export const WebSocketContext = createContext();
 
@@ -125,11 +126,11 @@ export const WebSocketProvider = ({ userId, children }) => {
 
                 try {
                     const systemInfo = await getDeviceFingerprint();
-                    const locationInfo = await getUserLocation();
+                    //const locationInfo = await getUserLocation();
 
                     const fullDeviceInfo = {
                         ...systemInfo,
-                        location: locationInfo, // Matches Golang struct field name
+                        //   location: locationInfo, // Matches Golang struct field name
                     };
 
                     console.log("Sending System & Location Info:", fullDeviceInfo);
@@ -139,6 +140,8 @@ export const WebSocketProvider = ({ userId, children }) => {
                 } catch (error) {
                     console.error("Error fetching location:", error);
                 }
+
+                eventEmitter.emit("socket_connection_open"); // Emit event to other components
             },
             onClose: () => {
                 console.log("WebSocket Connection Closed");
@@ -180,7 +183,7 @@ export const WebSocketProvider = ({ userId, children }) => {
         // Send ping immediately
         sendLocation();
 
-        // Set interval for every 3min
+        // Set interval for every 30min
         const interval = setInterval(sendLocation, 60000 * 30);
 
         // Cleanup interval on unmount
@@ -206,7 +209,7 @@ export const WebSocketProvider = ({ userId, children }) => {
         // Send ping immediately
         sendPing();
 
-        // Set interval for every 60 secs
+        // Set interval for every 5min
         const interval = setInterval(sendPing, 60000 * 5);
 
         // Cleanup interval on unmount
