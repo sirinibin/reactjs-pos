@@ -216,6 +216,8 @@ function ProductIndex(props) {
             // setSelectedCreatedByProducts(values);
         } else if (field === "category_id") {
             setSelectedProductCategories(values);
+        } else if (field === "product_id") {
+            setSelectedProducts(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -442,6 +444,69 @@ function ProductIndex(props) {
     }
     */
 
+    const [productOptions, setProductOptions] = useState([]);
+    //let [selectedProduct, setSelectedProduct] = useState([]);
+    // let [selectedProducts, setSelectedProducts] = useState([]);
+    let [selectedProducts, setSelectedProducts] = useState([]);
+    const [isProductsLoading, setIsProductsLoading] = useState(false);
+    let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
+
+    async function suggestProducts(searchTerm) {
+        console.log("Inside handle suggestProducts");
+        setProductOptions([]);
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            openProductSearchResult = false;
+            setOpenProductSearchResult(false);
+            return;
+        }
+
+        var params = {
+            search_text: searchTerm,
+        };
+
+        if (cookies.get("store_id")) {
+            params.store_id = cookies.get("store_id");
+        }
+
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = `select=id,item_code,part_number,name,unit,part_number,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
+        setIsProductsLoading(true);
+        let result = await fetch(
+            "/v1/product?" + Select + queryString + "&limit=20",
+            requestOptions
+        );
+        let data = await result.json();
+
+        let products = data.result;
+        if (!products || products.length === 0) {
+            openProductSearchResult = false;
+            setOpenProductSearchResult(false);
+            setIsProductsLoading(false);
+            return;
+        }
+
+        openProductSearchResult = true;
+        setOpenProductSearchResult(true);
+        setProductOptions(products);
+        setIsProductsLoading(false);
+
+    }
+
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {
         SalesHistoryRef.current.open(model);
@@ -484,6 +549,8 @@ function ProductIndex(props) {
             list(); // Fetch stats only if it's opened and not fetched before
         }
     };
+
+
 
     return (
         <>
@@ -1419,7 +1486,7 @@ function ProductIndex(props) {
                                                 </th>
 
                                                 <th>
-                                                    <input
+                                                    {/*<input
                                                         style={{ minWidth: "275px" }}
                                                         type="text"
                                                         id="name"
@@ -1427,6 +1494,58 @@ function ProductIndex(props) {
                                                             searchByFieldValue("name", e.target.value)
                                                         }
                                                         className="form-control"
+                                                    />
+                                                    <Typeahead
+                                                        id="product_id"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "category_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={categoryOptions}
+                                                        placeholder="Select Categories"
+                                                        selected={selectedProductCategories}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestCategories(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />*/}
+
+                                                    <Typeahead
+                                                        id="product_id"
+                                                        size="lg"
+                                                        labelKey="search_label"
+                                                        emptyLabel=""
+                                                        clearButton={false}
+                                                        open={openProductSearchResult}
+                                                        isLoading={isProductsLoading}
+                                                        onChange={(selectedItems) => {
+
+                                                            /*
+                                                            if (selectedItems.length === 0) {
+                                                                return;
+                                                            }*/
+
+                                                            searchByMultipleValuesField(
+                                                                "product_id",
+                                                                selectedItems
+                                                            );
+
+                                                            // addProduct(selectedItems[0]);
+
+                                                            setOpenProductSearchResult(false);
+                                                        }}
+                                                        options={productOptions}
+                                                        selected={selectedProducts}
+                                                        placeholder="Search By Name | Name in Arabic"
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestProducts(searchTerm);
+                                                        }}
+                                                        multiple
                                                     />
                                                 </th>
                                                 <th>

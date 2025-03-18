@@ -438,7 +438,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         var params = {
-            name: searchTerm,
+            search_text: searchTerm,
         };
 
         if (cookies.get("store_id")) {
