@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import ProductCreate from "./create.js";
 import ProductJson from "./json.js";
 import ProductView from "./view.js";
@@ -21,10 +21,11 @@ import DeliveryNoteHistory from "./delivery_note_history.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 import StatsSummary from "../utils/StatsSummary.js";
+import debounce from 'lodash.debounce';
 
 function ProductIndex(props) {
 
-    const cookies = new Cookies();
+    const cookies = useMemo(() => new Cookies(), []);
 
     // const selectedDate = new Date();
 
@@ -451,13 +452,16 @@ function ProductIndex(props) {
     const [isProductsLoading, setIsProductsLoading] = useState(false);
     let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
-    async function suggestProducts(searchTerm) {
+
+
+    const suggestProducts = useCallback(async (searchTerm) => {
+        //async function suggestProducts(searchTerm) {
         console.log("Inside handle suggestProducts");
         setProductOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
-            openProductSearchResult = false;
+            //openProductSearchResult = false;
             setOpenProductSearchResult(false);
             return;
         }
@@ -486,26 +490,40 @@ function ProductIndex(props) {
 
         let Select = `select=id,part_number,name,part_number,name_in_arabic`;
         setIsProductsLoading(true);
+
         let result = await fetch(
-            "/v1/product?" + Select + queryString + "&limit=20",
+            "/v1/product?" + Select + queryString + "&limit=200",
             requestOptions
-        );
+        )
         let data = await result.json();
 
         let products = data.result;
         if (!products || products.length === 0) {
-            openProductSearchResult = false;
+            //openProductSearchResult = false;
             setOpenProductSearchResult(false);
             setIsProductsLoading(false);
             return;
         }
 
-        openProductSearchResult = true;
+        //openProductSearchResult = true;
         setOpenProductSearchResult(true);
         setProductOptions(products);
         setIsProductsLoading(false);
 
-    }
+    }, [cookies]);
+
+    const debouncedSuggestProducts = useMemo(
+        () => debounce((searchTerm) => {
+            console.log("Inside debounce", searchTerm);
+            suggestProducts(searchTerm);
+        }, 400),
+        [suggestProducts]
+    );
+
+    // Then in your input change handler:
+    const handleSuggestProducts = (searchTerm) => {
+        debouncedSuggestProducts(searchTerm);
+    };
 
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {
@@ -1543,7 +1561,8 @@ function ProductIndex(props) {
                                                         placeholder="Search By Name | Name in Arabic"
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
-                                                            suggestProducts(searchTerm);
+                                                            handleSuggestProducts(searchTerm)
+
                                                         }}
                                                         multiple
                                                     />

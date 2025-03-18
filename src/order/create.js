@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo, useCallback } from "react";
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -19,6 +19,7 @@ import { DebounceInput } from 'react-debounce-input';
 import ProductView from "./../product/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { Spinner } from "react-bootstrap";
+import debounce from 'lodash.debounce';
 
 const OrderCreate = forwardRef((props, ref) => {
 
@@ -279,7 +280,7 @@ const OrderCreate = forwardRef((props, ref) => {
         "payment_amount": [],
     });
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+    const cookies = useMemo(() => new Cookies(), []);
 
     //fields
     let [formData, setFormData] = useState({
@@ -426,13 +427,13 @@ const OrderCreate = forwardRef((props, ref) => {
 
     let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
-    async function suggestProducts(searchTerm) {
+    const suggestProducts = useCallback(async (searchTerm) => {
         console.log("Inside handle suggestProducts");
         setProductOptions([]);
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
-            openProductSearchResult = false;
+            // openProductSearchResult = false;
             setOpenProductSearchResult(false);
             return;
         }
@@ -462,25 +463,39 @@ const OrderCreate = forwardRef((props, ref) => {
         let Select = `select=id,item_code,part_number,name,unit,part_number,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
         setIsProductsLoading(true);
         let result = await fetch(
-            "/v1/product?" + Select + queryString + "&limit=20",
+            "/v1/product?" + Select + queryString + "&limit=200",
             requestOptions
         );
         let data = await result.json();
 
         let products = data.result;
         if (!products || products.length === 0) {
-            openProductSearchResult = false;
+            // openProductSearchResult = false;
             setOpenProductSearchResult(false);
             setIsProductsLoading(false);
             return;
         }
 
-        openProductSearchResult = true;
+        // openProductSearchResult = true;
         setOpenProductSearchResult(true);
         setProductOptions(products);
         setIsProductsLoading(false);
 
-    }
+    }, [cookies]);
+
+    const debouncedSuggestProducts = useMemo(
+        () => debounce((searchTerm) => {
+            console.log("Inside debounce", searchTerm);
+            suggestProducts(searchTerm);
+        }, 400),
+        [suggestProducts]
+    );
+
+    // Then in your input change handler:
+    const handleSuggestProducts = (searchTerm) => {
+        debouncedSuggestProducts(searchTerm);
+    };
+
 
     async function getProductByBarCode(barcode) {
         formData.barcode = barcode;
@@ -1655,7 +1670,7 @@ function findDiscount() {
                                 placeholder="Search By Part No. / Name / Name in Arabic"
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
-                                    suggestProducts(searchTerm);
+                                    handleSuggestProducts(searchTerm);
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
