@@ -21,7 +21,7 @@ import DeliveryNoteHistory from "./delivery_note_history.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 import StatsSummary from "../utils/StatsSummary.js";
-import debounce from 'lodash.debounce';
+//import debounce from 'lodash.debounce';
 
 function ProductIndex(props) {
 
@@ -512,6 +512,7 @@ function ProductIndex(props) {
 
     }, [cookies]);
 
+    /*
     const debouncedSuggestProducts = useMemo(
         () => debounce((searchTerm) => {
             console.log("Inside debounce", searchTerm);
@@ -524,6 +525,7 @@ function ProductIndex(props) {
     const handleSuggestProducts = (searchTerm) => {
         debouncedSuggestProducts(searchTerm);
     };
+    */
 
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {
@@ -1561,8 +1563,7 @@ function ProductIndex(props) {
                                                         placeholder="Search By Name | Name in Arabic"
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
-                                                            handleSuggestProducts(searchTerm)
-
+                                                            suggestProducts(searchTerm)
                                                         }}
                                                         multiple
                                                     />

@@ -19,7 +19,7 @@ import { DebounceInput } from 'react-debounce-input';
 import ProductView from "./../product/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { Spinner } from "react-bootstrap";
-import debounce from 'lodash.debounce';
+//import debounce from 'lodash.debounce';
 
 const OrderCreate = forwardRef((props, ref) => {
 
@@ -483,6 +483,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     }, [cookies]);
 
+    /*
     const debouncedSuggestProducts = useMemo(
         () => debounce((searchTerm) => {
             console.log("Inside debounce", searchTerm);
@@ -495,6 +496,7 @@ const OrderCreate = forwardRef((props, ref) => {
     const handleSuggestProducts = (searchTerm) => {
         debouncedSuggestProducts(searchTerm);
     };
+    */
 
 
     async function getProductByBarCode(barcode) {
@@ -1670,7 +1672,8 @@ function findDiscount() {
                                 placeholder="Search By Part No. / Name / Name in Arabic"
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
-                                    handleSuggestProducts(searchTerm);
+                                    //handleSuggestProducts(searchTerm);
+                                    suggestProducts(searchTerm);
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
