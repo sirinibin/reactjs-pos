@@ -459,10 +459,10 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,item_code,bar_code,part_number,name,unit,part_number,name_in_arabic,product_stores";
+        let Select = `select=id,item_code,part_number,name,unit,part_number,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
         setIsProductsLoading(true);
         let result = await fetch(
-            "/v1/product?" + Select + queryString + "&limit=200",
+            "/v1/product?" + Select + queryString + "&limit=20",
             requestOptions
         );
         let data = await result.json();
@@ -516,7 +516,7 @@ const OrderCreate = forwardRef((props, ref) => {
             queryParams = "&" + queryParams;
         }
 
-        let Select = "select=id,item_code,bar_code,ean_12,part_number,name,product_stores,unit,part_number,name_in_arabic";
+        let Select = "select=id,item_code,part_number,name,product_stores,unit,part_number,name_in_arabic";
         let result = await fetch(
             "/v1/product/barcode/" + formData.barcode + "?" + Select + queryParams,
             requestOptions
@@ -816,10 +816,16 @@ const OrderCreate = forwardRef((props, ref) => {
             return;
         }
 
+        if (product.product_stores[formData.store_id]?.retail_unit_price) {
+            product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+        }
+
+        if (product.product_stores[formData.store_id]?.purchase_unit_price) {
+            product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+        }
+
 
         if (product.product_stores[formData.store_id]) {
-            product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
-            product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
             product.unit_discount = 0.00;
             product.unit_discount_percent = 0.00;
         }
@@ -853,7 +859,7 @@ const OrderCreate = forwardRef((props, ref) => {
         //let stock = GetProductStockInStore(formData.store_id, product.stores);
         let stock = 0;
 
-        if (product.product_stores[formData.store_id]) {
+        if (product.product_stores[formData.store_id]?.stock) {
             stock = product.product_stores[formData.store_id].stock;
         }
 
@@ -880,7 +886,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 quantity: product.quantity,
                 product_stores: product.product_stores,
                 unit_price: product.unit_price,
-                unit: product.unit,
+                unit: product.unit ? product.unit : "",
                 purchase_unit_price: product.purchase_unit_price,
                 unit_discount: product.unit_discount,
                 unit_discount_percent: product.unit_discount_percent,
@@ -1397,6 +1403,13 @@ function findDiscount() {
                                 })}
                             </ul></div> : ""}
 
+                    {errors.reporting_to_zatca && (<div style={{ marginBottom: "30px" }}>
+                        <input type="checkbox" checked={formData.skip_zatca_reporting} onChange={(e) => {
+                            formData.skip_zatca_reporting = !formData.skip_zatca_reporting;
+                            setFormData({ ...formData });
+                        }} /> Report Later to Zatca
+                    </div>)}
+
                     <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
                         {!cookies.get('store_name') ? <div className="col-md-6">
                             <label className="form-label">Store*</label>
@@ -1429,7 +1442,7 @@ function findDiscount() {
                                                 let stock = 0;
                                                 if (selectedProduct[0].product_stores) {
                                                     //stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stores);
-                                                    if (selectedProduct[0].product_stores[formData.store_id]) {
+                                                    if (selectedProduct[0].product_stores[formData.store_id]?.stock) {
                                                         stock = selectedProduct[0].product_stores[formData.store_id].stock
                                                     }
                                                 }
@@ -1446,7 +1459,7 @@ function findDiscount() {
                                             } else if (selectedProduct[0] && selectedProduct[0].product_stores) {
                                                 let stock = 0;
                                                 //stock = GetProductStockInStore(formData.store_id, selectedProduct[0].stores);
-                                                if (selectedProduct[0].product_stores[formData.store_id]) {
+                                                if (selectedProduct[0].product_stores[formData.store_id]?.stock) {
                                                     stock = selectedProduct[0].product_stores[formData.store_id].stock
                                                 }
 
@@ -1462,7 +1475,7 @@ function findDiscount() {
 
                                             if (selectedProduct[0]) {
 
-                                                if (selectedProduct[0].product_stores[formData.store_id]) {
+                                                if (selectedProduct[0].product_stores[formData.store_id]?.retail_unit_price) {
                                                     selectedProduct[0].unit_price = selectedProduct[0].product_stores[formData.store_id].retail_unit_price;
                                                 }
 
@@ -1798,8 +1811,8 @@ function findDiscount() {
                                                             reCalculate();
 
                                                             let stock = 0;
-                                                            if (selectedProducts[index].product_stores) {
-                                                                stock = selectedProducts[index].product_stores[formData.store_id]?.stock;
+                                                            if (selectedProducts[index].product_stores[formData.store_id]?.stock) {
+                                                                stock = selectedProducts[index].product_stores[formData.store_id].stock;
                                                                 // stock = GetProductStockInStore(formData.store_id, selectedProducts[index].stores);
                                                             }
 

@@ -971,6 +971,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
                                 })}
                             </ul></div> : ""}
+                    {errors.reporting_to_zatca && (<div style={{ marginBottom: "30px" }}>
+                        <input type="checkbox" checked={formData.skip_zatca_reporting} onChange={(e) => {
+                            formData.skip_zatca_reporting = !formData.skip_zatca_reporting;
+                            setFormData({ ...formData });
+                        }} /> Report Later to Zatca
+                    </div>)}
                     {selectedProducts?.length > 0 && <div className="col-md-3">
                         <label className="form-label">Date*</label>
                         <div className="input-group mb-3">

@@ -445,7 +445,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,item_code,bar_code,name,product_stores,unit,part_number,name_in_arabic";
+        // let Select = "select=id,item_code,bar_code,name,product_stores,unit,part_number,name_in_arabic";
+        let Select = `select=id,item_code,part_number,name,unit,part_number,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.wholesale_unit_price,product_stores.${cookies.get('store_id')}.stock`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200",
@@ -633,6 +634,25 @@ const PurchaseCreate = forwardRef((props, ref) => {
             );
             */
 
+            if (product.product_stores[formData.store_id]?.retail_unit_price) {
+                product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
+            }
+
+            if (product.product_stores[formData.store_id]?.purchase_unit_price) {
+                product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+            }
+
+            if (product.product_stores[formData.store_id]?.wholesale_unit_price) {
+                product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
+            }
+
+            if (product.product_stores[formData.store_id]) {
+                product.unit_discount = 0.00;
+                product.unit_discount_percent = 0.00;
+            }
+
+
+            /*
             if (product.product_stores[formData.store_id]) {
                 product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
                 product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
@@ -640,6 +660,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 product.unit_discount = 0.00;
                 product.unit_discount_percent = 0.00;
             }
+            */
 
         }
 
