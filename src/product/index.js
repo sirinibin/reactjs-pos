@@ -484,7 +484,7 @@ function ProductIndex(props) {
             },
         };
 
-        let Select = `select=id,item_code,part_number,name,unit,part_number,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
+        let Select = `select=id,part_number,name,part_number,name_in_arabic`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=20",
