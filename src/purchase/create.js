@@ -418,8 +418,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
-            openProductSearchResult = false;
-            setOpenProductSearchResult(false);
+            setTimeout(() => {
+                openProductSearchResult = false;
+                setOpenProductSearchResult(false);
+            }, 100);
+
+
             setIsProductsLoading(false);
             return;
         }

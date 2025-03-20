@@ -459,11 +459,18 @@ function ProductIndex(props) {
         console.log("Inside handle suggestProducts");
         setProductOptions([]);
 
-        console.log("searchTerm:" + searchTerm);
+
         if (!searchTerm) {
             //openProductSearchResult = false;
-            setOpenProductSearchResult(false);
+            console.log("no input");
+
+            setTimeout(() => {
+                setOpenProductSearchResult(false);
+            }, 100);
+
             return;
+        } else {
+            console.log("searchTerm:" + searchTerm + "|");
         }
 
         var params = {

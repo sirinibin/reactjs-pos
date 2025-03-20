@@ -434,7 +434,10 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("searchTerm:" + searchTerm);
         if (!searchTerm) {
             // openProductSearchResult = false;
-            setOpenProductSearchResult(false);
+
+            setTimeout(() => {
+                setOpenProductSearchResult(false);
+            }, 100);
             return;
         }
 
