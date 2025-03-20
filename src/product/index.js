@@ -466,7 +466,7 @@ function ProductIndex(props) {
 
             setTimeout(() => {
                 setOpenProductSearchResult(false);
-            }, 100);
+            }, 300);
 
             return;
         } else {

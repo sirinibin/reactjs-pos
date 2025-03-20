@@ -421,7 +421,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             setTimeout(() => {
                 openProductSearchResult = false;
                 setOpenProductSearchResult(false);
-            }, 100);
+            }, 300);
 
 
             setIsProductsLoading(false);
