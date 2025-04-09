@@ -252,11 +252,18 @@ function ProductIndex(props) {
         let Select = "";
 
         if (cookies.get("store_id")) {
+            // Select =
+            //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + cookies.get("store_id") + ".stock,product_stores." + cookies.get("store_id") + ".purchase_unit_price,product_stores." + cookies.get("store_id") + ".wholesale_unit_price,product_stores." + cookies.get("store_id") + ".retail_unit_price,product_stores." + cookies.get("store_id") + ".store_id";
             Select =
-                "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + cookies.get("store_id") + ".stock,product_stores." + cookies.get("store_id") + ".purchase_unit_price,product_stores." + cookies.get("store_id") + ".wholesale_unit_price,product_stores." + cookies.get("store_id") + ".retail_unit_price,product_stores." + cookies.get("store_id") + ".store_id";
+                "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+
         } else {
             Select =
-                "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores";
+                "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+
+
+            //Select =
+            //   "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores";
         }
 
 
@@ -1036,7 +1043,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                {/*
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1096,7 +1103,6 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
                                                 <th>
                                                     <b
                                                         style={{
@@ -1254,7 +1260,6 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
                                                 <th>
                                                     <b
                                                         style={{
@@ -1454,7 +1459,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-
+                                                {/*
                                                 <th>
                                                     <b
                                                         style={{
@@ -1704,7 +1709,7 @@ function ProductIndex(props) {
                                                         multiple
                                                     />
                                                 </th>
-                                                {/*
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1896,7 +1901,7 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
+                                                {/*<th>
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
@@ -2292,7 +2297,7 @@ function ProductIndex(props) {
                                                                     ))}
                                                             </ul>
                                                         </td>
-                                                        {/*
+
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
@@ -2504,7 +2509,7 @@ function ProductIndex(props) {
                                                             })}
                                                         </td>
 
-                                                        <td>{product.created_by_name}</td>
+                                                        {/*} <td>{product.created_by_name}</td>
                                                         <td>
                                                             {format(
                                                                 new Date(product.created_at),

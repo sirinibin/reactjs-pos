@@ -40,6 +40,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
                 'Authorization': cookies.get('access_token'),
             },
         };
+
         let searchParams = {};
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");

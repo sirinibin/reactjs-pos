@@ -983,7 +983,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
     useEffect(() => {
         const handleSocketOpen = () => {
-            console.log("WebSocket Opened in sales list");
+            //console.log("WebSocket Opened in sales list");
             list();
         };
 
