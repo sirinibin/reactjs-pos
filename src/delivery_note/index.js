@@ -93,7 +93,7 @@ function DeliveryNoteIndex(props) {
       },
     };
 
-    let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
+    let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
     let result = await fetch(
       `/v1/customer?${Select}${queryString}`,
       requestOptions
@@ -585,7 +585,7 @@ function DeliveryNoteIndex(props) {
                               );
                             }}
                             options={customerOptions}
-                            placeholder="name or mob"
+                            placeholder="Customer Name / Mob / VAT # / ID"
                             selected={selectedCustomers}
                             highlightOnlyResult={true}
                             onInputChange={(searchTerm, e) => {

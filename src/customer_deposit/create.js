@@ -245,7 +245,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
@@ -540,7 +540,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         setSelectedCustomers(selectedItems);
                                     }}
                                     options={customerOptions}
-                                    placeholder="Select Customer"
+                                    placeholder="Customer Name / Mob / VAT # / ID"
                                     selected={selectedCustomers}
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {

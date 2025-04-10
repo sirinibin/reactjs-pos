@@ -398,7 +398,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         setIsVendorsLoading(true);
         let result = await fetch(
             "/v1/vendor?" + Select + queryString,
@@ -1192,7 +1192,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     setSelectedVendors(selectedItems);
                                 }}
                                 options={vendorOptions}
-                                placeholder="Type name or mob"
+                                placeholder="Vendor Name / Mob / VAT # / ID"
                                 selected={selectedVendors}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {

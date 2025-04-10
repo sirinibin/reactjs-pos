@@ -370,7 +370,7 @@ function PurchaseReturnIndex(props) {
             },
         };
 
-        let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
         let data = await result.json();
 
@@ -1267,7 +1267,7 @@ function PurchaseReturnIndex(props) {
                                                             );
                                                         }}
                                                         options={vendorOptions}
-                                                        placeholder="name or mob"
+                                                        placeholder="Vendor Name / Mob / VAT # / ID"
                                                         selected={selectedVendors}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
