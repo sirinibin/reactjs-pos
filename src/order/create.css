@@ -1,0 +1,15 @@
+/* Example styles to handle very long text wrapping */
+.table td input {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px; /* adjust as needed */
+  }
+  
+  @media (max-width: 576px) {
+    /* For XS screens, let's make inputs full width or smaller */
+    .table-responsive {
+      font-size: 0.9rem;
+    }
+  }
+  

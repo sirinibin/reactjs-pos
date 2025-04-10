@@ -1,0 +1,21 @@
+/* Sticky header */
+/*
+thead .main-header th {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 10;
+  }
+  
+  thead .sub-header th {
+    position: sticky;
+    top: 40px; /* Adjust to match the height of the first row */
+ /*   background: white;
+    z-index: 9;
+  }
+
+  /* Adjust the input box with the date picker */
+ /* .date-picker {
+    position: relative;
+    z-index: 11; /* Higher than the table header */
+  
