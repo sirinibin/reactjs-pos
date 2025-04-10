@@ -111,7 +111,7 @@ function QuotationIndex(props) {
     console.log("Inside handle suggestCustomers");
 
     var params = {
-      name: searchTerm,
+      query: searchTerm,
     };
 
 

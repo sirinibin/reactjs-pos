@@ -2057,9 +2057,9 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <h5><b>Customer ID's:</b> {formData.customer_serial_number.prefix.toUpperCase()}-{String(formData.customer_serial_number.start_from_count).padStart(formData.customer_serial_number.padding_count, '0')}, {formData.customer_serial_number.prefix.toUpperCase()}-{String((formData.customer_serial_number.start_from_count + 1)).padStart(formData.customer_serial_number.padding_count, '0')}...</h5>
+                        <h5><b>Customer ID's:</b> {formData.customer_serial_number.prefix.toUpperCase()}{String(formData.customer_serial_number.start_from_count).padStart(formData.customer_serial_number.padding_count, '0')}, {formData.customer_serial_number.prefix.toUpperCase()}{String((formData.customer_serial_number.start_from_count + 1)).padStart(formData.customer_serial_number.padding_count, '0')}...</h5>
                         <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
+                            <label className="form-label">Prefix</label>
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.customer_serial_number.prefix}
@@ -2087,7 +2087,7 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
+                            <label className="form-label">Padding count</label>
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.customer_serial_number.padding_count}
@@ -2113,7 +2113,7 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
+                            <label className="form-label">Counting start from</label>
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.customer_serial_number.start_from_count}
@@ -2143,9 +2143,9 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <h5><b>Vendor ID's:</b> {formData.vendor_serial_number.prefix.toUpperCase()}-{String(formData.vendor_serial_number.start_from_count).padStart(formData.vendor_serial_number.padding_count, '0')}, {formData.vendor_serial_number.prefix.toUpperCase()}-{String((formData.vendor_serial_number.start_from_count + 1)).padStart(formData.vendor_serial_number.padding_count, '0')}...</h5>
+                        <h5><b>Vendor ID's:</b> {formData.vendor_serial_number.prefix.toUpperCase()}{String(formData.vendor_serial_number.start_from_count).padStart(formData.vendor_serial_number.padding_count, '0')}, {formData.vendor_serial_number.prefix.toUpperCase()}{String((formData.vendor_serial_number.start_from_count + 1)).padStart(formData.vendor_serial_number.padding_count, '0')}...</h5>
                         <div className="col-md-2">
-                            <label className="form-label">Prefix*</label>
+                            <label className="form-label">Prefix</label>
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.vendor_serial_number.prefix}
@@ -2172,7 +2172,7 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Padding count*</label>
+                            <label className="form-label">Padding count</label>
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.vendor_serial_number.padding_count}
@@ -2198,7 +2198,7 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Counting start from*</label>
+                            <label className="form-label">Counting start from</label>
                             <div className="input-group mb-3">
                                 <input
                                     value={formData.vendor_serial_number.start_from_count}

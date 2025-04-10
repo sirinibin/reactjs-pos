@@ -349,7 +349,7 @@ function PurchaseReturnIndex(props) {
         console.log("Inside handle suggestVendors");
 
         var params = {
-            name: searchTerm,
+            query: searchTerm,
         };
 
         if (cookies.get("store_id")) {

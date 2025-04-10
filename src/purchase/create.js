@@ -377,7 +377,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }
 
         var params = {
-            name: searchTerm,
+            query: searchTerm,
         };
 
         if (cookies.get("store_id")) {

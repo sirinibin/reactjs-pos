@@ -392,7 +392,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         var params = {
-            name: searchTerm,
+            query: searchTerm,
         };
 
         if (cookies.get("store_id")) {
@@ -412,7 +412,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,name,phone,name_in_arabic,phone_in_arabic,search_label";
         setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
@@ -1552,7 +1552,7 @@ function findDiscount() {
                                     setSelectedCustomers(selectedItems);
                                 }}
                                 options={customerOptions}
-                                placeholder="Type name or mob"
+                                placeholder="Name / Mob / VAT # / Customer ID"
                                 selected={selectedCustomers}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {

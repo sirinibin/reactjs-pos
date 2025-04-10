@@ -194,7 +194,7 @@ function CustomerWithdrawalIndex(props) {
         console.log("Inside handle suggestCustomers");
 
         var params = {
-            name: searchTerm,
+            query: searchTerm,
         };
 
         if (cookies.get("store_id")) {
