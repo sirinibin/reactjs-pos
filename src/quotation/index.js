@@ -27,7 +27,7 @@ function QuotationIndex(props) {
   const [quotationList, setQuotationList] = useState([]);
 
   //pagination
-  let [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   let [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalItems, setTotalItems] = useState(1);
@@ -391,10 +391,18 @@ function QuotationIndex(props) {
     list();
   }
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      list();
+    }, 300);
+
+    // Cleanup to avoid memory leaks
+    return () => clearTimeout(timer);
+  }, [pageSize, list]);
+
+
   function changePageSize(size) {
-    pageSize = parseInt(size);
-    setPageSize(pageSize);
-    list();
+    setPageSize(parseInt(size));
   }
 
   function changePage(newPage) {
@@ -433,6 +441,7 @@ function QuotationIndex(props) {
                 stats={{
                   "Quotation": totalQuotation,
                   "Profit": profit,
+                  "Profit %": profit && totalQuotation ? (profit / totalQuotation) * 100 : "",
                   "Loss": loss,
                 }}
                 onToggle={handleSummaryToggle}
@@ -579,7 +588,7 @@ function QuotationIndex(props) {
                     </>
                   )}
                 </div>
-                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                   <table className="table table-striped table-sm table-bordered">
                     <thead>
                       <tr className="text-center">

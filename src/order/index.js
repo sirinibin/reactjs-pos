@@ -23,6 +23,8 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 
+import "./../utils/stickyHeader.css";
+
 
 import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
@@ -539,7 +541,7 @@ const OrderIndex = forwardRef((props, ref) => {
     const [orderList, setOrderList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -1002,10 +1004,18 @@ const OrderIndex = forwardRef((props, ref) => {
         list();
     }
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            list();
+        }, 300);
+
+        // Cleanup to avoid memory leaks
+        return () => clearTimeout(timer);
+    }, [pageSize, list]);
+
+
     function changePageSize(size) {
-        pageSize = parseInt(size);
-        setPageSize(pageSize);
-        list();
+        setPageSize(parseInt(size));
     }
 
     function changePage(newPage) {
@@ -1233,6 +1243,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                     "Shipping/Handling fees": totalShippingHandlingFees,
                                     "VAT Collected": vatPrice,
                                     "Net Profit": netProfit,
+                                    "Net Profit %": netProfit && totalSales ? ((netProfit / totalSales) * 100) : "",
                                     "Net Loss": loss,
                                 }}
                                 onToggle={handleSummaryToggle}
@@ -1389,10 +1400,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                         </>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-bordered table-sm" style={{}}>
                                         <thead>
-                                            <tr className="text-center">
+                                            <tr className="text-center main-header">
                                                 <th>Actions</th>
                                                 <th>
                                                     <b
@@ -1770,10 +1781,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                                 <th>Actions</th>
                                             </tr>
-                                        </thead>
-
-                                        <thead>
-                                            <tr className="text-center">
+                                            <tr className="text-center sub-header">
                                                 <th></th>
                                                 <th >
                                                     <input
@@ -1786,9 +1794,10 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     />
                                                 </th>
                                                 <th >
-                                                    <div style={{ minWidth: "125px" }}>
+                                                    <div id="calendar-portal" className="date-picker " style={{ minWidth: "125px" }}>
                                                         <DatePicker
                                                             id="date_str"
+
                                                             value={dateValue}
                                                             selected={selectedDate}
                                                             className="form-control"
@@ -1804,6 +1813,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 selectedDate = date;
                                                                 setSelectedDate(date);
                                                             }}
+
                                                         />
 
                                                         <br />

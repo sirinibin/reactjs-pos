@@ -35,7 +35,7 @@ function PurchaseReturnIndex(props) {
     const [purchasereturnList, setPurchaseReturnList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -642,11 +642,21 @@ function PurchaseReturnIndex(props) {
         list();
     }
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            list();
+        }, 300);
+
+        // Cleanup to avoid memory leaks
+        return () => clearTimeout(timer);
+    }, [pageSize, list]);
+
+
     function changePageSize(size) {
-        pageSize = parseInt(size);
-        setPageSize(pageSize);
-        list();
+        setPageSize(parseInt(size));
     }
+
+
 
     function changePage(newPage) {
         page = parseInt(newPage);
@@ -946,7 +956,7 @@ function PurchaseReturnIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">

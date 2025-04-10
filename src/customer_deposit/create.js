@@ -391,7 +391,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Customer Deposit #" + formData.description : "Create New Customer Deposit"}
+                        {formData.id ? "Update Customer Receivable #" + formData.code : "Create New Customer Receivable"}
                     </Modal.Title>
 
 

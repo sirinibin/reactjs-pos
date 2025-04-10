@@ -88,7 +88,7 @@ const CustomerDepositView = forwardRef((props, ref) => {
     return (<>
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of CustomerDeposit #{model.description} </Modal.Title>
+                <Modal.Title>Details of Customer Receivable #{model.code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {

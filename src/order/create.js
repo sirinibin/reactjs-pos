@@ -20,6 +20,7 @@ import ProductView from "./../product/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import { Spinner } from "react-bootstrap";
 //import debounce from 'lodash.debounce';
+import ResizableTableCell from './../utils/ResizableTableCell';
 
 const OrderCreate = forwardRef((props, ref) => {
 
@@ -1349,6 +1350,7 @@ function findDiscount() {
         return true;
     }
 
+
     return (
         <>
             {/*
@@ -1694,16 +1696,17 @@ function findDiscount() {
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
-                                        <th style={{ width: "3%" }}></th>
-                                        <th style={{ width: "5%" }}>SI No.</th>
-                                        <th style={{ width: "10%" }}>Part No.</th>
-                                        <th style={{ width: "23%" }} className="text-start">Name</th>
-                                        <th style={{ width: "10%" }} >Purchase Unit Price</th>
-                                        <th style={{ width: "10%" }} >Qty</th>
-                                        <th style={{ width: "10%" }}>Unit Price</th>
-                                        <th style={{ width: "10%" }}>Unit Disc.</th>
-                                        <th style={{ width: "10%" }}>Unit Disc. %</th>
-                                        <th style={{ width: "32%" }}>Price</th>
+                                        <th ></th>
+                                        <th >SI No.</th>
+                                        <th>Part No.</th>
+                                        <ResizableTableCell className="text-start">Name
+                                        </ResizableTableCell>
+                                        <th  >Purchase Unit Price</th>
+                                        <th  >Qty</th>
+                                        <th >Unit Price</th>
+                                        <th>Unit Disc.</th>
+                                        <th >Unit Disc. %</th>
+                                        <th >Price</th>
 
                                     </tr>
                                 </thead>
@@ -1722,7 +1725,7 @@ function findDiscount() {
                                             </td>
                                             <td >{index + 1}</td>
                                             <td  >{product.part_number}</td>
-                                            <td style={{
+                                            <ResizableTableCell style={{
                                                 textDecoration: "underline",
                                                 color: "blue",
                                                 cursor: "pointer",
@@ -1739,7 +1742,7 @@ function findDiscount() {
                                                         {errors["product_" + index]}
                                                     </div>
                                                 )}
-                                            </td>
+                                            </ResizableTableCell>
 
                                             <td>
 

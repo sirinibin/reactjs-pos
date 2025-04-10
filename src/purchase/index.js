@@ -39,7 +39,7 @@ function PurchaseIndex(props) {
     const [purchaseList, setPurchaseList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(20);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -722,10 +722,18 @@ function PurchaseIndex(props) {
         list();
     }
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            list();
+        }, 300);
+
+        // Cleanup to avoid memory leaks
+        return () => clearTimeout(timer);
+    }, [pageSize, list]);
+
+
     function changePageSize(size) {
-        pageSize = parseInt(size);
-        setPageSize(pageSize);
-        list();
+        setPageSize(parseInt(size));
     }
 
     function changePage(newPage) {
@@ -815,7 +823,9 @@ function PurchaseIndex(props) {
                                     "Shipping/Handling fees": totalShippingHandlingFees,
                                     "VAT paid": vatPrice,
                                     "Net retail profit": netRetailProfit,
+                                    "Net retail Profit %": netRetailProfit && totalPurchase ? ((netRetailProfit / totalPurchase) * 100) : "",
                                     "Net wholesale profit": netWholesaleProfit,
+                                    "Net wholesale Profit %": netWholesaleProfit && totalPurchase ? ((netWholesaleProfit / totalPurchase) * 100) : "",
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -967,7 +977,7 @@ function PurchaseIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">

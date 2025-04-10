@@ -495,7 +495,7 @@ function LedgerIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">

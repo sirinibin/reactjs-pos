@@ -89,7 +89,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     <div className="col">
                         <u
                         ><h1 className="text-center" style={{ fontSize: "3mm" }}>
-                                {props.model.store?.zatca?.phase === "1" ? "TAX INVOICE | الفاتورة الضريبية" : ""}
+                                {props.model.payment_status === "not_paid" && props.model.store?.zatca?.phase === "1" ? "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان" : ""} {props.model.store?.zatca?.phase === "1" && props.model.payment_status !== "not_paid" ? "TAX INVOICE | الفاتورة الضريبية" : ""}
                                 {props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed && props.model.zatca?.is_simplified ? "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة" : ""}
                                 {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.is_simplified ? "STANDARD TAX INVOICE | فاتورة ضريبية قياسية" : ""}
                             </h1>

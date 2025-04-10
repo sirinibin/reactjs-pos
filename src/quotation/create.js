@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import ProductView from "./../product/view.js";
 import { DebounceInput } from "react-debounce-input";
+import ResizableTableCell from './../utils/ResizableTableCell';
 
 const QuotationCreate = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
@@ -1108,16 +1109,18 @@ const QuotationCreate = forwardRef((props, ref) => {
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
-                    <th style={{ width: "3%" }}>Remove</th>
-                    <th style={{ width: "5%" }}>SI No.</th>
-                    <th style={{ width: "10%" }}>Part No.</th>
-                    <th style={{ width: "23%" }} className="text-start">Name</th>
-                    <th style={{ width: "10%" }} >Purchase Unit Price</th>
-                    <th style={{ width: "10%" }} >Qty</th>
-                    <th style={{ width: "10%" }}>Unit Price</th>
-                    <th style={{ width: "10%" }}>Discount</th>
-                    <th style={{ width: "10%" }}>Discount%</th>
-                    <th style={{ width: "32%" }}>Price</th>
+                    <th ></th>
+                    <th >SI No.</th>
+                    <th >Part No.</th>
+                    <ResizableTableCell className="text-start">
+                      <b>Name</b>
+                    </ResizableTableCell>
+                    <th >Purchase Unit Price</th>
+                    <th  >Qty</th>
+                    <th >Unit Price</th>
+                    <th >Discount</th>
+                    <th >Discount%</th>
+                    <th >Price</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1131,12 +1134,12 @@ const QuotationCreate = forwardRef((props, ref) => {
                               removeProduct(product);
                             }}
                           >
-                            <i className="bi bi-x-lg"> </i>
+                            <i className="bi bi-trash"> </i>
                           </div>
                         </td>
                         <td>{index + 1}</td>
                         <td>{product.part_number}</td>
-                        <td
+                        <ResizableTableCell
                           style={{
                             textDecoration: "underline",
                             color: "blue",
@@ -1149,7 +1152,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           }}
                         >
                           {product.name}
-                        </td>
+                        </ResizableTableCell>
                         <td>
 
                           <div className="input-group mb-3">
@@ -1377,7 +1380,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                         </td>
                         <td>
                           <div className="input-group mb-3">
-                            <input type="number" className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                            <input type="number" disabled={true} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                               selectedProducts[index].is_discount_percent = true;
                               if (parseFloat(e.target.value) === 0) {
                                 selectedProducts[index].unit_discount_percent = parseFloat(e.target.value);

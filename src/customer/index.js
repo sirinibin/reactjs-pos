@@ -169,7 +169,7 @@ function CustomerIndex(props) {
             },
         };
         let Select =
-            "select=id,name,email,phone,created_by_name,created_at,stores";
+            "select=id,code,name,email,phone,created_by_name,created_at,stores";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -407,11 +407,30 @@ function CustomerIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
                                                 <th>Actions</th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("code");
+                                                        }}
+                                                    >
+                                                        ID
+                                                        {sortField === "code" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "code" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -979,6 +998,16 @@ function CustomerIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 <th></th>
+                                                <th >
+                                                    <input
+                                                        type="text"
+                                                        id="code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1312,6 +1341,7 @@ function CustomerIndex(props) {
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
                                                         </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{customer.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.phone}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                             <OverflowTooltip value={customer.name} />

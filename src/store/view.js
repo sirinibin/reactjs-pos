@@ -213,10 +213,22 @@ const StoreView = forwardRef((props, ref) => {
                                 <td> {model.purchase_return_serial_number.start_from_count}</td>
                             </tr>}
                             {model.quotation_serial_number && <tr>
-                                <td>Quotation Return</td>
+                                <td>Quotation</td>
                                 <td> {model.quotation_serial_number.prefix}</td>
                                 <td> {model.quotation_serial_number.padding_count}</td>
                                 <td> {model.quotation_serial_number.start_from_count}</td>
+                            </tr>}
+                            {model.customer_serial_number && <tr>
+                                <td>Customer</td>
+                                <td> {model.customer_serial_number.prefix}</td>
+                                <td> {model.customer_serial_number.padding_count}</td>
+                                <td> {model.customer_serial_number.start_from_count}</td>
+                            </tr>}
+                            {model.vendor_serial_number && <tr>
+                                <td>Vendor</td>
+                                <td> {model.vendor_serial_number.prefix}</td>
+                                <td> {model.vendor_serial_number.padding_count}</td>
+                                <td> {model.vendor_serial_number.start_from_count}</td>
                             </tr>}
                         </tbody>
                     </Table>

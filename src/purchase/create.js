@@ -14,6 +14,7 @@ import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import ProductView from "./../product/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import ResizableTableCell from './../utils/ResizableTableCell';
 
 
 const PurchaseCreate = forwardRef((props, ref) => {
@@ -1363,17 +1364,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
-                                        <th style={{ width: "2%" }}>Remove</th>
-                                        <th style={{ width: "5%" }}>SI No.</th>
-                                        <th style={{ width: "8%" }}>Part No.</th>
-                                        <th style={{ width: "20%" }} className="text-start">Name</th>
-                                        <th style={{ width: "11%" }}>Qty</th>
-                                        <th style={{ width: "11%" }}>Unit Price</th>
-                                        <th style={{ width: "10%" }}>Unit Disc.</th>
-                                        <th style={{ width: "10%" }}>Disc. %</th>
-                                        <th style={{ width: "11%" }}>Set latest wholesale unit price</th>
-                                        <th style={{ width: "11%" }}>Set latest retail unit price</th>
-                                        <th style={{ width: "15%" }}>Price</th>
+                                        <th></th>
+                                        <th>SI No.</th>
+                                        <th >Part No.</th>
+                                        <ResizableTableCell className="text-start">
+                                            <b> Name</b>
+                                        </ResizableTableCell>
+                                        <th >Qty</th>
+                                        <th >Unit Price</th>
+                                        <th >Unit Disc.</th>
+                                        <th >Disc. %</th>
+                                        <th >Set latest wholesale unit price</th>
+                                        <th >Set latest retail unit price</th>
+                                        <th >Price</th>
 
                                     </tr>
                                 </thead>
@@ -1387,12 +1390,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         removeProduct(product);
                                                     }}
                                                 >
-                                                    <i className="bi bi-x-lg"> </i>
+                                                    <i className="bi bi-trash"> </i>
                                                 </div>
                                             </td>
                                             <td>{index + 1}</td>
                                             <td>{product.part_number}</td>
-                                            <td style={{
+                                            <ResizableTableCell style={{
                                                 textDecoration: "underline",
                                                 color: "blue",
                                                 cursor: "pointer",
@@ -1402,7 +1405,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     openProductDetailsView(product.product_id);
                                                     console.log("okk,id:", product.product_id);
                                                 }}>{product.name}
-                                            </td>
+                                            </ResizableTableCell>
                                             <td style={{ width: "155px" }}>
 
                                                 <div className="input-group mb-3">
@@ -1542,7 +1545,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                                                    <input type="number" disabled={true} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                                         selectedProducts[index].is_discount_percent = true;
                                                         if (parseFloat(e.target.value) === 0) {
                                                             selectedProducts[index].unit_discount_percent = parseFloat(e.target.value);

@@ -185,7 +185,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[14])}>
                     <Link to="/dashboard/customer_deposits" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Customer Deposits</span>
+                        <span className="align-middle">Customer Receivables</span>
                     </Link>
                 </li>
                 <li onClick={() => {
@@ -212,22 +212,22 @@ function Sidebar(props) {
                         <span className="align-middle">Drawings</span>
                     </Link>
                 </li>
-                {cookies.get('admin') === "true" ? <li onClick={() => {
+                <li onClick={() => {
                     toggleActive(appState.tabs[18]);
                 }} className={toggleActiveStyles(appState.tabs[18])}>
                     <Link to="/dashboard/ledger" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
                         <span className="align-middle">Ledger</span>
                     </Link>
-                </li> : ""}
-                {cookies.get('admin') === "true" ? <li onClick={() => {
+                </li>
+                <li onClick={() => {
                     toggleActive(appState.tabs[19]);
                 }} className={toggleActiveStyles(appState.tabs[19])}>
                     <Link to="/dashboard/accounts" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Accounts & Trial balances</span>
                     </Link>
-                </li> : ""}
+                </li>
                 {cookies.get('user_role') === "Admin" ? <li onClick={() => {
                     toggleActive(appState.tabs[20]);
                 }} className={toggleActiveStyles(appState.tabs[20])}>

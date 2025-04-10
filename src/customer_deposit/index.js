@@ -369,7 +369,7 @@ function CustomerDepositIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Customer Deposits</h1>
+                        <h1 className="h3">Customer Receivables</h1>
                     </div>
 
 
@@ -514,7 +514,7 @@ function CustomerDepositIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">

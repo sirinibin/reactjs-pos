@@ -997,11 +997,21 @@ function SalesReturnIndex(props) {
         list();
     }
 
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            list();
+        }, 300);
+
+        // Cleanup to avoid memory leaks
+        return () => clearTimeout(timer);
+    }, [pageSize, list]);
+
+
     function changePageSize(size) {
-        pageSize = parseInt(size);
-        setPageSize(pageSize);
-        list();
+        setPageSize(parseInt(size));
     }
+
+
 
     function changePage(newPage) {
         page = parseInt(newPage);
@@ -1189,6 +1199,7 @@ function SalesReturnIndex(props) {
                                     "Shipping/Handling fees Return": totalShippingHandlingFees,
                                     "VAT Return": vatPrice,
                                     "Net Profit Return": netProfit,
+                                    "Net Profit Return %": netProfit && totalSalesReturn ? ((netProfit / totalSalesReturn) * 100) : "",
                                     "Net Loss Return": loss,
                                 }}
                                 onToggle={handleSummaryToggle}
@@ -1357,7 +1368,7 @@ function SalesReturnIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">

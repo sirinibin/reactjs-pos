@@ -168,7 +168,7 @@ function VendorIndex(props) {
             },
         };
         let Select =
-            "select=id,name,created_by_name,created_at,stores";
+            "select=id,code,name,created_by_name,created_at,stores";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -411,11 +411,30 @@ function VendorIndex(props) {
                                         </>
                                     )}
                                 </div>
-                                <div className="table-responsive" style={{ overflowX: "auto" }}>
+                                <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
                                                 <th>Actions</th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("code");
+                                                        }}
+                                                    >
+                                                        ID
+                                                        {sortField === "code" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "code" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -822,6 +841,16 @@ function VendorIndex(props) {
                                         <thead>
                                             <tr className="text-center">
                                                 <th></th>
+                                                <th >
+                                                    <input
+                                                        type="text"
+                                                        id="code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1103,6 +1132,7 @@ function VendorIndex(props) {
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
                                                         </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{vendor.code}</td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
 
                                                             <OverflowTooltip value={vendor.name} />
