@@ -1395,16 +1395,26 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>{index + 1}</td>
                                             <td>{product.part_number}</td>
-                                            <ResizableTableCell style={{
-                                                textDecoration: "underline",
-                                                color: "blue",
-                                                cursor: "pointer",
-                                            }}
-                                                className="text-start"
-                                                onClick={() => {
-                                                    openProductDetailsView(product.product_id);
-                                                    console.log("okk,id:", product.product_id);
-                                                }}>{product.name}
+                                            <ResizableTableCell>
+
+                                                <div className="text-start"
+                                                    style={{
+                                                        textDecoration: "underline",
+                                                        color: "blue",
+                                                        cursor: "pointer",
+
+                                                    }}
+                                                    onClick={() => {
+                                                        openProductDetailsView(product.product_id);
+                                                    }} >      {product.name}
+
+                                                    {errors["product_" + index] && (
+                                                        <div style={{ color: "red" }}>
+                                                            {errors["product_" + index]}
+                                                        </div>
+                                                    )}
+                                                </div>
+
                                             </ResizableTableCell>
                                             <td style={{ width: "155px" }}>
 
