@@ -23,6 +23,7 @@ function Sidebar(props) {
             'customers',
             'products',
             'product category',
+            'product brand',
             'expense category',
             'expenses',
             'analytics',
@@ -159,78 +160,86 @@ function Sidebar(props) {
                 <li onClick={() => {
                     toggleActive(appState.tabs[11]);
                 }} className={toggleActiveStyles(appState.tabs[11])}>
+                    <Link to="/dashboard/product_brand" className="sidebar-link">
+                        <i className="bi bi-diagram-3" />
+                        <span className="align-middle">Product Brand</span>
+                    </Link>
+                </li>
+                <li onClick={() => {
+                    toggleActive(appState.tabs[12]);
+                }} className={toggleActiveStyles(appState.tabs[12])}>
                     <Link to="/dashboard/expense_category" className="sidebar-link">
                         <i className="bi bi-diagram-3" />
                         <span className="align-middle">Expense Category</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[12]);
-                }} className={toggleActiveStyles(appState.tabs[12])}>
+                    toggleActive(appState.tabs[13]);
+                }} className={toggleActiveStyles(appState.tabs[13])}>
                     <Link to="/dashboard/expenses" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Expenses</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[13]);
-                }} className={toggleActiveStyles(appState.tabs[13])}>
+                    toggleActive(appState.tabs[14]);
+                }} className={toggleActiveStyles(appState.tabs[14])}>
                     <Link to="/dashboard/analytics" className="sidebar-link">
                         <i className="bi bi-graph-up" />
                         <span className="align-middle">Analytics</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[14]);
-                }} className={toggleActiveStyles(appState.tabs[14])}>
+                    toggleActive(appState.tabs[15]);
+                }} className={toggleActiveStyles(appState.tabs[15])}>
                     <Link to="/dashboard/customer_deposits" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Customer Receivables</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[15]);
-                }} className={toggleActiveStyles(appState.tabs[15])}>
+                    toggleActive(appState.tabs[16]);
+                }} className={toggleActiveStyles(appState.tabs[16])}>
                     <Link to="/dashboard/customer_withdrawals" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Customer Drawings</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[16]);
-                }} className={toggleActiveStyles(appState.tabs[16])}>
+                    toggleActive(appState.tabs[17]);
+                }} className={toggleActiveStyles(appState.tabs[17])}>
                     <Link to="/dashboard/capitals" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Capitals</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[17]);
-                }} className={toggleActiveStyles(appState.tabs[17])}>
+                    toggleActive(appState.tabs[18]);
+                }} className={toggleActiveStyles(appState.tabs[18])}>
                     <Link to="/dashboard/dividents" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
                         <span className="align-middle">Drawings</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[18]);
-                }} className={toggleActiveStyles(appState.tabs[18])}>
+                    toggleActive(appState.tabs[19]);
+                }} className={toggleActiveStyles(appState.tabs[19])}>
                     <Link to="/dashboard/ledger" className="sidebar-link">
                         <i className="bi bi-file-earmark-text" />
                         <span className="align-middle">Ledger</span>
                     </Link>
                 </li>
                 <li onClick={() => {
-                    toggleActive(appState.tabs[19]);
-                }} className={toggleActiveStyles(appState.tabs[19])}>
+                    toggleActive(appState.tabs[20]);
+                }} className={toggleActiveStyles(appState.tabs[20])}>
                     <Link to="/dashboard/accounts" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Accounts & Trial balances</span>
                     </Link>
                 </li>
                 {cookies.get('user_role') === "Admin" ? <li onClick={() => {
-                    toggleActive(appState.tabs[20]);
-                }} className={toggleActiveStyles(appState.tabs[20])}>
+                    toggleActive(appState.tabs[21]);
+                }} className={toggleActiveStyles(appState.tabs[21])}>
                     <Link to="/dashboard/users" className="sidebar-link">
                         <i className="bi bi-file-person" />
                         <span className="align-middle">Users</span>

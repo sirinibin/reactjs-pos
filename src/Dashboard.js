@@ -25,6 +25,7 @@ import StoreIndex from './store/index.js';
 import CustomerIndex from './customer/index.js';
 import ProductIndex from './product/index.js';
 import ProductCategoryIndex from './product_category/index.js';
+import ProductBrandIndex from './product_brand/index.js';
 import ExpenseCategoryIndex from './expense_category/index.js';
 import ExpenseIndex from './expense/index.js';
 
@@ -349,6 +350,18 @@ function Dashboard() {
                         <Topbar parentCallback={handleToggle} />
                         <main className="content">
                             <ProductCategoryIndex showToastMessage={showToastMessage} />
+                        </main>
+                        <Footer />
+                    </div>
+                </div>
+            </Route>
+            <Route path="/dashboard/product_brand">
+                <div className="wrapper">
+                    <Sidebar isSidebarOpen={isSidebarOpen} parentCallback={handleToggle} />
+                    <div className="main">
+                        <Topbar parentCallback={handleToggle} />
+                        <main className="content">
+                            <ProductBrandIndex showToastMessage={showToastMessage} />
                         </main>
                         <Footer />
                     </div>
