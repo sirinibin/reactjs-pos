@@ -11,6 +11,7 @@ import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import ProductCategoryCreate from "../product_category/create.js";
+import ProductBrandCreate from "../product_brand/create.js";
 import Resizer from "react-image-file-resizer";
 
 const ProductCreate = forwardRef((props, ref) => {
@@ -85,7 +86,9 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
   let [selectedCategories, setSelectedCategories] = useState([]);
+  let [selectedBrands, setSelectedBrands] = useState([]);
   let [categoryOptions, setCategoryOptions] = useState([]);
+  let [brandOptions, setBrandOptions] = useState([]);
 
   let [errors, setErrors] = useState({});
   const [isProcessing, setProcessing] = useState(false);
@@ -150,6 +153,17 @@ const ProductCreate = forwardRef((props, ref) => {
           }
         }
         setSelectedCategories(selectedCategories);
+
+
+        selectedBrands = [];
+        if (data.result.brand_id) {
+          selectedBrands.push({
+            id: data.result.brand_id,
+            name: data.result.brand_name ? data.result.brand_name : "",
+          });
+        }
+        console.log("selectedBrands:", selectedBrands);
+        setSelectedBrands(selectedBrands);
 
         if (data.result.product_stores) {
           console.log("data.result.product_stores-ok:", data.result.product_stores);
@@ -249,6 +263,48 @@ const ProductCreate = forwardRef((props, ref) => {
     let data = await result.json();
 
     setCategoryOptions(data.result);
+  }
+
+  async function suggestBrands(searchTerm) {
+    console.log("Inside handle suggest Brands");
+
+    console.log("searchTerm:" + searchTerm);
+    if (!searchTerm) {
+      return;
+    }
+
+    var params = {
+      name: searchTerm,
+    };
+
+    if (cookies.get("store_id")) {
+      params.store_id = cookies.get("store_id");
+    }
+
+    var queryString = ObjectToSearchQueryParams(params);
+    if (queryString !== "") {
+      queryString = "&" + queryString;
+    }
+
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: cookies.get("access_token"),
+      },
+    };
+
+    let Select = "select=id,name";
+    setIsBrandsLoading(true);
+
+    let result = await fetch(
+      "/v1/product-brand?" + Select + queryString,
+      requestOptions
+    );
+    setIsBrandsLoading(false);
+
+    let data = await result.json();
+    setBrandOptions(data.result);
   }
 
   let [stores, setStores] = useState([]);
@@ -469,6 +525,12 @@ const ProductCreate = forwardRef((props, ref) => {
   function openProductCategoryCreateForm() {
     ProductCategoryCreateFormRef.current.open();
   }
+  const ProductBrandCreateFormRef = useRef();
+  function openProductBrandCreateForm() {
+    ProductBrandCreateFormRef.current.open();
+  }
+
+  const [isBrandsLoading, setIsBrandsLoading] = useState(false);
 
   return (
     <>
@@ -481,6 +543,11 @@ const ProductCreate = forwardRef((props, ref) => {
             */}
       <ProductCategoryCreate
         ref={ProductCategoryCreateFormRef}
+        showToastMessage={props.showToastMessage}
+      />
+
+      <ProductBrandCreate
+        ref={ProductBrandCreateFormRef}
         showToastMessage={props.showToastMessage}
       />
 
@@ -756,6 +823,56 @@ const ProductCreate = forwardRef((props, ref) => {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="col-md-6" style={{ border: "solid 0px" }}>
+              <label className="form-label">Brand(Optional)</label>
+              <Typeahead
+                id="brand_id"
+                labelKey="name"
+                isLoading={isBrandsLoading}
+                isInvalid={errors.brand_id ? true : false}
+                onChange={(selectedItems) => {
+                  errors.brand_id = "";
+                  setErrors(errors);
+                  if (selectedItems.length === 0) {
+                    errors.brand_id = "Invalid brand selected";
+                    setErrors(errors);
+                    formData.brand_id = "";
+                    setFormData({ ...formData });
+                    setSelectedBrands([]);
+                    return;
+                  }
+                  formData.brand_id = selectedItems[0].id;
+                  setFormData({ ...formData });
+                  setSelectedBrands(selectedItems);
+                }}
+                options={brandOptions}
+                placeholder="Brand name"
+                selected={selectedBrands}
+                highlightOnlyResult={true}
+                onInputChange={(searchTerm, e) => {
+                  suggestBrands(searchTerm);
+                }}
+              />
+              <Button
+                hide={true.toString()}
+                onClick={openProductBrandCreateForm}
+                className="btn btn-outline-secondary btn-primary btn-sm"
+                type="button"
+                id="button-addon1"
+              >
+                {" "}
+                <i className="bi bi-plus-lg"></i> New
+              </Button>
+
+              {/* <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+              {errors.customer_id && (
+                <div style={{ color: "red" }}>
+                  {errors.customer_id}
+                </div>
+              )}*/}
+
             </div>
 
             <div className="col-md-2">

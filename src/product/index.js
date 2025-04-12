@@ -59,7 +59,9 @@ function ProductIndex(props) {
 
     //Created By Product Auto Suggestion
     const [categoryOptions, setCategoryOptions] = useState([]);
+    const [brandOptions, setBrandOptions] = useState([]);
     const [selectedProductCategories, setSelectedProductCategories] = useState([]);
+    const [selectedProductBrands, setSelectedProductBrands] = useState([]);
 
 
     useEffect(() => {
@@ -117,6 +119,45 @@ function ProductIndex(props) {
         let data = await result.json();
 
         setCategoryOptions(data.result);
+    }
+
+    async function suggestBrands(searchTerm) {
+        console.log("Inside handle suggest Categories");
+
+        console.log("searchTerm:" + searchTerm);
+        if (!searchTerm) {
+            return;
+        }
+
+        var params = {
+            name: searchTerm,
+        };
+
+        if (cookies.get("store_id")) {
+            params.store_id = cookies.get("store_id");
+        }
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = "&" + queryString;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = "select=id,name";
+        let result = await fetch(
+            "/v1/product-brand?" + Select + queryString,
+            requestOptions
+        );
+        let data = await result.json();
+
+        setBrandOptions(data.result);
     }
 
 
@@ -217,6 +258,8 @@ function ProductIndex(props) {
             // setSelectedCreatedByProducts(values);
         } else if (field === "category_id") {
             setSelectedProductCategories(values);
+        } else if (field === "brand_id") {
+            setSelectedProductBrands(values);
         } else if (field === "product_id") {
             setSelectedProducts(values);
         }
@@ -255,11 +298,11 @@ function ProductIndex(props) {
             // Select =
             //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + cookies.get("store_id") + ".stock,product_stores." + cookies.get("store_id") + ".purchase_unit_price,product_stores." + cookies.get("store_id") + ".wholesale_unit_price,product_stores." + cookies.get("store_id") + ".retail_unit_price,product_stores." + cookies.get("store_id") + ".store_id";
             Select =
-                "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+                "select=id,brand_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
 
         } else {
             Select =
-                "select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+                "select=id,brand_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
 
 
             //Select =
@@ -1051,6 +1094,26 @@ function ProductIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("brand_name");
+                                                        }}
+                                                    >
+                                                        Brands
+                                                        {sortField === "brand_name" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "brand_name" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("stores.sales_count");
                                                         }}
                                                     >
@@ -1689,7 +1752,7 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th style={{ width: "300px" }}>
+                                                <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="category_id"
                                                         labelKey="name"
@@ -1705,6 +1768,27 @@ function ProductIndex(props) {
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCategories(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+
+                                                <th style={{ minWidth: "250px" }}>
+                                                    <Typeahead
+                                                        id="brand_id"
+                                                        labelKey="name"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "brand_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={brandOptions}
+                                                        placeholder="Select brands"
+                                                        selected={selectedProductBrands}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestBrands(searchTerm);
                                                         }}
                                                         multiple
                                                     />
@@ -2295,6 +2379,12 @@ function ProductIndex(props) {
                                                                     product.category_name.map((name) => (
                                                                         <li key={name}  >{name}</li>
                                                                     ))}
+                                                            </ul>
+                                                        </td>
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                            <ul>
+                                                                {product.brand_name}
                                                             </ul>
                                                         </td>
 

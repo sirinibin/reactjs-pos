@@ -408,6 +408,7 @@ const ProductView = forwardRef((props, ref) => {
                                         ))}
                                 </ul>
                             </td>
+                            <th>Brand:</th><td> {model.brand_name}</td>
                         </tr>
                         <tr>
                             <th>Unit:</th><td> {model.unit ? model.unit : "Unit(s)"}</td>
