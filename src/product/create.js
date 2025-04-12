@@ -4,6 +4,7 @@ import React, {
   useRef,
   forwardRef,
   useImperativeHandle,
+  useMemo,
 } from "react";
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
@@ -13,8 +14,14 @@ import StoreCreate from "../store/create.js";
 import ProductCategoryCreate from "../product_category/create.js";
 import ProductBrandCreate from "../product_brand/create.js";
 import Resizer from "react-image-file-resizer";
+import countryList from 'react-select-country-list';
+//import Select from 'react-select'
 
 const ProductCreate = forwardRef((props, ref) => {
+  const countryOptions = useMemo(() => countryList().getData(), [])
+  //const [selectedCountry, setSelectedCountry] = useState('')
+  let [selectedCountries, setSelectedCountries] = useState([]);
+
   useImperativeHandle(ref, () => ({
     open(id) {
       selectedCategories = [];
@@ -164,6 +171,17 @@ const ProductCreate = forwardRef((props, ref) => {
         }
         console.log("selectedBrands:", selectedBrands);
         setSelectedBrands(selectedBrands);
+
+        selectedCountries = [];
+        if (data.result.country_code && data.result.country_name) {
+          selectedCountries.push({
+            value: data.result.country_code,
+            label: data.result.country_name,
+          });
+        }
+        setSelectedCountries(selectedCountries);
+
+
 
         if (data.result.product_stores) {
           console.log("data.result.product_stores-ok:", data.result.product_stores);
@@ -532,6 +550,21 @@ const ProductCreate = forwardRef((props, ref) => {
 
   const [isBrandsLoading, setIsBrandsLoading] = useState(false);
 
+  function makePartNumberPrefix() {
+    if (formData.brand_name && formData.country_code) {
+      formData.prefix_part_number = formData.brand_name + "-" + formData.country_code
+    } else if (formData.brand_name) {
+      formData.prefix_part_number = formData.brand_name;
+    } else if (formData.country_code) {
+      formData.prefix_part_number = formData.country_code;
+    } else {
+      formData.prefix_part_number = "";
+    }
+
+    formData.prefix_part_number = formData.prefix_part_number.toUpperCase();
+    setFormData({ ...formData });
+  }
+
   return (
     <>
       <StoreCreate
@@ -674,7 +707,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                 */}
 
             <div className="col-md-6">
-              <label className="form-label">Name In Arabic (Optional)</label>
+              <label className="form-label">Name In Arabic </label>
 
               <div className="input-group mb-3">
                 <input
@@ -705,8 +738,119 @@ const ProductCreate = forwardRef((props, ref) => {
                 )}
               </div>
             </div>
-            <div className="col-md-6">
-              <label className="form-label">Part Number(Optional)</label>
+
+            <div className="col-md-3" style={{ border: "solid 0px" }}>
+              <label className="form-label">Brand</label>
+              <div className="input-group mb-3">
+                <Typeahead
+                  id="brand_id"
+                  labelKey="name"
+                  isLoading={isBrandsLoading}
+                  onChange={(selectedItems) => {
+                    errors.brand_id = "";
+                    setErrors(errors);
+                    if (selectedItems.length === 0) {
+                      errors.brand_id = "Invalid brand selected";
+                      setErrors(errors);
+                      formData.brand_id = "";
+                      formData.brand_name = "";
+                      setFormData({ ...formData });
+                      setSelectedBrands([]);
+                      return;
+                    }
+                    formData.brand_id = selectedItems[0].id;
+                    formData.brand_name = selectedItems[0].name;
+                    setFormData({ ...formData });
+                    setSelectedBrands(selectedItems);
+                    makePartNumberPrefix();
+                  }}
+                  options={brandOptions}
+                  placeholder="Brand name"
+                  selected={selectedBrands}
+                  highlightOnlyResult={true}
+                  onInputChange={(searchTerm, e) => {
+                    suggestBrands(searchTerm);
+                  }}
+                />
+                <Button
+                  hide={true.toString()}
+                  onClick={openProductBrandCreateForm}
+                  className="btn btn-outline-secondary btn-primary btn-sm"
+                  type="button"
+                  id="button-addon1"
+                >
+                  {" "}
+                  <i className="bi bi-plus-lg"></i> New
+                </Button>
+              </div>
+            </div>
+
+
+            <div className="col-md-3">
+              <label className="form-label">Country</label>
+
+              <div className="input-group mb-3">
+                <Typeahead
+                  id="country_code"
+                  labelKey="label"
+                  onChange={(selectedItems) => {
+                    errors.country_code = "";
+                    setErrors(errors);
+                    if (selectedItems.length === 0) {
+                      errors.country_code = "Invalid country selected";
+                      setErrors(errors);
+                      formData.country_code = "";
+                      formData.country_name = "";
+                      setFormData({ ...formData });
+                      setSelectedCountries([]);
+                      return;
+                    }
+                    formData.country_code = selectedItems[0].value;
+                    formData.country_name = selectedItems[0].label;
+                    setFormData({ ...formData });
+                    setSelectedCountries(selectedItems);
+                    makePartNumberPrefix();
+                  }}
+                  options={countryOptions}
+                  placeholder="Country name"
+                  selected={selectedCountries}
+                  highlightOnlyResult={true}
+                  onInputChange={(searchTerm, e) => {
+                    //suggestBrands(searchTerm);
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="col-md-2">
+              <label className="form-label">Part no. prefix </label>
+
+              <div className="input-group mb-3">
+                <input
+                  value={formData.prefix_part_number ? formData.prefix_part_number : ""}
+                  type="string"
+                  onChange={(e) => {
+                    errors["part_number"] = "";
+                    setErrors({ ...errors });
+                    formData.prefix_part_number = e.target.value;
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+                  id="prefix_part_number"
+                  placeholder="Prefix"
+                />
+                {errors.prefix_part_number && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.prefix_part_number}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="col-md-4">
+              <label className="form-label">Part No.</label>
 
               <div className="input-group mb-3">
                 <input
@@ -739,7 +883,7 @@ const ProductCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="col-md-6">
-              <label className="form-label">Rack / Location (Optional)</label>
+              <label className="form-label">Rack / Location </label>
 
               <div className="input-group mb-3">
                 <input
@@ -771,10 +915,10 @@ const ProductCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            <div className="col-md-6">
+            <div className="col-md-4">
               <label className="form-label">Categories*</label>
 
-              <div className="input-group mb-3">
+              <div className="input-group mb-4">
                 <Typeahead
                   id="category_id"
                   labelKey="name"
@@ -825,58 +969,8 @@ const ProductCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            <div className="col-md-6" style={{ border: "solid 0px" }}>
-              <label className="form-label">Brand(Optional)</label>
-              <Typeahead
-                id="brand_id"
-                labelKey="name"
-                isLoading={isBrandsLoading}
-                isInvalid={errors.brand_id ? true : false}
-                onChange={(selectedItems) => {
-                  errors.brand_id = "";
-                  setErrors(errors);
-                  if (selectedItems.length === 0) {
-                    errors.brand_id = "Invalid brand selected";
-                    setErrors(errors);
-                    formData.brand_id = "";
-                    setFormData({ ...formData });
-                    setSelectedBrands([]);
-                    return;
-                  }
-                  formData.brand_id = selectedItems[0].id;
-                  setFormData({ ...formData });
-                  setSelectedBrands(selectedItems);
-                }}
-                options={brandOptions}
-                placeholder="Brand name"
-                selected={selectedBrands}
-                highlightOnlyResult={true}
-                onInputChange={(searchTerm, e) => {
-                  suggestBrands(searchTerm);
-                }}
-              />
-              <Button
-                hide={true.toString()}
-                onClick={openProductBrandCreateForm}
-                className="btn btn-outline-secondary btn-primary btn-sm"
-                type="button"
-                id="button-addon1"
-              >
-                {" "}
-                <i className="bi bi-plus-lg"></i> New
-              </Button>
-
-              {/* <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-              {errors.customer_id && (
-                <div style={{ color: "red" }}>
-                  {errors.customer_id}
-                </div>
-              )}*/}
-
-            </div>
-
             <div className="col-md-2">
-              <label className="form-label">Unit</label>
+              <label className="form-label">Unit*</label>
               <select
                 className="form-control"
                 value={formData.unit}
@@ -898,6 +992,13 @@ const ProductCreate = forwardRef((props, ref) => {
                 <option value="Mg">Mg</option>
               </select>
             </div>
+
+
+
+
+
+
+
 
             <h4>Unit Price & Stock</h4>
             <div className="table-responsive" style={{ overflowX: "auto" }}>
@@ -1113,7 +1214,7 @@ const ProductCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="col-md-6">
-              <label className="form-label">Image(Optional)</label>
+              <label className="form-label">Image</label>
 
               <div className="input-group mb-3">
                 <input
@@ -1217,7 +1318,7 @@ const ProductCreate = forwardRef((props, ref) => {
             </Modal.Footer>
           </form>
         </Modal.Body>
-      </Modal>
+      </Modal >
     </>
   );
 });

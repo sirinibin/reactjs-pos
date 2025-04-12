@@ -464,7 +464,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = `select=id,item_code,part_number,name,unit,part_number,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
+        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200",
@@ -1674,7 +1674,7 @@ function findDiscount() {
                                 }}
                                 options={productOptions}
                                 selected={selectedProduct}
-                                placeholder="Search By Part No. / Name / Name in Arabic"
+                                placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
                                     //handleSuggestProducts(searchTerm);

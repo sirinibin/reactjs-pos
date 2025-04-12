@@ -21,9 +21,12 @@ import DeliveryNoteHistory from "./delivery_note_history.js";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 import StatsSummary from "../utils/StatsSummary.js";
+import countryList from 'react-select-country-list'
 //import debounce from 'lodash.debounce';
 
 function ProductIndex(props) {
+    const countryOptions = useMemo(() => countryList().getData(), [])
+
 
     const cookies = useMemo(() => new Cookies(), []);
 
@@ -62,6 +65,7 @@ function ProductIndex(props) {
     const [brandOptions, setBrandOptions] = useState([]);
     const [selectedProductCategories, setSelectedProductCategories] = useState([]);
     const [selectedProductBrands, setSelectedProductBrands] = useState([]);
+    const [selectedCountries, setSelectedCountries] = useState([]);
 
 
     useEffect(() => {
@@ -260,13 +264,21 @@ function ProductIndex(props) {
             setSelectedProductCategories(values);
         } else if (field === "brand_id") {
             setSelectedProductBrands(values);
+        } else if (field === "country_code") {
+            setSelectedCountries(values);
         } else if (field === "product_id") {
             setSelectedProducts(values);
         }
 
         searchParams[field] = Object.values(values)
             .map(function (model) {
-                return model.id;
+                if (model.id) {
+                    return model.id;
+                } else if (model.value) {
+                    return model.value;
+                }
+                return "";
+
             })
             .join(",");
 
@@ -298,11 +310,11 @@ function ProductIndex(props) {
             // Select =
             //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + cookies.get("store_id") + ".stock,product_stores." + cookies.get("store_id") + ".purchase_unit_price,product_stores." + cookies.get("store_id") + ".wholesale_unit_price,product_stores." + cookies.get("store_id") + ".retail_unit_price,product_stores." + cookies.get("store_id") + ".store_id";
             Select =
-                "select=id,brand_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+                "select=id,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
 
         } else {
             Select =
-                "select=id,brand_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+                "select=id,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
 
 
             //Select =
@@ -545,7 +557,7 @@ function ProductIndex(props) {
             },
         };
 
-        let Select = `select=id,part_number,name,part_number,name_in_arabic`;
+        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
         setIsProductsLoading(true);
 
         let result = await fetch(
@@ -1102,6 +1114,25 @@ function ProductIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "brand_name" && sortProduct === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("country_name");
+                                                        }}
+                                                    >
+                                                        Countries
+                                                        {sortField === "country_name" && sortProduct === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "country_name" && sortProduct === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -1794,6 +1825,27 @@ function ProductIndex(props) {
                                                     />
                                                 </th>
 
+                                                <th style={{ minWidth: "250px" }}>
+                                                    <Typeahead
+                                                        id="country_code"
+                                                        labelKey="label"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "country_code",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={countryOptions}
+                                                        placeholder="Select countries"
+                                                        selected={selectedCountries}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            //suggestBrands(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -2214,7 +2266,7 @@ function ProductIndex(props) {
                                                             */}
                                                             </span>
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.part_number}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start">
                                                             <OverflowTooltip value={product.name + (product.name_in_arabic ? " | " + product.name_in_arabic : "")} maxWidth={300} />
                                                         </td>
@@ -2385,6 +2437,11 @@ function ProductIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             <ul>
                                                                 {product.brand_name}
+                                                            </ul>
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                            <ul>
+                                                                {product.country_name}
                                                             </ul>
                                                         </td>
 
