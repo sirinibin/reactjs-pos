@@ -29,6 +29,7 @@ import PurchaseHistory from "./../product/purchase_history.js";
 import PurchaseReturnHistory from "./../product/purchase_return_history.js";
 import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+import Products from "./../utils/products.js";
 
 
 const OrderCreate = forwardRef((props, ref) => {
@@ -1359,6 +1360,12 @@ function findDiscount() {
         return true;
     }
 
+    const LinkedProductsRef = useRef();
+    function openLinkedProducts(model) {
+        LinkedProductsRef.current.open(model);
+    }
+
+
     const SalesHistoryRef = useRef();
     function openSalesHistory(model) {
         SalesHistoryRef.current.open(model, selectedCustomers);
@@ -1408,6 +1415,7 @@ function findDiscount() {
                 }}
             />
             */}
+            <Products ref={LinkedProductsRef} showToastMessage={props.showToastMessage} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
@@ -1822,6 +1830,14 @@ function findDiscount() {
                                                         </Dropdown.Toggle>
 
                                                         <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openLinkedProducts(product);
+                                                            }}>
+                                                                <i className="bi bi-link"></i>
+                                                                &nbsp;
+                                                                Linked Products
+                                                            </Dropdown.Item>
+
                                                             <Dropdown.Item onClick={() => {
                                                                 openSalesHistory(product);
                                                             }}>

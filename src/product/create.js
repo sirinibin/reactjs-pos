@@ -25,8 +25,9 @@ const ProductCreate = forwardRef((props, ref) => {
   //const [selectedCountry, setSelectedCountry] = useState('')
   let [selectedCountries, setSelectedCountries] = useState([]);
 
+
   useImperativeHandle(ref, () => ({
-    open(id) {
+    open(id, linkToProductID) {
       selectedCategories = [];
       setSelectedCategories(selectedCategories);
 
@@ -37,7 +38,11 @@ const ProductCreate = forwardRef((props, ref) => {
         unit: "",
         item_code: "",
       };
-      setFormData({ formData });
+
+      if (linkToProductID) {
+        formData["link_to_product_id"] = linkToProductID
+      }
+      setFormData(formData);
       getAllStores();
 
       if (id) {
@@ -45,6 +50,8 @@ const ProductCreate = forwardRef((props, ref) => {
       } else {
         //getAllStores();
       }
+
+
 
       SetShow(true);
     },
@@ -455,6 +462,7 @@ const ProductCreate = forwardRef((props, ref) => {
       return;
     }
 
+    formData.barcode_base64 = "";
     let endPoint = "/v1/product";
     let method = "POST";
     if (formData.id) {
