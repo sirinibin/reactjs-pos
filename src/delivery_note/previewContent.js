@@ -107,8 +107,8 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                         ) : "<DATE_TIME>"}</li>
                          */}
                             <li><strong>Delivery Note: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                            <li><strong>Delivert Note Date: </strong>{props.model.created_at ? format(
-                                new Date(props.model.created_at),
+                            <li><strong>Delivert Note Date: </strong>{props.model.date ? format(
+                                new Date(props.model.date),
                                 "MMM dd yyyy h:mma"
                             ) : "<DATE_TIME>"}</li>
                             <li>
@@ -119,14 +119,14 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                             </li>
                         </ul>
                     </div>
-                    <div className="col">
-                        <ul className="list-unstyled mb0 text-end">
-                            <li>{props.model.code ? convertToPersianNumber(props.model.code) + "#" : "<ID_NUMBER_ARABIC>"}<strong> :رقم مذكرة التسليم </strong></li>
-                            <li><strong> تاريخ مذكرة التسليم: </strong>{props.model.created_at ? getArabicDate(props.model.created_at) : "<DATE_ARABIC>"}</li>
-                            <li>
-                                <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
+                    <div className="col" dir="ltr">
+                        <ul className="list-unstyled mb0 text-end" dir="ltr">
+                            <li dir="ltr">{props.model.code ? convertToPersianNumber(props.model.code) + "#" : "<ID_NUMBER_ARABIC>"}<strong> :رقم مذكرة التسليم </strong></li>
+                            <li dir="ltr">{props.model.date ? getArabicDate(props.model.date) : "<DATE_ARABIC>"} <strong dir="ltr"> :تاريخ مذكرة التسليم</strong></li>
+                            <li dir="ltr">
+                                {props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}<strong>:عميل</strong>
                             </li>
-                            <li><strong>ظريبه الشراء: </strong>{props.model.customer ? props.model.customer.vat_no_in_arabic : "<CUSTOMER_VAT_NO_ARABIC>"}</li>
+                            <li dir="ltr">{props.model.customer ? props.model.customer.vat_no_in_arabic : "<CUSTOMER_VAT_NO_ARABIC>"} <strong>:ظريبه الشراء</strong> </li>
                         </ul>
                     </div>
                 </div>

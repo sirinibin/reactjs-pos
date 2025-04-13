@@ -26,6 +26,10 @@ thead th {
   z-index: 9999 !important;
 }
 
+.dropdown-menu {
+  z-index: 1050 !important; /* Higher than Bootstrap modals and table cells */
+}
+
 
 
 

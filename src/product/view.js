@@ -431,6 +431,7 @@ const ProductView = forwardRef((props, ref) => {
                                 <th>Purchase Unit Price</th>
                                 <th>Wholesale Unit Price</th>
                                 <th>Retail Unit Price</th>
+                                <th>Damaged/Missing Stock</th>
                                 <th>Stock</th>
                             </tr>
                         </thead>
@@ -465,6 +466,7 @@ const ProductView = forwardRef((props, ref) => {
                                             suffix={" "}
                                         />
                                     </td>
+                                    <td>{model.product_stores[key].damaged_stock}</td>
                                     <td>{model.product_stores[key].stock}</td>
                                 </tr> : "")
                             })}

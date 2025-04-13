@@ -5,6 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useMemo,
+  useCallback,
 } from "react";
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
@@ -18,6 +19,8 @@ import countryList from 'react-select-country-list';
 //import Select from 'react-select'
 
 const ProductCreate = forwardRef((props, ref) => {
+  const cookies = useMemo(() => new Cookies(), []);
+
   const countryOptions = useMemo(() => countryList().getData(), [])
   //const [selectedCountry, setSelectedCountry] = useState('')
   let [selectedCountries, setSelectedCountries] = useState([]);
@@ -99,7 +102,6 @@ const ProductCreate = forwardRef((props, ref) => {
 
   let [errors, setErrors] = useState({});
   const [isProcessing, setProcessing] = useState(false);
-  const cookies = new Cookies();
 
   //fields
   let [formData, setFormData] = useState({
@@ -181,6 +183,11 @@ const ProductCreate = forwardRef((props, ref) => {
         }
         setSelectedCountries(selectedCountries);
 
+        setSelectedLinkedProducts([]);
+        if (data.result.linked_products) {
+          setSelectedLinkedProducts(data.result.linked_products);
+        }
+
 
 
         if (data.result.product_stores) {
@@ -195,6 +202,7 @@ const ProductCreate = forwardRef((props, ref) => {
               productStores[i].wholesale_unit_price = data.result.product_stores[key].wholesale_unit_price;
               productStores[i].retail_unit_price = data.result.product_stores[key].retail_unit_price;
               productStores[i].stock = data.result.product_stores[key].stock;
+              productStores[i].damaged_stock = data.result.product_stores[key].damaged_stock;
               i++;
             }
           }
@@ -387,6 +395,11 @@ const ProductCreate = forwardRef((props, ref) => {
       formData.category_id.push(selectedCategories[i].id);
     }
 
+    formData.linked_product_ids = [];
+    for (i = 0; i < selectedLinkedProducts.length; i++) {
+      formData.linked_product_ids.push(selectedLinkedProducts[i].id);
+    }
+
     console.log("productStores:", productStores);
 
 
@@ -412,6 +425,7 @@ const ProductCreate = forwardRef((props, ref) => {
         "wholesale_unit_price": productStores[i].wholesale_unit_price ? productStores[i].wholesale_unit_price : 0,
         "purchase_unit_price": productStores[i].purchase_unit_price ? productStores[i].purchase_unit_price : 0,
         "stock": productStores[i].stock ? productStores[i].stock : 0,
+        "damaged_stock": productStores[i].damaged_stock ? productStores[i].damaged_stock : 0,
       };
       /*
           storesData.push({
@@ -565,6 +579,70 @@ const ProductCreate = forwardRef((props, ref) => {
     setFormData({ ...formData });
   }
 
+  const [productOptions, setProductOptions] = useState([]);
+  //let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
+  //const [isProductsLoading, setIsProductsLoading] = useState(false);
+  let [selectedLinkedProducts, setSelectedLinkedProducts] = useState([]);
+
+  const suggestProducts = useCallback(async (searchTerm) => {
+    console.log("Inside handle suggestProducts");
+    setProductOptions([]);
+
+    console.log("searchTerm:" + searchTerm);
+    if (!searchTerm) {
+      // openProductSearchResult = false;
+
+      setTimeout(() => {
+        // setOpenProductSearchResult(false);
+      }, 300);
+      return;
+    }
+
+    var params = {
+      search_text: searchTerm,
+    };
+
+    if (cookies.get("store_id")) {
+      params.store_id = cookies.get("store_id");
+    }
+
+
+    var queryString = ObjectToSearchQueryParams(params);
+    if (queryString !== "") {
+      queryString = "&" + queryString;
+    }
+
+    const requestOptions = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: cookies.get("access_token"),
+      },
+    };
+
+    let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
+    //setIsProductsLoading(true);
+    let result = await fetch(
+      "/v1/product?" + Select + queryString + "&limit=200",
+      requestOptions
+    );
+    let data = await result.json();
+
+    let products = data.result;
+    if (!products || products.length === 0) {
+      // openProductSearchResult = false;
+      //setOpenProductSearchResult(false);
+      // setIsProductsLoading(false);
+      return;
+    }
+
+    // openProductSearchResult = true;
+    //setOpenProductSearchResult(true);
+    setProductOptions(products);
+    //setIsProductsLoading(false);
+
+  }, [cookies]);
+
   return (
     <>
       <StoreCreate
@@ -662,12 +740,6 @@ const ProductCreate = forwardRef((props, ref) => {
                     {errors.name}
                   </div>
                 )}
-                {formData.name && !errors.name && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
               </div>
             </div>
 
@@ -696,12 +768,7 @@ const ProductCreate = forwardRef((props, ref) => {
                                         {errors.ean_12}
                                     </div>
                                 )}
-                                {formData.ean_12 && !errors.ean_12 && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+                               
                             </div>
                         </div>
                                 */}
@@ -730,12 +797,7 @@ const ProductCreate = forwardRef((props, ref) => {
                     {errors.name_in_arabic}
                   </div>
                 )}
-                {formData.name_in_arabic && !errors.name_in_arabic && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
+
               </div>
             </div>
 
@@ -873,12 +935,7 @@ const ProductCreate = forwardRef((props, ref) => {
                     {errors.part_number}
                   </div>
                 )}
-                {formData.part_number && !errors.part_number && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
+
               </div>
             </div>
 
@@ -902,16 +959,11 @@ const ProductCreate = forwardRef((props, ref) => {
                 />
                 {errors.rack && (
                   <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
+
                     {errors.rack}
                   </div>
                 )}
-                {formData.rack && !errors.rack && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
+
               </div>
             </div>
 
@@ -956,16 +1008,10 @@ const ProductCreate = forwardRef((props, ref) => {
                 </Button>
                 {errors.category_id && (
                   <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
                     {errors.category_id}
                   </div>
                 )}
-                {formData.category_id && !errors.category_id && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
+
               </div>
             </div>
 
@@ -1000,6 +1046,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
 
+
+
             <h4>Unit Price & Stock</h4>
             <div className="table-responsive" style={{ overflowX: "auto" }}>
               <table className="table table-striped table-sm table-bordered">
@@ -1009,6 +1057,7 @@ const ProductCreate = forwardRef((props, ref) => {
                     <th>Purchase Unit Price</th>
                     <th>Wholesale Unit Price</th>
                     <th>Retail Unit Price</th>
+                    <th>Damaged/Missing Stock</th>
                     <th>Stock</th>
                   </tr>
                 </thead>
@@ -1053,17 +1102,10 @@ const ProductCreate = forwardRef((props, ref) => {
                         />{" "}
                         {errors["purchase_unit_price_" + index] && (
                           <div style={{ color: "red" }}>
-                            <i className="bi bi-x-lg"> </i>
                             {errors["purchase_unit_price_" + index]}
                           </div>
                         )}
-                        {(productStores[index]?.purchase_unit_price || productStores[index]?.purchase_unit_price === 0) &&
-                          !errors["purchase_unit_price_" + index] ? (
-                          <div style={{ color: "green" }}>
-                            <i className="bi bi-check-lg"> </i>
-                            Looks good!
-                          </div>
-                        ) : null}
+
                       </td>
                       <td style={{ width: "150px" }}>
                         <input
@@ -1102,17 +1144,10 @@ const ProductCreate = forwardRef((props, ref) => {
                         />
                         {errors["wholesale_unit_price_" + index] && (
                           <div style={{ color: "red" }}>
-                            <i className="bi bi-x-lg"> </i>
                             {errors["wholesale_unit_price_" + index]}
                           </div>
                         )}
-                        {(productStores[index]?.wholesale_unit_price || productStores[index]?.wholesale_unit_price === 0) &&
-                          !errors["wholesale_unit_price_" + index] ? (
-                          <div style={{ color: "green" }}>
-                            <i className="bi bi-check-lg"> </i>
-                            Looks good!
-                          </div>
-                        ) : null}
+
                       </td>
                       <td style={{ width: "150px" }}>
                         <input
@@ -1155,25 +1190,51 @@ const ProductCreate = forwardRef((props, ref) => {
                         />{" "}
                         {errors["retail_unit_price_" + index] && (
                           <div style={{ color: "red" }}>
-                            <i className="bi bi-x-lg"> </i>
+
                             {errors["retail_unit_price_" + index]}
                           </div>
                         )}
-                        {(productStores[index]?.retail_unit_price || productStores[index]?.retail_unit_price === 0) &&
-                          !errors["retail_unit_price_" + index] ? (
-                          <div style={{ color: "green" }}>
-                            <i className="bi bi-check-lg"> </i>
-                            Looks good!
-                          </div>
-                        ) : null}
+
                       </td>
 
+                      <td style={{ width: "150px" }}>
+                        <input
+                          value={productStores[index]?.damaged_stock || productStores[index]?.damaged_stock === 0
+                            ? productStores[index].damaged_stock
+                            : ""
+                          }
+                          type="number"
+                          onChange={(e) => {
+                            errors["damaged_stock_" + index] = "";
+                            setErrors({ ...errors });
+
+                            if (!e.target.value) {
+                              productStores[index].damaged_stock = "";
+                              setProductStores([...productStores]);
+                              //errors["stock_" + index] = "Invalid Stock value";
+                              //setErrors({ ...errors });
+                              return;
+                            }
+
+                            productStores[index].damaged_stock = parseFloat(e.target.value);
+                          }}
+                          className="form-control"
+                          id="damaged_stock"
+                          placeholder="Damaged stock"
+                        />
+                        {errors["damaged_stock_" + index] && (
+                          <div style={{ color: "red" }}>
+                            {errors["damaged_stock_" + index]}
+                          </div>
+                        )}
+                      </td>
                       <td style={{ width: "150px" }}>
                         <input
                           value={productStores[index]?.stock || productStores[index]?.stock === 0
                             ? productStores[index].stock
                             : ""
                           }
+                          disabled={true}
                           type="number"
                           onChange={(e) => {
                             errors["stock_" + index] = "";
@@ -1199,18 +1260,35 @@ const ProductCreate = forwardRef((props, ref) => {
                             {errors["stock_" + index]}
                           </div>
                         )}
-                        {(productStores[index]?.stock || productStores[index]?.stock === 0) &&
-                          !errors["stock_" + index] ? (
-                          <div style={{ color: "green" }}>
-                            <i className="bi bi-check-lg"> </i>
-                            Looks good!
-                          </div>
-                        ) : null}
                       </td>
                     </tr> : ''
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <div className="col-md-12">
+              <label className="form-label">Linked Products</label>
+              <Typeahead
+                id="product_id"
+                labelKey="search_label"
+                onChange={(selectedItems) => {
+                  setSelectedLinkedProducts(selectedItems);
+                  /*
+                  searchByMultipleValuesField(
+                    "category_id",
+                    selectedItems
+                  );*/
+                }}
+                options={productOptions}
+                placeholder="Select Products"
+                selected={selectedLinkedProducts}
+                highlightOnlyResult={true}
+                onInputChange={(searchTerm, e) => {
+                  suggestProducts(searchTerm);
+                }}
+                multiple
+              />
             </div>
 
             <div className="col-md-6">
@@ -1283,16 +1361,10 @@ const ProductCreate = forwardRef((props, ref) => {
                 />
                 {errors.image && (
                   <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
                     {errors.image}
                   </div>
                 )}
-                {formData.image && !errors.image && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
+
               </div>
             </div>
 

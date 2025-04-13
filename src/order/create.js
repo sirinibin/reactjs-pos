@@ -22,6 +22,15 @@ import { Spinner } from "react-bootstrap";
 //import debounce from 'lodash.debounce';
 import ResizableTableCell from './../utils/ResizableTableCell';
 
+import { Dropdown } from 'react-bootstrap';
+import SalesHistory from "./../product/sales_history.js";
+import SalesReturnHistory from "./../product/sales_return_history.js";
+import PurchaseHistory from "./../product/purchase_history.js";
+import PurchaseReturnHistory from "./../product/purchase_return_history.js";
+import QuotationHistory from "./../product/quotation_history.js";
+import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+
+
 const OrderCreate = forwardRef((props, ref) => {
 
 
@@ -1350,6 +1359,39 @@ function findDiscount() {
         return true;
     }
 
+    const SalesHistoryRef = useRef();
+    function openSalesHistory(model) {
+        SalesHistoryRef.current.open(model, selectedCustomers);
+    }
+
+    const SalesReturnHistoryRef = useRef();
+    function openSalesReturnHistory(model) {
+        SalesReturnHistoryRef.current.open(model, selectedCustomers);
+    }
+
+
+    const PurchaseHistoryRef = useRef();
+    function openPurchaseHistory(model) {
+        PurchaseHistoryRef.current.open(model);
+    }
+
+    const PurchaseReturnHistoryRef = useRef();
+    function openPurchaseReturnHistory(model) {
+        PurchaseReturnHistoryRef.current.open(model);
+    }
+
+
+    const DeliveryNoteHistoryRef = useRef();
+    function openDeliveryNoteHistory(model) {
+        DeliveryNoteHistoryRef.current.open(model, selectedCustomers);
+    }
+
+
+    const QuotationHistoryRef = useRef();
+    function openQuotationHistory(model) {
+        QuotationHistoryRef.current.open(model, selectedCustomers);
+    }
+
 
     return (
         <>
@@ -1366,6 +1408,13 @@ function findDiscount() {
                 }}
             />
             */}
+            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
+            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
+
+            <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
+            <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
+            <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
+            <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
             <OrderView ref={DetailsViewRef} openCreateForm={props.openCreateForm} />
             <ProductView ref={ProductDetailsViewRef} />
@@ -1692,7 +1741,7 @@ function findDiscount() {
 
 
 
-                        <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>
+                        <div className="table-responsive" style={{ overflowY: "auto", maxHeight: "400px" }}>
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
@@ -1701,9 +1750,10 @@ function findDiscount() {
                                         <th>Part No.</th>
                                         <ResizableTableCell className="text-start">Name
                                         </ResizableTableCell>
-                                        <th  >Purchase Unit Price</th>
-                                        <th  >Qty</th>
-                                        <th >Unit Price</th>
+                                        <th>Info</th>
+                                        <th>Purchase Unit Price</th>
+                                        <th>Qty</th>
+                                        <th>Unit Price</th>
                                         <th>Unit Disc.</th>
                                         <th >Unit Disc. %</th>
                                         <th >Price</th>
@@ -1744,7 +1794,81 @@ function findDiscount() {
                                                         </div>
                                                     )}
                                                 </div>
+
                                             </ResizableTableCell>
+                                            <td>
+
+                                                {/*<DropdownButton
+                                                    style={{ zIndex: "9999 !important", position: "absolute !important" }}
+                                                    title="History"
+                                                    variant="secondary"
+                                                    drop="top"
+                                                    container="body" // ensures dropdown renders in body
+                                                >
+                                                    <Dropdown.Item>Sales History</Dropdown.Item>
+                                                    <Dropdown.Item>Purchase History</Dropdown.Item>
+                                                    <Dropdown.Item>Delivery Note History</Dropdown.Item>
+                                                    <Dropdown.Item>Purchase History</Dropdown.Item>
+                                                    <Dropdown.Item>Delivery Note History</Dropdown.Item>
+                                                    <Dropdown.Item>Purchase History</Dropdown.Item>
+                                                    <Dropdown.Item>Delivery Note History</Dropdown.Item>
+                                                </DropdownButton>*/}
+
+
+                                                <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
+                                                    <Dropdown drop="top">
+                                                        <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
+                                                            <i className="bi bi-info"></i>
+                                                        </Dropdown.Toggle>
+
+                                                        <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openSalesHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Sales History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openSalesReturnHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Sales Return History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openPurchaseHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Purchase History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openPurchaseReturnHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Purchase Return History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openDeliveryNoteHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Delivery Note History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openQuotationHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Quotation History
+                                                            </Dropdown.Item>
+
+                                                        </Dropdown.Menu>
+                                                    </Dropdown>
+                                                </div>
+                                            </td>
 
                                             <td>
 

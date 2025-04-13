@@ -12,6 +12,7 @@ import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import ProductView from "../product/view.js";
 import { DebounceInput } from 'react-debounce-input';
+import DatePicker from "react-datepicker";
 
 const DeliveryNoteCreate = forwardRef((props, ref) => {
 
@@ -29,6 +30,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         status: "delivered",
         price_type: "retail",
       };
+
+      formData.date_str = new Date();
 
       selectedProducts = [];
       setSelectedProducts([]);
@@ -201,6 +204,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           is_discount_percent: deliverynote.is_discount_percent,
           shipping_handling_fees: deliverynote.shipping_handling_fees,
         };
+
+        formData.date_str = data.result.date;
 
         if (formData.is_discount_percent) {
           formData.discountValue = formData.discount_percent;
@@ -902,53 +907,44 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
             </div> : ""}
             <div className="col-md-6">
               <label className="form-label">Customer*</label>
-
-              <div className="input-group mb-3">
-                <Typeahead
-                  id="customer_id"
-                  labelKey="search_label"
-                  isLoading={isCustomersLoading}
-                  isInvalid={errors.customer_id ? true : false}
-                  onChange={(selectedItems) => {
-                    errors.customer_id = "";
+              <Typeahead
+                id="customer_id"
+                labelKey="search_label"
+                isLoading={isCustomersLoading}
+                isInvalid={errors.customer_id ? true : false}
+                onChange={(selectedItems) => {
+                  errors.customer_id = "";
+                  setErrors(errors);
+                  if (selectedItems.length === 0) {
+                    errors.customer_id = "Invalid Customer selected";
                     setErrors(errors);
-                    if (selectedItems.length === 0) {
-                      errors.customer_id = "Invalid Customer selected";
-                      setErrors(errors);
-                      formData.customer_id = "";
-                      setFormData({ ...formData });
-                      setSelectedCustomers([]);
-                      return;
-                    }
-                    formData.customer_id = selectedItems[0].id;
+                    formData.customer_id = "";
                     setFormData({ ...formData });
-                    setSelectedCustomers(selectedItems);
-                  }}
-                  options={customerOptions}
-                  placeholder="Customer Name / Mob / VAT # / ID"
-                  selected={selectedCustomers}
-                  highlightOnlyResult={true}
-                  onInputChange={(searchTerm, e) => {
-                    suggestCustomers(searchTerm);
-                  }}
-                />
-                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                {errors.customer_id && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.customer_id}
-                  </div>
-                )}
-                {formData.customer_id && !errors.customer_id && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
-              </div>
+                    setSelectedCustomers([]);
+                    return;
+                  }
+                  formData.customer_id = selectedItems[0].id;
+                  setFormData({ ...formData });
+                  setSelectedCustomers(selectedItems);
+                }}
+                options={customerOptions}
+                placeholder="Customer Name / Mob / VAT # / ID"
+                selected={selectedCustomers}
+                highlightOnlyResult={true}
+                onInputChange={(searchTerm, e) => {
+                  suggestCustomers(searchTerm);
+                }}
+              />
+              <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+              {errors.customer_id && (
+                <div style={{ color: "red" }}>
+                  <i className="bi bi-x-lg"> </i>
+                  {errors.customer_id}
+                </div>
+              )}
             </div>
 
-            <div className="col-md-6">
+            <div className="col-md-3">
               <label className="form-label">Product Barcode Scan</label>
 
               <div className="input-group mb-3">
@@ -969,6 +965,38 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   <div style={{ color: "green" }}>
                     <i className="bi bi-check-lg"> </i>
                     Looks good!
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <label className="form-label">Date*</label>
+
+              <div className="input-group mb-3">
+                <DatePicker
+                  id="date_str"
+                  selected={formData.date_str ? new Date(formData.date_str) : null}
+                  value={formData.date_str ? format(
+                    new Date(formData.date_str),
+                    "MMMM d, yyyy h:mm aa"
+                  ) : null}
+                  className="form-control"
+                  dateFormat="MMMM d, yyyy h:mm aa"
+                  showTimeSelect
+                  timeIntervals="1"
+                  onChange={(value) => {
+                    console.log("Value", value);
+                    formData.date_str = value;
+                    // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                    setFormData({ ...formData });
+                  }}
+                />
+
+                {errors.date_str && (
+                  <div style={{ color: "red" }}>
+
+                    {errors.date_str}
                   </div>
                 )}
               </div>

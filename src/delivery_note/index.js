@@ -13,6 +13,25 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 function DeliveryNoteIndex(props) {
   const cookies = new Cookies();
 
+  //Date filter
+  const [showDateRange, setShowDateRange] = useState(false);
+  let [selectedDate, setSelectedDate] = useState(new Date());
+  let [selectedFromDate, setSelectedFromDate] = useState(new Date());
+  let [selectedToDate, setSelectedToDate] = useState(new Date());
+  let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
+  let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
+  let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
+
+  let [dateValue, setDateValue] = useState("");
+  const [fromDateValue, setFromDateValue] = useState("");
+  const [toDateValue, setToDateValue] = useState("");
+
+  //Created At filter
+  const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
+  const [createdAtValue, setCreatedAtValue] = useState("");
+  const [createdAtFromValue, setCreatedAtFromValue] = useState("");
+  const [createdAtToValue, setCreatedAtToValue] = useState("");
+
   let [totalDeliveryNote, setTotalDeliveryNote] = useState(0.00);
   let [profit, setProfit] = useState(0.00);
   let [loss, setLoss] = useState(0.00);
@@ -29,14 +48,10 @@ function DeliveryNoteIndex(props) {
   const [offset, setOffset] = useState(0);
 
   //Date filter
-  const selectedDate = new Date();
+  //  const selectedDate = new Date();
 
 
-  //Created At filter
-  const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
-  const [createdAtValue, setCreatedAtValue] = useState("");
-  const [createdAtFromValue, setCreatedAtFromValue] = useState("");
-  const [createdAtToValue, setCreatedAtToValue] = useState("");
+
 
   //loader flag
   const [isListLoading, setIsListLoading] = useState(false);
@@ -148,28 +163,38 @@ function DeliveryNoteIndex(props) {
 
   function searchByDateField(field, value) {
     if (!value) {
-      page = 1;
       searchParams[field] = "";
+      page = 1;
       setPage(page);
       list();
       return;
     }
 
-    let d = new Date(value);
-    d = new Date(d.toUTCString());
+    if (value) {
+      let d = new Date(value);
+      value = format(d, "MMM dd yyyy");
+      console.log("value2:", value);
+      console.log(Intl.DateTimeFormat().resolvedOptions().timeZone)
+    } else {
+      value = "";
+    }
 
-    value = format(d, "MMM dd yyyy");
 
     if (field === "date_str") {
+      setDateValue(value);
+      setFromDateValue("");
+      setToDateValue("");
       searchParams["from_date"] = "";
       searchParams["to_date"] = "";
       searchParams[field] = value;
-      console.log("Value:", value);
     } else if (field === "from_date") {
-
+      setFromDateValue(value);
+      setDateValue("");
       searchParams["date"] = "";
       searchParams[field] = value;
     } else if (field === "to_date") {
+      setToDateValue(value);
+      setDateValue("");
       searchParams["date"] = "";
       searchParams[field] = value;
     } else if (field === "created_at") {
@@ -179,6 +204,7 @@ function DeliveryNoteIndex(props) {
       searchParams["created_at_from"] = "";
       searchParams["created_at_to"] = "";
       searchParams[field] = value;
+      console.log("searchParams[field]:", searchParams[field]);
     }
     if (field === "created_at_from") {
       setCreatedAtFromValue(value);
@@ -226,7 +252,7 @@ function DeliveryNoteIndex(props) {
       },
     };
     let Select =
-      "select=id,code,created_by_name,customer_name,created_at";
+      "select=id,code,date,created_by_name,customer_name,created_at";
     if (cookies.get("store_id")) {
       searchParams.store_id = cookies.get("store_id");
     }
@@ -329,6 +355,9 @@ function DeliveryNoteIndex(props) {
   function openCreateForm() {
     CreateFormRef.current.open();
   }
+
+
+
 
   return (
     <>
@@ -507,6 +536,27 @@ function DeliveryNoteIndex(props) {
                               cursor: "pointer",
                             }}
                             onClick={() => {
+                              sort("date");
+                            }}
+                          >
+                            Date
+                            {sortField === "date" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-down"></i>
+                            ) : null}
+                            {sortField === "date" && sortOrder === "" ? (
+                              <i className="bi bi-sort-up"></i>
+                            ) : null}
+                          </b>
+
+
+                        </th>
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
                               sort("customer_name");
                             }}
                           >
@@ -574,6 +624,86 @@ function DeliveryNoteIndex(props) {
                             className="form-control"
                           />
                         </th>
+                        <th >
+                          <div id="calendar-portal" className="date-picker " style={{ minWidth: "125px" }}>
+                            <DatePicker
+                              id="date_str"
+
+                              value={dateValue}
+                              selected={selectedDate}
+                              className="form-control"
+                              dateFormat="MMM dd yyyy"
+                              isClearable={true}
+                              onChange={(date) => {
+                                if (!date) {
+                                  setDateValue("");
+                                  searchByDateField("date_str", "");
+                                  return;
+                                }
+                                searchByDateField("date_str", date);
+                                selectedDate = date;
+                                setSelectedDate(date);
+                              }}
+
+                            />
+
+                            <br />
+                            <small
+                              style={{
+                                color: "blue",
+                                textDecoration: "underline",
+                                cursor: "pointer",
+                              }}
+                              onClick={(e) => setShowDateRange(!showDateRange)}
+                            >
+                              {showDateRange ? "Less.." : "More.."}
+                            </small>
+                            <br />
+
+                            {showDateRange ? (
+                              <span className="text-left">
+                                From:{" "}
+                                <DatePicker
+                                  id="from_date"
+                                  value={fromDateValue}
+                                  selected={selectedFromDate}
+                                  className="form-control"
+                                  dateFormat="MMM dd yyyy"
+                                  isClearable={true}
+                                  onChange={(date) => {
+                                    if (!date) {
+                                      setFromDateValue("");
+                                      searchByDateField("from_date", "");
+                                      return;
+                                    }
+                                    searchByDateField("from_date", date);
+                                    selectedFromDate = date;
+                                    setSelectedFromDate(date);
+                                  }}
+                                />
+                                To:{" "}
+                                <DatePicker
+                                  id="to_date"
+                                  value={toDateValue}
+                                  selected={selectedToDate}
+                                  className="form-control"
+                                  dateFormat="MMM dd yyyy"
+                                  isClearable={true}
+                                  onChange={(date) => {
+                                    if (!date) {
+                                      setToDateValue("");
+                                      searchByDateField("to_date", "");
+                                      return;
+                                    }
+                                    searchByDateField("to_date", date);
+                                    selectedToDate = date;
+                                    setSelectedToDate(date);
+                                  }}
+                                />
+                              </span>
+                            ) : null}
+                          </div>
+                        </th>
                         <th>
                           <Typeahead
                             id="customer_id"
@@ -618,11 +748,20 @@ function DeliveryNoteIndex(props) {
                           <DatePicker
                             id="created_at"
                             value={createdAtValue}
-                            selected={selectedDate}
+                            selected={selectedCreatedAtDate}
                             className="form-control"
                             dateFormat="MMM dd yyyy"
+                            isClearable={true}
                             onChange={(date) => {
+                              if (!date) {
+                                //  createdAtValue = "";
+                                setCreatedAtValue("");
+                                searchByDateField("created_at", "");
+                                return;
+                              }
                               searchByDateField("created_at", date);
+                              selectedCreatedAtDate = date;
+                              setSelectedCreatedAtDate(date);
                             }}
                           />
                           <small
@@ -645,22 +784,38 @@ function DeliveryNoteIndex(props) {
                               <DatePicker
                                 id="created_at_from"
                                 value={createdAtFromValue}
-                                selected={selectedDate}
+                                selected={selectedCreatedAtFromDate}
                                 className="form-control"
                                 dateFormat="MMM dd yyyy"
+                                isClearable={true}
                                 onChange={(date) => {
+                                  if (!date) {
+                                    setCreatedAtFromValue("");
+                                    searchByDateField("created_at_from", "");
+                                    return;
+                                  }
                                   searchByDateField("created_at_from", date);
+                                  selectedCreatedAtFromDate = date;
+                                  setSelectedCreatedAtFromDate(date);
                                 }}
                               />
                               To:{" "}
                               <DatePicker
                                 id="created_at_to"
                                 value={createdAtToValue}
-                                selected={selectedDate}
+                                selected={selectedCreatedAtToDate}
                                 className="form-control"
                                 dateFormat="MMM dd yyyy"
+                                isClearable={true}
                                 onChange={(date) => {
+                                  if (!date) {
+                                    setCreatedAtToValue("");
+                                    searchByDateField("created_at_to", "");
+                                    return;
+                                  }
                                   searchByDateField("created_at_to", date);
+                                  selectedCreatedAtToDate = date;
+                                  setSelectedCreatedAtToDate(date);
                                 }}
                               />
                             </span>
@@ -675,6 +830,11 @@ function DeliveryNoteIndex(props) {
                         deliverynoteList.map((deliverynote) => (
                           <tr key={deliverynote.code}>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{deliverynote.code}</td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+
+                              {format(new Date(deliverynote.date), "MMM dd yyyy h:mma")}
+
+                            </td>
                             <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
                               <OverflowTooltip value={deliverynote.customer_name} />
                             </td>

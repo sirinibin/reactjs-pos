@@ -8,20 +8,82 @@ import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import PurchaseView from "../purchase/view.js";
 import VendorView from "../vendor/view.js";
+import { Typeahead } from "react-bootstrap-typeahead";
 
 //function ProductIndex(props) {
 
 const PurchaseHistory = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open(model) {
+        open(model, selectedVendors) {
             product = model;
             setProduct({ ...product });
-            list();
+            if (selectedVendors?.length > 0) {
+                setSelectedVendors(selectedVendors)
+                searchByMultipleValuesField("vendor_id", selectedVendors);
+            } else {
+                list();
+            }
             SetShow(true);
         },
 
     }));
+
+
+    function searchByMultipleValuesField(field, values) {
+        if (field === "vendor_id") {
+            setSelectedVendors(values);
+        }
+
+        searchParams[field] = Object.values(values)
+            .map(function (model) {
+                return model.id;
+            })
+            .join(",");
+
+        page = 1;
+        setPage(page);
+
+        list();
+    }
+
+    const [vendorOptions, setVendorOptions] = useState([]);
+    const [selectedVendors, setSelectedVendors] = useState([]);
+
+    async function suggestVendors(searchTerm) {
+        console.log("Inside handle suggestVendors");
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (cookies.get("store_id")) {
+            params.store_id = cookies.get("store_id");
+        }
+
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = `&${queryString}`;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let result = await fetch(
+            `/v1/vendor?${Select}${queryString}`,
+            requestOptions
+        );
+        let data = await result.json();
+
+        setVendorOptions(data.result);
+    }
 
     let [product, setProduct] = useState({});
 
@@ -113,19 +175,19 @@ const PurchaseHistory = forwardRef((props, ref) => {
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-          
-           
+
+
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-          
+
 
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-           
+
 
             searchParams["created_at"] = "";
             searchParams[field] = value;
@@ -154,7 +216,13 @@ const PurchaseHistory = forwardRef((props, ref) => {
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
-        searchParams["product_id"] = product.id;
+
+        if (product.product_id) {
+            searchParams["product_id"] = product.product_id;
+        } else if (product.id) {
+            searchParams["product_id"] = product.id;
+        }
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -906,13 +974,23 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                             />
                                                         </th>
                                                         <th>
-                                                            <input
-                                                                type="text"
-                                                                id="vendor_name"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("vendor_name", e.target.value)
-                                                                }
-                                                                className="form-control"
+                                                            <Typeahead
+                                                                id="vendor_id"
+                                                                labelKey="search_label"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "vendor_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={vendorOptions}
+                                                                placeholder="Vendor Name | Mob | VAT # | ID"
+                                                                selected={selectedVendors}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestVendors(searchTerm);
+                                                                }}
+                                                                multiple
                                                             />
                                                         </th>
 

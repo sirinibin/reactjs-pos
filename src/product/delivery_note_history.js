@@ -8,20 +8,81 @@ import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import DeliveryNoteView from "../delivery_note/view.js";
 import CustomerView from "../customer/view.js";
+import { Typeahead } from "react-bootstrap-typeahead";
 
 //function ProductIndex(props) {
 
 const DeliveryNoteHistory = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
-        open(model) {
+        open(model, selectedCustomers) {
             product = model;
             setProduct({ ...product });
-            list();
+            if (selectedCustomers?.length > 0) {
+                setSelectedCustomers(selectedCustomers)
+                searchByMultipleValuesField("customer_id", selectedCustomers);
+            } else {
+                list();
+            }
             SetShow(true);
         },
 
     }));
+
+    function searchByMultipleValuesField(field, values) {
+        if (field === "customer_id") {
+            setSelectedCustomers(values);
+        }
+
+        searchParams[field] = Object.values(values)
+            .map(function (model) {
+                return model.id;
+            })
+            .join(",");
+
+        page = 1;
+        setPage(page);
+
+        list();
+    }
+
+    const [customerOptions, setCustomerOptions] = useState([]);
+    const [selectedCustomers, setSelectedCustomers] = useState([]);
+
+    async function suggestCustomers(searchTerm) {
+        console.log("Inside handle suggestCustomers");
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (cookies.get("store_id")) {
+            params.store_id = cookies.get("store_id");
+        }
+
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = `&${queryString}`;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: cookies.get("access_token"),
+            },
+        };
+
+        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let result = await fetch(
+            `/v1/customer?${Select}${queryString}`,
+            requestOptions
+        );
+        let data = await result.json();
+
+        setCustomerOptions(data.result);
+    }
 
     let [product, setProduct] = useState({});
 
@@ -110,18 +171,18 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
             searchParams["date"] = "";
             searchParams[field] = value;
         } else if (field === "created_at") {
-         
+
             searchParams["created_at_from"] = "";
             searchParams["created_at_to"] = "";
             searchParams[field] = value;
         }
         if (field === "created_at_from") {
-           
-    
+
+
             searchParams["created_at"] = "";
             searchParams[field] = value;
         } else if (field === "created_at_to") {
-       
+
             searchParams["created_at"] = "";
             searchParams[field] = value;
         }
@@ -132,7 +193,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
         list();
     }
 
-   
+
 
     function list() {
         const requestOptions = {
@@ -150,7 +211,13 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
-        searchParams["product_id"] = product.id;
+
+        if (product.product_id) {
+            searchParams["product_id"] = product.product_id;
+        } else if (product.id) {
+            searchParams["product_id"] = product.id;
+        }
+
         setSearchParams(searchParams);
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -625,13 +692,23 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                             />
                                                         </th>
                                                         <th>
-                                                            <input
-                                                                type="text"
-                                                                id="customer_name"
-                                                                onChange={(e) =>
-                                                                    searchByFieldValue("customer_name", e.target.value)
-                                                                }
-                                                                className="form-control"
+                                                            <Typeahead
+                                                                id="customer_id"
+                                                                labelKey="search_label"
+                                                                onChange={(selectedItems) => {
+                                                                    searchByMultipleValuesField(
+                                                                        "customer_id",
+                                                                        selectedItems
+                                                                    );
+                                                                }}
+                                                                options={customerOptions}
+                                                                placeholder="Customer Name | Mob | VAT # | ID"
+                                                                selected={selectedCustomers}
+                                                                highlightOnlyResult={true}
+                                                                onInputChange={(searchTerm, e) => {
+                                                                    suggestCustomers(searchTerm);
+                                                                }}
+                                                                multiple
                                                             />
                                                         </th>
 
