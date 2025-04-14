@@ -37,6 +37,7 @@ const Products = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(model, productType) {
+            setProductList([]);
             type = productType;
             setType(type);
             console.log("Model: ", model);
