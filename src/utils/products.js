@@ -43,6 +43,7 @@ const Products = forwardRef((props, ref) => {
             }
 
             SetShow(true);
+            setSelectedIds([]);
         },
 
     }));
@@ -58,7 +59,7 @@ const Products = forwardRef((props, ref) => {
     const [productList, setProductList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(100);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
@@ -489,6 +490,32 @@ const Products = forwardRef((props, ref) => {
     };
 
 
+    //Select Products
+    const [selectedIds, setSelectedIds] = useState([]);
+
+    // Handle all select
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            setSelectedIds(productList.map((p) => p.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    // Handle individual selection
+    const handleSelect = (id) => {
+        setSelectedIds((prev) =>
+            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+        );
+    };
+
+    const isAllSelected = selectedIds?.length === productList?.length;
+
+    const handleSendSelected = () => {
+        const selectedProducts = productList.filter((p) => selectedIds.includes(p.id));
+        props.onSelectProducts(selectedProducts); // Send to parent
+        handleClose();
+    };
 
 
 
@@ -498,7 +525,7 @@ const Products = forwardRef((props, ref) => {
         <>
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Linked products of {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
+                    <Modal.Title>Linked products of #{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number} - {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -695,7 +722,18 @@ const Products = forwardRef((props, ref) => {
                                                             <p className="text-start">
                                                                 showing {offset + 1}-{offset + currentPageItemsCount} of{" "}
                                                                 {totalItems}
+
                                                             </p>
+                                                            <button
+                                                                style={{ marginBottom: "3px" }}
+                                                                className="btn btn-success mt-2"
+                                                                disabled={selectedIds.length === 0}
+                                                                onClick={handleSendSelected}
+                                                            >
+                                                                Select {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
+                                                            </button>
+
+
                                                         </div>
 
                                                         <div className="col text-end">
@@ -712,6 +750,7 @@ const Products = forwardRef((props, ref) => {
                                                         <tr className="text-center">
 
                                                             <th>Actions</th>
+                                                            <th>Select</th>
                                                             <th>
                                                                 <b
                                                                     style={{
@@ -1471,6 +1510,13 @@ const Products = forwardRef((props, ref) => {
                                                             <th style={{ minWidth: "100px" }}></th>
                                                             <th>
                                                                 <input
+                                                                    type="checkbox"
+                                                                    checked={isAllSelected}
+                                                                    onChange={handleSelectAll}
+                                                                /> All
+                                                            </th>
+                                                            <th>
+                                                                <input
                                                                     type="text"
                                                                     id="part_number"
                                                                     onChange={(e) =>
@@ -2134,6 +2180,13 @@ const Products = forwardRef((props, ref) => {
                                                             </ul>
                                                             */}
                                                                         </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={selectedIds.includes(product.id)}
+                                                                            onChange={() => handleSelect(product.id)}
+                                                                        />
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number}</td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start">

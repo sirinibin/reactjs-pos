@@ -844,9 +844,13 @@ const OrderCreate = forwardRef((props, ref) => {
         if (!product) {
             errors.product_id = "Invalid Product";
             setErrors({ ...errors });
-            return;
+            console.log("Invalid product:", product);
+            return false;
         }
 
+
+
+        // console.log("product:", product);
         if (product.product_stores[formData.store_id]?.retail_unit_price) {
             product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
         }
@@ -864,9 +868,12 @@ const OrderCreate = forwardRef((props, ref) => {
 
         errors.unit_price = "";
         if (!product.unit_price) {
-            errors.unit_price = "Invalid Unit Price";
-            setErrors({ ...errors });
-            return;
+            product["unit_price"] = 0.00;
+            product["purchase_unit_price"] = 0.00;
+            // errors.unit_price = "Invalid Unit Price";
+            // setErrors({ ...errors });
+            //console.log("Invalid unit price:", product);
+            //  return false;
         }
 
         let alreadyAdded = false;
@@ -904,6 +911,7 @@ const OrderCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
         }
 
+
         if (alreadyAdded) {
             selectedProducts[index].quantity = parseFloat(quantity);
         }
@@ -912,6 +920,7 @@ const OrderCreate = forwardRef((props, ref) => {
             selectedProducts.push({
                 product_id: product.id,
                 code: product.item_code,
+                prefix_part_number: product.prefix_part_number,
                 part_number: product.part_number,
                 name: product.name,
                 quantity: product.quantity,
@@ -927,7 +936,7 @@ const OrderCreate = forwardRef((props, ref) => {
         }
         setSelectedProducts([...selectedProducts]);
         reCalculate();
-        console.log("reCalculate")
+        return true;
     }
 
     function removeProduct(product) {
@@ -1399,23 +1408,49 @@ function findDiscount() {
         QuotationHistoryRef.current.open(model, selectedCustomers);
     }
 
+    const handleSelectedProducts = (selected) => {
+        console.log("Selected Products:", selected);
+        let addedCount = 0;
+        for (var i = 0; i < selected.length; i++) {
+            if (addProduct(selected[i])) {
+                addedCount++;
+            }
+        }
+        setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+
+        // props.showToastMessage("Successfully Added " + selected.length + " products", "success");
+    };
+
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
 
     return (
         <>
-            {/*
-            <div ref={camref}></div>
-        */}
+            {/* Bootstrap 5 Toast */}
+            <div
+                className="toast-container position-fixed top-0 end-0 p-3"
+                style={{ zIndex: 9999 }}
+            >
+                <div
+                    className={`toast align-items-center text-white bg-success ${showToast ? "show" : "hide"}`}
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body">{toastMessage}</div>
+                        <button
+                            type="button"
+                            className="btn-close btn-close-white me-2 m-auto"
+                            onClick={() => setShowToast(false)}
+                        ></button>
+                    </div>
+                </div>
+            </div>
 
-            {/*
-            <BarcodeScannerComponent
-                width={500}
-                height={500}
-                onUpdate={(err, result) => {
-                    console.log("Result:", result);
-                }}
-            />
-            */}
-            <Products ref={LinkedProductsRef} showToastMessage={props.showToastMessage} />
+            <Products ref={LinkedProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
@@ -1586,6 +1621,8 @@ function findDiscount() {
                             </div>
                         </div> : ""}
 
+
+
                         <div className="col-md-6" style={{ border: "solid 0px" }}>
                             <label className="form-label">Customer*</label>
                             <Typeahead
@@ -1750,6 +1787,8 @@ function findDiscount() {
 
 
                         <div className="table-responsive" style={{ overflowY: "auto", maxHeight: "400px" }}>
+
+
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
@@ -1781,8 +1820,8 @@ function findDiscount() {
                                                     <i className="bi bi-trash"> </i>
                                                 </div>
                                             </td>
-                                            <td >{index + 1}</td>
-                                            <td  >{product.part_number}</td>
+                                            <td>{index + 1}</td>
+                                            <td>{product.prefix_part_number ? product.prefix_part_number + " -  " : ""}{product.part_number}</td>
                                             <ResizableTableCell
                                             >
                                                 <div className="text-start"
