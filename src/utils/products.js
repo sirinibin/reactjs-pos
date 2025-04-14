@@ -43,7 +43,9 @@ const Products = forwardRef((props, ref) => {
             console.log("Model: ", model);
             if (!model)
                 return;
-
+            searchParams["linked_products_of_product_id"] = "";
+            searchParams["delivery_note_products_of_delivery_note_id"] = "";
+            searchParams["quotation_products_of_quotation_id"] = "";
 
             if (type === "linked_products") {
                 product = model;
