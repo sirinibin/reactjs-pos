@@ -30,17 +30,35 @@ const Products = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    //let product = {};
     let [product, setProduct] = useState({});
+    let [quotation, setQuotation] = useState({});
+    let [deliveryNote, setDeliveryNote] = useState({});
+    let [type, setType] = useState("");
 
     useImperativeHandle(ref, () => ({
-        open(model) {
+        open(model, productType) {
+            type = productType;
+            setType(type);
             console.log("Model: ", model);
-            product = model
-            setProduct(product);
-            if (model) {
-                list();
+            if (!model)
+                return;
+
+
+            if (type === "linked_products") {
+                product = model;
+                setProduct(product);
+                searchParams.linked_products_of_product_id = model.product_id;
+            } else if (type === "quotation_products") {
+                quotation = model;
+                setQuotation(quotation);
+                searchParams.quotation_products_of_quotation_id = model.id;
+            } else if (type === "delivery_note_products") {
+                deliveryNote = model;
+                setDeliveryNote(deliveryNote);
+                searchParams.delivery_note_products_of_delivery_note_id = model.id;
             }
+
+            list();
 
             SetShow(true);
             setSelectedIds([]);
@@ -254,9 +272,7 @@ const Products = forwardRef((props, ref) => {
             searchParams.store_id = cookies.get("store_id");
         }
 
-        if (product) {
-            searchParams.linked_products_of_product_id = product.product_id;
-        }
+
 
         const d = new Date();
         let diff = d.getTimezoneOffset();
@@ -525,7 +541,20 @@ const Products = forwardRef((props, ref) => {
         <>
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Linked products of #{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number} - {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}</Modal.Title>
+                    <Modal.Title>
+                        {type === "linked_products" ?
+                            <div>
+                                Select linked products of #{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number} - {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}
+                            </div> : ""}
+                        {type === "quotation_products" ?
+                            <div>
+                                Select products of Quotation #{quotation.code}
+                            </div> : ""}
+                        {type === "delivery_note_products" ?
+                            <div>
+                                Select products of Delivery Note #{deliveryNote.code}
+                            </div> : ""}
+                    </Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button

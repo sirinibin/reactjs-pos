@@ -30,6 +30,8 @@ import PurchaseReturnHistory from "./../product/purchase_return_history.js";
 import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
+import Quotations from "./../utils/quotations.js";
+import DeliveryNotes from "./../utils/delivery_notes.js";
 
 
 const OrderCreate = forwardRef((props, ref) => {
@@ -1369,9 +1371,33 @@ function findDiscount() {
         return true;
     }
 
-    const LinkedProductsRef = useRef();
+    //Import products from quotations
+    const QuotationsRef = useRef();
+    function openQuotations(model) {
+        QuotationsRef.current.open(model, selectedCustomers);
+    }
+
+    const handleSelectedQuotation = (selectedQuotation) => {
+        console.log("Selected Quotation:", selectedQuotation);
+        ProductsRef.current.open(selectedQuotation, "quotation_products");
+    };
+
+    //Import products from delivery notes
+    const DeliveryNotesRef = useRef();
+    function openDeliveryNotes(model) {
+        DeliveryNotesRef.current.open(model, selectedCustomers);
+    }
+
+    const handleSelectedDeliveryNote = (selectedDeliveryNote) => {
+        console.log("Selected DeliveryNots:", selectedDeliveryNote);
+        ProductsRef.current.open(selectedDeliveryNote, "delivery_note_products");
+    };
+
+
+
+    const ProductsRef = useRef();
     function openLinkedProducts(model) {
-        LinkedProductsRef.current.open(model);
+        ProductsRef.current.open(model, "linked_products");
     }
 
 
@@ -1407,6 +1433,7 @@ function findDiscount() {
     function openQuotationHistory(model) {
         QuotationHistoryRef.current.open(model, selectedCustomers);
     }
+
 
     const handleSelectedProducts = (selected) => {
         console.log("Selected Products:", selected);
@@ -1450,7 +1477,9 @@ function findDiscount() {
                 </div>
             </div>
 
-            <Products ref={LinkedProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
+            <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotation} showToastMessage={props.showToastMessage} />
+            <DeliveryNotes ref={DeliveryNotesRef} onSelectDeliveryNote={handleSelectedDeliveryNote} showToastMessage={props.showToastMessage} />
+            <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
 
@@ -1715,34 +1744,8 @@ function findDiscount() {
                         </div>
 
 
-                        <div className="col-md-12">
+                        <div className="col-md-10">
                             <label className="form-label">Product Search*</label>
-                            {/*  
-                            <Form.Check
-                                type="switch"
-                                as="input"
-                                id="use_laser_scanner"
-                                label="Use Laser Scanner to Read Barcode"
-                                onChange={(e) => {
-
-                                    formData.useLaserScanner = !formData.useLaserScanner;
-
-                                    if (formData.useLaserScanner) {
-                                        console.log("adding keydown event");
-                                        document.addEventListener("keydown", keyPress);
-                                    } else {
-                                        console.log("removing keydown event");
-                                        document.removeEventListener("keydown", keyPress);
-                                    }
-
-                                    console.log("e.target.value:", formData.useLaserScanner);
-
-                                    setFormData({ ...formData });
-
-                                }}
-                            />
-                            */}
-
                             <Typeahead
                                 id="product_id"
                                 size="lg"
@@ -1782,6 +1785,60 @@ function findDiscount() {
                                     {errors.product_id}
                                 </div>
                             ) : ""}
+                        </div>
+
+                        <div className="col-md-2">
+                            <div style={{ zIndex: "9999 !important", marginTop: "30px" }}>
+                                <Dropdown>
+                                    <Dropdown.Toggle variant="success" id="dropdown-basic">
+                                        <i className="bi bi-download"></i>    Import Products from
+                                    </Dropdown.Toggle>
+
+                                    <Dropdown.Menu >
+                                        <Dropdown.Item onClick={() => {
+                                            openQuotations();
+                                        }}>
+                                            <i className="bi bi-file-earmark-text"></i>
+                                            &nbsp;
+                                            Quotations
+                                        </Dropdown.Item>
+
+                                        <Dropdown.Item onClick={() => {
+                                            openDeliveryNotes();
+                                        }}>
+                                            <i className="bi bi-file-earmark-text"></i>
+                                            &nbsp;
+                                            Delivery Notes
+                                        </Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>
+
+                                {/*<div className="input-group mb-4">*/}
+                                {/*<Dropdown drop="top" variant="success">
+                                    <Dropdown.Toggle variant="success" id="dropdown-secondary" style={{}}>
+                                        <i className="bi bi-download"></i>    Import Product from
+                                    </Dropdown.Toggle>
+
+
+                                    <Dropdown.Menu >
+                                        <Dropdown.Item onClick={() => {
+                                            openLinkedProducts();
+                                        }}>
+                                            <i className="bi bi-file-earmark-text"></i>
+                                            &nbsp;
+                                            Quotations
+                                        </Dropdown.Item>
+
+                                        <Dropdown.Item onClick={() => {
+                                            openSalesHistory();
+                                        }}>
+                                            <i className="bi bi-file-earmark-text"></i>
+                                            &nbsp;
+                                            Delivery Notes
+                                        </Dropdown.Item>
+                                    </Dropdown.Menu>
+                                </Dropdown>*/}
+                            </div>
                         </div>
 
 
@@ -1844,24 +1901,6 @@ function findDiscount() {
 
                                             </ResizableTableCell>
                                             <td>
-
-                                                {/*<DropdownButton
-                                                    style={{ zIndex: "9999 !important", position: "absolute !important" }}
-                                                    title="History"
-                                                    variant="secondary"
-                                                    drop="top"
-                                                    container="body" // ensures dropdown renders in body
-                                                >
-                                                    <Dropdown.Item>Sales History</Dropdown.Item>
-                                                    <Dropdown.Item>Purchase History</Dropdown.Item>
-                                                    <Dropdown.Item>Delivery Note History</Dropdown.Item>
-                                                    <Dropdown.Item>Purchase History</Dropdown.Item>
-                                                    <Dropdown.Item>Delivery Note History</Dropdown.Item>
-                                                    <Dropdown.Item>Purchase History</Dropdown.Item>
-                                                    <Dropdown.Item>Delivery Note History</Dropdown.Item>
-                                                </DropdownButton>*/}
-
-
                                                 <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
                                                     <Dropdown drop="top">
                                                         <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
