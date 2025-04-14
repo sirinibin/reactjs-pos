@@ -21,6 +21,7 @@ import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
+import Sales from "./../utils/sales.js";
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -1112,8 +1113,12 @@ function SalesReturnIndex(props) {
         CreateFormRef.current.open(id);
     }
 
-    function openCreateForm() {
-        CreateFormRef.current.open(undefined, props.order.id);
+    function openCreateForm(sale) {
+        if (sale) {
+            CreateFormRef.current.open(undefined, sale.id);
+        } else {
+            CreateFormRef.current.open(undefined, props.order.id);
+        }
     }
 
     const SalesReturnPaymentListRef = useRef();
@@ -1124,8 +1129,20 @@ function SalesReturnIndex(props) {
         setStatsOpen(statsOpen);
     };
 
+    const SalesRef = useRef();
+    function openSales() {
+        SalesRef.current.open();
+    }
+
+    const handleSelectedSale = (selected) => {
+        openCreateForm(selected);
+    };
+
+
+
     return (
         <>
+            <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
             <SalesReturnCreate ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />
             <SalesReturnView ref={DetailsViewRef} />
 
@@ -1234,16 +1251,16 @@ function SalesReturnIndex(props) {
                             </Button> : ""}
                         </div>
 
-                        {/*
+
                         <Button
                             hide={true}
                             variant="primary"
                             className="btn btn-primary mb-3"
-                            onClick={openCreateForm}
+                            onClick={openSales}
                         >
                             <i className="bi bi-plus-lg"></i> Create
                         </Button>
-                        */}
+
                     </div>
                 </div>
 
