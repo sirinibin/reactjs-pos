@@ -203,7 +203,7 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={index} className="text-center" style={{ height: "20px" }}  >
                                             <td>{index + 1 + (pageIndex * props.model.pageSize)}</td>
-                                            <td>{product.part_number ? product.part_number : ""}</td>
+                                            <td>{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}</td>
                                             <td>
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
 

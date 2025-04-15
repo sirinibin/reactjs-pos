@@ -67,7 +67,7 @@ const QuotationPrintContent = forwardRef((props, ref) => {
                                 </td>
                                 <td className="text-center" style={{ border: "solid 0px", width: "93px" }} >
                                     <h4 style={{ fontSize: "3mm" }}>
-                                        {product.part_number ? product.part_number : ""}
+                                        {product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}
                                     </h4>
                                 </td>
                                 <td className="text-left" style={{ border: "solid 0px", width: "299px", paddingLeft: "5px" }} >
@@ -97,9 +97,9 @@ const QuotationPrintContent = forwardRef((props, ref) => {
                                             suffix={" SAR"}
                                             renderText={(value, props) => value}
                                         />
-                                          {product.unit_discount ? " ["+(product.unit_discount* product.quantity).toFixed(2)+" off]" : ""}
+                                        {product.unit_discount ? " [" + (product.unit_discount * product.quantity).toFixed(2) + " off]" : ""}
                                     </h4>
-                                  
+
                                 </td>
                                 <td className="text-end" style={{ border: "solid 0px", width: "99px", paddingRight: "5px" }} >
                                     <h4 style={{ fontSize: "3mm" }}>

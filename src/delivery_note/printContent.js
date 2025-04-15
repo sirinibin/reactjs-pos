@@ -68,7 +68,7 @@ const DeliveryNotePrintContent = forwardRef((props, ref) => {
                                 </td>
                                 <td className="text-center" style={{ border: "solid 0px", width: "93px" }} >
                                     <h4 style={{ fontSize: "3mm" }}>
-                                        {product.part_number ? product.part_number : ""}
+                                        {product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}
                                     </h4>
                                 </td>
                                 <td className="text-left" style={{ border: "solid 0px", width: "299px", paddingLeft: "5px" }} >

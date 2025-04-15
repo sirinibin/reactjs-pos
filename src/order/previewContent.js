@@ -315,7 +315,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={product.item_code} className="text-center"  >
                                             <td style={{ padding: "1px", height: "16px" }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
-                                            <td style={{ padding: "1px" }} >{product.part_number ? product.part_number : ""}</td>
+                                            <td style={{ padding: "1px" }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
                                             <td style={{ padding: "1px" }}>
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
                                             </td>
