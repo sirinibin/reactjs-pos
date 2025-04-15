@@ -8,11 +8,18 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
     let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
     let persianMap = persianDigits.split("");
 
-    function convertToPersianNumber(input) {
+    function convertToArabicNumber(input) {
+        if (Number.isInteger(input)) {
+            input = input.toString();
+        }
+
         return input.replace(/\d/g, function (m) {
             return persianMap[parseInt(m)];
         });
     }
+
+
+
 
     function getArabicDate(engishDate) {
         let event = new Date(engishDate);
@@ -105,6 +112,9 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                             {props.model.phone ? <li>
                                 <strong>Phone: </strong>{props.model.phone}
                             </li> : ""}
+                            {props.model.vat_no ? <li>
+                                <strong>VAT #: </strong>{props.model.vat_no}
+                            </li> : ""}
                             {props.model.dateValue ? <li>
                                 <strong>Date: </strong>{props.model.dateValue ? format(new Date(props.model.dateValue), "MMM dd yyyy") : ""}
                             </li> : ""}
@@ -125,27 +135,28 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         {props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "70px", height: "72px" }} alt="Invoice QR Code" /> : ""}
                         </div>*/}
 
-                    <div className="col-md-5" style={{ border: "solid 0px", width: "50%", alignSelf: "end" }}>
-                        <ul className="list-unstyled mb0 text-end">
+                    <div className="col-md-5" style={{ border: "solid 0px", width: "50%", alignSelf: "end" }} dir="ltr">
+                        <ul className="list-unstyled mb0 text-end" dir="ltr">
                             {/*
                             <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :طلب </strong></li>
                     <li><strong>تاريخ الطلب:  </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>*/}
-                            <li>
-                                {props.model.name ? props.model.name : "غير متاح"} <strong> :إسم الحساب</strong>
+                            <li dir="ltr">
+                                {props.model.name ? props.model.name : "غير متاح"} <strong dir="ltr"> :إسم الحساب</strong>
                             </li>
-                            <li><strong>رقم حساب: </strong>{props.model.number ? props.model.number : "غير متاح"}</li>
-                            {props.model.phone ? <li> <strong>هاتف:</strong> {props.model.phone} </li> : ""}
-                            {props.model.dateValue ? <li>
+                            <li dir="ltr">{props.model.number ? convertToArabicNumber(props.model.number) : "غير متاح"} <strong dir="ltr">:رقم حساب</strong></li>
+                            {props.model.phone ? <li dir="ltr"> <strong>هاتف:</strong> {convertToArabicNumber(props.model.phone)} </li> : ""}
+                            {props.model.vat_no ? <li dir="ltr"> <strong>رقم ضريبة القيمة المضافة:</strong> {convertToArabicNumber(props.model.vat_no)} </li> : ""}
+                            {props.model.dateValue ? <li dir="ltr">
                                 <strong>تاريخ: </strong>{props.model.dateValue ? format(new Date(props.model.dateValue), "dd-MM-yyyy") : ""}
                             </li> : ""}
-                            {props.model.fromDateValue && props.model.toDateValue ? <li>
+                            {props.model.fromDateValue && props.model.toDateValue ? <li dir="ltr">
                                 <strong>تاريخ: </strong>{format(new Date(props.model.fromDateValue), "dd-MM-yyyy") + " - " + format(new Date(props.model.toDateValue), "dd-MM-yyyy")}
                             </li> : ""}
-                            {props.model.fromDateValue && !props.model.toDateValue && !props.model.dateValue ? <li>
+                            {props.model.fromDateValue && !props.model.toDateValue && !props.model.dateValue ? <li dir="ltr">
                                 <strong>تاريخ: </strong>{"من " + format(new Date(props.model.fromDateValue), "dd-MM-yyyy") + " لتقديم"}
                             </li> : ""}
-                            {props.model.toDateValue && !props.model.fromDateValue && !props.model.dateValue ? <li>
-                                <strong>تاريخ: </strong>{"يصل إلى " + format(new Date(props.model.toDateValue), "dd-MM-yyyy")}
+                            {props.model.toDateValue && !props.model.fromDateValue && !props.model.dateValue ? <li dir="ltr">
+                                <strong dir="ltr">تاريخ: </strong>{"يصل إلى " + format(new Date(props.model.toDateValue), "dd-MM-yyyy")}
                             </li> : ""}
 
                         </ul>
@@ -156,7 +167,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </div>
                     <div className="col text-end">
-                        {props.model.total_pages ? convertToPersianNumber(props.model.total_pages.toString()) + " الصفحة " + convertToPersianNumber((pageIndex + 1).toString()) + " من " : ""}
+                        {props.model.total_pages ? convertToArabicNumber(props.model.total_pages.toString()) + " الصفحة " + convertToArabicNumber((pageIndex + 1).toString()) + " من " : ""}
                     </div>
                 </div>
                 <div className="row">

@@ -506,6 +506,25 @@ const Customers = forwardRef((props, ref) => {
                                                                         cursor: "pointer",
                                                                     }}
                                                                     onClick={() => {
+                                                                        sort("vat_no");
+                                                                    }}
+                                                                >
+                                                                    VAT #
+                                                                    {sortField === "vat_no" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "vat_no" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
                                                                         sort("name");
                                                                     }}
                                                                 >
@@ -1071,6 +1090,16 @@ const Customers = forwardRef((props, ref) => {
                                                             <th>
                                                                 <input
                                                                     type="text"
+                                                                    id="vat_no"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("vat_no", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
                                                                     id="name"
                                                                     onChange={(e) =>
                                                                         searchByFieldValue("name", e.target.value)
@@ -1400,6 +1429,7 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>{customer.code}</td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.phone}</td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.vat_no}</td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                                         <OverflowTooltip value={customer.name} />
                                                                     </td>

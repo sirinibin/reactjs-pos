@@ -163,7 +163,7 @@ function AccountIndex(props) {
             },
         };
         let Select =
-            "select=id,store_id,name,type,phone,number,search_label,open,balance,debit_total,credit_total,created_at,updated_at,reference_model,debit_or_credit_balance";
+            "select=id,store_id,name,type,phone,vat_no,number,search_label,open,balance,debit_total,credit_total,created_at,updated_at,reference_model,debit_or_credit_balance";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -524,6 +524,25 @@ function AccountIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vat_no");
+                                                        }}
+                                                    >
+                                                        VAT #
+                                                        {sortField === "vat_no" && sortaccount === "-" ? (
+                                                            <i className="bi bi-sort-down"></i>
+                                                        ) : null}
+                                                        {sortField === "vat_no" && sortaccount === "" ? (
+                                                            <i className="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
 
                                                 <th>
                                                     <b
@@ -697,6 +716,16 @@ function AccountIndex(props) {
                                                         id="phone"
                                                         onChange={(e) =>
                                                             searchByFieldValue("phone", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th style={{ width: "110px" }}>
+                                                    <input
+                                                        type="text"
+                                                        id="vat_no"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("vat_no", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -914,6 +943,7 @@ function AccountIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.debit_or_credit_balance === "debit_balance" ? <Amount amount={account.balance} /> : "0"}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.debit_or_credit_balance === "credit_balance" ? <Amount amount={account.balance} /> : "0"}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.phone}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.vat_no}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.type}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             <Button variant="link" onClick={() => {

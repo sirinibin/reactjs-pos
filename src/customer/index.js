@@ -169,7 +169,7 @@ function CustomerIndex(props) {
             },
         };
         let Select =
-            "select=id,code,name,email,phone,created_by_name,created_at,stores";
+            "select=id,code,name,email,phone,vat_no,created_by_name,created_at,stores";
 
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -446,6 +446,25 @@ function CustomerIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "phone" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("vat_no");
+                                                        }}
+                                                    >
+                                                        VAT #
+                                                        {sortField === "vat_no" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "vat_no" && sortCustomer === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -1021,6 +1040,16 @@ function CustomerIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
+                                                        id="vat_no"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("vat_no", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
                                                         id="name"
                                                         onChange={(e) =>
                                                             searchByFieldValue("name", e.target.value)
@@ -1343,6 +1372,7 @@ function CustomerIndex(props) {
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{customer.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.phone}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.vat_no}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                             <OverflowTooltip value={customer.name} />
                                                         </td>

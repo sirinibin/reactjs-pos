@@ -493,6 +493,44 @@ const Vendors = forwardRef((props, ref) => {
                                                                         cursor: "pointer",
                                                                     }}
                                                                     onClick={() => {
+                                                                        sort("mob");
+                                                                    }}
+                                                                >
+                                                                    Phone
+                                                                    {sortField === "phone" && sortVendor === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "phone" && sortVendor === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("vat_no");
+                                                                    }}
+                                                                >
+                                                                    VAT #
+                                                                    {sortField === "vat_no" && sortVendor === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "vat_no" && sortVendor === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
                                                                         sort("name");
                                                                     }}
                                                                 >
@@ -906,6 +944,26 @@ const Vendors = forwardRef((props, ref) => {
                                                             <th>
                                                                 <input
                                                                     type="text"
+                                                                    id="phone"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("phone", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    id="vat_no"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("vat_no", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
                                                                     id="name"
                                                                     onChange={(e) =>
                                                                         searchByFieldValue("name", e.target.value)
@@ -1192,6 +1250,8 @@ const Vendors = forwardRef((props, ref) => {
                                                                         </Button>
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>{vendor.code}</td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.phone}</td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >{vendor.vat_no}</td>
                                                                     <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
 
                                                                         <OverflowTooltip value={vendor.name} />
