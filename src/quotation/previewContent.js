@@ -1,25 +1,31 @@
 import { React, forwardRef } from "react";
-import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
+import { trimTo2Decimals } from "../utils/numberUtils";
+import '@emran-alhaddad/saudi-riyal-font/index.css';
+import Amount from "../utils/amount.js";
 
 const QuotationPreviewContent = forwardRef((props, ref) => {
 
     let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
     let persianMap = persianDigits.split("");
 
-    function convertToPersianNumber(input) {
+    function convertToArabicNumber(input) {
+        if (Number.isInteger(input)) {
+            input = input.toString();
+        }
+
         return input.replace(/\d/g, function (m) {
             return persianMap[parseInt(m)];
         });
     }
 
+    /*
     function getArabicDate(engishDate) {
         let event = new Date(engishDate);
         let options = {
-            /*weekday: 'long', */
             year: 'numeric',
-            month: 'long',
+            month: 'numeric',
             day: 'numeric',
             hour: "numeric",
             minute: "numeric",
@@ -27,21 +33,21 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
             //  timeZoneName: "short",
         };
         return event.toLocaleDateString('ar-EG', options)
-    }
+    }*/
 
-    return (<>
+    return (<><span ref={ref}>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
                 className="container"
                 id="printableArea"
                 style={{
                     backgroundColor: "white",
-                    border: "solid 2px",
+                    border: "solid 0px",
                     borderColor: "silver",
                     borderRadius: "2mm",
                     padding: "20px",
-                    marginTop: (10 + page.top) + "px",
-                    height: "1110px",
+                    marginTop: page.top + "px",
+                    height: "100px",
                     width: "770px"
                 }}
 
@@ -52,13 +58,13 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             <li><h4 style={{ fontSize: "3.5mm" }}>{props.model.store ? props.model.store.name : "<STORE_NAME>"}</h4></li>
                             <li>{props.model.store ? props.model.store.title : "<STORE_TITLE>"}</li>
                             {/*<!-- <li><hr /></li> --> */}
-                            <li>C.R. / {props.model.store ? props.model.store.registration_number : "<STORE_CR_NO>"}</li>
-                            <li>VAT / {props.model.store ? props.model.store.vat_no : "<STORE_VAT_NO>"}</li>
+                            <li style={{ fontSize: "2.2mm" }}>C.R. / {props.model.store ? props.model.store.registration_number : "<STORE_CR_NO>"}</li>
+                            <li style={{ fontSize: "2.2mm" }}>VAT / {props.model.store ? props.model.store.vat_no : "<STORE_VAT_NO>"}</li>
                         </ul>
                     </div>
                     <div className="col">
-                        <div className="invoice-logo text-center">
-                            {props.model.store && props.model.store.logo ? <img width="70" height="70" src={props.model.store.logo + "?" + (Date.now())} alt="Invoice logo" /> : null}
+                        <div className="quotation-logo text-center">
+                            {props.model?.store?.logo ? <img width="70" height="70" src={props.model.store.logo + "?" + (Date.now())} alt="Quotation logo" /> : null}
                         </div>
                     </div>
                     <div className="col">
@@ -74,8 +80,8 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                 {props.model.store ? props.model.store.title_in_arabic : "<STORE_TITLE_ARABIC>"}
                             </li>
                             {/* <!-- <li><hr /></li> --> */}
-                            <li>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"} / ‫ت‬.‫س‬</li>
-                            <li>{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"} / ‫الضريبي‬ ‫الرقم‬</li>
+                            <li style={{ fontSize: "2.2mm" }}>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"} / ‫ت‬.‫س‬</li>
+                            <li style={{ fontSize: "2.2mm" }} >{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"} / ‫الضريبي‬ ‫الرقم‬</li>
                         </ul>
                     </div>
                 </div>
@@ -90,44 +96,116 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                 </div>
 
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
-                    <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
+                    <div className="col-md-5" style={{ border: "solid 0px", width: "77%" }}>
+                        <div class="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2mm" }}>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" dir="ltr">Quotation No. | رقم الفاتورة:</div>
+                                <div class="col-6" style={{ marginLeft: "-80px" }} dir="ltr">
+                                    {props.model.code ? props.model.code : ""}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" dir="ltr">Quotation Date | تاريخ الفاتورة:</div>
+                                <div class="col-6 " style={{ marginLeft: "-80px" }} dir="ltr">
+                                    <span dir="ltr"> {props.model.date ? format(
+                                        new Date(props.model.date),
+                                        "yyyy-MM-dd h:mma"
+                                    ) : "<DATETIME>"}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                                    {props.model.customer ? props.model.customer.name : ""}
+                                    {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
+                                    {!props.model.customerName && !props.model.customer ? "N/A" : ""}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                                    <span dir="ltr">
+                                        {props.model.customer?.vat_no ? "#" + props.model.customer.vat_no : ""}
+                                        {!props.model.customer && props.model.vat_no ? "#" + props.model.vat_no : ""}
+                                        {!props.model.customer && !props.model.vat_no ? "N/A" : ""}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-7 text-start fw-bold" dir="ltr" >Customer Address | عنوان العميل:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+
+                                    <span dir="ltr">
+                                        {props.model.address ? props.model.address : ""}
+                                        {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
+                                        {props.model.customer?.national_address?.unit_no ? `Unit #${props.model.customer.national_address.unit_no}, ` : ""}
+                                        {props.model.customer?.national_address?.building_no ? `Building #${props.model.customer.national_address.building_no}` : ""}
+                                        {props.model.customer?.national_address?.street_name ? `, ${props.model.customer.national_address.street_name}` : ""}
+                                        {props.model.customer?.national_address?.district_name ? `, ${props.model.customer.national_address.district_name} dist.` : ""}
+                                        {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
+                                        {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        {/*
                         <ul className="list-unstyled mb0 text-start">
-                            <li><strong>Quotation: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                            <li><strong>Quotation Date: </strong> {props.model.date ? format(
+                            <li><strong>Quotation Count Value | قيمة عدد الفاتورة (ICV): </strong>{props.model.quotation_count_value ? props.model.quotation_count_value : "<ICV_NUMBER>"}</li>
+                            <li><strong>UUID: </strong>{props.model.uuid ? props.model.uuid : "<UUID_STRING>"}</li>
+                            <li><strong>Quotation No. | رقم الفاتورة: </strong>{props.model.code ? props.model.code : "<ID_STRING>"}</li>
+                            <li><strong>Quotation Date | تاريخ الفاتورة: </strong> <span dir="ltr"> {props.model.date ? format(
                                 new Date(props.model.date),
-                                "MMM dd yyyy h:mma"
-                            ) : "<DATETIME>"} </li>
+                                "yyyy-MM-dd h:mma"
+                            ) : "<DATETIME>"}
+                            </span>
+                            </li>
                             <li>
-                                <strong>Customer: </strong>{props.model.customer ? props.model.customer.name : "N/A"}
+                                <strong>Customer Name | اسم العميل: </strong>{props.model.customer ? props.model.customer.name : "N/A"}
                             </li>
-                            <li><strong>VAT Number: </strong>{props.model.customer ? props.model.customer.vat_no : "N/A"}
+                            <li><strong>Customer VAT  | ضريبة القيمة المضافة للعملاء: </strong> <span dir="ltr">{props.model.customer?.vat_no ? "#" + props.model.customer.vat_no : "N/A"}</span></li>
+                            <li><strong>Customer Address  | عنوان العميل: </strong>
+                                <span dir="ltr">
+                                    {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
+                                    {props.model.customer?.national_address?.unit_no ? `Unit #${props.model.customer.national_address.unit_no}, ` : ""}
+                                    {props.model.customer?.national_address?.building_no ? `Building #${props.model.customer.national_address.building_no}` : ""}
+                                    {props.model.customer?.national_address?.street_name ? `, ${props.model.customer.national_address.street_name}` : ""}
+                                    {props.model.customer?.national_address?.district_name ? `, ${props.model.customer.national_address.district_name} dist.` : ""}
+                                    {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
+                                    {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
+                                </span>
                             </li>
-                        </ul>
+
+                        </ul>*/}
                     </div>
 
-                    <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "20%", padding: "0px" }}>
-                        {props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "70px", height: "72px" }} alt="Invoice QR Code" /> : ""}
-                    </div>
+                    {/*<div className="col-md-2 text-center" style={{ border: "solid 0px", width: "23%", padding: "0px" }}>
 
+                    </div>*/}
+
+                    {/*
                     <div className="col-md-5" style={{ border: "solid 0px", width: "40%" }}>
                         <ul className="list-unstyled mb0 text-end">
-                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :اقتباس </strong></li>
-                            <li><strong>تاريخ الاقتباس:  </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
+                            <li>{props.model.quotation_count_value ? convertToArabicNumber(props.model.quotation_count_value) : "<ICV_NUMBER_ARABIC>"}<strong> :(ICV) قيمة عدد الفواتير </strong></li>
+                            <li>{props.model.uuid ? props.model.uuid : "<UUID_STRING_ARABIC>"}<strong> :(UUID) المعرف الفريد العالمي </strong></li>
+                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :رقم الفاتورة </strong></li>
+                            <li> <strong>تاريخ الفاتورة</strong> {props.model.date ? " :" + getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>
                             <li>
-                                <strong>عميل: </strong>{props.model.customer ? props.model.customer.name_in_arabic : "<CUSTOMER_NAME_ARABIC>"}
+                                {props.model.customer?.name_in_arabic ? props.model.customer.name_in_arabic : props.model.customer?.name ? props.model.customer.name : ""}<strong> :اسم العميل</strong>
                             </li>
-                            <li><strong>الرقم الضريبي للعميل: </strong>{props.model.customer ? props.model.customer.vat_no_in_arabic : "<CUSTOMER_VAT_NO_ARABIC>"}</li>
+                            <li><strong>الرقم الضريبي للعميل</strong>{props.model.customer ? ": " + props.model.customer.vat_no_in_arabic : "<CUSTOMER_VAT_NO_ARABIC>"}</li>
 
 
                         </ul>
                     </div>
+                    */}
                 </div>
-                <div className="row" style={{ fontSize: "3.5mm" }}>
+                <div className="row" style={{ fontSize: "1.5mm" }}>
                     <div className="col text-start">
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </div>
                     <div className="col text-end">
-                        {props.model.total_pages ? convertToPersianNumber(props.model.total_pages.toString()) + " الصفحة " + convertToPersianNumber((pageIndex + 1).toString()) + " من " : ""}
+                        {props.model.total_pages ? convertToArabicNumber(props.model.total_pages.toString()) + " الصفحة " + convertToArabicNumber((pageIndex + 1).toString()) + " من " : ""}
                     </div>
                 </div>
                 <div className="row">
@@ -144,7 +222,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                 className="table table-bordered"
                                 style={{ borderRadius: "6px" }}
                             >
-                                <thead style={{ fontSize: "3mm" }}>
+                                <thead style={{ fontSize: "1.5mm" }}>
                                     <tr >
                                         <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
@@ -165,7 +243,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 }}
                                             >
                                                 <li>رقم القطعة</li>
-                                                <li>Part Number</li>
+                                                <li>Part No.</li>
                                             </ul>
                                         </th>
                                         <th className="per68 text-center" style={{ padding: "0px", width: "15%" }}>
@@ -219,124 +297,137 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                     height: "15px"
                                                 }}
                                             >
-                                                <li>سعر</li>
-                                                <li>Price</li>
+                                                <li>السعر (بدون ضريبة القيمة المضافة)</li>
+                                                <li>Price (without VAT)</li>
+                                            </ul>
+                                        </th>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{
+                                                    height: "15px"
+                                                }}
+                                            >
+                                                <li>ضريبة القيمة المضافة</li>
+                                                <li>VAT({trimTo2Decimals(props.model.vat_percent)}%)</li>
+                                            </ul>
+                                        </th>
+                                        <th className="per20 text-center" style={{ padding: "0px", width: "5%" }}>
+                                            <ul
+                                                className="list-unstyled"
+                                                style={{
+                                                    height: "15px"
+                                                }}
+                                            >
+                                                <li>السعر (مع ضريبة القيمة المضافة)</li>
+                                                <li>Price (with VAT)</li>
                                             </ul>
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody style={{ fontSize: "2.7mm" }} >
+                                <tbody style={{ fontSize: "1.8mm" }} >
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={product.item_code} className="text-center"  >
                                             <td style={{ padding: "1px", height: "16px" }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
-                                            <td style={{ padding: "1px" }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number ? product.part_number : ""}</td>
+                                            <td style={{ padding: "1px" }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
                                             <td style={{ padding: "1px" }}>
                                                 {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }}>{product.quantity ? product.quantity.toFixed(2) : ""}  {product.unit ? product.unit : ""}</td>
+                                            <td style={{ padding: "1px" }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
                                             <td className="text-end" style={{ padding: "1px" }} >
-                                                {product.unit_price ? <NumberFormat
-                                                    value={product.unit_price.toFixed(2)}
-                                                    displayType={"text"}
-                                                    thousandSeparator={true}
-                                                    suffix={""}
-                                                    renderText={(value, props) => value}
-                                                /> : ""}
+                                                {product.unit_price ? <Amount amount={trimTo2Decimals(product.unit_price)} /> : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }} className="text-end">{product.unit_discount_percent ? "(" + product.unit_discount_percent.toFixed(2) + "%)" : ""}{product.unit_discount ? " " + (product.unit_discount * product.quantity)?.toFixed(2) : ""} </td>
+                                            <td style={{ padding: "1px" }} className="text-end">{product.unit_discount_percent ? "(" + trimTo2Decimals(product.unit_discount_percent) + "%)" : ""}{product.unit_discount ? " " + trimTo2Decimals(product.unit_discount * product.quantity) : ""} </td>
                                             <td style={{ padding: "1px" }} className="text-end">
-                                                <NumberFormat
-                                                    value={((product.unit_price - product.unit_discount) * product.quantity).toFixed(2)}
-                                                    displayType={"text"}
-                                                    thousandSeparator={true}
-                                                    suffix={""}
-                                                    renderText={(value, props) => value}
-                                                />
+
+                                                {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)} /> : ""}
+
+                                            </td>
+                                            <td style={{ padding: "1px" }} className="text-end">
+                                                {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
+                                            </td>
+                                            <td style={{ padding: "1px" }} className="text-end">
+                                                {product.unit_price ? <Amount amount={trimTo2Decimals(((product.unit_price - product.unit_discount) * product.quantity) + (((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)))} /> : ""}
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
 
-                                <tfoot style={{ fontSize: "3mm", }}>
+                                <tfoot style={{ fontSize: "2mm", }}>
                                     <tr >
-
-
-                                        <th colSpan="6" className="text-end" style={{ padding: "2px" }}>
-                                            Total المجموع:
+                                        <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
+                                            Total (without VAT) الإجمالي (بدون ضريبة القيمة المضافة):
                                         </th>
-                                        <th className="text-end" colSpan="2" style={{ padding: "2px", }} >
-                                            <NumberFormat
-                                                value={props.model.total.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
+                                        <th className="text-end" colSpan="1" style={{ padding: "2px", }} >
+                                            <Amount amount={trimTo2Decimals(props.model.total)} />
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="6" style={{ padding: "2px" }}>
+                                        <th className="text-end" colSpan="8" style={{ padding: "2px" }}>
 
                                             Shipping / Handling Fees   رسوم الشحن / المناولة:
                                         </th>
-                                        <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
-                                            <NumberFormat
-                                                value={props.model.shipping_handling_fees.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
+                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                            <Amount amount={trimTo2Decimals(props.model.shipping_handling_fee)} />
                                         </th>
                                     </tr>
                                     <tr>
-                                        <th className="text-end" colSpan="6" style={{ padding: "2px" }}>
-                                            Discount خصم:
+                                        <th className="text-end" colSpan="8" style={{ padding: "2px" }}>
+                                            Total Discount الخصم الإجمالي:
+                                        </th>
+                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                            <Amount amount={trimTo2Decimals(props.model.discount)} />
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
+                                            Total Taxable Amount (without VAT)  إجمالي المبلغ الخاضع للضريبة (بدون ضريبة القيمة المضافة):
+                                        </th>
+                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                            <Amount amount={trimTo2Decimals((props.model.net_total - props.model.vat_price))} />
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th className="text-end" colSpan="8" style={{ padding: "2px" }}>
+                                            Total VAT {trimTo2Decimals(props.model.vat_percent)}% إجمالي ضريبة القيمة المضافة :
+                                        </th>
 
-                                        </th>
-                                        <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
-                                            <NumberFormat
-                                                value={props.model.discount?.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
-                                        </th>
-                                    </tr>
-                                    <tr>
-                                        <th className="text-end" colSpan="6" style={{ padding: "2px" }} > VAT {props.model.vat_percent.toFixed(2) + "%"} ضريبة: </th>
-                                        <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
-                                            <NumberFormat
-                                                value={props.model.vat_price.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
+                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                            <Amount amount={trimTo2Decimals(props.model.vat_price)} />
+
                                         </th>
                                     </tr>
 
                                     <tr>
-                                        <th colSpan="6" className="text-end" style={{ padding: "2px" }}>
-                                            Net Total الإجمالي الصافي:
+                                        <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
+                                            Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة):
                                         </th>
-                                        <th className="text-end" colSpan="2" style={{ padding: "2px" }}>
-                                            <NumberFormat
-                                                value={props.model.net_total.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
+                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                            <span className="icon-saudi_riyal">
+                                                <Amount amount={trimTo2Decimals(props.model.net_total)} />
+                                            </span>
                                         </th>
                                     </tr>
-                                    <tr>
+                                    {props.model.remarks ? <tr>
                                         <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
-                                            بكلمات:
+                                            Remarks ملاحظات:
                                         </th>
                                         <th
-                                            colSpan="5"
+                                            colSpan="7"
+                                            style={{ padding: "2px" }}
+
+                                        >
+                                            {props.model.remarks ? props.model.remarks : ""}
+                                        </th>
+
+                                    </tr> : ""}
+                                    <tr>
+
+                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
+                                            In Words بكلمات:
+                                        </th>
+                                        <th
+                                            colSpan="7"
                                             style={{ padding: "2px" }}
 
                                         >
@@ -345,94 +436,37 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                                 style={{ marginBottom: "0px" }}
                                             >
                                                 <li>{n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}</li>
-                                            </ul>
-                                        </th>
-                                    </tr>
-                                    <tr>
-                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
-                                            In Words
-                                        </th>
-                                        <th
-                                            colSpan="5"
-                                            style={{ padding: "2px" }}
-
-                                        >
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{ marginBottom: "0px" }}
-                                            >
                                                 <li>{n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}</li>
                                             </ul>
                                         </th>
                                     </tr>
                                     <tr>
+
                                         <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
-                                            صلاحية:
+                                            Validity صحة:
                                         </th>
-                                        {props.model.validity_days ? <th
-                                            colSpan="1"
+                                        <th
+                                            colSpan="2"
                                             style={{ padding: "2px" }}
 
                                         >
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{ marginBottom: "0px" }}
-                                            >
-                                                <li style={{ color: "red" }}>{props.model.validity_days + " أيام"}</li>
-                                            </ul>
-                                        </th> : ""}
-                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
-                                            توصيل:
+                                            <span style={{ color: "red" }}> {props.model.validity_days + " days أيام"} </span>
                                         </th>
-                                        {props.model.delivery_days ? <th
+                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
+                                            Delivery توصيل:
+                                        </th>
+                                        <th
                                             colSpan="3"
                                             style={{ padding: "2px" }}
 
                                         >
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{ marginBottom: "0px" }}
-                                            >
-                                                <li>{"خلال " + props.model.delivery_days + " أيام من تاريخ الدفع"}</li>
-                                            </ul>
-                                        </th> : ""}
-
-                                    </tr>
-                                    <tr>
-                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
-                                            Validity
+                                            <span dir="ltr"> Within {props.model.delivery_days} days from the date of payment | خلال {props.model.delivery_days} أيام من تاريخ الدفع</span>
                                         </th>
-                                        {props.model.validity_days ? <th
-                                            colSpan="1"
-                                            style={{ padding: "2px" }}
-
-                                        >
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{ marginBottom: "0px" }}
-                                            >
-                                                <li style={{ color: "red" }}>{props.model.validity_days + " days"}</li>
-                                            </ul>
-                                        </th> : ""}
-
-                                        <th colSpan="1" className="text-end" style={{ padding: "2px" }}>
-                                            Delivery
-                                        </th>
-                                        {props.model.delivery_days ? <th
-                                            colSpan="3"
-                                            style={{ padding: "2px" }}
-
-                                        >
-                                            <ul
-                                                className="list-unstyled"
-                                                style={{ marginBottom: "0px" }}
-                                            >
-                                                <li>{"Within " + props.model.delivery_days + " days from the date of payment"}</li>
-                                            </ul>
-                                        </th> : ""}
                                     </tr>
+
+
                                     {props.model.pages.length === (pageIndex + 1) && props.model.store?.bank_account ? <tr >
-                                        <td colSpan="7" style={{ padding: "0px" }}>
+                                        <td colSpan="9" style={{ padding: "0px" }}>
 
                                             <table
                                                 className="table table-bordered"
@@ -440,7 +474,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             >
 
 
-                                                <thead style={{ fontSize: "3mm" }}>
+                                                <thead style={{ fontSize: "2mm" }}>
                                                     <tr >
                                                         <th colSpan="5" className="per1 text-center" style={{ padding: "0px" }}>
                                                             <ul
@@ -513,7 +547,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
 
                                                     </tr>
                                                 </thead>
-                                                <tbody style={{ fontSize: "3mm" }} >
+                                                <tbody style={{ fontSize: "2mm" }} >
                                                     <tr>
                                                         <td style={{ width: "5%" }}>
 
@@ -545,7 +579,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                 </tfoot>
                             </table>
 
-                            <table className="table table-bordered" style={{ fontSize: "3mm" }}>
+                            <table className="table table-bordered" style={{ fontSize: "2mm" }}>
                                 <thead>
                                     <tr>
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
@@ -559,7 +593,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
 
                                         </th>
                                     </tr>
-                                    <tr>
+                                    {/*} <tr>
                                         <th className="text-end" style={{ padding: "2px" }}>
                                             Signature إمضاء:
                                         </th>
@@ -572,8 +606,8 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             Signature إمضاء:
                                         </th>
                                         <th></th>
-                                    </tr>
-                                    <tr>
+                                    </tr>*/}
+                                    {/*<tr>
                                         <th className="text-end" style={{ padding: "2px" }}>
                                             Date تاريخ:
                                         </th>
@@ -584,15 +618,15 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                             Date تاريخ:
                                         </th>
                                         <th></th>
-                                    </tr>
+                                    </tr>*/}
                                 </thead>
                             </table>
                         </div>
                     </div>
                 </div>
-                {props.model.pages.length === (pageIndex + 1) ? <div className="row" style={{ fontSize: "3mm", height: "55px", }}>
+                <div className="row" style={{ fontSize: "2mm", height: "55px", }}>
                     <div className="col-md-2 text-start">
-                        {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
+                        {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Quotation QR Code" />*/}
                     </div>
                     <div className="col-md-8 text-center">
                         <ul className="list-unstyled mb0 text-center">
@@ -622,9 +656,10 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                             </li>
                         </ul>
                     </div>
-                </div> : ""}
+                </div>
             </div>
         ))}
+    </span>
     </>);
 
 });

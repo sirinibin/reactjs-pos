@@ -1,10 +1,20 @@
-import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useEffect } from "react";
+import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback } from "react";
 import { Modal, Button } from 'react-bootstrap';
 import QuotationPreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
+import { Invoice } from '@axenda/zatca';
+
 
 const QuotationPreview = forwardRef((props, ref) => {
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
 
     useImperativeHandle(ref, () => ({
         open(modelObj) {
@@ -28,7 +38,7 @@ const QuotationPreview = forwardRef((props, ref) => {
                     getSignature(model.delivered_by_signature_id);
                 }
 
-                let pageSize = 17;
+                let pageSize = 20;
                 model.pageSize = pageSize;
                 let totalProducts = model.products.length;
                 let top = 0;
@@ -64,7 +74,13 @@ const QuotationPreview = forwardRef((props, ref) => {
                         }
                     }
 
-                    top += 1057;
+                    if (model.pages[i].products.length < pageSize) {
+                        for (let s = model.pages[i].products.length; s < pageSize; s++) {
+                            model.pages[i].products.push({});
+                        }
+                    }
+
+                    top += 1057; //1057
                     offset += pageSize;
 
                     if (i === 0) {
@@ -77,8 +93,10 @@ const QuotationPreview = forwardRef((props, ref) => {
                 }
 
                 console.log("model.pages:", model.pages);
-
                 console.log("model.products:", model.products);
+
+
+
                 getQRCodeContents();
                 //model.qr_content = getQRCodeContents();
                 //setModel({ ...model });
@@ -97,7 +115,6 @@ const QuotationPreview = forwardRef((props, ref) => {
 
     const [show, setShow] = useState(props.show);
 
-
     function handleClose() {
         setShow(false);
     }
@@ -109,7 +126,7 @@ const QuotationPreview = forwardRef((props, ref) => {
         qrContent = "";
 
         if (model.code) {
-            qrContent += "Quotation #: " + model.code + "<br />";
+            qrContent += "Invoice #: " + model.code + "<br />";
         }
 
         if (model.store) {
@@ -159,6 +176,20 @@ const QuotationPreview = forwardRef((props, ref) => {
                 console.log(data);
                 let storeData = data.result;
                 model.store = storeData;
+
+                const invoice = new Invoice({
+                    sellerName: model.store_name,
+                    vatRegistrationNumber: model.store.vat_no,
+                    invoiceTimestamp: model.date,
+                    invoiceTotal: model.net_total,
+                    invoiceVatTotal: model.vat_price,
+                    // uuid: model.uuid,
+                    invoiceHash: model.hash ? model.hash : "",
+                });
+
+                model.QRImageData = await invoice.render();
+                console.log("model.QRImageData:", model.QRImageData);
+
                 setModel({ ...model });
             })
             .catch(error => {
@@ -167,14 +198,6 @@ const QuotationPreview = forwardRef((props, ref) => {
     }
 
 
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
 
     function getCustomer(id) {
         console.log("inside get Customer");
@@ -203,7 +226,7 @@ const QuotationPreview = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                console.log("Response:");
+                console.log("Customer Response:");
                 console.log(data);
                 let customerData = data.result;
                 model.customer = customerData;
@@ -257,6 +280,7 @@ const QuotationPreview = forwardRef((props, ref) => {
             },
         };
 
+
         let searchParams = {};
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
@@ -281,7 +305,6 @@ const QuotationPreview = forwardRef((props, ref) => {
                 setModel({ ...model });
             })
             .catch(error => {
-
             });
     }
 
@@ -296,7 +319,7 @@ const QuotationPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Quotation";
+        let filename = "Sales_";
 
         if (model.id) {
             filename += "_#" + model.code;
@@ -329,9 +352,9 @@ const QuotationPreview = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} scrollable={true} fullscreen onHide={handleClose} animation={false}>
+        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Quotation Preview</Modal.Title>
+                <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
                         <i className="bi bi-printer"></i> Print

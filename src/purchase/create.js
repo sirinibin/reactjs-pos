@@ -263,6 +263,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     payment_method: purchase.payment_method,
                     payment_status: purchase.payment_status,
                     shipping_handling_fees: purchase.shipping_handling_fees,
+                    remarks: purchase.remarks,
                 };
 
                 if (data.result.payments) {
@@ -1078,8 +1079,20 @@ const PurchaseCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
     };
 
+    const PreviewRef = useRef();
+    function openPreview() {
+        let model = formData;
+        model.products = selectedProducts;
+        model.payment_status = paymentStatus;
+        model.date = formData.date_str;
+        model.code = formData.code;
+
+        PreviewRef.current.open(model);
+    }
+
     return (
         <>
+            <PurchasePreview ref={PreviewRef} />
             <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} showToastMessage={props.showToastMessage} />
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
@@ -1096,13 +1109,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
-                        <PurchasePreview />
-                        {formData.id ? <Button variant="primary" onClick={() => {
-                            handleClose();
-                            props.openDetailsView(formData.id);
-                        }}>
-                            <i className="bi bi-eye"></i> View Detail
-                        </Button> : ""}
+
+                        <Button variant="primary" onClick={openPreview}>
+                            <i className="bi bi-printer"></i> Print Full Invoice
+                        </Button>
+                        &nbsp;&nbsp;
                         &nbsp;&nbsp;
                         <Button variant="primary" onClick={handleCreate} >
                             {isProcessing ?
@@ -1317,6 +1328,31 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        <div className="col-md-3" >
+                            <label className="form-label">Remarks</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.remarks}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["remarks"] = "";
+                                        setErrors({ ...errors });
+                                        formData.remarks = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="remarks"
+                                    placeholder="Remarks"
+                                />
+                            </div>
+                            {errors.remarks && (
+                                <div style={{ color: "red" }}>
+                                    {errors.remarks}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-12">

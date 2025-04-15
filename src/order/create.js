@@ -37,9 +37,19 @@ import Customers from "./../utils/customers.js";
 
 const OrderCreate = forwardRef((props, ref) => {
 
+    /*
+    function ResetFormData() {
+        for (let key in formData) {
+            if (formData.hasOwnProperty(key)) {
+                formData[key] = "";
+            }
+        }
+    }
+        */
 
     useImperativeHandle(ref, () => ({
         open(id) {
+            //ResetFormData();
             errors = {};
             setErrors({ ...errors });
             selectedProducts = [];
@@ -240,7 +250,7 @@ const OrderCreate = forwardRef((props, ref) => {
                         id: formData.created_by,
                         name: formData.created_by_name
                     }
-                ];
+                ];f
 
 
                 setSelectedOrderPlacedByUsers([...selectedOrderPlacedByUsers]);
@@ -251,8 +261,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 reCalculate();
                 setFormData({ ...formData });
-
-
             })
             .catch(error => {
                 setProcessing(false);
@@ -312,6 +320,7 @@ const OrderCreate = forwardRef((props, ref) => {
         price_type: "retail",
         useLaserScanner: false,
         store_id: "",
+        products: [],
     });
 
     //Store Auto Suggestion
@@ -1466,9 +1475,24 @@ function findDiscount() {
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
 
+    const PreviewRef = useRef();
+    function openPreview() {
+        let model = formData;
+        model.products = selectedProducts;
+        model.payment_status = paymentStatus;
+        model.date = formData.date_str;
+        if (!formData.code) {
+            formData.code = Math.floor(10000 + Math.random() * 90000).toString();;
+        }
+        PreviewRef.current.open(model);
+    }
+
+
+
     return (
         <>
-            {/* Bootstrap 5 Toast */}
+
+            <OrderPreview ref={PreviewRef} />
             <div
                 className="toast-container position-fixed top-0 end-0 p-3"
                 style={{ zIndex: 9999 }}
@@ -1519,7 +1543,12 @@ function findDiscount() {
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
-                        <OrderPreview />
+
+                        <Button variant="primary" onClick={openPreview}>
+                            <i className="bi bi-printer"></i> Print Full Invoice
+                        </Button>
+                        &nbsp;&nbsp;
+
                         <Button variant="primary" onClick={handleCreate}>
                             {isProcessing ?
                                 <Spinner
@@ -1693,6 +1722,7 @@ function findDiscount() {
                                 selected={selectedCustomers}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
+                                    formData.customerName = searchTerm;
                                     suggestCustomers(searchTerm);
                                 }}
                             />
@@ -1762,6 +1792,113 @@ function findDiscount() {
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Phone ( 05.. / +966..)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.phone ? formData.phone : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["phone"] = "";
+                                        setErrors({ ...errors });
+                                        formData.phone = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="phone"
+                                    placeholder="Phone"
+                                />
+                            </div>
+                            {errors.phone && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.phone}
+                                </div>
+                            )}
+                        </div>
+
+
+
+                        <div className="col-md-2">
+                            <label className="form-label">VAT NO.(15 digits)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vat_no ? formData.vat_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["vat_no"] = "";
+                                        setErrors({ ...errors });
+                                        formData.vat_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="vat_no"
+                                    placeholder="VAT NO."
+                                />
+                            </div>
+                            {errors.vat_no && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.vat_no}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Address</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.address}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address"
+                                    placeholder="Address"
+                                />
+                            </div>
+                            {errors.address && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address}
+                                </div>
+                            )}
+                        </div>
+                        <div className="col-md-3">
+                            <label className="form-label">Remarks</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.remarks}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.remarks = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="remarks"
+                                    placeholder="Remarks"
+                                />
+                            </div>
+                            {errors.remarks && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.remarks}
+                                </div>
+                            )}
                         </div>
 
 

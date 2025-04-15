@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import SalesReturnPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
@@ -14,6 +13,7 @@ import { Spinner } from "react-bootstrap";
 import SalesReturnView from "./view.js";
 import ProductView from "./../product/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import SalesReturnPreview from "./preview.js";
 
 const SalesReturnCreate = forwardRef((props, ref) => {
 
@@ -122,6 +122,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 formData = {
                     id: salesReturn.id,
+                    uuid: salesReturn.uuid,
+                    invoice_count_value: salesReturn.invoice_count_value,
                     code: salesReturn.code,
                     order_code: salesReturn.order_code,
                     order_id: salesReturn.order_id,
@@ -137,6 +139,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     is_discount_percent: salesReturn.is_discount_percent,
                     payment_status: salesReturn.payment_status,
                     shipping_handling_fees: salesReturn.shipping_handling_fees,
+                    remarks: salesReturn.remarks,
                 };
 
                 if (!formData.payments_input) {
@@ -919,9 +922,23 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         DetailsViewRef.current.open(id);
     }
 
+    const PreviewRef = useRef();
+    function openPreview() {
+        let model = formData;
+        model.products = selectedProducts;
+        model.payment_status = paymentStatus;
+        model.date = formData.date_str;
+        model.uuid = formData.uuid;
+        model.invoice_count_value = formData.invoice_count_value;
+        model.code = formData.code;
+        PreviewRef.current.open(model);
+    }
+
+
 
     return (
         <>
+            <SalesReturnPreview ref={PreviewRef} />
             <SalesReturnView ref={DetailsViewRef} />
             <ProductView ref={ProductDetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -938,7 +955,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
-                        <SalesReturnPreview />
+
+                        <Button variant="primary" onClick={openPreview}>
+                            <i className="bi bi-printer"></i> Print Full Invoice
+                        </Button>
+                        &nbsp;&nbsp;
+
                         {selectedProducts && selectedProducts.length > 0 &&
                             <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
@@ -977,41 +999,63 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             setFormData({ ...formData });
                         }} /> Report Later to Zatca
                     </div>)}
-                    {selectedProducts?.length > 0 && <div className="col-md-3">
-                        <label className="form-label">Date*</label>
-                        <div className="input-group mb-3">
-                            <DatePicker
-                                id="date_str"
-                                selected={formData.date_str ? new Date(formData.date_str) : null}
-                                value={formData.date_str ? format(
-                                    new Date(formData.date_str),
-                                    "MMMM d, yyyy h:mm aa"
-                                ) : null}
-                                className="form-control"
-                                dateFormat="MMMM d, yyyy h:mm aa"
-                                showTimeSelect
-                                timeIntervals="1"
-                                onChange={(value) => {
-                                    console.log("Value", value);
-                                    formData.date_str = value;
-                                    // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                    setFormData({ ...formData });
-                                }}
-                            />
-                        </div>
-                        {errors.date_str && (
-                            <div style={{ color: "red" }}>
-                                <i className="bi bi-x-lg"> </i>
-                                {errors.date_str}
+                    <div className="row">
+                        {selectedProducts?.length > 0 && <div className="col-md-3" >
+                            <label className="form-label">Date*</label>
+                            <div className="input-group mb-3">
+                                <DatePicker
+                                    id="date_str"
+                                    selected={formData.date_str ? new Date(formData.date_str) : null}
+                                    value={formData.date_str ? format(
+                                        new Date(formData.date_str),
+                                        "MMMM d, yyyy h:mm aa"
+                                    ) : null}
+                                    className="form-control"
+                                    dateFormat="MMMM d, yyyy h:mm aa"
+                                    showTimeSelect
+                                    timeIntervals="1"
+                                    onChange={(value) => {
+                                        console.log("Value", value);
+                                        formData.date_str = value;
+                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                        setFormData({ ...formData });
+                                    }}
+                                />
                             </div>
-                        )}
-                        {formData.date_str && !errors.date_str && (
-                            <div style={{ color: "green" }}>
-                                <i className="bi bi-check-lg"> </i>
-                                Looks good!
+                            {errors.date_str && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.date_str}
+                                </div>
+                            )}
+
+                        </div>}
+
+                        {selectedProducts?.length > 0 && <div className="col-md-3" >
+                            <label className="form-label">Remarks</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.remarks}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.remarks = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="remarks"
+                                    placeholder="Remarks"
+                                />
                             </div>
-                        )}
-                    </div>}
+                            {errors.remarks && (
+                                <div style={{ color: "red" }}>
+                                    {errors.remarks}
+                                </div>
+                            )}
+                        </div>}
+                    </div>
 
                     {selectedProducts && selectedProducts.length === 0 && "Already returned all products"}
                     {selectedProducts && selectedProducts.length > 0 && <form className="row g-3 needs-validation" onSubmit={handleCreate}>

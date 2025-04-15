@@ -797,10 +797,24 @@ const QuotationCreate = forwardRef((props, ref) => {
     ProductDetailsViewRef.current.open(id);
   }
 
+
+
   const PreviewRef = useRef();
+  function openPreview() {
+    let model = formData;
+    model.products = selectedProducts;
+    model.date = formData.date_str;
+    model.code = formData.code;
+    if (!formData.code) {
+      formData.code = Math.floor(10000 + Math.random() * 90000).toString();;
+    }
+    PreviewRef.current.open(model);
+  }
+
 
   return (
     <>
+      <QuotationPreview ref={PreviewRef} />
       <ProductView
         ref={ProductDetailsViewRef}
         openUpdateForm={openProductUpdateForm}
@@ -811,8 +825,6 @@ const QuotationCreate = forwardRef((props, ref) => {
         showToastMessage={props.showToastMessage}
         openDetailsView={openProductDetailsView}
       />
-
-      <QuotationPreview ref={PreviewRef} />
 
       <StoreCreate
         ref={StoreCreateFormRef}
@@ -847,20 +859,10 @@ const QuotationCreate = forwardRef((props, ref) => {
           </Modal.Title>
 
           <div className="col align-self-end text-end">
-            &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
-            {formData.id ? (
-              <Button
-                variant="primary"
-                onClick={() => {
-                  handleClose();
-                  props.openDetailsView(formData.id);
-                }}
-              >
-                <i className="bi bi-eye"></i> View Detail
-              </Button>
-            ) : (
-              ""
-            )}
+            <Button variant="primary" onClick={openPreview}>
+              <i className="bi bi-printer"></i> Print Full Quotation
+            </Button>
+            &nbsp;&nbsp;
             &nbsp;&nbsp;
             <Button variant="primary" onClick={handleCreate}>
               {isProcessing ?
@@ -957,61 +959,56 @@ const QuotationCreate = forwardRef((props, ref) => {
             <div className="col-md-6">
               <label className="form-label">Customer*</label>
 
-              <div className="input-group mb-3">
-                <Typeahead
-                  id="customer_id"
-                  labelKey="search_label"
-                  isLoading={isCustomersLoading}
-                  isInvalid={errors.customer_id ? true : false}
-                  onChange={(selectedItems) => {
-                    errors.customer_id = "";
+
+              <Typeahead
+                id="customer_id"
+                labelKey="search_label"
+                isLoading={isCustomersLoading}
+                isInvalid={errors.customer_id ? true : false}
+                onChange={(selectedItems) => {
+                  errors.customer_id = "";
+                  setErrors(errors);
+                  if (selectedItems.length === 0) {
+                    errors.customer_id = "Invalid Customer selected";
                     setErrors(errors);
-                    if (selectedItems.length === 0) {
-                      errors.customer_id = "Invalid Customer selected";
-                      setErrors(errors);
-                      formData.customer_id = "";
-                      setFormData({ ...formData });
-                      setSelectedCustomers([]);
-                      return;
-                    }
-                    formData.customer_id = selectedItems[0].id;
+                    formData.customer_id = "";
                     setFormData({ ...formData });
-                    setSelectedCustomers(selectedItems);
-                  }}
-                  options={customerOptions}
-                  placeholder="Customer Name / Mob / VAT # / ID"
-                  selected={selectedCustomers}
-                  highlightOnlyResult={true}
-                  onInputChange={(searchTerm, e) => {
-                    suggestCustomers(searchTerm);
-                  }}
-                />
-                <Button
-                  hide={true.toString()}
-                  onClick={openCustomerCreateForm}
-                  className="btn btn-outline-secondary btn-primary btn-sm"
-                  type="button"
-                  id="button-addon1"
-                >
-                  {" "}
-                  <i className="bi bi-plus-lg"></i> New
-                </Button>
-                {errors.customer_id && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.customer_id}
-                  </div>
-                )}
-                {formData.customer_id && !errors.customer_id && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
-              </div>
+                    setSelectedCustomers([]);
+                    return;
+                  }
+                  formData.customer_id = selectedItems[0].id;
+                  setFormData({ ...formData });
+                  setSelectedCustomers(selectedItems);
+                }}
+                options={customerOptions}
+                placeholder="Customer Name / Mob / VAT # / ID"
+                selected={selectedCustomers}
+                highlightOnlyResult={true}
+                onInputChange={(searchTerm, e) => {
+                  formData.customerName = searchTerm;
+                  suggestCustomers(searchTerm);
+                }}
+              />
+              <Button
+                hide={true.toString()}
+                onClick={openCustomerCreateForm}
+                className="btn btn-outline-secondary btn-primary btn-sm"
+                type="button"
+                id="button-addon1"
+              >
+                {" "}
+                <i className="bi bi-plus-lg"></i> New
+              </Button>
+              {errors.customer_id && (
+                <div style={{ color: "red" }}>
+                  <i className="bi bi-x-lg"> </i>
+                  {errors.customer_id}
+                </div>
+              )}
+
             </div>
 
-            <div className="col-md-6">
+            <div className="col-md-2">
               <label className="form-label">Product Barcode Scan</label>
 
               <div className="input-group mb-3">
@@ -1036,6 +1033,151 @@ const QuotationCreate = forwardRef((props, ref) => {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="col-md-3">
+              <label className="form-label">Date*</label>
+
+              <div className="input-group mb-3">
+                <DatePicker
+                  id="date_str"
+                  selected={
+                    formData.date_str ? new Date(formData.date_str) : null
+                  }
+                  value={
+                    formData.date_str
+                      ? format(
+                        new Date(formData.date_str),
+                        "MMMM d, yyyy h:mm aa"
+                      )
+                      : null
+                  }
+                  className="form-control"
+                  dateFormat="MMMM d, yyyy h:mm aa"
+                  showTimeSelect
+                  timeIntervals="1"
+                  onChange={(value) => {
+                    console.log("Value", value);
+                    formData.date_str = value;
+                    // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                    setFormData({ ...formData });
+                  }}
+                />
+
+                {errors.date_str && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.date_str}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="col-md-2">
+              <label className="form-label">Phone ( 05.. / +966..)</label>
+
+              <div className="input-group mb-3">
+                <input
+                  value={formData.phone ? formData.phone : ""}
+                  type='string'
+                  onChange={(e) => {
+                    errors["phone"] = "";
+                    setErrors({ ...errors });
+                    formData.phone = e.target.value;
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+                  id="phone"
+                  placeholder="Phone"
+                />
+              </div>
+              {errors.phone && (
+                <div style={{ color: "red" }}>
+
+                  {errors.phone}
+                </div>
+              )}
+            </div>
+
+
+
+            <div className="col-md-2">
+              <label className="form-label">VAT NO.(15 digits)</label>
+
+              <div className="input-group mb-3">
+                <input
+                  value={formData.vat_no ? formData.vat_no : ""}
+                  type='string'
+                  onChange={(e) => {
+                    errors["vat_no"] = "";
+                    setErrors({ ...errors });
+                    formData.vat_no = e.target.value;
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+                  id="vat_no"
+                  placeholder="VAT NO."
+                />
+              </div>
+              {errors.vat_no && (
+                <div style={{ color: "red" }}>
+
+                  {errors.vat_no}
+                </div>
+              )}
+            </div>
+
+            <div className="col-md-3">
+              <label className="form-label">Address</label>
+              <div className="input-group mb-3">
+                <textarea
+                  value={formData.address}
+                  type='string'
+                  onChange={(e) => {
+                    errors["address"] = "";
+                    setErrors({ ...errors });
+                    formData.address = e.target.value;
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+                  id="address"
+                  placeholder="Address"
+                />
+              </div>
+              {errors.address && (
+                <div style={{ color: "red" }}>
+
+                  {errors.address}
+                </div>
+              )}
+            </div>
+            <div className="col-md-3">
+              <label className="form-label">Remarks</label>
+              <div className="input-group mb-3">
+                <textarea
+                  value={formData.remarks}
+                  type='string'
+                  onChange={(e) => {
+                    errors["address"] = "";
+                    setErrors({ ...errors });
+                    formData.remarks = e.target.value;
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+                  id="remarks"
+                  placeholder="Remarks"
+                />
+              </div>
+              {errors.remarks && (
+                <div style={{ color: "red" }}>
+
+                  {errors.remarks}
+                </div>
+              )}
             </div>
 
             <div className="col-md-12">
@@ -1760,43 +1902,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            <div className="col-md-6">
-              <label className="form-label">Date*</label>
 
-              <div className="input-group mb-3">
-                <DatePicker
-                  id="date_str"
-                  selected={
-                    formData.date_str ? new Date(formData.date_str) : null
-                  }
-                  value={
-                    formData.date_str
-                      ? format(
-                        new Date(formData.date_str),
-                        "MMMM d, yyyy h:mm aa"
-                      )
-                      : null
-                  }
-                  className="form-control"
-                  dateFormat="MMMM d, yyyy h:mm aa"
-                  showTimeSelect
-                  timeIntervals="1"
-                  onChange={(value) => {
-                    console.log("Value", value);
-                    formData.date_str = value;
-                    // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                    setFormData({ ...formData });
-                  }}
-                />
-
-                {errors.date_str && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.date_str}
-                  </div>
-                )}
-              </div>
-            </div>
 
             <div className="col-md-3">
               <label className="form-label">Validity (# of Days)*</label>

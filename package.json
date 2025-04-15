@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@axenda/zatca": "^1.0.4",
+    "@emran-alhaddad/saudi-riyal-font": "^1.0.3",
     "@fingerprintjs/fingerprintjs": "^4.6.1",
     "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^11.2.7",

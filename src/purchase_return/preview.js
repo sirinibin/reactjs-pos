@@ -17,6 +17,10 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
                     getStore(model.store_id);
                 }
 
+                if (model.order_id) {
+                    getOrder(model.order_id);
+                }
+
                 if (model.vendor_id) {
                     getVendor(model.vendor_id);
                 }
@@ -183,8 +187,6 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
             });
     }
 
-
-
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
             .map(function (key) {
@@ -192,6 +194,48 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
             })
             .join("&");
     }
+
+    function getOrder(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': cookies.get('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (cookies.get("store_id")) {
+            searchParams.store_id = cookies.get("store_id");
+        }
+
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                model.order = data.result;
+
+                setModel({ ...model });
+            })
+            .catch(error => {
+
+            });
+    }
+
+
 
     function getVendor(id) {
         console.log("inside get Vendor");
@@ -207,6 +251,7 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
+
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
         fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
@@ -278,6 +323,7 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
         if (cookies.get("store_id")) {
             searchParams.store_id = cookies.get("store_id");
         }
+
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
         fetch('/v1/signature/' + id + "?" + queryParams, requestOptions)
@@ -312,7 +358,7 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Sales_";
+        let filename = "Purchase_Return_";
 
         if (model.id) {
             filename += "_#" + model.code;
@@ -345,9 +391,9 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} scrollable={true} fullscreen onHide={handleClose} animation={false}>
+        <Modal show={show} fullscreen scrollable={true} size="xl" onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Invoice Preview</Modal.Title>
+                <Modal.Title>Preview</Modal.Title>
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className="btn btn-primary mb-3" onClick={handlePrint}>
                         <i className="bi bi-printer"></i> Print

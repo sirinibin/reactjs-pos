@@ -597,6 +597,70 @@ const CustomerCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <div className="col-md-3">
+                            <label className="form-label">Contact Person</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.contact_person ? formData.contact_person : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["contact_person"] = "";
+
+                                        formData.contact_person = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="contact_person"
+                                    placeholder="Contact Person"
+                                />
+                            </div>
+                            {errors.contact_person && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.contact_person}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Credit limit</label>
+                            <input type='number' value={formData.credit_limit} className="form-control "
+                                onChange={(e) => {
+                                    errors["credit_limit"] = "";
+                                    setErrors({ ...errors });
+                                    if (!e.target.value) {
+                                        formData.credit_limit = e.target.value;
+                                        setFormData({ ...formData });
+                                        return;
+                                    }
+                                    formData.credit_limit = parseFloat(e.target.value);
+
+                                    setFormData({ ...formData });
+                                    console.log(formData);
+                                }}
+                            />
+                            {errors.credit_limit && (
+                                <div style={{ color: "red" }}>
+                                    {errors.credit_limit}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Credit balance</label>
+                            <input type='number' disabled={true} value={formData.credit_balance} className="form-control "
+                                onChange={(e) => {
+
+                                }}
+                            />
+                            {errors.credit_balance && (
+                                <div style={{ color: "red" }}>
+                                    {errors.credit_balance}
+                                </div>
+                            )}
+                        </div>
+
                         {/*
                         <div className="col-md-3">
                             <label className="form-label">Address</label>

@@ -1,11 +1,20 @@
-import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useEffect } from "react";
+import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback } from "react";
 import { Modal, Button } from 'react-bootstrap';
-import OrderPreviewContent from './previewContent.js';
+import PurchasePreviewContent from './previewContent.js';
 import Cookies from "universal-cookie";
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
 
+
 const PurchasePreview = forwardRef((props, ref) => {
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
 
     useImperativeHandle(ref, () => ({
         open(modelObj) {
@@ -85,6 +94,9 @@ const PurchasePreview = forwardRef((props, ref) => {
 
                 console.log("model.pages:", model.pages);
                 console.log("model.products:", model.products);
+
+
+
                 getQRCodeContents();
                 //model.qr_content = getQRCodeContents();
                 //setModel({ ...model });
@@ -121,8 +133,8 @@ const PurchasePreview = forwardRef((props, ref) => {
             qrContent += "Store: " + model.store.name + "<br />";
         }
 
-        if (model.customer) {
-            qrContent += "Customer: " + model.customer.name + "<br />";
+        if (model.vendor) {
+            qrContent += "Vendor: " + model.vendor.name + "<br />";
         }
 
 
@@ -171,6 +183,8 @@ const PurchasePreview = forwardRef((props, ref) => {
                     invoiceTimestamp: model.date,
                     invoiceTotal: model.net_total,
                     invoiceVatTotal: model.vat_price,
+                    // uuid: model.uuid,
+                    invoiceHash: model.hash ? model.hash : "",
                 });
 
                 model.QRImageData = await invoice.render();
@@ -186,7 +200,7 @@ const PurchasePreview = forwardRef((props, ref) => {
 
 
     function getVendor(id) {
-        console.log("inside get Customer");
+        console.log("inside get Vendor");
         const requestOptions = {
             method: 'GET',
             headers: {
@@ -201,7 +215,6 @@ const PurchasePreview = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
-
         fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -213,7 +226,7 @@ const PurchasePreview = forwardRef((props, ref) => {
                     return Promise.reject(error);
                 }
 
-                console.log("Response:");
+                console.log("Vendor Response:");
                 console.log(data);
                 let vendorData = data.result;
                 model.vendor = vendorData;
@@ -257,14 +270,6 @@ const PurchasePreview = forwardRef((props, ref) => {
             });
     }
 
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-
     function getSignature(id) {
         console.log("inside get Signature");
         const requestOptions = {
@@ -274,6 +279,7 @@ const PurchasePreview = forwardRef((props, ref) => {
                 'Authorization': cookies.get('access_token'),
             },
         };
+
 
         let searchParams = {};
         if (cookies.get("store_id")) {
@@ -313,7 +319,7 @@ const PurchasePreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Sales_";
+        let filename = "Purchase_";
 
         if (model.id) {
             filename += "_#" + model.code;
@@ -346,7 +352,7 @@ const PurchasePreview = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} scrollable={true} fullscreen onHide={handleClose} animation={false}>
+        <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Invoice Preview</Modal.Title>
                 <div className="col align-self-end text-end">
@@ -365,7 +371,7 @@ const PurchasePreview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <OrderPreviewContent model={model} />
+                    <PurchasePreviewContent model={model} />
                 </div>
             </Modal.Body>
             <Modal.Footer>

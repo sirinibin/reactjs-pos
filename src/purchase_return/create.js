@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import PurchaseReturnedPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import VendorCreate from "../vendor/create.js";
@@ -15,6 +14,7 @@ import PurchaseReturnedView from "./view.js";
 import ProductView from "../product/view.js";
 import PurchaseView from "./../purchase/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import PurchaseReturnPreview from "./preview.js";
 
 
 const PurchaseReturnedCreate = forwardRef((props, ref) => {
@@ -210,6 +210,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     payment_method: purchaseReturn.payment_method,
                     payment_status: purchaseReturn.payment_status,
                     shipping_handling_fees: purchaseReturn.shipping_handling_fees,
+                    remarks: purchaseReturn.remarks,
                 };
 
                 if (!formData.payments_input) {
@@ -804,8 +805,23 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
 
 
+
+    const PreviewRef = useRef();
+    function openPreview() {
+        let model = formData;
+        model.products = selectedProducts;
+        model.payment_status = paymentStatus;
+        model.date = formData.date_str;
+        model.uuid = formData.uuid;
+        model.invoice_count_value = formData.invoice_count_value;
+        model.code = formData.code;
+        PreviewRef.current.open(model);
+    }
+
+
     return (
         <>
+            <PurchaseReturnPreview ref={PreviewRef} />
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
 
@@ -834,9 +850,14 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     </Modal.Title>
 
                     <div className="col align-self-end text-end">
-                        <PurchaseReturnedPreview />
+                        <Button variant="primary" onClick={openPreview}>
+                            <i className="bi bi-printer"></i> Print Full Invoice
+                        </Button>
+                        &nbsp;&nbsp;
+                        &nbsp;&nbsp;
+
                         {selectedProducts && selectedProducts.length > 0 &&
-                            <Button variant="primary" className="mb-3" onClick={handleCreate} >
+                            <Button variant="primary" onClick={handleCreate} >
                                 {isProcessing ?
                                     <Spinner
                                         as="span"
@@ -896,12 +917,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         {errors.vendor_invoice_no}
                                     </div>
                                 )}
-                                {formData.vendor_invoice_no && !errors.rack && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
+
                             </div>
                         </div>
 
@@ -942,6 +958,31 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        <div className="col-md-3" >
+                            <label className="form-label">Remarks</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.remarks}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["remarks"] = "";
+                                        setErrors({ ...errors });
+                                        formData.remarks = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="remarks"
+                                    placeholder="Remarks"
+                                />
+                            </div>
+                            {errors.remarks && (
+                                <div style={{ color: "red" }}>
+                                    {errors.remarks}
+                                </div>
+                            )}
                         </div>
 
 
