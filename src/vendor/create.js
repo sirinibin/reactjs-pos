@@ -365,6 +365,32 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
+                            <label className="form-label">ID</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.code ? formData.code : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["code"] = "";
+                                        setErrors({ ...errors });
+                                        formData.code = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="id"
+                                    placeholder="ID"
+                                />
+                            </div>
+                            {errors.code && (
+                                <div style={{ color: "red" }}>
+                                    {errors.code}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-6">
                             <label className="form-label">Phone*</label>
 
                             <div className="input-group mb-3">
@@ -594,36 +620,67 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-6">
-                            <label className="form-label">VAT %</label>
-
+                            <label className="form-label">Contact Person</label>
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.vat_percent ? formData.vat_percent : ""}
+                                    value={formData.contact_person ? formData.contact_person : ""}
                                     type='string'
                                     onChange={(e) => {
-                                        errors["vat_percent"] = "";
-                                        setErrors({ ...errors });
-                                        formData.vat_percent = e.target.value;
+                                        errors["contact_person"] = "";
+
+                                        formData.contact_person = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="vat_percent"
-                                    placeholder="Vat %"
+                                    id="contact_person"
+                                    placeholder="Contact Person"
                                 />
-                                {errors.vat_percent && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.vat_percent}
-                                    </div>
-                                )}
-                                {formData.vat_percent && !errors.vat_percent && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.contact_person && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.contact_person}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Credit limit</label>
+                            <input type='number' value={formData.credit_limit} className="form-control "
+                                onChange={(e) => {
+                                    errors["credit_limit"] = "";
+                                    setErrors({ ...errors });
+                                    if (!e.target.value) {
+                                        formData.credit_limit = e.target.value;
+                                        setFormData({ ...formData });
+                                        return;
+                                    }
+                                    formData.credit_limit = parseFloat(e.target.value);
+
+                                    setFormData({ ...formData });
+                                    console.log(formData);
+                                }}
+                            />
+                            {errors.credit_limit && (
+                                <div style={{ color: "red" }}>
+                                    {errors.credit_limit}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Credit balance</label>
+                            <input type='number' disabled={true} value={formData.credit_balance} className="form-control "
+                                onChange={(e) => {
+
+                                }}
+                            />
+                            {errors.credit_balance && (
+                                <div style={{ color: "red" }}>
+                                    {errors.credit_balance}
+                                </div>
+                            )}
                         </div>
 
 
