@@ -44,9 +44,16 @@ const Products = forwardRef((props, ref) => {
         }
     }
 
+    let [enableProductSelection, setEnableProductSelection] = useState(true);
+
     useImperativeHandle(ref, () => ({
         open(model, productType) {
             ResetSearchParams();
+
+            if (!props.onSelectProducts) {
+                enableProductSelection = false
+                setEnableProductSelection(enableProductSelection);
+            }
 
             setProductList([]);
             type = productType;
@@ -543,7 +550,10 @@ const Products = forwardRef((props, ref) => {
 
     const handleSendSelected = () => {
         const selectedProducts = productList.filter((p) => selectedIds.includes(p.id));
-        props.onSelectProducts(selectedProducts); // Send to parent
+        if (props.onSelectProducts) {
+            props.onSelectProducts(selectedProducts); // Send to parent
+        }
+
         handleClose();
     };
 
@@ -558,7 +568,7 @@ const Products = forwardRef((props, ref) => {
                     <Modal.Title>
                         {type === "linked_products" ?
                             <div>
-                                Select linked products of #{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number} - {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}
+                                {enableProductSelection ? "Select" : ""} Linked products of #{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number} - {product.name} {product.name_in_arabic ? " / " + product.name_in_arabic : ""}
                             </div> : ""}
                         {type === "quotation_products" ?
                             <div>
@@ -767,14 +777,14 @@ const Products = forwardRef((props, ref) => {
                                                                 {totalItems}
 
                                                             </p>
-                                                            <button
+                                                            {enableProductSelection && <button
                                                                 style={{ marginBottom: "3px" }}
                                                                 className="btn btn-success mt-2"
                                                                 disabled={selectedIds.length === 0}
                                                                 onClick={handleSendSelected}
                                                             >
                                                                 Select {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
-                                                            </button>
+                                                            </button>}
 
 
                                                         </div>
@@ -788,12 +798,13 @@ const Products = forwardRef((props, ref) => {
                                                 )}
                                             </div>
                                             <div className="table-responsive" style={{ overflowX: "auto", overflowY: "auto", maxHeight: "500px" }}>
+
                                                 <table className="table table-striped table-sm table-bordered">
                                                     <thead>
                                                         <tr className="text-center">
 
                                                             <th>Actions</th>
-                                                            <th>Select</th>
+                                                            {enableProductSelection && <th>Select</th>}
                                                             <th>
                                                                 <b
                                                                     style={{
@@ -1551,13 +1562,13 @@ const Products = forwardRef((props, ref) => {
                                                     <thead>
                                                         <tr className="text-center">
                                                             <th style={{ minWidth: "100px" }}></th>
-                                                            <th>
+                                                            {enableProductSelection && <th>
                                                                 <input
                                                                     type="checkbox"
                                                                     checked={isAllSelected}
                                                                     onChange={handleSelectAll}
                                                                 /> All
-                                                            </th>
+                                                            </th>}
                                                             <th>
                                                                 <input
                                                                     type="text"
@@ -2224,13 +2235,13 @@ const Products = forwardRef((props, ref) => {
                                                             */}
                                                                         </span>
                                                                     </td>
-                                                                    <td>
+                                                                    {enableProductSelection && <td>
                                                                         <input
                                                                             type="checkbox"
                                                                             checked={selectedIds.includes(product.id)}
                                                                             onChange={() => handleSelect(product.id)}
                                                                         />
-                                                                    </td>
+                                                                    </td>}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number}</td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start">
                                                                         <OverflowTooltip value={product.name + (product.name_in_arabic ? " | " + product.name_in_arabic : "")} maxWidth={300} />

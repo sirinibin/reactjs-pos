@@ -14,6 +14,16 @@ import ProductView from "../product/view.js";
 import { DebounceInput } from 'react-debounce-input';
 import DatePicker from "react-datepicker";
 
+import { Dropdown } from 'react-bootstrap';
+
+import SalesHistory from "./../product/sales_history.js";
+import SalesReturnHistory from "./../product/sales_return_history.js";
+import PurchaseHistory from "./../product/purchase_history.js";
+import PurchaseReturnHistory from "./../product/purchase_return_history.js";
+import QuotationHistory from "./../product/quotation_history.js";
+import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+import Products from "./../utils/products.js";
+
 const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => ({
@@ -597,7 +607,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     if (!formData.store_id) {
       errors.product_id = "Please Select a Store and try again";
       setErrors({ ...errors });
-      return;
+      return false;
     }
 
 
@@ -605,15 +615,15 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     if (!product) {
       errors.product_id = "Invalid Product";
       setErrors({ ...errors });
-      return;
+      return false;
     }
 
     let productStore = GetProductUnitPriceInStore(
       formData.store_id,
       product.stores
     );
-    product.unit_price = productStore.retail_unit_price;
-    product.purchase_unit_price = productStore.purchase_unit_price;
+    product.unit_price = productStore.retail_unit_price ? productStore.retail_unit_price : 0.00;
+    product.purchase_unit_price = productStore.purchase_unit_price ? productStore.purchase_unit_price : 0.00;
 
     let alreadyAdded = false;
     let index = -1;
@@ -663,6 +673,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     console.log("selectedProducts:", selectedProducts);
     setSelectedProducts([...selectedProducts]);
     reCalculate();
+    return true;
   }
 
   function getProductIndex(productID) {
@@ -794,8 +805,95 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     PreviewRef.current.open(model);
   }
 
+  const ProductsRef = useRef();
+  function openLinkedProducts(model) {
+    ProductsRef.current.open(model, "linked_products");
+  }
+
+
+  const SalesHistoryRef = useRef();
+  function openSalesHistory(model) {
+    SalesHistoryRef.current.open(model, selectedCustomers);
+  }
+
+  const SalesReturnHistoryRef = useRef();
+  function openSalesReturnHistory(model) {
+    SalesReturnHistoryRef.current.open(model, selectedCustomers);
+  }
+
+
+  const PurchaseHistoryRef = useRef();
+  function openPurchaseHistory(model) {
+    PurchaseHistoryRef.current.open(model);
+  }
+
+  const PurchaseReturnHistoryRef = useRef();
+  function openPurchaseReturnHistory(model) {
+    PurchaseReturnHistoryRef.current.open(model);
+  }
+
+
+  const DeliveryNoteHistoryRef = useRef();
+  function openDeliveryNoteHistory(model) {
+    DeliveryNoteHistoryRef.current.open(model, selectedCustomers);
+  }
+
+
+  const QuotationHistoryRef = useRef();
+  function openQuotationHistory(model) {
+    QuotationHistoryRef.current.open(model, selectedCustomers);
+  }
+
+
+  const handleSelectedProducts = (selected) => {
+    console.log("Selected Products:", selected);
+    let addedCount = 0;
+    for (var i = 0; i < selected.length; i++) {
+      if (addProduct(selected[i])) {
+        addedCount++;
+      }
+    }
+    setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+
+    // props.showToastMessage("Successfully Added " + selected.length + " products", "success");
+  };
+
+
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
   return (
     <>
+      <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
+      <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
+      <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
+      <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
+      <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
+      <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
+      <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
+
+      <div
+        className="toast-container position-fixed top-0 end-0 p-3"
+        style={{ zIndex: 9999 }}
+      >
+        <div
+          className={`toast align-items-center text-white bg-success ${showToast ? "show" : "hide"}`}
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+        >
+          <div className="d-flex">
+            <div className="toast-body">{toastMessage}</div>
+            <button
+              type="button"
+              className="btn-close btn-close-white me-2 m-auto"
+              onClick={() => setShowToast(false)}
+            ></button>
+          </div>
+        </div>
+      </div>
+
       <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
       <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
 
@@ -1060,7 +1158,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     <th style={{ width: "3%" }}>Remove</th>
                     <th style={{ width: "5%" }}>SI No.</th>
                     <th style={{ width: "10%" }}>Part No.</th>
-                    <th style={{ width: "34%" }} className="text-start">Name</th>
+                    <th style={{ width: "30%" }} className="text-start">Name</th>
+                    <th style={{ width: "4%%" }}>Info</th>
                     <th style={{ width: "11%" }}>Qty</th>
                   </tr>
                 </thead>
@@ -1089,6 +1188,69 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                           openProductDetailsView(product.product_id);
                           console.log("okk,id:", product.product_id);
                         }}>{product.name}
+                      </td>
+                      <td>
+                        <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
+                          <Dropdown drop="top">
+                            <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
+                              <i className="bi bi-info"></i>
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                              <Dropdown.Item onClick={() => {
+                                openLinkedProducts(product);
+                              }}>
+                                <i className="bi bi-link"></i>
+                                &nbsp;
+                                Linked Products
+                              </Dropdown.Item>
+
+                              <Dropdown.Item onClick={() => {
+                                openSalesHistory(product);
+                              }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Sales History
+                              </Dropdown.Item>
+                              <Dropdown.Item onClick={() => {
+                                openSalesReturnHistory(product);
+                              }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Sales Return History
+                              </Dropdown.Item>
+                              <Dropdown.Item onClick={() => {
+                                openPurchaseHistory(product);
+                              }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Purchase History
+                              </Dropdown.Item>
+                              <Dropdown.Item onClick={() => {
+                                openPurchaseReturnHistory(product);
+                              }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Purchase Return History
+                              </Dropdown.Item>
+                              <Dropdown.Item onClick={() => {
+                                openDeliveryNoteHistory(product);
+                              }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Delivery Note History
+                              </Dropdown.Item>
+                              <Dropdown.Item onClick={() => {
+                                openQuotationHistory(product);
+                              }}>
+                                <i className="bi bi-clock-history"></i>
+                                &nbsp;
+                                Quotation History
+                              </Dropdown.Item>
+
+                            </Dropdown.Menu>
+                          </Dropdown>
+                        </div>
                       </td>
                       <td style={{ width: "155px" }}>
 

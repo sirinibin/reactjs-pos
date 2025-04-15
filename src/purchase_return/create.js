@@ -16,6 +16,15 @@ import PurchaseView from "./../purchase/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import PurchaseReturnPreview from "./preview.js";
 
+import { Dropdown } from 'react-bootstrap';
+import SalesHistory from "./../product/sales_history.js";
+import SalesReturnHistory from "./../product/sales_return_history.js";
+import PurchaseHistory from "./../product/purchase_history.js";
+import PurchaseReturnHistory from "./../product/purchase_return_history.js";
+import QuotationHistory from "./../product/quotation_history.js";
+import DeliveryNoteHistory from "./../product/delivery_note_history.js";
+import Products from "./../utils/products.js";
+
 
 const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
@@ -819,8 +828,57 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
     }
 
 
+    const ProductsRef = useRef();
+    function openLinkedProducts(model) {
+        ProductsRef.current.open(model, "linked_products");
+    }
+
+
+    const SalesHistoryRef = useRef();
+    function openSalesHistory(model) {
+        SalesHistoryRef.current.open(model);
+    }
+
+    const SalesReturnHistoryRef = useRef();
+    function openSalesReturnHistory(model) {
+        SalesReturnHistoryRef.current.open(model);
+    }
+
+
+    const PurchaseHistoryRef = useRef();
+    function openPurchaseHistory(model) {
+        PurchaseHistoryRef.current.open(model);
+    }
+
+    const PurchaseReturnHistoryRef = useRef();
+    function openPurchaseReturnHistory(model) {
+        PurchaseReturnHistoryRef.current.open(model);
+    }
+
+
+    const DeliveryNoteHistoryRef = useRef();
+    function openDeliveryNoteHistory(model) {
+        DeliveryNoteHistoryRef.current.open(model);
+    }
+
+
+    const QuotationHistoryRef = useRef();
+    function openQuotationHistory(model) {
+        QuotationHistoryRef.current.open(model);
+    }
+
+
+
     return (
         <>
+            <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
+            <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
+            <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
+            <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
+            <PurchaseReturnHistory ref={PurchaseReturnHistoryRef} showToastMessage={props.showToastMessage} />
+            <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
+            <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
+
             <PurchaseReturnPreview ref={PreviewRef} />
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
@@ -1001,6 +1059,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         <th>SI No.</th>
                                         <th>Part No.</th>
                                         <th>Name</th>
+                                        <th>Info</th>
                                         <th>Qty</th>
                                         <th>Unit Price</th>
                                         <th style={{ width: "10%" }}>Unit Disc.</th>
@@ -1037,6 +1096,69 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                 onClick={() => {
                                                     openProductDetailsView(product.product_id);
                                                 }}>{product.name}
+                                            </td>
+                                            <td>
+                                                <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
+                                                    <Dropdown drop="top">
+                                                        <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
+                                                            <i className="bi bi-info"></i>
+                                                        </Dropdown.Toggle>
+
+                                                        <Dropdown.Menu style={{ zIndex: 9999, position: "absolute" }} popperConfig={{ modifiers: [{ name: 'preventOverflow', options: { boundary: 'viewport' } }] }}>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openLinkedProducts(product);
+                                                            }}>
+                                                                <i className="bi bi-link"></i>
+                                                                &nbsp;
+                                                                Linked Products
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => {
+                                                                openSalesHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Sales History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openSalesReturnHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Sales Return History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openPurchaseHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Purchase History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openPurchaseReturnHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Purchase Return History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openDeliveryNoteHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Delivery Note History
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openQuotationHistory(product);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Quotation History
+                                                            </Dropdown.Item>
+
+                                                        </Dropdown.Menu>
+                                                    </Dropdown>
+                                                </div>
                                             </td>
                                             <td style={{ width: "155px" }}>
 
