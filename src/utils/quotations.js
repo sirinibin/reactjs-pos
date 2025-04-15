@@ -26,10 +26,17 @@ const Quotations = forwardRef((props, ref) => {
     let [order, setOrder] = useState({});
     let [searchParams, setSearchParams] = useState({});
 
+    function ResetSearchParams() {
+        for (let key in searchParams) {
+            if (searchParams.hasOwnProperty(key)) {
+                searchParams[key] = "";
+            }
+        }
+    }
+
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers) {
-            //searchParams = {};
-            //setSearchParams(searchParams);
+            ResetSearchParams();
 
             order = model;
             setOrder(order);
@@ -118,10 +125,10 @@ const Quotations = forwardRef((props, ref) => {
 
     const [selectedStatusList, setSelectedStatusList] = useState([]);
 
-    useEffect(() => {
-        list();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    // useEffect(() => {
+    //    list();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // }, []);
 
     //Search params
 
@@ -826,6 +833,7 @@ const Quotations = forwardRef((props, ref) => {
                                                                 <input
                                                                     type="text"
                                                                     id="code"
+                                                                    value={searchParams.code}
                                                                     onChange={(e) =>
                                                                         searchByFieldValue("code", e.target.value)
                                                                     }

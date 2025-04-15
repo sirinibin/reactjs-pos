@@ -53,13 +53,18 @@ const Sales = forwardRef((props, ref) => {
         SetShow(false);
     };
 
+    function ResetSearchParams() {
+        for (let key in searchParams) {
+            if (searchParams.hasOwnProperty(key)) {
+                searchParams[key] = "";
+            }
+        }
+    }
     //let [order, setOrder] = useState({});
 
     useImperativeHandle(ref, () => ({
         open(selectedCustomers) {
-            //searchParams = {}
-            //setSearchParams(searchParams);
-
+            ResetSearchParams();
             if (selectedCustomers?.length > 0) {
                 setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);

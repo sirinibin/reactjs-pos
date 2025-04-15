@@ -35,10 +35,18 @@ const Products = forwardRef((props, ref) => {
     let [deliveryNote, setDeliveryNote] = useState({});
     let [type, setType] = useState("");
 
+
+    function ResetSearchParams() {
+        for (let key in searchParams) {
+            if (searchParams.hasOwnProperty(key)) {
+                searchParams[key] = "";
+            }
+        }
+    }
+
     useImperativeHandle(ref, () => ({
         open(model, productType) {
-            // searchParams = {}
-            // setSearchParams(searchParams);
+            ResetSearchParams();
 
             setProductList([]);
             type = productType;

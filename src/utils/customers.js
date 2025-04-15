@@ -17,12 +17,19 @@ const Customers = forwardRef((props, ref) => {
         SetShow(false);
     };
 
+    function ResetSearchParams() {
+        for (let key in searchParams) {
+            if (searchParams.hasOwnProperty(key)) {
+                searchParams[key] = "";
+            }
+        }
+    }
+
     //let [order, setOrder] = useState({});
 
     useImperativeHandle(ref, () => ({
         open() {
-            //searchParams = {}
-            //setSearchParams(searchParams);
+            ResetSearchParams();
             list();
             SetShow(true);
         },
@@ -282,6 +289,8 @@ const Customers = forwardRef((props, ref) => {
 
     const handleSelected = (selected) => {
         props.onSelectCustomer(selected); // Send to parent
+        //searchParams = {}
+        //setSearchParams(searchParams);
         handleClose();
     };
 

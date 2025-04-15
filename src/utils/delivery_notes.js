@@ -21,10 +21,18 @@ const DeliveryNotes = forwardRef((props, ref) => {
 
     let [order, setOrder] = useState({});
 
+    function ResetSearchParams() {
+        for (let key in searchParams) {
+            if (searchParams.hasOwnProperty(key)) {
+                searchParams[key] = "";
+            }
+        }
+    }
+
+
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers) {
-            //searchParams = {}
-            //setSearchParams(searchParams);
+            ResetSearchParams();
 
             order = model;
             setOrder(order);

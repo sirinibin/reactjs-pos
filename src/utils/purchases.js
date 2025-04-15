@@ -32,12 +32,17 @@ const Purchases = forwardRef((props, ref) => {
     };
 
     //let [order, setOrder] = useState({});
+    function ResetSearchParams() {
+        for (let key in searchParams) {
+            if (searchParams.hasOwnProperty(key)) {
+                searchParams[key] = "";
+            }
+        }
+    }
 
     useImperativeHandle(ref, () => ({
         open() {
-            //searchParams = {}
-            //setSearchParams(searchParams);
-
+            ResetSearchParams();
             list();
 
             SetShow(true);
