@@ -24,11 +24,17 @@ const Quotations = forwardRef((props, ref) => {
     };
 
     let [order, setOrder] = useState({});
+    let [searchParams, setSearchParams] = useState({});
 
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers) {
+            //searchParams = {};
+            //setSearchParams(searchParams);
+
             order = model;
             setOrder(order);
+
+            console.log("selectedCustomers:", selectedCustomers);
             if (selectedCustomers?.length > 0) {
                 setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);
@@ -118,7 +124,7 @@ const Quotations = forwardRef((props, ref) => {
     }, []);
 
     //Search params
-    const [searchParams, setSearchParams] = useState({});
+
     let [sortField, setSortField] = useState("created_at");
     let [sortOrder, setSortOrder] = useState("-");
 
@@ -284,7 +290,8 @@ const Quotations = forwardRef((props, ref) => {
 
         page = 1;
         setPage(page);
-
+        console.log("searchParams1:", searchParams);
+        setSearchParams(searchParams);
         list();
     }
 
@@ -293,6 +300,7 @@ const Quotations = forwardRef((props, ref) => {
 
 
     const list = useCallback(() => {
+        console.log("searchParams2:", searchParams);
         const requestOptions = {
             method: "GET",
             headers: {

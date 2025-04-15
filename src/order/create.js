@@ -32,6 +32,7 @@ import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
 import Quotations from "./../utils/quotations.js";
 import DeliveryNotes from "./../utils/delivery_notes.js";
+import Customers from "./../utils/customers.js";
 
 
 const OrderCreate = forwardRef((props, ref) => {
@@ -223,13 +224,13 @@ const OrderCreate = forwardRef((props, ref) => {
                 ];
 
 
-                let searchLabel = formData.customer_name;
+                // let searchLabel = formData.customer_name;
 
                 let selectedCustomers = [
                     {
                         id: formData.customer_id,
                         name: formData.customer_name,
-                        search_label: searchLabel,
+                        search_label: formData.customer.search_label,
                     }
                 ];
 
@@ -1382,6 +1383,13 @@ function findDiscount() {
         ProductsRef.current.open(selectedQuotation, "quotation_products");
     };
 
+    const handleSelectedCustomer = (selectedCustomer) => {
+        console.log("selectedCustomer:", selectedCustomer);
+        setSelectedCustomers([selectedCustomer])
+        formData.customer_id = selectedCustomer.id;
+        setFormData({ ...formData });
+    };
+
     //Import products from delivery notes
     const DeliveryNotesRef = useRef();
     function openDeliveryNotes(model) {
@@ -1434,6 +1442,11 @@ function findDiscount() {
         QuotationHistoryRef.current.open(model, selectedCustomers);
     }
 
+    const CustomersRef = useRef();
+    function openCustomers(model) {
+        CustomersRef.current.open();
+    }
+
 
     const handleSelectedProducts = (selected) => {
         console.log("Selected Products:", selected);
@@ -1477,6 +1490,7 @@ function findDiscount() {
                 </div>
             </div>
 
+            <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
             <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotation} showToastMessage={props.showToastMessage} />
             <DeliveryNotes ref={DeliveryNotesRef} onSelectDeliveryNote={handleSelectedDeliveryNote} showToastMessage={props.showToastMessage} />
             <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
@@ -1683,6 +1697,8 @@ function findDiscount() {
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+
+
                             {errors.customer_id && (
                                 <div style={{ color: "red" }}>
                                     {errors.customer_id}
@@ -1690,8 +1706,13 @@ function findDiscount() {
                             )}
 
                         </div>
+                        <div className="col-md-1">
+                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
+                                <i class="bi bi-list"></i>
+                            </Button>
+                        </div>
 
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <label className="form-label">Product Barcode Scan</label>
 
                             <div className="input-group mb-3">

@@ -37,6 +37,9 @@ const Products = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(model, productType) {
+            // searchParams = {}
+            // setSearchParams(searchParams);
+
             setProductList([]);
             type = productType;
             setType(type);
@@ -106,7 +109,7 @@ const Products = forwardRef((props, ref) => {
     }, []);*/
 
     //Search params
-    const [searchParams, setSearchParams] = useState({});
+    let [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortProduct, setSortProduct] = useState("-");
 

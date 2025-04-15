@@ -35,6 +35,9 @@ const Purchases = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open() {
+            //searchParams = {}
+            //setSearchParams(searchParams);
+
             list();
 
             SetShow(true);
@@ -408,7 +411,7 @@ const Purchases = forwardRef((props, ref) => {
 
 
     //Search params
-    const [searchParams, setSearchParams] = useState({});
+    let [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortOrder, setSortOrder] = useState("-");
 

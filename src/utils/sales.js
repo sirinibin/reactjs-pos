@@ -57,6 +57,9 @@ const Sales = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(selectedCustomers) {
+            //searchParams = {}
+            //setSearchParams(searchParams);
+
             if (selectedCustomers?.length > 0) {
                 setSelectedCustomers(selectedCustomers)
                 searchByMultipleValuesField("customer_id", selectedCustomers);
@@ -654,7 +657,7 @@ const Sales = forwardRef((props, ref) => {
     }, []);
 
     //Search params
-    const [searchParams, setSearchParams] = useState({});
+    let [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortOrder, setSortOrder] = useState("-");
 

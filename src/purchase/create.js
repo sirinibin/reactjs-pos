@@ -15,6 +15,7 @@ import { Spinner } from "react-bootstrap";
 import ProductView from "./../product/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import ResizableTableCell from './../utils/ResizableTableCell';
+import Vendors from "./../utils/vendors.js";
 
 
 const PurchaseCreate = forwardRef((props, ref) => {
@@ -293,7 +294,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     {
                         id: purchase.vendor_id,
                         name: purchase.vendor_name,
-                        search_label: purchase.vendor_name,
+                        search_label: purchase.vendor.search_label,
                     }
                 ];
 
@@ -1065,8 +1066,21 @@ const PurchaseCreate = forwardRef((props, ref) => {
         ProductDetailsViewRef.current.open(id);
     }
 
+    const VendorsRef = useRef();
+    function openVendors(model) {
+        VendorsRef.current.open();
+    }
+
+    const handleSelectedVendor = (selectedVendor) => {
+        console.log("selectedVendor:", selectedVendor);
+        setSelectedVendors([selectedVendor])
+        formData.vendor_id = selectedVendor.id;
+        setFormData({ ...formData });
+    };
+
     return (
         <>
+            <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} showToastMessage={props.showToastMessage} />
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
 
@@ -1206,12 +1220,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     {errors.vendor_id}
                                 </div>
                             )}
-                            {formData.vendor_id && !errors.vendor_id && (
-                                <div style={{ color: "green" }}>
-                                    <i className="bi bi-check-lg"> </i>
-                                    Looks good!
-                                </div>
-                            )}
+                        </div>
+                        <div className="col-md-1">
+                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openVendors}>
+                                <i class="bi bi-list"></i>
+                            </Button>
                         </div>
                         {/*
                         <div className="col-md-3">
@@ -1241,7 +1254,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                         </div>
                                 */}
 
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <label className="form-label">Vendor Invoice No. (Optional)</label>
 
                             <div className="input-group mb-3">

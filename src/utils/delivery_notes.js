@@ -23,6 +23,9 @@ const DeliveryNotes = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(model, selectedCustomers) {
+            //searchParams = {}
+            //setSearchParams(searchParams);
+
             order = model;
             setOrder(order);
             if (selectedCustomers?.length > 0) {
@@ -98,7 +101,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
     }, []);
 
     //Search params
-    const [searchParams, setSearchParams] = useState({});
+    let [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("created_at");
     let [sortOrder, setSortOrder] = useState("-");
 
