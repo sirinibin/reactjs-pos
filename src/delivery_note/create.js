@@ -23,6 +23,7 @@ import PurchaseReturnHistory from "./../product/purchase_return_history.js";
 import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
+import Customers from "./../utils/customers.js";
 
 const DeliveryNoteCreate = forwardRef((props, ref) => {
 
@@ -213,6 +214,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           delivered_by_signature_id: deliverynote.delivered_by_signature_id,
           is_discount_percent: deliverynote.is_discount_percent,
           shipping_handling_fees: deliverynote.shipping_handling_fees,
+          customer: deliverynote.customer,
         };
 
         formData.date_str = data.result.date;
@@ -237,8 +239,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         let selectedCustomers = [
           {
             id: deliverynote.customer_id,
-            name: deliverynote.customer_name,
-            search_label: deliverynote.customer_name,
+            name: deliverynote.customer.name,
+            search_label: deliverynote.customer.search_label,
           }
         ];
 
@@ -863,8 +865,23 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+
+  const CustomersRef = useRef();
+  function openCustomers(model) {
+    CustomersRef.current.open();
+  }
+
+  const handleSelectedCustomer = (selectedCustomer) => {
+    console.log("selectedCustomer:", selectedCustomer);
+    setSelectedCustomers([selectedCustomer])
+    formData.customer_id = selectedCustomer.id;
+    setFormData({ ...formData });
+  };
+
+
   return (
     <>
+      <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
       <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
       <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
       <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1040,6 +1057,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   {errors.customer_id}
                 </div>
               )}
+            </div>
+
+            <div className="col-md-1">
+              <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
+                <i class="bi bi-list"></i>
+              </Button>
             </div>
 
             <div className="col-md-3">

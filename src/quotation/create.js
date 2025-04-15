@@ -31,6 +31,7 @@ import PurchaseReturnHistory from "./../product/purchase_return_history.js";
 import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
+import Customers from "./../utils/customers.js";
 
 const QuotationCreate = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
@@ -883,8 +884,21 @@ const QuotationCreate = forwardRef((props, ref) => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
 
+  const CustomersRef = useRef();
+  function openCustomers(model) {
+    CustomersRef.current.open();
+  }
+
+  const handleSelectedCustomer = (selectedCustomer) => {
+    console.log("selectedCustomer:", selectedCustomer);
+    setSelectedCustomers([selectedCustomer])
+    formData.customer_id = selectedCustomer.id;
+    setFormData({ ...formData });
+  };
+
   return (
     <>
+      <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
       <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
       <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
       <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1106,6 +1120,12 @@ const QuotationCreate = forwardRef((props, ref) => {
                 </div>
               )}
 
+            </div>
+
+            <div className="col-md-1">
+              <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
+                <i class="bi bi-list"></i>
+              </Button>
             </div>
 
             <div className="col-md-2">
