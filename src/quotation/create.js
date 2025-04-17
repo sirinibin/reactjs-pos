@@ -34,8 +34,14 @@ import Products from "./../utils/products.js";
 import Customers from "./../utils/customers.js";
 
 const QuotationCreate = forwardRef((props, ref) => {
+  //const [operationType, setoperationType] = useState("")
+  const [enableProductSelection, setEnableProductSelection] = useState(false);
   useImperativeHandle(ref, () => ({
-    open(id) {
+    open(id, operationType) {
+      if (operationType && operationType === "product_selection") {
+        setEnableProductSelection(true);
+      }
+
       formData = {
         vat_percent: 15.0,
         discount: 0.0,
@@ -896,6 +902,38 @@ const QuotationCreate = forwardRef((props, ref) => {
     setFormData({ ...formData });
   };
 
+
+
+  //Select Products
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  // Handle all select
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(selectedProducts.map((p) => p.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  // Handle individual selection
+  const handleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const isAllSelected = selectedIds?.length === selectedProducts?.length;
+
+  const handleSendSelected = () => {
+    const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.id));
+    if (props.onSelectProducts) {
+      props.onSelectProducts(newlySelectedProducts); // Send to parent
+    }
+
+    handleClose();
+  };
+
   return (
     <>
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
@@ -959,7 +997,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       <Modal
         show={show}
         size="xl"
-        fullscreen
+        fullscreen={!enableProductSelection}
         onHide={handleClose}
         animation={false}
         backdrop="static"
@@ -967,9 +1005,10 @@ const QuotationCreate = forwardRef((props, ref) => {
       >
         <Modal.Header>
           <Modal.Title>
-            {formData.id
+            {!enableProductSelection && formData.id
               ? "Update Quotation #" + formData.code
-              : "Create New Quotation"}
+              : !enableProductSelection ? "Create New Quotation" : ""}
+            {enableProductSelection ? "Select products from quotation #" + formData.code : ""}
           </Modal.Title>
 
           <div className="col align-self-end text-end">
@@ -978,7 +1017,7 @@ const QuotationCreate = forwardRef((props, ref) => {
             </Button>
             &nbsp;&nbsp;
             &nbsp;&nbsp;
-            <Button variant="primary" onClick={handleCreate}>
+            <Button variant="primary" disabled={enableProductSelection} onClick={handleCreate}>
               {isProcessing ?
                 <Spinner
                   as="span"
@@ -1359,6 +1398,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                 )}
             </div>
 
+
+
             <div
               className="table-responsive"
               style={{
@@ -1367,10 +1408,27 @@ const QuotationCreate = forwardRef((props, ref) => {
                 overflowY: "auto",
               }}
             >
+
+              {enableProductSelection && <button
+                style={{ marginBottom: "3px" }}
+                className="btn btn-success mt-2"
+                disabled={selectedIds.length === 0}
+                onClick={handleSendSelected}
+              >
+                Select {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
+              </button>}
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
                     <th ></th>
+                    {enableProductSelection && <th>
+
+                      <input
+                        type="checkbox"
+                        checked={isAllSelected}
+                        onChange={handleSelectAll}
+                      /> Select All
+                    </th>}
                     <th >SI No.</th>
                     <th >Part No.</th>
                     <ResizableTableCell className="text-start">
@@ -1399,6 +1457,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                             <i className="bi bi-trash"> </i>
                           </div>
                         </td>
+                        {enableProductSelection && <td>
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(product.id)}
+                            onChange={() => handleSelect(product.id)}
+                          />
+                        </td>}
                         <td>{index + 1}</td>
                         <td>{product.part_number}</td>
                         <ResizableTableCell
@@ -2205,7 +2270,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               <Button variant="secondary" onClick={handleClose}>
                 Close
               </Button>
-              <Button variant="primary" onClick={handleCreate}>
+              <Button variant="primary" disabled={enableProductSelection} onClick={handleCreate}>
                 {isProcessing
                   ? (
                     <Spinner

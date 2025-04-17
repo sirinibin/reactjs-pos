@@ -26,9 +26,14 @@ import Products from "./../utils/products.js";
 import Customers from "./../utils/customers.js";
 
 const DeliveryNoteCreate = forwardRef((props, ref) => {
-
+  const [enableProductSelection, setEnableProductSelection] = useState(false);
   useImperativeHandle(ref, () => ({
-    open(id) {
+    open(id, operationType) {
+
+      if (operationType && operationType === "product_selection") {
+        setEnableProductSelection(true);
+      }
+
       formData = {
         vat_percent: 15.0,
         discount: 0.0,
@@ -879,6 +884,36 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   };
 
 
+  //Select Products
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  // Handle all select
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(selectedProducts.map((p) => p.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  // Handle individual selection
+  const handleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const isAllSelected = selectedIds?.length === selectedProducts?.length;
+
+  const handleSendSelected = () => {
+    const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.id));
+    if (props.onSelectProducts) {
+      props.onSelectProducts(newlySelectedProducts); // Send to parent
+    }
+
+    handleClose();
+  };
+
   return (
     <>
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
@@ -920,10 +955,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+      <Modal show={show} size="xl" fullscreen={!enableProductSelection} onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
         <Modal.Header>
           <Modal.Title>
-            {formData.id ? "Update DeliveryNote #" + formData.code : "Create New DeliveryNote"}
+            {!enableProductSelection && formData.id ? "Update Delivery Note #" + formData.code : !enableProductSelection ? "Create New DeliveryNote" : ""}
+            {enableProductSelection ? "Select products from Delivery Note #" + formData.code : ""}
           </Modal.Title>
 
 
@@ -940,7 +976,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <i className="bi bi-eye"></i> View Detail
             </Button> : ""}
             &nbsp;&nbsp;
-            <Button variant="primary" onClick={handleCreate} >
+            <Button variant="primary" disabled={enableProductSelection} onClick={handleCreate} >
               {isProcessing ?
                 <Spinner
                   as="span"
@@ -1175,10 +1211,25 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>
+              {enableProductSelection && <button
+                style={{ marginBottom: "3px" }}
+                className="btn btn-success mt-2"
+                disabled={selectedIds.length === 0}
+                onClick={handleSendSelected}
+              >
+                Select {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
+              </button>}
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
-                    <th style={{ width: "3%" }}>Remove</th>
+                    <th style={{ width: "3%" }}></th>
+                    {enableProductSelection && <th>
+                      <input
+                        type="checkbox"
+                        checked={isAllSelected}
+                        onChange={handleSelectAll}
+                      /> Select All
+                    </th>}
                     <th style={{ width: "5%" }}>SI No.</th>
                     <th style={{ width: "10%" }}>Part No.</th>
                     <th style={{ width: "30%" }} className="text-start">Name</th>
@@ -1199,6 +1250,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                           <i className="bi bi-x-lg"> </i>
                         </div>
                       </td>
+                      {enableProductSelection && <td>
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(product.id)}
+                          onChange={() => handleSelect(product.id)}
+                        />
+                      </td>}
                       <td>{index + 1}</td>
                       <td>{product.part_number}</td>
                       <td style={{
@@ -1329,7 +1387,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <Button variant="secondary" onClick={handleClose}>
                 Close
               </Button>
-              <Button variant="primary" onClick={handleCreate} >
+              <Button variant="primary" disabled={enableProductSelection} onClick={handleCreate} >
                 {isProcessing ?
                   <Spinner
                     as="span"

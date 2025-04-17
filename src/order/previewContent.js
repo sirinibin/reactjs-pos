@@ -100,28 +100,28 @@ const OrderPreviewContent = forwardRef((props, ref) => {
 
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "77%" }}>
-                        <div class="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2mm" }}>
-                            {props.model.invoice_count_value ? <div class="row" style={{ border: "solid 0px" }}>
-                                <div class="col-7 text-start fw-bold" style={{ border: "solid 0px" }} dir="ltr">Invoice Count Value | عد الفاتورة (ICV):</div>
-                                <div class="col-5" style={{ border: "solid 0px", marginLeft: "-80px" }} dir="ltr">
+                        <div className="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
+                            {props.model.invoice_count_value ? <div className="row" style={{ border: "solid 0px" }}>
+                                <div className="col-7 text-start fw-bold" style={{ border: "solid 0px" }} dir="ltr">Invoice Count Value | عد الفاتورة (ICV):</div>
+                                <div className="col-5 fw-bold" style={{ border: "solid 0px", marginLeft: "-72px" }} dir="ltr">
                                     {props.model.invoice_count_value ? props.model.invoice_count_value : ""}
                                 </div>
                             </div> : ""}
-                            {props.model.uuid ? <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">UUID:</div>
-                                <div class="col-6 " style={{ marginLeft: "-80px" }} dir="ltr">
+                            {props.model.uuid ? <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">UUID:</div>
+                                <div className="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
                                     {props.model.uuid ? props.model.uuid : ""}
                                 </div>
                             </div> : ""}
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Invoice No. | رقم الفاتورة:</div>
-                                <div class="col-6" style={{ marginLeft: "-80px" }} dir="ltr">
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Invoice No. | رقم الفاتورة:</div>
+                                <div className="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
                                     {props.model.code ? props.model.code : ""}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Invoice Date | تاريخ الفاتورة:</div>
-                                <div class="col-6 " style={{ marginLeft: "-80px" }} dir="ltr">
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Invoice Date | تاريخ الفاتورة:</div>
+                                <div className="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
                                     <span dir="ltr"> {props.model.date ? format(
                                         new Date(props.model.date),
                                         "yyyy-MM-dd h:mma"
@@ -129,17 +129,17 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
+                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
                                     {props.model.customer ? props.model.customer.name : ""}
                                     {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
                                     {!props.model.customerName && !props.model.customer ? "N/A" : ""}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
+                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
                                     <span dir="ltr">
                                         {props.model.customer?.vat_no ? "#" + props.model.customer.vat_no : ""}
                                         {!props.model.customer && props.model.vat_no ? "#" + props.model.vat_no : ""}
@@ -147,9 +147,9 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr" >Customer Address | عنوان العميل:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" dir="ltr" >Customer Address | عنوان العميل:</div>
+                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
 
                                     <span dir="ltr">
                                         {props.model.address ? props.model.address : ""}
@@ -196,7 +196,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
 
                     <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "23%", padding: "0px" }}>
                         {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "108px", height: "108px" }} alt="Invoice QR Code" /> : ""}
-                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "108px", height: "108px" }} size={108} /> : ""}
+                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "108px", height: "108px" }} size={108} /> : <img className="text-start" src={props.model.QRImageData} style={{ width: "108px", height: "108px" }} alt="Invoice QR Code" />}
                     </div>
 
                     {/*
@@ -216,7 +216,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                     </div>
                     */}
                 </div>
-                <div className="row" style={{ fontSize: "1.5mm" }}>
+                <div className="row" style={{ fontSize: "2.2mm" }}>
                     <div className="col text-start">
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </div>
@@ -238,46 +238,46 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                 className="table table-bordered"
                                 style={{ borderRadius: "6px" }}
                             >
-                                <thead style={{ fontSize: "1.5mm" }}>
-                                    <tr >
+                                <thead style={{ fontSize: "2.2mm" }} className="fw-bold">
+                                    <tr style={{}}>
                                         <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "20px"
                                                 }}
                                             >
                                                 <li>رقم سري</li>
                                                 <li>SI No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per3 text-center" style={{ padding: "0px", width: "8%" }}>
+                                        <th className="per3 text-center" style={{ padding: "0px", width: "5%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "20px"
                                                 }}
                                             >
                                                 <li>رقم القطعة</li>
                                                 <li>Part No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "15%" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "13%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "20px"
                                                 }}
                                             >
                                                 <li>وصف</li>
                                                 <li>Description</li>
                                             </ul>
                                         </th>
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "4%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "20px"
                                                 }}
                                             >
                                                 <li>كمية</li>
@@ -288,7 +288,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "20px"
                                                 }}
                                             >
                                                 <li>سعر الوحدة</li>
@@ -299,18 +299,18 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "20px"
                                                 }}
                                             >
                                                 <li>تخفيض</li>
                                                 <li>Discount</li>
                                             </ul>
                                         </th>
-                                        <th className="per20 text-center" style={{ padding: "0px", width: "5%" }}>
+                                        <th className="per20 text-center" style={{ padding: "0px", width: "10%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "25px"
                                                 }}
                                             >
                                                 <li>السعر (بدون ضريبة القيمة المضافة)</li>
@@ -321,18 +321,18 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "20px"
                                                 }}
                                             >
                                                 <li>ضريبة القيمة المضافة</li>
                                                 <li>VAT({trimTo2Decimals(props.model.vat_percent)}%)</li>
                                             </ul>
                                         </th>
-                                        <th className="per20 text-center" style={{ padding: "0px", width: "5%" }}>
+                                        <th className="per20 text-center" style={{ padding: "0px", width: "6%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "25px"
                                                 }}
                                             >
                                                 <li>السعر (مع ضريبة القيمة المضافة)</li>
@@ -341,7 +341,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody style={{ fontSize: "1.8mm" }} >
+                                <tbody style={{ fontSize: "2.2mm" }} className="fw-bold" >
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={product.item_code} className="text-center"  >
                                             <td style={{ padding: "1px", height: "16px" }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
@@ -369,7 +369,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                     ))}
                                 </tbody>
 
-                                <tfoot style={{ fontSize: "2mm", }}>
+                                <tfoot style={{ fontSize: "2.2mm" }} className="fw-bold">
                                     <tr >
                                         <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
                                             Total (without VAT) الإجمالي (بدون ضريبة القيمة المضافة):
@@ -459,7 +459,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                 </tfoot>
                             </table>
 
-                            <table className="table table-bordered" style={{ fontSize: "2mm" }}>
+                            <table className="table table-bordered fw-bold" style={{ fontSize: "2.2mm" }} >
                                 <thead>
                                     <tr>
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
@@ -504,7 +504,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "2mm", height: "55px", }}>
+                {props.model.store?.show_address_in_invoice_footer && <div className="row fw-bold" style={{ fontSize: "2.2mm", height: "55px", }}>
                     <div className="col-md-2 text-start">
                         {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                     </div>
@@ -536,10 +536,10 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                             </li>
                         </ul>
                     </div>
-                </div>
+                </div>}
             </div>
         ))}
-    </span>
+    </span >
     </>);
 
 });

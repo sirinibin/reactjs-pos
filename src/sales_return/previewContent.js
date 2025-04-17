@@ -97,28 +97,28 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "77%" }}>
 
-                        <div class="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2mm" }}>
+                        <div class="container fw-bold" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
                             <div class="row" style={{ border: "solid 0px" }}>
-                                <div class="col-7 text-start fw-bold" style={{ border: "solid 0px" }} dir="ltr">Invoice Count Value | قيمة عدد الفاتورة (ICV):</div>
-                                <div class="col-5" style={{ border: "solid 0px", marginLeft: "-80px" }} dir="ltr">
+                                <div class="col-7 text-start" style={{ border: "solid 0px" }} dir="ltr">Invoice Count Value | عد الفاتورة (ICV):</div>
+                                <div class="col-5" style={{ border: "solid 0px", marginLeft: "-66px" }} dir="ltr">
                                     {props.model.invoice_count_value ? props.model.invoice_count_value : ""}
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">UUID:</div>
-                                <div class="col-6 " style={{ marginLeft: "-80px" }} dir="ltr">
+                                <div class="col-7 text-start" dir="ltr">UUID:</div>
+                                <div class="col-6 " style={{ marginLeft: "-66px" }} dir="ltr">
                                     {props.model.uuid ? props.model.uuid : ""}
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Invoice No. | رقم الفاتورة:</div>
-                                <div class="col-6" style={{ marginLeft: "-80px" }} dir="ltr">
+                                <div class="col-7 text-start" dir="ltr">Invoice No. | رقم الفاتورة:</div>
+                                <div class="col-6" style={{ marginLeft: "-66px" }} dir="ltr">
                                     {props.model.code ? props.model.code : ""}
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-7 text-start fw-bold" dir="ltr">Invoice Date | تاريخ الفاتورة:</div>
-                                <div class="col-6 " style={{ marginLeft: "-80px" }} dir="ltr">
+                                <div class="col-6 " style={{ marginLeft: "-66px" }} dir="ltr">
                                     <span dir="ltr"> {props.model.date ? format(
                                         new Date(props.model.date),
                                         "yyyy-MM-dd h:mma"
@@ -126,15 +126,15 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr">Original Invoice No. | رقم الفاتورة الأصلية:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                            <div class="row fw-bold">
+                                <div class="col-7 text-start" dir="ltr">Original Invoice No. | رقم الفاتورة الأصلية:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-66px" }}>
                                     {props.model.order_code ? props.model.order_code : ""}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr" >Original Invoice Date | تاريخ الفاتورة الأصلية:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                            <div class="row fw-bold">
+                                <div class="col-7 text-start" dir="ltr" >Original Invoice Date | تاريخ الفاتورة الأصلية:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-66px" }}>
                                     <span dir="ltr"> {props.model.order?.date ? format(
                                         new Date(props.model.order.date),
                                         "yyyy-MM-dd h:mma"
@@ -142,21 +142,21 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
-                            <div class="row">
+                            <div class="row fw-bold">
                                 <div class="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-66px" }}>
                                     {props.model.customer ? props.model.customer.name : "N/A"}
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                            <div class="row fw-bold">
+                                <div class="col-7 text-start" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-66px" }}>
                                     <span dir="ltr">{props.model.customer?.vat_no ? "#" + props.model.customer.vat_no : "N/A"}</span>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-7 text-start fw-bold" dir="ltr" >Customer Address | عنوان العميل:</div>
-                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-80px" }}>
+                            <div class="row fw-bold">
+                                <div class="col-7 text-start" dir="ltr" >Customer Address | عنوان العميل:</div>
+                                <div class="col-6 " dir="ltr" style={{ marginLeft: "-66px" }}>
 
                                     <span dir="ltr">
                                         {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
@@ -210,7 +210,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                         {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "108px", height: "108px" }} size={108} /> : ""}
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "1.5mm" }}>
+                <div className="row fw-bold" style={{ fontSize: "2.2mm" }}>
                     <div className="col text-start">
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </div>
@@ -232,35 +232,35 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                 className="table table-bordered"
                                 style={{ borderRadius: "6px" }}
                             >
-                                <thead style={{ fontSize: "1.5mm" }}>
+                                <thead style={{ fontSize: "2.2mm" }}>
                                     <tr >
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "4%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "30px"
                                                 }}
                                             >
                                                 <li>رقم سري</li>
                                                 <li>SI No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per3 text-center" style={{ padding: "0px", width: "8%" }}>
+                                        <th className="per3 text-center" style={{ padding: "0px", width: "4%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "30px"
                                                 }}
                                             >
                                                 <li>رقم القطعة</li>
                                                 <li>Part No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "15%" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "13%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "30px"
                                                 }}
                                             >
                                                 <li>وصف</li>
@@ -271,7 +271,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "30px"
                                                 }}
                                             >
                                                 <li>كمية</li>
@@ -282,7 +282,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "30px"
                                                 }}
                                             >
                                                 <li>سعر الوحدة</li>
@@ -293,18 +293,18 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "30px"
                                                 }}
                                             >
                                                 <li>تخفيض</li>
                                                 <li>Discount</li>
                                             </ul>
                                         </th>
-                                        <th className="per20 text-center" style={{ padding: "0px", width: "5%" }}>
+                                        <th className="per20 text-center" style={{ padding: "0px", width: "10%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "30px"
                                                 }}
                                             >
                                                 <li>السعر (بدون ضريبة القيمة المضافة)</li>
@@ -315,18 +315,18 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "30px"
                                                 }}
                                             >
                                                 <li>ضريبة القيمة المضافة</li>
                                                 <li>VAT({trimTo2Decimals(props.model.vat_percent)}%)</li>
                                             </ul>
                                         </th>
-                                        <th className="per20 text-center" style={{ padding: "0px", width: "5%" }}>
+                                        <th className="per20 text-center" style={{ padding: "0px", width: "8%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "30px"
                                                 }}
                                             >
                                                 <li>السعر (مع ضريبة القيمة المضافة)</li>
@@ -335,7 +335,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody style={{ fontSize: "1.8mm" }} >
+                                <tbody style={{ fontSize: "2.2mm" }} className="fw-bold" >
                                     {page.products && page.products.map((product, index) => (
                                         <tr key={product.item_code} className="text-center"  >
                                             <td style={{ padding: "1px", height: "16px" }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
@@ -363,7 +363,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                     ))}
                                 </tbody>
 
-                                <tfoot style={{ fontSize: "2mm", }}>
+                                <tfoot style={{ fontSize: "2.2mm", }} className="fw-bold">
                                     <tr >
                                         <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
                                             Total (without VAT) الإجمالي (بدون ضريبة القيمة المضافة):
@@ -453,7 +453,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                 </tfoot>
                             </table>
 
-                            <table className="table table-bordered" style={{ fontSize: "2mm" }}>
+                            <table className="table table-bordered fw-bold" style={{ fontSize: "2.2mm" }}>
                                 <thead>
                                     <tr>
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
@@ -498,7 +498,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "2mm", height: "55px", }}>
+                {props.model.store?.show_address_in_invoice_footer && <div className="row fw-bold" style={{ fontSize: "2.2mm", height: "55px", }}>
                     <div className="col-md-2 text-start">
                         {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
                     </div>
@@ -530,7 +530,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                             </li>
                         </ul>
                     </div>
-                </div>
+                </div>}
             </div>
         ))}
     </>);

@@ -319,10 +319,10 @@ const QuotationPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Sales_";
+        let filename = "Quotation_";
 
         if (model.id) {
-            filename += "_#" + model.code;
+            filename += "#" + model.code;
         }
 
         return filename;

@@ -31,6 +31,8 @@ import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
 import Quotations from "./../utils/quotations.js";
+import Quotation from "./../quotation/create.js";
+import DeliveryNote from "./../delivery_note/create.js";
 import DeliveryNotes from "./../utils/delivery_notes.js";
 import Customers from "./../utils/customers.js";
 
@@ -851,7 +853,6 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.store_id = cookies.get("store_id");
         }
 
-
         errors.product_id = "";
         if (!product) {
             errors.product_id = "Invalid Product";
@@ -863,16 +864,16 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         // console.log("product:", product);
-        if (product.product_stores[formData.store_id]?.retail_unit_price) {
+        if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
             product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
         }
 
-        if (product.product_stores[formData.store_id]?.purchase_unit_price) {
+        if (product.product_stores && product.product_stores[formData.store_id]?.purchase_unit_price) {
             product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
         }
 
 
-        if (product.product_stores[formData.store_id]) {
+        if (product.product_stores && product.product_stores[formData.store_id]) {
             product.unit_discount = 0.00;
             product.unit_discount_percent = 0.00;
         }
@@ -891,13 +892,30 @@ const OrderCreate = forwardRef((props, ref) => {
         let alreadyAdded = false;
         let index = false;
         let quantity = 0.00;
-        product.quantity = 1.00;
+
+        if (!product.quantity) {
+            product.quantity = 1.00;
+        }
+
+        if (!product.id && product.product_id) {
+            product.id = product.product_id
+        }
+
 
 
         if (isProductAdded(product.id)) {
             alreadyAdded = true;
             index = getProductIndex(product.id);
             quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
+            if (product.unit_price) {
+                selectedProducts[index].unit_price = product.unit_price;
+            }
+
+            if (product.unit_discount) {
+                selectedProducts[index].unit_discount = product.unit_discount;
+                //selectedProducts[index].unit_discount = product.unit_discount_percent;
+            }
+
         } else {
             quantity = parseFloat(product.quantity);
         }
@@ -909,11 +927,11 @@ const OrderCreate = forwardRef((props, ref) => {
         //let stock = GetProductStockInStore(formData.store_id, product.stores);
         let stock = 0;
 
-        if (product.product_stores[formData.store_id]?.stock) {
+        if (product.product_stores && product.product_stores[formData.store_id]?.stock) {
             stock = product.product_stores[formData.store_id].stock;
         }
 
-        if (stock < quantity) {
+        if (product.product_stores && stock < quantity) {
             if (index === false) {
                 index = selectedProducts.length;
             }
@@ -1387,9 +1405,12 @@ function findDiscount() {
         QuotationsRef.current.open(model, selectedCustomers);
     }
 
+
+    const QuotationRef = useRef();
     const handleSelectedQuotation = (selectedQuotation) => {
         console.log("Selected Quotation:", selectedQuotation);
-        ProductsRef.current.open(selectedQuotation, "quotation_products");
+        QuotationRef.current.open(selectedQuotation.id, "product_selection");
+        //ProductsRef.current.open(selectedQuotation, "quotation_products");
     };
 
     const handleSelectedCustomer = (selectedCustomer) => {
@@ -1405,9 +1426,10 @@ function findDiscount() {
         DeliveryNotesRef.current.open(model, selectedCustomers);
     }
 
+    const DeliveryNoteRef = useRef();
     const handleSelectedDeliveryNote = (selectedDeliveryNote) => {
         console.log("Selected DeliveryNots:", selectedDeliveryNote);
-        ProductsRef.current.open(selectedDeliveryNote, "delivery_note_products");
+        DeliveryNoteRef.current.open(selectedDeliveryNote.id, "product_selection");
     };
 
 
@@ -1515,6 +1537,8 @@ function findDiscount() {
             </div>
 
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
+            <Quotation ref={QuotationRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
+            <DeliveryNote ref={DeliveryNoteRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
             <Quotations ref={QuotationsRef} onSelectQuotation={handleSelectedQuotation} showToastMessage={props.showToastMessage} />
             <DeliveryNotes ref={DeliveryNotesRef} onSelectDeliveryNote={handleSelectedDeliveryNote} showToastMessage={props.showToastMessage} />
             <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />

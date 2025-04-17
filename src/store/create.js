@@ -2363,6 +2363,34 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <h6><b>Settings</b></h6>
+
+                        <div className="col-md-2">
+
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.show_address_in_invoice_footer}
+                                    checked={formData.show_address_in_invoice_footer}
+                                    onChange={(e) => {
+
+                                        errors["formData.show_address_in_invoice_footer"] = "";
+                                        formData.show_address_in_invoice_footer = !formData.show_address_in_invoice_footer
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="formData.show_address_in_invoice_footer"
+
+                                /> &nbsp;Show addres in invoice footer
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.show_address_in_invoice_footer && (
+                                <div style={{ color: "red" }}>
+                                    {errors.show_address_in_invoice_footer}
+                                </div>
+                            )}
+                        </div>
+
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close

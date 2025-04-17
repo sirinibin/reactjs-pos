@@ -358,7 +358,7 @@ const SalesReturnPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Sales_";
+        let filename = "Sales_Return";
 
         if (model.id) {
             filename += "_#" + model.code;
