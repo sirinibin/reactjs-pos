@@ -36,6 +36,7 @@ function StoreIndex(props) {
 
     function selectStore(store) {
         cookies.set('store_name', store.name, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+        cookies.set('branch_name', store.branch_name, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
         cookies.set('store_id', store.id, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
         window.location = "/dashboard/stores";
     }

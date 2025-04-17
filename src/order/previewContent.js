@@ -101,13 +101,13 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "77%" }}>
                         <div className="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
-                            {props.model.invoice_count_value ? <div className="row" style={{ border: "solid 0px" }}>
+                            {props.model.invoice_count_value && props.model.store?.zatca?.phase === "2" ? <div className="row" style={{ border: "solid 0px" }}>
                                 <div className="col-7 text-start fw-bold" style={{ border: "solid 0px" }} dir="ltr">Invoice Count Value | عد الفاتورة (ICV):</div>
                                 <div className="col-5 fw-bold" style={{ border: "solid 0px", marginLeft: "-72px" }} dir="ltr">
                                     {props.model.invoice_count_value ? props.model.invoice_count_value : ""}
                                 </div>
                             </div> : ""}
-                            {props.model.uuid ? <div className="row">
+                            {props.model.uuid && props.model.store?.zatca?.phase === "2" ? <div className="row">
                                 <div className="col-7 text-start fw-bold" dir="ltr">UUID:</div>
                                 <div className="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
                                     {props.model.uuid ? props.model.uuid : ""}

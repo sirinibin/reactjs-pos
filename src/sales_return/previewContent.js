@@ -98,18 +98,18 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                     <div className="col-md-5" style={{ border: "solid 0px", width: "77%" }}>
 
                         <div class="container fw-bold" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
-                            <div class="row" style={{ border: "solid 0px" }}>
+                            {props.model.store?.zatca?.phase === "2" && <div class="row" style={{ border: "solid 0px" }}>
                                 <div class="col-7 text-start" style={{ border: "solid 0px" }} dir="ltr">Invoice Count Value | عد الفاتورة (ICV):</div>
                                 <div class="col-5" style={{ border: "solid 0px", marginLeft: "-66px" }} dir="ltr">
                                     {props.model.invoice_count_value ? props.model.invoice_count_value : ""}
                                 </div>
-                            </div>
-                            <div class="row">
+                            </div>}
+                            {props.model.store?.zatca?.phase === "2" && <div class="row">
                                 <div class="col-7 text-start" dir="ltr">UUID:</div>
                                 <div class="col-6 " style={{ marginLeft: "-66px" }} dir="ltr">
                                     {props.model.uuid ? props.model.uuid : ""}
                                 </div>
-                            </div>
+                            </div>}
                             <div class="row">
                                 <div class="col-7 text-start" dir="ltr">Invoice No. | رقم الفاتورة:</div>
                                 <div class="col-6" style={{ marginLeft: "-66px" }} dir="ltr">

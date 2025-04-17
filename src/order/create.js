@@ -1598,7 +1598,7 @@ function findDiscount() {
                     </div>
                 </Modal.Header>
                 <Modal.Body>
-                    {Object.keys(errors).length > 0 ?
+                    {errors && Object.keys(errors).length > 0 ?
                         <div>
                             <ul>
 
@@ -1613,7 +1613,7 @@ function findDiscount() {
                                 })}
                             </ul></div> : ""}
 
-                    {errors.reporting_to_zatca && (<div style={{ marginBottom: "30px" }}>
+                    {errors && errors.reporting_to_zatca && (<div style={{ marginBottom: "30px" }}>
                         <input type="checkbox" checked={formData.skip_zatca_reporting} onChange={(e) => {
                             formData.skip_zatca_reporting = !formData.skip_zatca_reporting;
                             setFormData({ ...formData });
