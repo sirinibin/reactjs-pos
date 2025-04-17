@@ -169,6 +169,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
                                         {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
                                         {props.model.customer?.national_address?.additional_no ? ` - ${props.model.customer.national_address.additional_no}` : ""}
+                                        {props.model.customer?.country_name ? `, ${props.model.customer.country_name}` : ""}
                                     </span>
                                 </div>
                             </div>

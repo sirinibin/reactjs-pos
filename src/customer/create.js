@@ -1,7 +1,9 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo } from "react";
 import { Modal, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Spinner } from "react-bootstrap";
+import countryList from 'react-select-country-list';
+import { Typeahead } from "react-bootstrap-typeahead";
 
 
 const CustomerCreate = forwardRef((props, ref) => {
@@ -149,6 +151,16 @@ const CustomerCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 let customerData = data.result;
+
+                selectedCountries = [];
+                if (data.result.country_code && data.result.country_name) {
+                    selectedCountries.push({
+                        value: data.result.country_code,
+                        label: data.result.country_name,
+                    });
+                }
+                setSelectedCountries(selectedCountries);
+
                 customerData.logo = "";
                 setFormData({ ...customerData });
             })
@@ -391,6 +403,11 @@ const CustomerCreate = forwardRef((props, ref) => {
         DetailsViewRef.current.open(id);
     }
     */
+
+    //country
+    const countryOptions = useMemo(() => countryList().getData(), [])
+    //const [selectedCountry, setSelectedCountry] = useState('')
+    let [selectedCountries, setSelectedCountries] = useState([]);
 
     return (
         <>
@@ -648,6 +665,41 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     {errors.contact_person}
                                 </div>
                             )}
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Country</label>
+
+                            <div className="input-group mb-3">
+                                <Typeahead
+                                    id="country_code"
+                                    labelKey="label"
+                                    onChange={(selectedItems) => {
+                                        errors.country_code = "";
+                                        setErrors(errors);
+                                        if (selectedItems.length === 0) {
+                                            errors.country_code = "Invalid country selected";
+                                            setErrors(errors);
+                                            formData.country_code = "";
+                                            formData.country_name = "";
+                                            setFormData({ ...formData });
+                                            setSelectedCountries([]);
+                                            return;
+                                        }
+                                        formData.country_code = selectedItems[0].value;
+                                        formData.country_name = selectedItems[0].label;
+                                        setFormData({ ...formData });
+                                        setSelectedCountries(selectedItems);
+                                    }}
+                                    options={countryOptions}
+                                    placeholder="Country name"
+                                    selected={selectedCountries}
+                                    highlightOnlyResult={true}
+                                    onInputChange={(searchTerm, e) => {
+                                        //suggestBrands(searchTerm);
+                                    }}
+                                />
+                            </div>
                         </div>
 
                         <div className="col-md-2">
