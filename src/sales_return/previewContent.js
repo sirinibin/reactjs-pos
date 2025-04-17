@@ -208,6 +208,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                     <div className="col-md-5" style={{ border: "solid 0px", width: "23%" }}>
                         {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "108px", height: "108px" }} alt="Invoice QR Code" /> : ""}
                         {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "108px", height: "108px" }} size={108} /> : ""}
+                        {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img className="text-start" src={props.model.QRImageData} style={{ width: "108px", height: "108px" }} alt="Invoice QR Code" /> : ""}
                     </div>
                 </div>
                 <div className="row fw-bold" style={{ fontSize: "2.2mm" }}>
