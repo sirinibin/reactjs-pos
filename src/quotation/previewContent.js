@@ -132,6 +132,14 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     </span>
                                 </div>
                             </div>
+                            <div className="row">
+                                <div className="col-7 text-start fw-bold" >Customer C.R | رقم تسجيل شركة العميل:</div>
+                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
+                                    <span dir="ltr">
+                                        {props.model.customer?.registration_number ? props.model.customer.registration_number : "N/A"}
+                                    </span>
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-7 text-start fw-bold" dir="ltr" >Customer Address | عنوان العميل:</div>
                                 <div class="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
