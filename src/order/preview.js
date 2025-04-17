@@ -319,7 +319,7 @@ const OrderPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Sales_";
+        let filename = "Sales";
 
         if (model.id) {
             filename += "_#" + model.code;

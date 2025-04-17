@@ -358,7 +358,7 @@ const PurchaseReturnPreview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     function getFileName() {
-        let filename = "Purchase_Return_";
+        let filename = "Purchase_Return";
 
         if (model.id) {
             filename += "_#" + model.code;
