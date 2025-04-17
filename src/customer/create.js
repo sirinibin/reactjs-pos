@@ -772,60 +772,6 @@ const CustomerCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-2">
-                            <label className="form-label">Unit Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address && formData.national_address.unit_no ? formData.national_address.unit_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_unit_no"] = "";
-                                        formData.national_address.unit_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.unit_no"
-                                    placeholder="Unit Number"
-                                />
-                            </div>
-                            {errors.national_address_unit_no && (
-                                <div style={{ color: "red" }}>
-                                    {errors.national_address_unit_no}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="col-md-2">
-                            <label className="form-label">Additional Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address && formData.national_address.additional_no ? formData.national_address.additional_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_additional_no"] = "";
-                                        formData.national_address.additional_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.additional_no"
-                                    placeholder="Additional Number"
-                                />
-                            </div>
-                            {errors.national_address_additional_no && (
-                                <div style={{ color: "red" }}>
-                                    {errors.national_address_additional_no}
-                                </div>
-                            )}
-                        </div>
-
-
-
-                        <div className="col-md-2">
                             <label className="form-label">Street Name</label>
 
                             <div className="input-group mb-3">
@@ -934,6 +880,32 @@ const CustomerCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <div className="col-md-2">
+                            <label className="form-label">Unit Number</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.unit_no ? formData.national_address.unit_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_unit_no"] = "";
+                                        formData.national_address.unit_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.unit_no"
+                                    placeholder="Unit Number"
+                                />
+                            </div>
+                            {errors.national_address_unit_no && (
+                                <div style={{ color: "red" }}>
+                                    {errors.national_address_unit_no}
+                                </div>
+                            )}
+                        </div>
+
 
                         <div className="col-md-2">
                             <label className="form-label">City Name</label>
@@ -1012,6 +984,32 @@ const CustomerCreate = forwardRef((props, ref) => {
                                 <div style={{ color: "red" }}>
 
                                     {errors.national_address_zipcode}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Additional Number</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address && formData.national_address.additional_no ? formData.national_address.additional_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_additional_no"] = "";
+                                        formData.national_address.additional_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.additional_no"
+                                    placeholder="Additional Number"
+                                />
+                            </div>
+                            {errors.national_address_additional_no && (
+                                <div style={{ color: "red" }}>
+                                    {errors.national_address_additional_no}
                                 </div>
                             )}
                         </div>

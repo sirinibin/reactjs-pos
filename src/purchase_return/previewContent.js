@@ -137,13 +137,15 @@ const PurchaseReturnPreviewContent = forwardRef((props, ref) => {
                                 <div class="col-6 " dir="ltr" style={{ marginLeft: "-72px" }}>
 
                                     <span dir="ltr">
+                                        {props.model.address ? props.model.address : ""}
                                         {!props.model.vendor?.national_address?.building_no && !props.model.vendor?.national_address?.unit_no && props.model.vendor?.national_address?.street_name && props.model.vendor?.national_address?.district_name && props.model.vendor?.national_address?.city_name ? props.model.vendor?.address : ""}
-                                        {props.model.vendor?.national_address?.unit_no ? `Unit #${props.model.vendor.national_address.unit_no}, ` : ""}
-                                        {props.model.vendor?.national_address?.building_no ? `Building #${props.model.vendor.national_address.building_no}` : ""}
-                                        {props.model.vendor?.national_address?.street_name ? `, ${props.model.vendor.national_address.street_name}` : ""}
-                                        {props.model.vendor?.national_address?.district_name ? `, ${props.model.vendor.national_address.district_name} dist.` : ""}
+                                        {props.model.vendor?.national_address?.building_no ? `${props.model.vendor.national_address.building_no}` : ""}
+                                        {props.model.vendor?.national_address?.street_name ? ` ${props.model.vendor.national_address.street_name}` : ""}
+                                        {props.model.vendor?.national_address?.district_name ? ` - ${props.model.vendor.national_address.district_name}` : ""}
+                                        {props.model.vendor?.national_address?.unit_no ? `, Unit #${props.model.vendor.national_address.unit_no}` : ""}
                                         {props.model.vendor?.national_address?.city_name ? `, ${props.model.vendor.national_address.city_name}` : ""}
                                         {props.model.vendor?.national_address?.zipcode ? ` - ${props.model.vendor.national_address.zipcode}` : ""}
+                                        {props.model.vendor?.national_address?.additional_no ? ` - ${props.model.vendor.national_address.additional_no}` : ""}
                                     </span>
                                 </div>
                             </div>
