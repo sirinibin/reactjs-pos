@@ -327,7 +327,7 @@ const ProductCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,name";
+    let Select = "select=id,code,name";
     setIsBrandsLoading(true);
 
     let result = await fetch(
@@ -573,10 +573,10 @@ const ProductCreate = forwardRef((props, ref) => {
   const [isBrandsLoading, setIsBrandsLoading] = useState(false);
 
   function makePartNumberPrefix() {
-    if (formData.brand_name && formData.country_code) {
-      formData.prefix_part_number = formData.brand_name + "-" + formData.country_code
-    } else if (formData.brand_name) {
-      formData.prefix_part_number = formData.brand_name;
+    if (formData.brand_code && formData.country_code) {
+      formData.prefix_part_number = formData.brand_code + "-" + formData.country_code
+    } else if (formData.brand_code) {
+      formData.prefix_part_number = formData.brand_code;
     } else if (formData.country_code) {
       formData.prefix_part_number = formData.country_code;
     } else {
@@ -829,6 +829,7 @@ const ProductCreate = forwardRef((props, ref) => {
                       return;
                     }
                     formData.brand_id = selectedItems[0].id;
+                    formData.brand_code = selectedItems[0].code;
                     formData.brand_name = selectedItems[0].name;
                     setFormData({ ...formData });
                     setSelectedBrands(selectedItems);

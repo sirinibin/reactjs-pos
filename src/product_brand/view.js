@@ -106,7 +106,7 @@ const ProductBrandView = forwardRef((props, ref) => {
                     <tbody>
                         <tr>
                             <th>Name:</th><td> {model.name}</td>
-                            <th>Parent Brand Name:</th><td> {model.parent_name}</td>
+                            <th>Code:</th><td> {model.code}</td>
                         </tr>
                         <tr>
                             <th>Created At:</th><td> {model.created_at}</td>

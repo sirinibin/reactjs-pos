@@ -117,7 +117,7 @@ function ProductBrandIndex(props) {
             },
         };
         let Select =
-            "select=id,name,created_at";
+            "select=id,code,name,created_at";
 
 
         if (cookies.get("store_id")) {
@@ -368,6 +368,25 @@ function ProductBrandIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
+                                                            sort("code");
+                                                        }}
+                                                    >
+                                                        Code
+                                                        {sortField === "code" && sortProductBrand === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "code" && sortProductBrand === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
                                                             sort("name");
                                                         }}
                                                     >
@@ -405,6 +424,16 @@ function ProductBrandIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("code", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -490,11 +519,10 @@ function ProductBrandIndex(props) {
                                             {productbrandList &&
                                                 productbrandList.map((productbrand) => (
                                                     <tr key={productbrand.id}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{productbrand.code}</td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-
                                                             <OverflowTooltip value={productbrand.name} maxWidth={250} />
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{productbrand.parent_name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{productbrand.created_by_name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(

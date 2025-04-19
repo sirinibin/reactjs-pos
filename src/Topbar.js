@@ -31,7 +31,7 @@ function Topbar(props) {
 
 
         <div className="navbar-collapse collapse">
-
+            {cookies.get('branch_name') ? "Branch: " + cookies.get('branch_name') : ""}
 
 
             <ul className="navbar-nav navbar-align">
