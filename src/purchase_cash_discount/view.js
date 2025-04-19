@@ -1,6 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Table, Button } from 'react-bootstrap';
-import Cookies from "universal-cookie";
+
 
 const PurchaseCashDiscountView = forwardRef((props, ref) => {
 
@@ -17,7 +17,7 @@ const PurchaseCashDiscountView = forwardRef((props, ref) => {
 
 
     let [model, setModel] = useState({});
-    const cookies = new Cookies();
+
 
     const [show, SetShow] = useState(false);
 
@@ -39,12 +39,12 @@ const PurchaseCashDiscountView = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 

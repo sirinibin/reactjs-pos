@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo } from "react";
 import { Modal, Button } from "react-bootstrap";
-import Cookies from "universal-cookie";
+
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
 import countryList from 'react-select-country-list';
@@ -102,7 +102,7 @@ const StoreCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
     const validateEmail = (email) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         return re.test(email);
@@ -165,7 +165,7 @@ const StoreCreate = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             window.location = "/";
         }
@@ -178,7 +178,7 @@ const StoreCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
@@ -507,7 +507,7 @@ const StoreCreate = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -545,9 +545,9 @@ const StoreCreate = forwardRef((props, ref) => {
                 if (props.refreshList) {
                     props.refreshList();
                 }
-                if (cookies.get("store_id")) {
-                    if (cookies.get("store_id") === data.result.id) {
-                        cookies.set('vat_percent', data.result.vat_percent, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                if (localStorage.getItem("store_id")) {
+                    if (localStorage.getItem("store_id") === data.result.id) {
+                        localStorage.setItem("vat_percent", data.result.vat_percent);
                     }
                 }
 
@@ -618,7 +618,7 @@ const StoreCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
-import Cookies from "universal-cookie";
+
 import { Spinner } from "react-bootstrap";
 import Resizer from "react-image-file-resizer";
 
@@ -48,7 +48,7 @@ const SignatureCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
 
     //fields
     let [formData, setFormData] = useState({});
@@ -60,7 +60,7 @@ const SignatureCreate = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             window.location = "/";
         }
@@ -97,13 +97,13 @@ const SignatureCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -158,7 +158,7 @@ const SignatureCreate = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -166,8 +166,8 @@ const SignatureCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 

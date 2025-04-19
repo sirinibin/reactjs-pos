@@ -1,7 +1,7 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import PurchaseReturnPreview from './preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
-import Cookies from "universal-cookie";
+
 import NumberFormat from "react-number-format";
 import PurchaseReturnPrint from './print.js';
 import { format } from "date-fns";
@@ -22,7 +22,7 @@ const PurchaseReturnView = forwardRef((props, ref) => {
     }));
 
     let [model, setModel] = useState({});
-    const cookies = new Cookies();
+
 
     const [show, setShow] = useState(false);
 
@@ -50,13 +50,13 @@ const PurchaseReturnView = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,amount,method,store_name,purchase_return_code,purchase_return_id,created_by_name,created_at";
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         searchParams["purchase_return_id"] = purchase_return_id;
         setSearchParams(searchParams);
@@ -102,13 +102,13 @@ const PurchaseReturnView = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 

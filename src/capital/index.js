@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import CapitalCreate from "./create.js";
 import CapitalView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -15,7 +15,7 @@ import UserView from "../user/view.js";
 
 function CapitalIndex(props) {
 
-    const cookies = new Cookies();
+
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
@@ -93,7 +93,7 @@ function CapitalIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -206,7 +206,7 @@ function CapitalIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -231,14 +231,14 @@ function CapitalIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,date,amount,payment_method,description,invested_by_user_name,created_by_name,created_at";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();

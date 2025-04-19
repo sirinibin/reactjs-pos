@@ -2,13 +2,8 @@ import React, { useState } from 'react';
 import {
     Link
 } from "react-router-dom";
-import Cookies from "universal-cookie";
 
 function Sidebar(props) {
-
-    const cookies = new Cookies();
-
-
     const [appState, ChangeState] = useState({
         activeTab: '',
         tabs: [
@@ -62,7 +57,7 @@ function Sidebar(props) {
         <div className="sidebar-content js-simplebar">
             <div className="sidebar-brand">
                 <span className="align-middle">
-                    {cookies.get('store_name') ? cookies.get('store_name') : "Start POS"}
+                    {localStorage.getItem("store_name") ? localStorage.getItem("store_name") : "Start POS"}
                 </span>
             </div>
 
@@ -237,7 +232,7 @@ function Sidebar(props) {
                         <span className="align-middle">Accounts & Trial balances</span>
                     </Link>
                 </li>
-                {cookies.get('user_role') === "Admin" ? <li onClick={() => {
+                {localStorage.getItem("user_role") === "Admin" ? <li onClick={() => {
                     toggleActive(appState.tabs[21]);
                 }} className={toggleActiveStyles(appState.tabs[21])}>
                     <Link to="/dashboard/users" className="sidebar-link">

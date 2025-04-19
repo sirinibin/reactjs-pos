@@ -12,7 +12,7 @@ import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
 import SignatureCreate from "./../signature/create.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
@@ -73,20 +73,20 @@ const QuotationCreate = forwardRef((props, ref) => {
 
       reCalculate();
 
-      if (cookies.get("user_id")) {
+      if (localStorage.getItem("user_id")) {
         selectedDeliveredByUsers = [
           {
-            id: cookies.get("user_id"),
-            name: cookies.get("user_name"),
+            id: localStorage.getItem("user_id"),
+            name: localStorage.getItem("user_name"),
           },
         ];
-        formData.delivered_by = cookies.get("user_id");
+        formData.delivered_by = localStorage.getItem("user_id");
         setFormData({ ...formData });
         setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
       }
-      if (cookies.get("store_id")) {
-        formData.store_id = cookies.get("store_id");
-        formData.store_name = cookies.get("store_name");
+      if (localStorage.getItem("store_id")) {
+        formData.store_id = localStorage.getItem("store_id");
+        formData.store_name = localStorage.getItem("store_name");
       }
 
       setFormData({ ...formData });
@@ -127,7 +127,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   //const history = useHistory();
   let [errors, setErrors] = useState({});
   const [isProcessing, setProcessing] = useState(false);
-  const cookies = new Cookies();
+
 
   //fields
   let [formData, setFormData] = useState({
@@ -172,7 +172,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   }
 
   useEffect(() => {
-    let at = cookies.get("access_token");
+    let at = localStorage.getItem("access_token");
     if (!at) {
       // history.push("/dashboard/quotations");
       window.location = "/";
@@ -185,14 +185,14 @@ const QuotationCreate = forwardRef((props, ref) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
 
 
     let searchParams = {};
-    if (cookies.get("store_id")) {
-      searchParams.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      searchParams.store_id = localStorage.getItem("store_id");
     }
     let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -311,7 +311,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
 
@@ -340,8 +340,8 @@ const QuotationCreate = forwardRef((props, ref) => {
       query: searchTerm,
     };
 
-    if (cookies.get("store_id")) {
-      params.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      params.store_id = localStorage.getItem("store_id");
     }
 
 
@@ -354,7 +354,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
 
@@ -392,8 +392,8 @@ const QuotationCreate = forwardRef((props, ref) => {
       search_text: searchTerm,
     };
 
-    if (cookies.get("store_id")) {
-      params.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      params.store_id = localStorage.getItem("store_id");
     }
 
     var queryString = ObjectToSearchQueryParams(params);
@@ -405,11 +405,11 @@ const QuotationCreate = forwardRef((props, ref) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
 
-    let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
+    let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
     setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=50",
@@ -451,7 +451,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
 
@@ -459,8 +459,8 @@ const QuotationCreate = forwardRef((props, ref) => {
       "select=id,item_code,bar_code,ean_12,part_number,name,product_stores,unit,part_number,name_in_arabic";
 
     let searchParams = {};
-    if (cookies.get("store_id")) {
-      searchParams.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      searchParams.store_id = localStorage.getItem("store_id");
     }
     let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -516,8 +516,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     formData.vat_percent = parseFloat(formData.vat_percent);
 
 
-    if (cookies.get("store_id")) {
-      formData.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      formData.store_id = localStorage.getItem("store_id");
     }
 
     console.log("formData.discount:", formData.discount);
@@ -534,7 +534,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
       body: JSON.stringify(formData),
     };
@@ -542,8 +542,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     console.log("formData:", formData);
 
     let searchParams = {};
-    if (cookies.get("store_id")) {
-      searchParams.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      searchParams.store_id = localStorage.getItem("store_id");
     }
     let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -765,7 +765,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
       body: JSON.stringify(formData),
     };
@@ -1049,7 +1049,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 })}
               </ul></div> : ""}
           <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-            {!cookies.get("store_name") ? (
+            {!localStorage.getItem("store_name") ? (
               <div className="col-md-6">
                 <label className="form-label">Store*</label>
 

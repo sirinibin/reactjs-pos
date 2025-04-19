@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import PurchaseReturnCreate from "./create.js";
 import PurchaseReturnView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -26,7 +26,7 @@ const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function PurchaseReturnIndex(props) {
     const { lastMessage } = useContext(WebSocketContext);
-    const cookies = useMemo(() => new Cookies(), []);
+
 
     let [totalPurchaseReturn, setTotalPurchaseReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
@@ -233,14 +233,14 @@ function PurchaseReturnIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,vendor_invoice_no,date,total,net_total,discount_percent,discount,products,vendor_name,created_at,vat_price";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -353,8 +353,8 @@ function PurchaseReturnIndex(props) {
             query: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -367,7 +367,7 @@ function PurchaseReturnIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -399,7 +399,7 @@ function PurchaseReturnIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -517,13 +517,13 @@ function PurchaseReturnIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,purchase_code,cash_discount,purchase_id,date,net_total,created_by_name,vendor_name,vendor_invoice_no,status,created_at,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         if (props.purchase) {
@@ -597,7 +597,7 @@ function PurchaseReturnIndex(props) {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [sortOrder, sortField, page, pageSize, statsOpen, cookies, searchParams, props.purchase]);
+    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams, props.purchase]);
 
 
     const handleSummaryToggle = (isOpen) => {

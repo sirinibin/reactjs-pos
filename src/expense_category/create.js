@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
-import Cookies from "universal-cookie";
+
 import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 
@@ -51,7 +51,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
 
     const [parentCategoryOptions, setParentCategoryOptions] = useState([]);
     let [selectedParentCategories, setSelectedParentCategories] = useState([]);
@@ -67,7 +67,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             window.location = "/";
         }
@@ -80,7 +80,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
         formData = {};
@@ -89,8 +89,8 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
         setSelectedParentCategories([...selectedParentCategories]);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -157,8 +157,8 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
         if (formData.id) {
             endPoint = "/v1/expense-category/" + formData.id;
             method = "PUT";
-        } else if (cookies.get("store_id")) {
-            formData.store_id = cookies.get("store_id");
+        } else if (localStorage.getItem("store_id")) {
+            formData.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -167,7 +167,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -175,8 +175,8 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -238,8 +238,8 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
             name: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -251,7 +251,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 

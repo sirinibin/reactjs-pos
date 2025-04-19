@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
-import Cookies from "universal-cookie";
+
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -59,8 +59,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             query: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -73,7 +73,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -89,7 +89,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
 
     let [product, setProduct] = useState({});
 
-    const cookies = new Cookies();
+
 
     let [selectedDate, setSelectedDate] = useState(new Date());
     let [selectedFromDate, setSelectedFromDate] = useState(new Date());
@@ -207,7 +207,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select = "";
@@ -215,8 +215,8 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
         let Select =
             "select=id,store_id,store_name,customer_id,customer_name,order_id,order_code,quantity,";
             */
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         if (product.product_id) {
@@ -537,7 +537,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                             </b>
                                                         </th>
 
-                                                        {!cookies.get("store_id") ? <th>
+                                                        {!localStorage.getItem("store_id") ? <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -838,7 +838,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </div>
                                                         </th>
-                                                        {!cookies.get("store_id") ? <th>
+                                                        {!localStorage.getItem("store_id") ? <th>
                                                             <input
                                                                 type="text"
                                                                 id="store_name"
@@ -972,7 +972,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                                         "MMM dd yyyy h:mma"
                                                                     ) : "Not set"}
                                                                 </td>
-                                                                {!cookies.get("store_id") ? <td>{history.store_name}</td> : ""}
+                                                                {!localStorage.getItem("store_id") ? <td>{history.store_name}</td> : ""}
                                                                 <td style={{
                                                                     textDecoration: "underline",
                                                                     color: "blue",

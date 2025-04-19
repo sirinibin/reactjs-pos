@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
-import Cookies from "universal-cookie";
+
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -57,8 +57,8 @@ const PurchaseHistory = forwardRef((props, ref) => {
             query: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -71,7 +71,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -87,7 +87,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
 
     let [product, setProduct] = useState({});
 
-    const cookies = new Cookies();
+
 
     let [selectedDate, setSelectedDate] = useState(new Date());
     let [selectedFromDate, setSelectedFromDate] = useState(new Date());
@@ -205,7 +205,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select = "";
@@ -213,8 +213,8 @@ const PurchaseHistory = forwardRef((props, ref) => {
         let Select =
             "select=id,store_id,store_name,customer_id,customer_name,order_id,order_code,quantity,";
             */
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         if (product.product_id) {
@@ -379,7 +379,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                         />
                                     </Badge>
                                 </h1>
-                                {cookies.get('admin') === "true" ? <h1 className="text-end">
+                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
                                     Net Retail Profit: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalRetailProfit}
@@ -390,7 +390,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                         />
                                     </Badge>
                                 </h1> : ""}
-                                {cookies.get('admin') === "true" ? <h1 className="text-end">
+                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
                                     Net Wholesale Profit: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalWholesaleProfit}
@@ -401,7 +401,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                         />
                                     </Badge>
                                 </h1> : ""}
-                                {cookies.get('admin') === "true" ? <h1 className="text-end">
+                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
                                     Retail Loss: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalRetailLoss}
@@ -412,7 +412,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                         />
                                     </Badge>
                                 </h1> : ""}
-                                {cookies.get('admin') === "true" ? <h1 className="text-end">
+                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
                                     Wholesale Loss: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalWholesaleLoss}
@@ -588,7 +588,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                             </b>
                                                         </th>
 
-                                                        {!cookies.get("store_id") ? <th>
+                                                        {!localStorage.getItem("store_id") ? <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -786,7 +786,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                             </b>
                                                         </th>
 
-                                                        {cookies.get('admin') === "true" ?
+                                                        {localStorage.getItem("admin") === "true" ?
                                                             <th>
                                                                 <b
                                                                     style={{
@@ -808,7 +808,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
 
 
                                                             </th> : ""}
-                                                        {cookies.get('admin') === "true" ?
+                                                        {localStorage.getItem("admin") === "true" ?
                                                             <th>
                                                                 <b
                                                                     style={{
@@ -830,7 +830,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
 
 
                                                             </th> : ""}
-                                                        {cookies.get('admin') === "true" ? <th>
+                                                        {localStorage.getItem("admin") === "true" ? <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -849,7 +849,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th> : ""}
-                                                        {cookies.get('admin') === "true" ? <th>
+                                                        {localStorage.getItem("admin") === "true" ? <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -953,7 +953,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </div>
                                                         </th>
-                                                        {!cookies.get("store_id") ? <th>
+                                                        {!localStorage.getItem("store_id") ? <th>
                                                             <input
                                                                 type="text"
                                                                 id="store_name"
@@ -1064,7 +1064,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 className="form-control"
                                                             />
                                                         </th>
-                                                        {cookies.get('admin') === "true" ?
+                                                        {localStorage.getItem("admin") === "true" ?
                                                             <th>
                                                                 <input
                                                                     type="text"
@@ -1075,7 +1075,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     className="form-control"
                                                                 />
                                                             </th> : ""}
-                                                        {cookies.get('admin') === "true" ?
+                                                        {localStorage.getItem("admin") === "true" ?
                                                             <th>
                                                                 <input
                                                                     type="text"
@@ -1086,7 +1086,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     className="form-control"
                                                                 />
                                                             </th> : ""}
-                                                        {cookies.get('admin') === "true" ?
+                                                        {localStorage.getItem("admin") === "true" ?
                                                             <th>
                                                                 <input
                                                                     type="text"
@@ -1097,7 +1097,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     className="form-control"
                                                                 />
                                                             </th> : ""}
-                                                        {cookies.get('admin') === "true" ?
+                                                        {localStorage.getItem("admin") === "true" ?
                                                             <th>
                                                                 <input
                                                                     type="text"
@@ -1121,7 +1121,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                         "MMM dd yyyy h:mma"
                                                                     ) : "Not set"}
                                                                 </td>
-                                                                {!cookies.get("store_id") ? <td>{history.store_name}</td> : ""}
+                                                                {!localStorage.getItem("store_id") ? <td>{history.store_name}</td> : ""}
                                                                 <td style={{
                                                                     textDecoration: "underline",
                                                                     color: "blue",
@@ -1147,10 +1147,10 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 <td>{history.price.toFixed(2) + " "}</td>
                                                                 <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " "}</td>
-                                                                {cookies.get('admin') === "true" ? <td>{history.retail_profit.toFixed(2) + " "}</td> : ""}
-                                                                {cookies.get('admin') === "true" ? <td>{history.wholesale_profit.toFixed(2) + " "}</td> : ""}
-                                                                {cookies.get('admin') === "true" ? <td>{history.retail_loss.toFixed(2) + " "}</td> : ""}
-                                                                {cookies.get('admin') === "true" ? <td>{history.wholesale_loss.toFixed(2) + " "}</td> : ""}
+                                                                {localStorage.getItem("admin") === "true" ? <td>{history.retail_profit.toFixed(2) + " "}</td> : ""}
+                                                                {localStorage.getItem("admin") === "true" ? <td>{history.wholesale_profit.toFixed(2) + " "}</td> : ""}
+                                                                {localStorage.getItem("admin") === "true" ? <td>{history.retail_loss.toFixed(2) + " "}</td> : ""}
+                                                                {localStorage.getItem("admin") === "true" ? <td>{history.wholesale_loss.toFixed(2) + " "}</td> : ""}
 
                                                                 {/* <td>   
                                                         <button

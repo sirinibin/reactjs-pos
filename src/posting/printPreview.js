@@ -1,7 +1,7 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from 'react-bootstrap';
 import BalanceSheetPrintPreviewContent from './printPreviewContent.js';
-import Cookies from "universal-cookie";
+
 import { useReactToPrint } from 'react-to-print';
 import { format } from "date-fns";
 
@@ -123,7 +123,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
     }));
 
-    const cookies = new Cookies();
+
 
     let [model, setModel] = useState({});
 
@@ -140,7 +140,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
@@ -185,7 +185,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             filename += model.name + "_acc_#" + model.number;
         }
 
-        filename=filename.split(' ').join('_')
+        filename = filename.split(' ').join('_')
 
         if (model.dateValue) {
             filename += "_Date_" + format(new Date(model.dateValue), "MMM_dd_yyyy")
@@ -197,7 +197,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             filename += "_Date_upto_" + format(new Date(model.toDateValue), "MMM_dd_yyyy")
         }
 
-       
+
 
         filename += ".pdf"
 
@@ -230,7 +230,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <BalanceSheetPrintPreviewContent model={model} userName={cookies.get("user_name")?cookies.get("user_name"):""} />
+                    <BalanceSheetPrintPreviewContent model={model} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
                 </div>
             </Modal.Body>
             <Modal.Footer>

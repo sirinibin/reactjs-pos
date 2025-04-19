@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
 import OrderPreview from "./preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
@@ -6,7 +6,7 @@ import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
 import SignatureCreate from "./../signature/create.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
@@ -68,20 +68,20 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
 
-            if (cookies.get("user_id")) {
+            if (localStorage.getItem("user_id")) {
                 selectedDeliveredByUsers = [{
-                    id: cookies.get("user_id"),
-                    name: cookies.get("user_name"),
+                    id: localStorage.getItem("user_id"),
+                    name: localStorage.getItem("user_name"),
                 }];
-                formData.delivered_by = cookies.get("user_id");
+                formData.delivered_by = localStorage.getItem("user_id");
                 setFormData({ ...formData });
                 setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
             }
 
-            if (cookies.get('store_id')) {
-                getStore(cookies.get('store_id'));
-                formData["store_id"] = cookies.get('store_id');
-                formData["store_name"] = cookies.get('store_name');
+            if (localStorage.getItem('store_id')) {
+                getStore(localStorage.getItem('store_id'));
+                formData["store_id"] = localStorage.getItem('store_id');
+                formData["store_name"] = localStorage.getItem('store_name');
                 setFormData({ ...formData });
                 console.log("formData.store_id:", formData.store_id);
                 console.log("formData.store_id:", formData.store_id);
@@ -126,7 +126,7 @@ const OrderCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
@@ -159,13 +159,13 @@ const OrderCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -304,7 +304,7 @@ const OrderCreate = forwardRef((props, ref) => {
         "payment_amount": [],
     });
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = useMemo(() => new Cookies(), []);
+
 
     //fields
     let [formData, setFormData] = useState({
@@ -353,7 +353,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             // history.push("/dashboard/orders");
             window.location = "/";
@@ -390,7 +390,7 @@ const OrderCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -419,8 +419,8 @@ const OrderCreate = forwardRef((props, ref) => {
             query: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -432,7 +432,7 @@ const OrderCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -470,8 +470,8 @@ const OrderCreate = forwardRef((props, ref) => {
             search_text: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -484,11 +484,11 @@ const OrderCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
-        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
+        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200",
@@ -509,7 +509,7 @@ const OrderCreate = forwardRef((props, ref) => {
         setProductOptions(products);
         setIsProductsLoading(false);
 
-    }, [cookies]);
+    }, []);
 
     /*
     const debouncedSuggestProducts = useMemo(
@@ -547,14 +547,14 @@ const OrderCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
         if (queryParams !== "") {
@@ -745,8 +745,8 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.vat_percent = parseFloat(formData.vat_percent);
         formData.net_total = parseFloat(formData.net_total);
 
-        if (cookies.get('store_id')) {
-            formData.store_id = cookies.get('store_id');
+        if (localStorage.getItem('store_id')) {
+            formData.store_id = localStorage.getItem('store_id');
         }
 
 
@@ -762,7 +762,7 @@ const OrderCreate = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -770,8 +770,8 @@ const OrderCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -850,7 +850,7 @@ const OrderCreate = forwardRef((props, ref) => {
     function addProduct(product) {
         console.log("Inside Add product");
         if (!formData.store_id) {
-            formData.store_id = cookies.get("store_id");
+            formData.store_id = localStorage.getItem("store_id");
         }
 
         errors.product_id = "";
@@ -1172,7 +1172,7 @@ function findDiscount() {
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -1621,7 +1621,7 @@ function findDiscount() {
                     </div>)}
 
                     <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
-                        {!cookies.get('store_name') ? <div className="col-md-6">
+                        {!localStorage.getItem('store_name') ? <div className="col-md-6">
                             <label className="form-label">Store*</label>
 
                             <div className="input-group mb-3">

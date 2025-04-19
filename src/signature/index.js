@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import SignatureCreate from "./create.js";
 import SignatureView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -10,7 +10,7 @@ import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 
 function SignatureIndex(props) {
-    const cookies = new Cookies();
+
 
     const selectedDate = new Date();
 
@@ -79,7 +79,7 @@ function SignatureIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -163,7 +163,7 @@ function SignatureIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
@@ -172,8 +172,8 @@ function SignatureIndex(props) {
         const d = new Date();
         let diff = d.getTimezoneOffset();
         searchParams["timezone_offset"] = parseFloat(diff / 60);
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         setSearchParams(searchParams);

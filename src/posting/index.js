@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -11,7 +11,7 @@ import Amount from "../utils/amount.js";
 
 const PostingIndex = forwardRef((props, ref) => {
 
-    const cookies = new Cookies();
+
 
     let [selectedAccount, setSelectedAccount] = useState(null);
     let [showAccountBalanceSheet, setShowAccountBalanceSheet] = useState(false);
@@ -205,14 +205,14 @@ const PostingIndex = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,date,store_id,account_id,account_name,account_number,reference_id,reference_model,reference_code,posts,debit_total_credit_total,created_at";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         if (selectedAccount) {
@@ -306,14 +306,14 @@ const PostingIndex = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,date,store_id,account_id,account_name,account_number,reference_id,reference_model,reference_code,posts,debit_total_credit_total,created_at";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         if (selectedAccount) {
@@ -453,8 +453,8 @@ const PostingIndex = forwardRef((props, ref) => {
             search: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -466,7 +466,7 @@ const PostingIndex = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 

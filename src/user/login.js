@@ -2,7 +2,7 @@
 import avatar from './../avatar.jpg';
 import React, { useState, useEffect } from "react";
 import Footer from './../Footer.js';
-import Cookies from 'universal-cookie';
+
 //import { useHistory } from "react-router-dom";
 
 function Login() {
@@ -10,11 +10,11 @@ function Login() {
     // const history = useHistory();
     const [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
 
     useEffect(() => {
-        const cookies = new Cookies();
-        let at = cookies.get("access_token");
+
+        let at = localStorage.getItem("access_token");
         if (at) {
             // history.push("/dashboard/quotations");
             //window.location = "/dashboard/analytics";
@@ -22,14 +22,13 @@ function Login() {
         }
     }, []);
 
-
     function me() {
         console.log("inside me");
         const requestOptions = {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
@@ -53,31 +52,32 @@ function Login() {
 
                 if (data.result.role !== "Admin" && (storeIDs?.length === 0 || !storeIDs)) {
                     errors.email = "You have no stores assigned to you"
-                    cookies.remove("access_token", { path: '/' });
+                    localStorage.removeItem("access_token");
                     setProcessing(false);
                     setErrors({ ...errors });
                     return;
                 }
 
                 if (data.result.role !== "Admin") {
-                    cookies.set('store_name', storeNames[0], { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
-                    cookies.set('store_id', storeIDs[0], { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                    localStorage.setItem("store_name", storeNames[0]);
+                    localStorage.setItem("store_id", storeIDs[0]);
                 }
 
-                cookies.set('user_name', data.result.name, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
-                cookies.set('user_id', data.result.id, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
-                cookies.set('user_role', data.result.role, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                localStorage.setItem("user_name", data.result.name);
+                localStorage.setItem("user_id", data.result.id);
+                localStorage.setItem("user_role", data.result.role);
+                //localStorage.setItem("id", JSON.stringify({ id: data.result.id, changedAt: Date.now() }));
 
 
 
                 if (data.result.admin === true) {
-                    cookies.set('admin', true, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                    localStorage.setItem("admin", true);
                 } else {
-                    cookies.set('admin', false, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                    localStorage.setItem("admin", false);
                 }
 
                 if (data.result.photo) {
-                    cookies.set('user_photo', data.result.photo, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+                    localStorage.setItem("user_photo", data.result.photo);
                 }
 
                 // history.push("/dashboard/analytics");
@@ -89,6 +89,22 @@ function Login() {
                 setErrors(error);
             });
     }
+
+    useEffect(() => {
+        const handleStorageChange = (event) => {
+            console.log("event:", event);
+            if (event.key === "store_id" || event.key === "access_token") {
+                console.log("Store info changed in another tab, reloading...");
+                window.location.reload(); // Refresh this tab
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+        };
+    }, []);
 
     function getAccessToken(authCode) {
         console.log("inside access token");
@@ -115,11 +131,7 @@ function Login() {
 
                 console.log("Response:");
                 console.log(data);
-
-                const cookies = new Cookies();
-                var d = new Date(0); // The 0 there is the key, which sets the date to the epoch
-                d.setUTCSeconds(data.result.expires_at);
-                cookies.set('access_token', data.result.access_token, { path: '/', expires: d });
+                localStorage.setItem("access_token", data.result.access_token);
                 me();
             })
             .catch(error => {

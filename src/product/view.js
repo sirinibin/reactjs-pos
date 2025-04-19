@@ -1,6 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { Modal, Table } from 'react-bootstrap';
-import Cookies from "universal-cookie";
+
 import NumberFormat from "react-number-format";
 
 //let ThermalPrinterEncoder = require('thermal-printer-encoder');
@@ -33,7 +33,7 @@ const ProductView = forwardRef((props, ref) => {
 
 
     let [model, setModel] = useState({});
-    const cookies = new Cookies();
+
 
     const [show, SetShow] = useState(false);
 
@@ -56,13 +56,13 @@ const ProductView = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -427,7 +427,7 @@ const ProductView = forwardRef((props, ref) => {
                     <table className="table table-striped table-sm table-bordered">
                         <thead>
                             <tr className="text-center">
-                                {!cookies.get('store_id') ? <th>Store Name</th> : ""}
+                                {!localStorage.getItem('store_id') ? <th>Store Name</th> : ""}
                                 <th>Purchase Unit Price</th>
                                 <th>Wholesale Unit Price</th>
                                 <th>Retail Unit Price</th>
@@ -437,8 +437,8 @@ const ProductView = forwardRef((props, ref) => {
                         </thead>
                         <tbody>
                             {model.product_stores && Object.keys(model.product_stores).map((key, index) => {
-                                return (!cookies.get('store_id') || cookies.get('store_id') === model.product_stores[key].store_id ? <tr key={index} className="text-center">
-                                    {!cookies.get('store_id') ? <td>{model.product_stores[key].store_name}</td> : ""}
+                                return (!localStorage.getItem('store_id') || localStorage.getItem('store_id') === model.product_stores[key].store_id ? <tr key={index} className="text-center">
+                                    {!localStorage.getItem('store_id') ? <td>{model.product_stores[key].store_name}</td> : ""}
                                     <td>
                                         <NumberFormat
                                             value={model.product_stores[key].purchase_unit_price}
@@ -474,8 +474,8 @@ const ProductView = forwardRef((props, ref) => {
                         {/*
                         <tbody>
                             {model.product_stores && Object.keys(model.product_stores).map((key, index) => {
-                                !cookies.get('store_id') || model.product_stores[key].store_id == cookies.get('store_id') ? <tr key={index} className="text-center">
-                                    {!cookies.get('store_id') ? <td>{model.product_stores[key].store_name}</td> : ""}
+                                !      localStorage.getItem('store_id') || model.product_stores[key].store_id ==       localStorage.getItem('store_id') ? <tr key={index} className="text-center">
+                                    {!      localStorage.getItem('store_id') ? <td>{model.product_stores[key].store_name}</td> : ""}
                                     <td>
                                         <NumberFormat
                                             value={model.product_stores[key].purchase_unit_price}

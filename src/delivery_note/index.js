@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import DeliveryNoteCreate from "./create.js";
 import DeliveryNoteView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -11,7 +11,7 @@ import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function DeliveryNoteIndex(props) {
-  const cookies = new Cookies();
+
 
   //Date filter
   const [showDateRange, setShowDateRange] = useState(false);
@@ -91,8 +91,8 @@ function DeliveryNoteIndex(props) {
       query: searchTerm,
     };
 
-    if (cookies.get("store_id")) {
-      params.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      params.store_id = localStorage.getItem("store_id");
     }
 
     var queryString = ObjectToSearchQueryParams(params);
@@ -104,7 +104,7 @@ function DeliveryNoteIndex(props) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
 
@@ -139,7 +139,7 @@ function DeliveryNoteIndex(props) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
 
@@ -248,13 +248,13 @@ function DeliveryNoteIndex(props) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
     let Select =
       "select=id,code,date,created_by_name,customer_name,created_at";
-    if (cookies.get("store_id")) {
-      searchParams.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      searchParams.store_id = localStorage.getItem("store_id");
     }
 
     const d = new Date();

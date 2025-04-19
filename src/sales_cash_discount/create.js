@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
-import Cookies from "universal-cookie";
+
 import { Spinner } from "react-bootstrap";
 
 import DatePicker from "react-datepicker";
@@ -63,7 +63,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
 
     let [selectedParentCategories, setSelectedParentCategories] = useState([]);
 
@@ -77,7 +77,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             window.location = "/";
         }
@@ -90,7 +90,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
         formData = {};
@@ -99,8 +99,8 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
         setSelectedParentCategories([...selectedParentCategories]);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -187,7 +187,7 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -195,8 +195,8 @@ const SalesCashDiscountCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 

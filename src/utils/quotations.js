@@ -1,11 +1,11 @@
-import React, { useState, useRef, forwardRef, useEffect, useImperativeHandle, useMemo, useCallback } from "react";
+import React, { useState, useRef, forwardRef, useEffect, useImperativeHandle, useCallback } from "react";
 import { Button, Spinner, Modal } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import "react-datepicker/dist/react-datepicker.css";
 import OverflowTooltip from "./OverflowTooltip.js";
 import QuotationCreate from "./../quotation/create.js";
 import QuotationView from "./../quotation/view.js";
-import Cookies from "universal-cookie";
+
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import ReactPaginate from "react-paginate";
@@ -53,7 +53,7 @@ const Quotations = forwardRef((props, ref) => {
         },
     }));
 
-    const cookies = useMemo(() => new Cookies(), []);
+
 
     let [totalQuotation, setTotalQuotation] = useState(0.00);
     let [profit, setProfit] = useState(0.00);
@@ -151,8 +151,8 @@ const Quotations = forwardRef((props, ref) => {
         };
 
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -165,7 +165,7 @@ const Quotations = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -200,7 +200,7 @@ const Quotations = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -312,13 +312,13 @@ const Quotations = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -384,7 +384,7 @@ const Quotations = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [sortOrder, sortField, page, pageSize, statsOpen, cookies, searchParams]);
+    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams]);
 
     const handleSummaryToggle = (isOpen) => {
         statsOpen = isOpen
@@ -704,7 +704,7 @@ const Quotations = forwardRef((props, ref) => {
                                                                     ) : null}
                                                                 </b>
                                                             </th>
-                                                            {cookies.get('admin') === "true" ?
+                                                            {localStorage.getItem("admin") === "true" ?
                                                                 <th>
                                                                     <b
                                                                         style={{
@@ -724,7 +724,7 @@ const Quotations = forwardRef((props, ref) => {
                                                                         ) : null}
                                                                     </b>
                                                                 </th> : ""}
-                                                            {cookies.get('admin') === "true" ?
+                                                            {localStorage.getItem("admin") === "true" ?
                                                                 <th>
                                                                     <b
                                                                         style={{
@@ -915,7 +915,7 @@ const Quotations = forwardRef((props, ref) => {
                                                                     className="form-control"
                                                                 />
                                                             </th>
-                                                            {cookies.get('admin') === "true" ?
+                                                            {localStorage.getItem("admin") === "true" ?
                                                                 <th>
                                                                     <input
                                                                         type="text"
@@ -926,7 +926,7 @@ const Quotations = forwardRef((props, ref) => {
                                                                         className="form-control"
                                                                     />
                                                                 </th> : ""}
-                                                            {cookies.get('admin') === "true" ?
+                                                            {localStorage.getItem("admin") === "true" ?
                                                                 <th>
                                                                     <input
                                                                         type="text"
@@ -1094,10 +1094,10 @@ const Quotations = forwardRef((props, ref) => {
                                                                         {format(new Date(quotation.date), "MMM dd yyyy h:mma")}
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
-                                                                    {cookies.get('admin') === "true" ?
+                                                                    {localStorage.getItem("admin") === "true" ?
                                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? <Amount amount={trimTo2Decimals(quotation.profit)} /> : 0.00} </td>
                                                                         : ""}
-                                                                    {cookies.get('admin') === "true" ?
+                                                                    {localStorage.getItem("admin") === "true" ?
                                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.loss ? <Amount amount={trimTo2Decimals(quotation.loss)} /> : 0.00} </td>
                                                                         : ""}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.created_by_name}</td>

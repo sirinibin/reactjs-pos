@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
-import Cookies from "universal-cookie";
+
 import { Spinner } from "react-bootstrap";
 
 const ZatcaConnect = forwardRef((props, ref) => {
@@ -51,7 +51,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
 
     //fields
     let [formData, setFormData] = useState({});
@@ -63,7 +63,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             window.location = "/";
         }
@@ -82,7 +82,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };

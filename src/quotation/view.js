@@ -1,6 +1,6 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
-import Cookies from "universal-cookie";
+
 import NumberFormat from "react-number-format";
 import QuotationPreview from './preview.js';
 import QuotationPrint from './print.js';
@@ -22,7 +22,7 @@ const QuotationView = forwardRef((props, ref) => {
 
 
     let [model, setModel] = useState({});
-    const cookies = new Cookies();
+
 
 
 
@@ -41,13 +41,13 @@ const QuotationView = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -140,10 +140,10 @@ const QuotationView = forwardRef((props, ref) => {
                                 <th>Disc.</th>
                                 <th>Disc. %</th>
                                 <th>Price</th>
-                                {cookies.get('admin') === "true" ? <th>Purchase Unit Price</th> : ""}
-                                {cookies.get('admin') === "true" ? <th>Purchase Price</th> : ""}
-                                {cookies.get('admin') === "true" ? <th>Profit</th> : ""}
-                                {cookies.get('admin') === "true" ? <th>Loss</th> : ""}
+                                {localStorage.getItem("admin") === "true" ? <th>Purchase Unit Price</th> : ""}
+                                {localStorage.getItem("admin") === "true" ? <th>Purchase Price</th> : ""}
+                                {localStorage.getItem("admin") === "true" ? <th>Profit</th> : ""}
+                                {localStorage.getItem("admin") === "true" ? <th>Loss</th> : ""}
                             </tr>
                         </thead>
                         <tbody>
@@ -189,7 +189,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td>
-                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                         <NumberFormat
                                             value={product.purchase_unit_price?.toFixed(2)}
                                             displayType={"text"}
@@ -198,7 +198,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                         <NumberFormat
                                             value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                             displayType={"text"}
@@ -207,7 +207,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                         <NumberFormat
                                             value={product.profit?.toFixed(2)}
                                             displayType={"text"}
@@ -216,7 +216,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                         <NumberFormat
                                             value={product.loss?.toFixed(2)}
                                             displayType={"text"}
@@ -239,7 +239,7 @@ const QuotationView = forwardRef((props, ref) => {
                                     /> : "0.00 "}
                                 </td>
                                 <td colSpan="2" ></td>
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">
                                         <NumberFormat
                                             value={model.profit?.toFixed(2)}
@@ -249,7 +249,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                {cookies.get('admin') === "true" ? <td className="text-end">
+                                {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                     <NumberFormat
                                         value={model.loss?.toFixed(2)}
                                         displayType={"text"}
@@ -284,11 +284,11 @@ const QuotationView = forwardRef((props, ref) => {
                                     {model.discount?.toFixed(2)}
                                 </td>
                                 <td colSpan="2"></td>
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">
                                         {model.net_profit > 0 ? model.discount ? model.discount.toFixed(2) : "0.00" : "0.00"}
                                     </td> : ""}
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">
                                         {model.net_loss > 0 ? model.discount ? model.discount.toFixed(2) : "0.00" : "0.00"}
                                     </td> : ""}
@@ -305,10 +305,10 @@ const QuotationView = forwardRef((props, ref) => {
                                     />
                                 </td>
                                 <td colSpan="2"></td>
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">0.00 </td>
                                     : ""}
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">0.00</td>
                                     : ""}
                             </tr>
@@ -325,10 +325,10 @@ const QuotationView = forwardRef((props, ref) => {
                                 </th>
 
 
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <th colSpan="2" className="text-end">Net Profit / Loss</th>
                                     : ""}
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <th className="text-end">
                                         <NumberFormat
                                             value={model.net_profit?.toFixed(2)}
@@ -339,7 +339,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         />
                                     </th>
                                     : ""}
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <th className="text-end">
                                         <NumberFormat
                                             value={model.net_loss?.toFixed(2)}
@@ -386,8 +386,8 @@ const QuotationView = forwardRef((props, ref) => {
                         <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
-                            {cookies.get('admin') === "true" ? <th>Profit:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.profit} </td> : ""}
-                            {cookies.get('admin') === "true" ? <th>Loss:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.loss} </td> : ""}
+                            {localStorage.getItem("admin") === "true" ? <th>Profit:</th> : ""}{localStorage.getItem("admin") === "true" ? <td> {model.profit} </td> : ""}
+                            {localStorage.getItem("admin") === "true" ? <th>Loss:</th> : ""}{localStorage.getItem("admin") === "true" ? <td> {model.loss} </td> : ""}
                         </tr>
 
                     </tbody>

@@ -1,7 +1,7 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useEffect } from "react";
 import { Modal, Button } from 'react-bootstrap';
 import PurchaseReturnPrintContent from './printContent.js';
-import Cookies from "universal-cookie";
+
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
 //import { generateQR } from "@zatca/qr";
@@ -92,7 +92,7 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
 
     }));
 
-    const cookies = new Cookies();
+
 
     let [model, setModel] = useState({});
 
@@ -140,7 +140,7 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
@@ -217,13 +217,13 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -255,7 +255,7 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
@@ -288,13 +288,13 @@ const PurchaseReturnPrint = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 

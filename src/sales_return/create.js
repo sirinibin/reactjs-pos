@@ -5,7 +5,7 @@ import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
 import SignatureCreate from "./../signature/create.js";
-import Cookies from "universal-cookie";
+
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
@@ -55,12 +55,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 }
             ];
             formData.cash_discount = 0.00;
-            if (cookies.get("user_id")) {
+            if (localStorage.getItem("user_id")) {
                 selectedReceivedByUsers = [{
-                    id: cookies.get("user_id"),
-                    name: cookies.get("user_name"),
+                    id: localStorage.getItem("user_id"),
+                    name: localStorage.getItem("user_name"),
                 }];
-                formData.received_by = cookies.get("user_id");
+                formData.received_by = localStorage.getItem("user_id");
                 setFormData({ ...formData });
                 setSelectedReceivedByUsers([...selectedReceivedByUsers]);
             }
@@ -99,13 +99,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -244,14 +244,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -412,7 +412,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     //const history = useHistory();
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
 
     //fields
     let [formData, setFormData] = useState({
@@ -447,7 +447,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             // history.push("/dashboard/salesreturns");
             window.location = "/";
@@ -600,7 +600,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -608,8 +608,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -714,7 +714,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             headers: {
                 Accept: "application/json",
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef } from "react";
-import Cookies from "universal-cookie";
+
 import AllSales from "./sales/allSales";
 import HourlySales from "./sales/hourlySales";
 import DailySales from "./sales/dailySales";
@@ -9,7 +9,7 @@ import YearlySales from "./sales/yearlySales";
 
 
 const Analytics = forwardRef((props, ref) => {
-    const cookies = new Cookies();
+
     let [allOrders, setAllOrders] = useState([]);
     let [allExpenses, setAllExpenses] = useState([]);
     let [allPurchases, setAllPurchases] = useState([]);
@@ -35,14 +35,14 @@ const Analytics = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select = fields;
 
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -110,7 +110,7 @@ const Analytics = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-       
+
         fetchData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);

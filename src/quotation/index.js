@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import QuotationCreate from "./create.js";
 import QuotationView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -17,7 +17,7 @@ import eventEmitter from "./../utils/eventEmitter";
 
 function QuotationIndex(props) {
   const { lastMessage } = useContext(WebSocketContext);
-  const cookies = useMemo(() => new Cookies(), []);
+
 
   let [totalQuotation, setTotalQuotation] = useState(0.00);
   let [profit, setProfit] = useState(0.00);
@@ -115,8 +115,8 @@ function QuotationIndex(props) {
     };
 
 
-    if (cookies.get("store_id")) {
-      params.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      params.store_id = localStorage.getItem("store_id");
     }
 
 
@@ -129,7 +129,7 @@ function QuotationIndex(props) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
 
@@ -164,7 +164,7 @@ function QuotationIndex(props) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
 
@@ -274,13 +274,13 @@ function QuotationIndex(props) {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: cookies.get("access_token"),
+        Authorization: localStorage.getItem("access_token"),
       },
     };
     let Select =
       "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
-    if (cookies.get("store_id")) {
-      searchParams.store_id = cookies.get("store_id");
+    if (localStorage.getItem("store_id")) {
+      searchParams.store_id = localStorage.getItem("store_id");
     }
 
     const d = new Date();
@@ -346,7 +346,7 @@ function QuotationIndex(props) {
         setIsRefreshInProcess(false);
         console.log(error);
       });
-  }, [sortOrder, sortField, page, pageSize, statsOpen, cookies, searchParams]);
+  }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams]);
 
   const handleSummaryToggle = (isOpen) => {
     statsOpen = isOpen
@@ -650,7 +650,7 @@ function QuotationIndex(props) {
                             ) : null}
                           </b>
                         </th>
-                        {cookies.get('admin') === "true" ?
+                        {localStorage.getItem("admin") === "true" ?
                           <th>
                             <b
                               style={{
@@ -670,7 +670,7 @@ function QuotationIndex(props) {
                               ) : null}
                             </b>
                           </th> : ""}
-                        {cookies.get('admin') === "true" ?
+                        {localStorage.getItem("admin") === "true" ?
                           <th>
                             <b
                               style={{
@@ -859,7 +859,7 @@ function QuotationIndex(props) {
                             className="form-control"
                           />
                         </th>
-                        {cookies.get('admin') === "true" ?
+                        {localStorage.getItem("admin") === "true" ?
                           <th>
                             <input
                               type="text"
@@ -870,7 +870,7 @@ function QuotationIndex(props) {
                               className="form-control"
                             />
                           </th> : ""}
-                        {cookies.get('admin') === "true" ?
+                        {localStorage.getItem("admin") === "true" ?
                           <th>
                             <input
                               type="text"
@@ -1031,10 +1031,10 @@ function QuotationIndex(props) {
                               {format(new Date(quotation.date), "MMM dd yyyy h:mma")}
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
-                            {cookies.get('admin') === "true" ?
+                            {localStorage.getItem("admin") === "true" ?
                               <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? <Amount amount={trimTo2Decimals(quotation.profit)} /> : 0.00} </td>
                               : ""}
-                            {cookies.get('admin') === "true" ?
+                            {localStorage.getItem("admin") === "true" ?
                               <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.loss ? <Amount amount={trimTo2Decimals(quotation.loss)} /> : 0.00} </td>
                               : ""}
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.created_by_name}</td>

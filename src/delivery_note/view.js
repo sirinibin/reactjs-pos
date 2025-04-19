@@ -1,6 +1,6 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
-import Cookies from "universal-cookie";
+
 import DeliveryNotePreview from './preview.js';
 import DeliveryNotePrint from './print.js';
 import { format } from "date-fns";
@@ -21,7 +21,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
 
 
     let [model, setModel] = useState({});
-    const cookies = new Cookies();
+
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -37,13 +37,13 @@ const DeliveryNoteView = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 

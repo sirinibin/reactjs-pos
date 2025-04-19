@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import ProductCreate from "./create.js";
 import ProductJson from "./json.js";
 import ProductView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 //import { format } from "date-fns";
 //import DatePicker from "react-datepicker";
@@ -28,7 +28,7 @@ function ProductIndex(props) {
     const countryOptions = useMemo(() => countryList().getData(), [])
 
 
-    const cookies = useMemo(() => new Cookies(), []);
+
 
     // const selectedDate = new Date();
 
@@ -98,8 +98,8 @@ function ProductIndex(props) {
             name: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -111,7 +111,7 @@ function ProductIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -137,8 +137,8 @@ function ProductIndex(props) {
             name: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -150,7 +150,7 @@ function ProductIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -186,7 +186,7 @@ function ProductIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -298,7 +298,7 @@ function ProductIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         /*let Select =
@@ -306,9 +306,9 @@ function ProductIndex(props) {
         */
         let Select = "";
 
-        if (cookies.get("store_id")) {
+        if (localStorage.getItem("store_id")) {
             // Select =
-            //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + cookies.get("store_id") + ".stock,product_stores." + cookies.get("store_id") + ".purchase_unit_price,product_stores." + cookies.get("store_id") + ".wholesale_unit_price,product_stores." + cookies.get("store_id") + ".retail_unit_price,product_stores." + cookies.get("store_id") + ".store_id";
+            //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + localStorage.getItem("store_id") + ".stock,product_stores." + localStorage.getItem("store_id") + ".purchase_unit_price,product_stores." + localStorage.getItem("store_id") + ".wholesale_unit_price,product_stores." + localStorage.getItem("store_id") + ".retail_unit_price,product_stores." + localStorage.getItem("store_id") + ".store_id";
             Select =
                 "select=id,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
 
@@ -322,8 +322,8 @@ function ProductIndex(props) {
         }
 
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -457,7 +457,7 @@ function ProductIndex(props) {
             let price = getProductPrice(productList[i]);
 
             jsonContent.push({
-                storename: cookies.get("store_name"),
+                storename:       localStorage.getItem("store_name"),
                 productname: productList[i].name,
                 ean_12: productList[i].ean_12,
                 rack: productList[i].rack,
@@ -472,7 +472,7 @@ function ProductIndex(props) {
 
     /*
     function getProductPrice(product) {
-        let store_id = cookies.get("store_id");
+        let store_id = localStorage.getItem("store_id");
         let vat_percent = 0.15;
        
 
@@ -539,8 +539,8 @@ function ProductIndex(props) {
             search_text: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -553,11 +553,11 @@ function ProductIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
-        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
+        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
         setIsProductsLoading(true);
 
         let result = await fetch(
@@ -579,7 +579,7 @@ function ProductIndex(props) {
         setProductOptions(products);
         setIsProductsLoading(false);
 
-    }, [cookies]);
+    }, []);
 
     /*
     const debouncedSuggestProducts = useMemo(
@@ -2274,11 +2274,11 @@ function ProductIndex(props) {
                                                         {/*<td>{product.rack}</td>*/}
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (
                                                                         <b>{product.product_stores[key].purchase_unit_price?.toFixed(2)}</b>
                                                                     );
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
                                                                 return ""
@@ -2286,9 +2286,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].wholesale_unit_price?.toFixed(2)}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].wholesale_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
                                                                 return ""
@@ -2296,10 +2296,10 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].retail_unit_price?.toFixed(2)}</b>);
 
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].retail_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
                                                                 return ""
@@ -2307,9 +2307,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].stock}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].stock}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
                                                                 return ""
@@ -2318,7 +2318,7 @@ function ProductIndex(props) {
                                                         {/*
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     if (product.product_stores[key].wholesale_unit_profit <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2336,7 +2336,7 @@ function ProductIndex(props) {
                                                                     } else {
                                                                         return (<b>{product.product_stores[key].wholesale_unit_profit?.toFixed(2)}</b>);
                                                                     }
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].wholesale_unit_profit?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
 
@@ -2345,7 +2345,7 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     if (product.product_stores[key].wholesale_unit_profit_perc <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2363,7 +2363,7 @@ function ProductIndex(props) {
                                                                     } else {
                                                                         return (<b>{product.product_stores[key].wholesale_unit_profit_perc?.toFixed(2) + "%"}</b>);
                                                                     }
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].wholesale_unit_profit_perc?.toFixed(2) + "%"}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
 
@@ -2372,7 +2372,7 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     if (product.product_stores[key].retail_unit_profit <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2390,7 +2390,7 @@ function ProductIndex(props) {
                                                                     } else {
                                                                         return (<b>{product.product_stores[key].retail_unit_profit?.toFixed(2)}</b>);
                                                                     }
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].retail_unit_profit.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
 
@@ -2399,7 +2399,7 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     if (product.product_stores[key].retail_unit_profit_perc <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2417,7 +2417,7 @@ function ProductIndex(props) {
                                                                     } else {
                                                                         return (<b>{product.product_stores[key].retail_unit_profit_perc?.toFixed(2) + "%"}</b>);
                                                                     }
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].retail_unit_profit_perc?.toFixed(2) + "%"}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
 
@@ -2447,9 +2447,9 @@ function ProductIndex(props) {
 
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_count}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2457,9 +2457,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2467,9 +2467,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_quantity}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2477,9 +2477,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_profit}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_profit}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2487,9 +2487,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_loss}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_loss}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2497,9 +2497,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return_count}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2507,9 +2507,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2517,9 +2517,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return_quantity}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2527,9 +2527,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return_profit}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return_profit}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2537,9 +2537,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].sales_return_loss}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].sales_return_loss}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2547,9 +2547,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_count}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2557,9 +2557,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2567,9 +2567,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_quantity}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2577,9 +2577,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_return_count}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_return_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2587,9 +2587,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_return}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_return}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2597,9 +2597,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].purchase_return_quantity}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_return_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2607,9 +2607,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].quotation_count}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].quotation_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2617,9 +2617,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].quotation}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].quotation}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2627,9 +2627,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].quotation_quantity}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].quotation_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2637,9 +2637,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].delivery_note_count}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].delivery_note_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""
@@ -2647,9 +2647,9 @@ function ProductIndex(props) {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (<b>{product.product_stores[key].delivery_note_quantity}</b>);
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].delivery_note_quantiy}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                 }
                                                                 return ""

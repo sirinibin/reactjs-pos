@@ -1,7 +1,6 @@
 import Dashboard from './Dashboard.js';
 import Login from './user/login.js';
 import { WebSocketProvider } from "./utils/WebSocketContext.js";
-import Cookies from "universal-cookie";
 import {
   BrowserRouter as Router,
   Switch,
@@ -9,13 +8,11 @@ import {
 } from "react-router-dom";
 //import { Redirect } from 'react-router-dom'
 
-//import Cookies from 'universal-cookie';
 
 
 function App() {
-  const cookies = new Cookies();
 
-  let userId = cookies.get("user_id") ? cookies.get("user_id") : "guest";
+  let userId = localStorage.getItem("user_id") ? localStorage.getItem("user_id") : "guest";
 
 
 

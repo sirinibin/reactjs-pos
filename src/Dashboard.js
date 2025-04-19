@@ -43,7 +43,6 @@ import SignatureIndex from './signature/index.js';
 import Footer from './Footer';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import Cookies from 'universal-cookie';
 import Login from './user/login.js';
 import { Redirect } from 'react-router-dom'
 import Toast from 'react-bootstrap/Toast'
@@ -55,16 +54,31 @@ function Dashboard() {
 
     const [isSidebarOpen, SetSidebarOpen] = useState("");
 
-    const cookies = new Cookies();
 
-    let at = cookies.get("access_token");
+    let at = localStorage.getItem("access_token")
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             window.location = "/";
         }
     });
+
+    useEffect(() => {
+        const handleStorageChange = (event) => {
+            console.log("event:", event);
+            if (event.key === "store_id" || event.key === "access_token") {
+                console.log("Store info changed in another tab, reloading...");
+                window.location.reload(); // Refresh this tab
+            }
+        };
+
+        window.addEventListener("storage", handleStorageChange);
+
+        return () => {
+            window.removeEventListener("storage", handleStorageChange);
+        };
+    }, []);
 
     function handleToggle() {
         if (isSidebarOpen === "collapsed") {

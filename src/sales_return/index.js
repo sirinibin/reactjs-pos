@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import SalesReturnCreate from "./create.js";
 import SalesReturnView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -49,7 +49,7 @@ const TimeAgo = ({ date }) => {
 function SalesReturnIndex(props) {
     const { lastMessage } = useContext(WebSocketContext);
     let [statsOpen, setStatsOpen] = useState(false);
-    const cookies = useMemo(() => new Cookies(), []);
+
 
     let [totalSalesReturn, setTotalSalesReturn] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
@@ -106,8 +106,8 @@ function SalesReturnIndex(props) {
 
     useEffect(() => {
         list();
-        if (cookies.get("store_id")) {
-            getStore(cookies.get("store_id"));
+        if (localStorage.getItem("store_id")) {
+            getStore(localStorage.getItem("store_id"));
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -127,8 +127,8 @@ function SalesReturnIndex(props) {
         }
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -139,7 +139,7 @@ function SalesReturnIndex(props) {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -203,7 +203,7 @@ function SalesReturnIndex(props) {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
@@ -601,14 +601,14 @@ function SalesReturnIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,date,total,net_total,discount_percent,discount,products,customer_name,created_at,vat_price,loss,net_profit";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -716,8 +716,8 @@ function SalesReturnIndex(props) {
         };
 
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -730,7 +730,7 @@ function SalesReturnIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -765,7 +765,7 @@ function SalesReturnIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -874,13 +874,13 @@ function SalesReturnIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,created_by_name,customer_name,status,created_at,net_profit,net_loss,cash_discount,order_code,order_id,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount,store_id";
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         if (props.order) {
@@ -958,7 +958,7 @@ function SalesReturnIndex(props) {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [sortSalesReturn, sortField, page, pageSize, statsOpen, cookies, searchParams, props.order]);
+    }, [sortSalesReturn, sortField, page, pageSize, statsOpen, searchParams, props.order]);
 
     useEffect(() => {
         if (statsOpen) {
@@ -1624,7 +1624,7 @@ function SalesReturnIndex(props) {
                                                 </th>
 
 
-                                                {cookies.get('admin') === "true" ? <th>
+                                                {localStorage.getItem("admin") === "true" ? <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1643,7 +1643,7 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th> : ""}
-                                                {cookies.get('admin') === "true" ? <th>
+                                                {localStorage.getItem("admin") === "true" ? <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1927,7 +1927,7 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                {cookies.get('admin') === "true" ? <th>
+                                                {localStorage.getItem("admin") === "true" ? <th>
                                                     <input
                                                         type="text"
                                                         id="net_profit"
@@ -1937,7 +1937,7 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th> : ""}
-                                                {cookies.get('admin') === "true" ? <th>
+                                                {localStorage.getItem("admin") === "true" ? <th>
                                                     <input
                                                         type="text"
                                                         id="net_loss"
@@ -2162,8 +2162,8 @@ function SalesReturnIndex(props) {
 
                                                         </td>
                                                         <td>{trimTo2Decimals(salesreturn.cash_discount)}</td>
-                                                        {cookies.get('admin') === "true" ? <td> <Amount amount={trimTo2Decimals(salesreturn.net_profit)} /> </td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td> <Amount amount={trimTo2Decimals(salesreturn.net_loss)} />  </td> : ""}
+                                                        {localStorage.getItem("admin") === "true" ? <td> <Amount amount={trimTo2Decimals(salesreturn.net_profit)} /> </td> : ""}
+                                                        {localStorage.getItem("admin") === "true" ? <td> <Amount amount={trimTo2Decimals(salesreturn.net_loss)} />  </td> : ""}
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.created_by_name}</td>
 
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >

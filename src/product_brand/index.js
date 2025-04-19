@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import ProductBrandCreate from "./create.js";
 import ProductBrandView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -11,7 +11,7 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function ProductBrandIndex(props) {
 
-    const cookies = new Cookies();
+
 
     const selectedDate = new Date();
 
@@ -113,15 +113,15 @@ function ProductBrandIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,name,created_at";
 
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();

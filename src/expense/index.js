@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import ExpenseCreate from "./create.js";
 import ExpenseView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -13,7 +13,7 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function ExpenseIndex(props) {
 
-    const cookies = new Cookies();
+
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
@@ -88,8 +88,8 @@ function ExpenseIndex(props) {
             name: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -101,7 +101,7 @@ function ExpenseIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -136,7 +136,7 @@ function ExpenseIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -241,14 +241,14 @@ function ExpenseIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,date,amount,description,category_name,created_by_name,created_at";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();

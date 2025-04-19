@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, forwardRef, useContext, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useContext, useCallback } from "react";
 import OrderCreate from "./create.js";
 import OrderView from "./view.js";
 
@@ -7,7 +7,7 @@ import SalesReturnIndex from "./../sales_return/index.js";
 import SalesReturnCreate from "./../sales_return/create.js";
 
 
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -54,7 +54,7 @@ const TimeAgo = ({ date }) => {
 const OrderIndex = forwardRef((props, ref) => {
     const { lastMessage } = useContext(WebSocketContext);
 
-    const cookies = useMemo(() => new Cookies(), []);
+
 
 
     let [allOrders, setAllOrders] = useState([]);
@@ -437,14 +437,14 @@ const OrderIndex = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,customer_name,created_at,vat_price,vat_percent,customer_id,customer.id,customer.vat_no";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -632,8 +632,8 @@ const OrderIndex = forwardRef((props, ref) => {
 
     useEffect(() => {
         list();
-        if (cookies.get("store_id")) {
-            getStore(cookies.get("store_id"));
+        if (localStorage.getItem("store_id")) {
+            getStore(localStorage.getItem("store_id"));
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -665,7 +665,7 @@ const OrderIndex = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
@@ -706,8 +706,8 @@ const OrderIndex = forwardRef((props, ref) => {
             query: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -720,7 +720,7 @@ const OrderIndex = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -755,7 +755,7 @@ const OrderIndex = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -873,14 +873,14 @@ const OrderIndex = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,return_count,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -956,7 +956,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [sortOrder, sortField, page, pageSize, statsOpen, cookies, searchParams]);
+    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams]);
 
 
     const handleSummaryToggle = (isOpen) => {
@@ -1099,8 +1099,8 @@ const OrderIndex = forwardRef((props, ref) => {
         }
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -1111,7 +1111,7 @@ const OrderIndex = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -1659,7 +1659,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>*/}
-                                                {cookies.get('admin') === "true" ? <th>
+                                                {localStorage.getItem("admin") === "true" ? <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1678,7 +1678,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th> : ""}
-                                                {cookies.get('admin') === "true" ? <th>
+                                                {localStorage.getItem("admin") === "true" ? <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -2013,7 +2013,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th>*/}
-                                                {cookies.get('admin') === "true" ? <th>
+                                                {localStorage.getItem("admin") === "true" ? <th>
                                                     <input
                                                         type="text"
                                                         id="net_profit"
@@ -2023,7 +2023,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th> : ""}
-                                                {cookies.get('admin') === "true" ? <th>
+                                                {localStorage.getItem("admin") === "true" ? <th>
                                                     <input
                                                         type="text"
                                                         id="net_loss"
@@ -2299,8 +2299,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td><Amount amount={trimTo2Decimals(order.cash_discount)} /> </td>
                                                         <td>{trimTo2Decimals(order.discount)} </td>
                                                         {/*<td>{trimTo2Decimals(order.discount_percent)} %</td>*/}
-                                                        {cookies.get('admin') === "true" ? <td><Amount amount={trimTo2Decimals(order.net_profit)} /> </td> : ""}
-                                                        {cookies.get('admin') === "true" ? <td><Amount amount={trimTo2Decimals(order.net_loss)} />  </td> : ""}
+                                                        {localStorage.getItem("admin") === "true" ? <td><Amount amount={trimTo2Decimals(order.net_profit)} /> </td> : ""}
+                                                        {localStorage.getItem("admin") === "true" ? <td><Amount amount={trimTo2Decimals(order.net_loss)} />  </td> : ""}
 
                                                         <td>
 

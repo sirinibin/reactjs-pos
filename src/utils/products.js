@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle, useMemo, useCallback } from "react";
-import Cookies from "universal-cookie";
+
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
@@ -90,7 +90,7 @@ const Products = forwardRef((props, ref) => {
 
     const countryOptions = useMemo(() => countryList().getData(), [])
 
-    const cookies = useMemo(() => new Cookies(), []);
+
 
     // const selectedDate = new Date();
 
@@ -148,8 +148,8 @@ const Products = forwardRef((props, ref) => {
             name: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -161,7 +161,7 @@ const Products = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -187,8 +187,8 @@ const Products = forwardRef((props, ref) => {
             name: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -200,7 +200,7 @@ const Products = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -265,7 +265,7 @@ const Products = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         /*let Select =
@@ -273,9 +273,9 @@ const Products = forwardRef((props, ref) => {
         */
         let Select = "";
 
-        if (cookies.get("store_id")) {
+        if (localStorage.getItem("store_id")) {
             // Select =
-            //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + cookies.get("store_id") + ".stock,product_stores." + cookies.get("store_id") + ".purchase_unit_price,product_stores." + cookies.get("store_id") + ".wholesale_unit_price,product_stores." + cookies.get("store_id") + ".retail_unit_price,product_stores." + cookies.get("store_id") + ".store_id";
+            //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + localStorage.getItem("store_id") + ".stock,product_stores." + localStorage.getItem("store_id") + ".purchase_unit_price,product_stores." + localStorage.getItem("store_id") + ".wholesale_unit_price,product_stores." + localStorage.getItem("store_id") + ".retail_unit_price,product_stores." + localStorage.getItem("store_id") + ".store_id";
             Select =
                 "select=id,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
 
@@ -289,8 +289,8 @@ const Products = forwardRef((props, ref) => {
         }
 
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -440,8 +440,8 @@ const Products = forwardRef((props, ref) => {
             search_text: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -454,11 +454,11 @@ const Products = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
-        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${cookies.get('store_id')}.purchase_unit_price,product_stores.${cookies.get('store_id')}.retail_unit_price,product_stores.${cookies.get('store_id')}.stock`;
+        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
         setIsProductsLoading(true);
 
         let result = await fetch(
@@ -480,7 +480,7 @@ const Products = forwardRef((props, ref) => {
         setProductOptions(products);
         setIsProductsLoading(false);
 
-    }, [cookies]);
+    }, []);
 
 
     const SalesHistoryRef = useRef();
@@ -2250,11 +2250,11 @@ const Products = forwardRef((props, ref) => {
                                                                     {/*<td>{product.rack}</td>*/}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{product.product_stores[key].purchase_unit_price?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].purchase_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -2262,9 +2262,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].wholesale_unit_price?.toFixed(2)}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].wholesale_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -2272,10 +2272,10 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].retail_unit_price?.toFixed(2)}</b>);
 
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].retail_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -2283,9 +2283,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].stock}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].stock}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -2294,7 +2294,7 @@ const Products = forwardRef((props, ref) => {
                                                                     {/*
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     if (product.product_stores[key].wholesale_unit_profit <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2312,7 +2312,7 @@ const Products = forwardRef((props, ref) => {
                                                                     } else {
                                                                         return (<b>{product.product_stores[key].wholesale_unit_profit?.toFixed(2)}</b>);
                                                                     }
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].wholesale_unit_profit?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
 
@@ -2321,7 +2321,7 @@ const Products = forwardRef((props, ref) => {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     if (product.product_stores[key].wholesale_unit_profit_perc <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2339,7 +2339,7 @@ const Products = forwardRef((props, ref) => {
                                                                     } else {
                                                                         return (<b>{product.product_stores[key].wholesale_unit_profit_perc?.toFixed(2) + "%"}</b>);
                                                                     }
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].wholesale_unit_profit_perc?.toFixed(2) + "%"}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
 
@@ -2348,7 +2348,7 @@ const Products = forwardRef((props, ref) => {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     if (product.product_stores[key].retail_unit_profit <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2366,7 +2366,7 @@ const Products = forwardRef((props, ref) => {
                                                                     } else {
                                                                         return (<b>{product.product_stores[key].retail_unit_profit?.toFixed(2)}</b>);
                                                                     }
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].retail_unit_profit.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
 
@@ -2375,7 +2375,7 @@ const Products = forwardRef((props, ref) => {
                                                         </td>
                                                         <td>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     if (product.product_stores[key].retail_unit_profit_perc <= 0) {
                                                                         return (
                                                                             <OverlayTrigger
@@ -2393,7 +2393,7 @@ const Products = forwardRef((props, ref) => {
                                                                     } else {
                                                                         return (<b>{product.product_stores[key].retail_unit_profit_perc?.toFixed(2) + "%"}</b>);
                                                                     }
-                                                                } else if (!cookies.get("store_id")) {
+                                                                } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].retail_unit_profit_perc?.toFixed(2) + "%"}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
 
@@ -2423,9 +2423,9 @@ const Products = forwardRef((props, ref) => {
 
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales_count}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2433,9 +2433,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2443,9 +2443,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales_quantity}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2453,9 +2453,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales_profit}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales_profit}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2463,9 +2463,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales_loss}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales_loss}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2473,9 +2473,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales_return_count}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales_return_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2483,9 +2483,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales_return}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales_return}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2493,9 +2493,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales_return_quantity}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales_return_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2503,9 +2503,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales_return_profit}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales_return_profit}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2513,9 +2513,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].sales_return_loss}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].sales_return_loss}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2523,9 +2523,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].purchase_count}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].purchase_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2533,9 +2533,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].purchase}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].purchase}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2543,9 +2543,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].purchase_quantity}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].purchase_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2553,9 +2553,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].purchase_return_count}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].purchase_return_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2563,9 +2563,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].purchase_return}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].purchase_return}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2573,9 +2573,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].purchase_return_quantity}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].purchase_return_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2583,9 +2583,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].quotation_count}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].quotation_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2593,9 +2593,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].quotation}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].quotation}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2603,9 +2603,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].quotation_quantity}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].quotation_quantity}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2613,9 +2613,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].delivery_note_count}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].delivery_note_count}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""
@@ -2623,9 +2623,9 @@ const Products = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td>
                                                                         {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && product.product_stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (<b>{product.product_stores[key].delivery_note_quantity}</b>);
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{product.product_stores[key].delivery_note_quantiy}</b> {"@" + product.product_stores[key].sales_name}</li>);
                                                                             }
                                                                             return ""

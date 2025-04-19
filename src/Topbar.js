@@ -1,12 +1,8 @@
 import React from 'react';
-import Cookies from 'universal-cookie';
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 
 function Topbar(props) {
-
-    const cookies = new Cookies();
-
     function onTrigger(event) {
         props.parentCallback();
         event.preventDefault();
@@ -14,13 +10,13 @@ function Topbar(props) {
 
     function logOut(event) {
         event.preventDefault();
-        cookies.remove("access_token", { path: '/' });
-        cookies.remove("user_id", { path: '/' });
-        cookies.remove("user_photo", { path: '/' });
-        cookies.remove("user_name", { path: '/' });
-        cookies.remove("store_name", { path: '/' });
-        cookies.remove("store_id", { path: '/' });
-        cookies.remove("admin", { path: '/' });
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("user_id");
+        localStorage.removeItem("user_photo");
+        localStorage.removeItem("user_name");
+        localStorage.removeItem("store_name");
+        localStorage.removeItem("store_id");
+        localStorage.removeItem("admin");
         window.location = "/";
     }
 
@@ -31,7 +27,7 @@ function Topbar(props) {
 
 
         <div className="navbar-collapse collapse">
-            {cookies.get('branch_name') ? "Branch: " + cookies.get('branch_name') : ""}
+            {localStorage.getItem("branch_name") ? "Branch: " + localStorage.getItem("branch_name") : ""}
 
 
             <ul className="navbar-nav navbar-align">
@@ -48,7 +44,7 @@ function Topbar(props) {
 
                     <DropdownButton
                         id="dropdown-basic-button"
-                        title={cookies.get('user_name')}
+                        title={localStorage.getItem("user_name")}
                         drop={"down"}
                     >
                         <Dropdown.Item onClick={(e) => {
@@ -61,14 +57,14 @@ function Topbar(props) {
 
                         data-bs-toggle="dropdown"
                     >
-                        {cookies.get('user_photo') ?
+                        {?
                             <img
-                                src={cookies.get('user_photo')}
+                                src={}
                                 className="avatar img-fluid rounded me-1"
                                 alt="Charles Hall"
                             />
                             : null}
-                        <span className="text-dark">{cookies.get('user_name')}</span>
+                        <span className="text-dark">{      localStorage.getItem('user_name')}</span>
                     </a>*/}
 
 

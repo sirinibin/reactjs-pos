@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import SalesReturnPaymentCreate from "./create.js";
 import SalesReturnPaymentView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -13,7 +13,7 @@ import { confirm } from 'react-bootstrap-confirmation';
 
 function SalesReturnPaymentIndex(props) {
 
-    const cookies = new Cookies();
+
 
     const selectedDate = new Date();
 
@@ -82,7 +82,7 @@ function SalesReturnPaymentIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -182,13 +182,13 @@ function SalesReturnPaymentIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,date,amount,method,store_name,sales_return_code,sales_return_id,order_id,order_code,created_by_name,created_at,deleted";
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         if (props.salesReturn) {
@@ -336,13 +336,13 @@ function SalesReturnPaymentIndex(props) {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 

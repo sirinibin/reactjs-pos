@@ -1,6 +1,6 @@
 import React, { useState, forwardRef, useImperativeHandle } from "react";
 import { Modal, Table, Button } from 'react-bootstrap';
-import Cookies from "universal-cookie";
+
 
 const UserView = forwardRef((props, ref) => {
 
@@ -14,7 +14,7 @@ const UserView = forwardRef((props, ref) => {
     }));
 
     let [model, setModel] = useState({});
-    const cookies = new Cookies();
+
 
     const [show, SetShow] = useState(false);
 
@@ -28,7 +28,7 @@ const UserView = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 

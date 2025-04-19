@@ -1,10 +1,10 @@
-import React, { useState, useRef, forwardRef, useEffect, useImperativeHandle, useMemo } from "react";
+import React, { useState, useRef, forwardRef, useEffect, useImperativeHandle } from "react";
 import { Button, Spinner, Modal } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import "react-datepicker/dist/react-datepicker.css";
 import DeliveryNoteCreate from "./../delivery_note/create.js";
 import DeliveryNoteView from "./../delivery_note/view.js";
-import Cookies from "universal-cookie";
+
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import ReactPaginate from "react-paginate";
@@ -47,7 +47,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
         },
     }));
 
-    const cookies = useMemo(() => new Cookies(), []);
+
 
 
     //Date filter
@@ -128,8 +128,8 @@ const DeliveryNotes = forwardRef((props, ref) => {
             query: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -141,7 +141,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -176,7 +176,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -285,13 +285,13 @@ const DeliveryNotes = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,date,created_by_name,customer_name,created_at";
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();

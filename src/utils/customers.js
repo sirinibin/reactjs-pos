@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import CustomerCreate from "./../customer/create.js";
 import CustomerView from "./../customer/view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -35,7 +35,7 @@ const Customers = forwardRef((props, ref) => {
         },
     }));
 
-    const cookies = useMemo(() => new Cookies(), []);
+
 
 
     const selectedDate = new Date();
@@ -105,7 +105,7 @@ const Customers = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -189,14 +189,14 @@ const Customers = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,name,email,phone,name_in_arabic,phone_in_arabic,vat_no,created_by_name,created_at,stores";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -1436,11 +1436,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.email}</td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1448,11 +1448,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1460,11 +1460,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_paid_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_paid_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1472,11 +1472,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_balance_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_balance_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1484,11 +1484,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_profit?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_profit?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1496,11 +1496,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_loss?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_loss?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1508,11 +1508,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_paid_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1520,11 +1520,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_not_paid_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_not_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1532,11 +1532,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_paid_partially_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_paid_partially_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1544,11 +1544,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_return_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1556,11 +1556,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_return_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1568,11 +1568,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_return_paid_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_paid_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1580,11 +1580,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_return_balance_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_balance_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1592,11 +1592,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_return_profit?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_profit?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1604,11 +1604,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_return_loss?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_loss?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1616,11 +1616,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_return_paid_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1628,11 +1628,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_return_not_paid_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_not_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1640,11 +1640,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].sales_return_paid_partially_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_paid_partially_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1652,11 +1652,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].quotation_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].quotation_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1664,11 +1664,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].quotation_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].quotation_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1676,11 +1676,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].quotation_profit?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].quotation_profit?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1688,11 +1688,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].quotation_loss?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].quotation_loss?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
@@ -1700,11 +1700,11 @@ const Customers = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {customer.stores && Object.keys(customer.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && customer.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{customer.stores[key].delivery_note_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].delivery_note_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
-import Cookies from "universal-cookie";
+
 import { Spinner } from "react-bootstrap";
 
 
@@ -49,7 +49,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
 
     //fields
     let [formData, setFormData] = useState({});
@@ -61,7 +61,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             window.location = "/";
         }
@@ -74,7 +74,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
         formData = {};
@@ -82,8 +82,8 @@ const ProductBrandCreate = forwardRef((props, ref) => {
 
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -138,8 +138,8 @@ const ProductBrandCreate = forwardRef((props, ref) => {
         if (formData.id) {
             endPoint = "/v1/product-brand/" + formData.id;
             method = "PUT";
-        } else if (cookies.get("store_id")) {
-            formData.store_id = cookies.get("store_id");
+        } else if (localStorage.getItem("store_id")) {
+            formData.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -148,7 +148,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -156,8 +156,8 @@ const ProductBrandCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 

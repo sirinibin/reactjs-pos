@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useMemo, useContext, useCallback } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import PurchaseCreate from "./create.js";
 import PurchaseView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -25,7 +25,7 @@ const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 function PurchaseIndex(props) {
     const { lastMessage } = useContext(WebSocketContext);
-    const cookies = useMemo(() => new Cookies(), []);
+
 
     let [totalPurchase, setTotalPurchase] = useState(0.00);
     let [vatPrice, setVatPrice] = useState(0.00);
@@ -291,14 +291,14 @@ function PurchaseIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,vendor_id,vendor.id,vendor.vat_no,vendor_invoice_no,date,total,net_total,shipping_handling_fees,discount_percent,discount,products,vendor_name,created_at,updated_at,vat_price";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -411,8 +411,8 @@ function PurchaseIndex(props) {
             query: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -424,7 +424,7 @@ function PurchaseIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -456,7 +456,7 @@ function PurchaseIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -598,13 +598,13 @@ function PurchaseIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,date,net_total,return_count,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();
@@ -677,7 +677,7 @@ function PurchaseIndex(props) {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [sortOrder, sortField, page, pageSize, statsOpen, cookies, searchParams]);
+    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams]);
 
     const handleSummaryToggle = (isOpen) => {
         statsOpen = isOpen
@@ -1250,7 +1250,7 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                {cookies.get('admin') === "true" ?
+                                                {localStorage.getItem("admin") === "true" ?
                                                     <th>
                                                         <b
                                                             style={{
@@ -1271,7 +1271,7 @@ function PurchaseIndex(props) {
                                                         </b>
                                                     </th>
                                                     : ""}
-                                                {cookies.get('admin') === "true" ?
+                                                {localStorage.getItem("admin") === "true" ?
                                                     <th>
                                                         <b
                                                             style={{
@@ -1592,7 +1592,7 @@ function PurchaseIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                {cookies.get('admin') === "true" ?
+                                                {localStorage.getItem("admin") === "true" ?
                                                     <th>
                                                         <input
                                                             type="text"
@@ -1604,7 +1604,7 @@ function PurchaseIndex(props) {
                                                         />
                                                     </th>
                                                     : ""}
-                                                {cookies.get('admin') === "true" ?
+                                                {localStorage.getItem("admin") === "true" ?
                                                     <th>
                                                         <input
                                                             type="text"
@@ -1888,13 +1888,13 @@ function PurchaseIndex(props) {
                                                                 {purchase.return_count}
                                                             </Button>
                                                         </td>
-                                                        {cookies.get('admin') === "true" ?
+                                                        {localStorage.getItem("admin") === "true" ?
                                                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                 <Amount amount={purchase.net_retail_profit} />
 
                                                             </td>
                                                             : ""}
-                                                        {cookies.get('admin') === "true" ?
+                                                        {localStorage.getItem("admin") === "true" ?
                                                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                 <Amount amount={purchase.net_wholesale_profit} />
 

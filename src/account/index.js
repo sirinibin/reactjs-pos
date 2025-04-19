@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import Cookies from "universal-cookie";
+
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -10,7 +10,7 @@ import Amount from "../utils/amount.js";
 
 function AccountIndex(props) {
 
-    const cookies = new Cookies();
+
 
 
     //list
@@ -159,14 +159,14 @@ function AccountIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,store_id,name,type,phone,vat_no,number,search_label,open,balance,debit_total,credit_total,created_at,updated_at,reference_model,debit_or_credit_balance";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         const d = new Date();

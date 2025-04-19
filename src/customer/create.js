@@ -1,6 +1,6 @@
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo } from "react";
 import { Modal, Button } from "react-bootstrap";
-import Cookies from "universal-cookie";
+
 import { Spinner } from "react-bootstrap";
 import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
@@ -21,8 +21,8 @@ const CustomerCreate = forwardRef((props, ref) => {
             }
             SetShow(true);
 
-            if (cookies.get("store_id")) {
-                getStore(cookies.get("store_id"));
+            if (localStorage.getItem("store_id")) {
+                getStore(localStorage.getItem("store_id"));
             }
         },
 
@@ -36,7 +36,7 @@ const CustomerCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
@@ -91,7 +91,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
 
     //fields
     let [formData, setFormData] = useState({
@@ -105,7 +105,7 @@ const CustomerCreate = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             window.location = "/";
         }
@@ -125,13 +125,13 @@ const CustomerCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -324,8 +324,8 @@ const CustomerCreate = forwardRef((props, ref) => {
         if (formData.id) {
             endPoint = "/v1/customer/" + formData.id;
             method = "PUT";
-        } else if (cookies.get("store_id")) {
-            formData.store_id = cookies.get("store_id");
+        } else if (localStorage.getItem("store_id")) {
+            formData.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -334,7 +334,7 @@ const CustomerCreate = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -342,8 +342,8 @@ const CustomerCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 

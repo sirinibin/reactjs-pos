@@ -1,6 +1,6 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
-import Cookies from "universal-cookie";
+
 import NumberFormat from "react-number-format";
 import OrderPreview from './preview.js';
 import OrderPrint from './print.js';
@@ -26,7 +26,7 @@ const OrderView = forwardRef((props, ref) => {
 
 
     let [model, setModel] = useState({});
-    const cookies = new Cookies();
+
 
 
 
@@ -40,13 +40,13 @@ const OrderView = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,amount,store_name,order_code,order_id,created_by_name,created_at";
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         searchParams["order_id"] = order_id;
         setSearchParams(searchParams);
@@ -93,13 +93,13 @@ const OrderView = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,amount,method,store_name,order_code,order_id,created_by_name,created_at";
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         searchParams["order_id"] = order_id;
         setSearchParams(searchParams);
@@ -144,13 +144,13 @@ const OrderView = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -263,10 +263,10 @@ const OrderView = forwardRef((props, ref) => {
                                 <th>Disc. %</th>
                                 <th>Price</th>
                                 <th>Qty Returned</th>
-                                {cookies.get('admin') === "true" ? <th>Purchase Unit Price</th> : ""}
-                                {cookies.get('admin') === "true" ? <th>Purchase Price</th> : ""}
-                                {cookies.get('admin') === "true" ? <th>Profit</th> : ""}
-                                {cookies.get('admin') === "true" ? <th>Loss</th> : ""}
+                                {localStorage.getItem("admin") === "true" ? <th>Purchase Unit Price</th> : ""}
+                                {localStorage.getItem("admin") === "true" ? <th>Purchase Price</th> : ""}
+                                {localStorage.getItem("admin") === "true" ? <th>Profit</th> : ""}
+                                {localStorage.getItem("admin") === "true" ? <th>Loss</th> : ""}
                             </tr>
                         </thead>
                         <tbody>
@@ -313,7 +313,7 @@ const OrderView = forwardRef((props, ref) => {
                                         />
                                     </td>
                                     <td>{product.quantity_returned}  {product.unit ? product.unit : ""} </td>
-                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(product.purchase_unit_price)}
                                             displayType={"text"}
@@ -322,7 +322,7 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(product.purchase_unit_price * product.quantity)}
                                             displayType={"text"}
@@ -331,7 +331,7 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(product.profit)}
                                             displayType={"text"}
@@ -340,7 +340,7 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                    {cookies.get('admin') === "true" ? <td className="text-end">
+                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(product.loss)}
                                             displayType={"text"}
@@ -363,7 +363,7 @@ const OrderView = forwardRef((props, ref) => {
                                     /> : "0.00 "}
                                 </td>
                                 <td colSpan="3" ></td>
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(model.profit)}
@@ -373,7 +373,7 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                {cookies.get('admin') === "true" ? <td className="text-end">
+                                {localStorage.getItem("admin") === "true" ? <td className="text-end">
                                     <NumberFormat
                                         value={trimTo2Decimals(model.loss)}
                                         displayType={"text"}
@@ -414,7 +414,7 @@ const OrderView = forwardRef((props, ref) => {
                                     /> : "0.00 "}
                                 </td>
                                 <td colSpan="3"></td>
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(model.discount - model.return_discount)}
@@ -424,7 +424,7 @@ const OrderView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td> : ""}
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">
                                         0.00
                                     </td> : ""}
@@ -441,10 +441,10 @@ const OrderView = forwardRef((props, ref) => {
                                     />
                                 </td>
                                 <td colSpan="3"></td>
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">0.00 </td>
                                     : ""}
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <td className="text-end">0.00</td>
                                     : ""}
                             </tr>
@@ -473,10 +473,10 @@ const OrderView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <td colSpan="8"></td>
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <th colSpan="3" className="text-end">Net Profit / Loss</th>
                                     : ""}
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <th className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(model.net_profit)}
@@ -487,7 +487,7 @@ const OrderView = forwardRef((props, ref) => {
                                         />
                                     </th>
                                     : ""}
-                                {cookies.get('admin') === "true" ?
+                                {localStorage.getItem("admin") === "true" ?
                                     <th className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(model.net_loss)}
@@ -600,8 +600,8 @@ const OrderView = forwardRef((props, ref) => {
                         <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
-                            {cookies.get('admin') === "true" ? <th>Profit:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.profit} </td> : ""}
-                            {cookies.get('admin') === "true" ? <th>Loss:</th> : ""}{cookies.get('admin') === "true" ? <td> {model.loss} </td> : ""}
+                            {localStorage.getItem("admin") === "true" ? <th>Profit:</th> : ""}{localStorage.getItem("admin") === "true" ? <td> {model.profit} </td> : ""}
+                            {localStorage.getItem("admin") === "true" ? <th>Loss:</th> : ""}{localStorage.getItem("admin") === "true" ? <td> {model.loss} </td> : ""}
                         </tr>
                         <tr>
                             {salesCashDiscountList.length > 0 ?

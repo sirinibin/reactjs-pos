@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useContext, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useRef, useContext, useCallback } from "react";
 import UserCreate from "./create.js";
 import UserView from "./view.js";
-import Cookies from "universal-cookie";
+
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -14,11 +14,6 @@ import { formatDistanceToNowStrict } from "date-fns";
 import { enUS } from "date-fns/locale";
 function UserIndex(props) {
     const { lastMessage } = useContext(WebSocketContext);
-
-    //const cookies = new Cookies();
-    // Memoize cookies to ensure it remains stable across renders
-    const cookies = useMemo(() => new Cookies(), []);
-
     const selectedDate = new Date();
 
     //list
@@ -98,7 +93,7 @@ function UserIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -181,7 +176,7 @@ function UserIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
@@ -239,7 +234,7 @@ function UserIndex(props) {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [cookies, page, pageSize, searchParams, sortField, sortUser]);
+    }, [page, pageSize, searchParams, sortField, sortUser]);
 
     useEffect(() => {
         if (lastMessage) {

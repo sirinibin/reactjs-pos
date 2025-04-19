@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle, useMemo } from "react";
+import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import VendorCreate from "./../vendor/create.js";
 import VendorView from "./../vendor/view.js";
-import Cookies from "universal-cookie";
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -34,8 +33,6 @@ const Vendors = forwardRef((props, ref) => {
             SetShow(true);
         },
     }));
-
-    const cookies = useMemo(() => new Cookies(), []);
 
     const selectedDate = new Date();
 
@@ -104,7 +101,7 @@ const Vendors = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -188,14 +185,14 @@ const Vendors = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
             "select=id,code,name,name_in_arabic,phone,phone_in_arabic,vat_no,created_by_name,created_at,stores";
 
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -1258,11 +1255,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1270,11 +1267,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1282,11 +1279,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_paid_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_paid_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1294,11 +1291,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_balance_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_balance_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1306,11 +1303,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_retail_profit?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_retail_profit?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1318,11 +1315,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_retail_loss?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_retail_loss?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1330,11 +1327,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_wholesale_profit?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_wholesale_profit?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1342,11 +1339,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_wholesale_loss?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_wholesale_loss?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1354,11 +1351,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_paid_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1366,11 +1363,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_not_paid_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_not_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1378,11 +1375,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_paid_partially_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_paid_partially_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1390,11 +1387,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_return_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_return_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1402,11 +1399,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_return_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_return_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1414,11 +1411,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_return_paid_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_return_paid_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1426,11 +1423,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_return_balance_amount?.toFixed(2)}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_return_balance_amount?.toFixed(2)}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1438,11 +1435,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_return_paid_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_return_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1450,11 +1447,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_return_not_paid_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_return_not_paid_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""
@@ -1462,11 +1459,11 @@ const Vendors = forwardRef((props, ref) => {
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {
-                                                                            if (cookies.get("store_id") && vendor.stores[key].store_id === cookies.get("store_id")) {
+                                                                            if (localStorage.getItem("store_id") && vendor.stores[key].store_id === localStorage.getItem("store_id")) {
                                                                                 return (
                                                                                     <b>{vendor.stores[key].purchase_return_paid_partially_count}</b>
                                                                                 );
-                                                                            } else if (!cookies.get("store_id")) {
+                                                                            } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{vendor.stores[key].purchase_return_paid_partially_count}</b> {"@" + vendor.stores[key].store_name}</li>);
                                                                             }
                                                                             return ""

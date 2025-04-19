@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
-import Cookies from "universal-cookie";
+
 import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
@@ -85,7 +85,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
-    const cookies = new Cookies();
+
 
     //fields
     let [formData, setFormData] = useState({
@@ -105,13 +105,13 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': cookies.get('access_token'),
+                'Authorization': localStorage.getItem('access_token'),
             },
         };
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
@@ -180,7 +180,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -195,7 +195,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     }
 
     useEffect(() => {
-        let at = cookies.get("access_token");
+        let at = localStorage.getItem("access_token");
         if (!at) {
             window.location = "/";
         }
@@ -228,8 +228,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             query: searchTerm,
         };
 
-        if (cookies.get("store_id")) {
-            params.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
         }
 
         var queryString = ObjectToSearchQueryParams(params);
@@ -241,7 +241,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
 
@@ -269,8 +269,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
         console.log("category_id:", formData.category_id);
 
-        if (cookies.get("store_id")) {
-            formData.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            formData.store_id = localStorage.getItem("store_id");
         }
 
 
@@ -287,7 +287,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -295,8 +295,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         console.log("formData:", formData);
 
         let searchParams = {};
-        if (cookies.get("store_id")) {
-            searchParams.store_id = cookies.get("store_id");
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
         }
 
         let queryParams = ObjectToSearchQueryParams(searchParams);
@@ -442,7 +442,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                 })}
                             </ul></div> : ""}
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        {!cookies.get('store_name') ? <div className="col-md-6">
+                        {!localStorage.getItem('store_name') ? <div className="col-md-6">
                             <label className="form-label">Store*</label>
 
                             <div className="input-group mb-3">

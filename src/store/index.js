@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import StoreCreate from "./create.js";
 import ZatcaConnect from "./zatca_connect.js";
 import StoreView from "./view.js";
-import Cookies from "universal-cookie";
+
 import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
@@ -31,24 +31,16 @@ const TimeAgo = ({ date }) => {
     return <span>{formatDistanceToNowStrict(new Date(date), { locale: shortLocale })} ago</span>;
 };
 
+
 function StoreIndex(props) {
-    const cookies = new Cookies();
+
 
     function selectStore(store) {
-        cookies.set('store_name', store.name, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
-        cookies.set('branch_name', store.branch_name, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
-        cookies.set('store_id', store.id, { path: '/', expires: new Date(Date.now() + (3600 * 1000 * 24 * 365)) });
+        localStorage.setItem("store_name", store.name);
+        localStorage.setItem("branch_name", store.branch_name);
+        localStorage.setItem("store_id", store.id);
         window.location = "/dashboard/stores";
     }
-
-    /*
-    function selectAllStore() {
-        cookies.remove('store_name', { path: '/' });
-        cookies.remove('store_id', { path: '/' });
-        cookies.remove('vat_percent', { path: '/' });
-        window.location = "/dashboard/stores";
-    }*/
-
 
     //list
     const [storeList, setStoreList] = useState([]);
@@ -103,7 +95,7 @@ function StoreIndex(props) {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
         };
         let Select =
@@ -214,7 +206,7 @@ function StoreIndex(props) {
             headers: {
                 'Accept': 'application/json',
                 "Content-Type": "application/json",
-                Authorization: cookies.get("access_token"),
+                Authorization: localStorage.getItem("access_token"),
             },
             body: JSON.stringify(formData),
         };
@@ -281,7 +273,7 @@ function StoreIndex(props) {
                         <h1 className="h3">Stores</h1>
                     </div>
 
-                    {cookies.get('user_role') === "Admin" ? <div className="col text-end">
+                    {localStorage.getItem('user_role') === "Admin" ? <div className="col text-end">
                         <Button
                             hide={true.toString()}
                             variant="primary"
@@ -565,7 +557,7 @@ function StoreIndex(props) {
                                                 storeList.map((store) => (
                                                     <tr key={store.id}>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {cookies.get('store_id') !== store.id ?
+                                                            {localStorage.getItem('store_id') !== store.id ?
                                                                 <Button className="btn btn-danger btn-sm" onClick={() => {
                                                                     selectStore(store);
                                                                 }}>
