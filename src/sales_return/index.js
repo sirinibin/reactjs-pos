@@ -1240,7 +1240,7 @@ function SalesReturnIndex(props) {
                         &nbsp;&nbsp;
 
 
-                        <div className="col text-end">
+                        {/*<div className="col text-end">
                             {props.order ? <Button
                                 hide={true.toString()}
                                 variant="primary"
@@ -1249,7 +1249,7 @@ function SalesReturnIndex(props) {
                             >
                                 <i className="bi bi-plus-lg"></i> Create
                             </Button> : ""}
-                        </div>
+                        </div>*/}
 
 
                         <Button
@@ -1400,7 +1400,7 @@ function SalesReturnIndex(props) {
                                                             sort("code");
                                                         }}
                                                     >
-                                                        ID
+                                                        Sales Return ID
                                                         {sortField === "code" && sortSalesReturn === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}

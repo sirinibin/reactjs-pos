@@ -167,15 +167,18 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 }
 
 
-                let selectedCustomers = [
-                    {
-                        id: formData.customer_id,
-                        name: formData.customer.name,
-                        search_label: formData.customer.search_label,
-                    }
-                ];
+                if (formData.customer_id) {
+                    let selectedCustomers = [
+                        {
+                            id: formData.customer_id,
+                            name: formData.customer.name,
+                            search_label: formData.customer.search_label,
+                        }
+                    ];
 
-                setSelectedCustomers([...selectedCustomers]);
+                    setSelectedCustomers([...selectedCustomers]);
+                }
+
 
 
 
@@ -1856,7 +1859,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
-                                                            <option value="customer_account">Customer Account</option>
+                                                            {formData.customer_id && <option value="customer_account">Customer Account</option>}
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
@@ -1880,7 +1883,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 <b>Total</b>
                                             </td>
                                             <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
-
+                                                {errors["total_payment"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["total_payment"]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td>
                                                 <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {trimTo2Decimals(balanceAmount)}</b>

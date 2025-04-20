@@ -656,6 +656,8 @@ const OrderIndex = forwardRef((props, ref) => {
     const [totalCashSales, setTotalCashSales] = useState(0.00);
     const [totalBankAccountSales, setTotalBankAccountSales] = useState(0.00);
     const [loss, setLoss] = useState(0.00);
+    const [returnCount, setReturnCount] = useState(0.00);
+    const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
 
     let [store, setStore] = useState({});
 
@@ -877,7 +879,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,return_count,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total";
+            "select=zatca.compliance_check_last_failed_at,zatca.reporting_passed,zatca.compliance_passed,zatca.reporting_passed_at,zatca.compliane_check_passed_at,zatca.reporting_last_failed_at,zatca.reporting_failed_count,zatca.compliance_check_failed_count,id,code,date,net_total,return_count,return_amount,cash_discount,total_payment_received,payments_count,payment_methods,balance_amount,discount_percent,discount,created_by_name,customer_name,status,payment_status,payment_method,created_at,loss,net_loss,net_profit,store_id,total";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -949,6 +951,8 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalUnPaidSales(data.meta.unpaid_sales);
                 setTotalCashSales(data.meta.cash_sales);
                 setTotalBankAccountSales(data.meta.bank_account_sales);
+                setReturnCount(data.meta.return_count);
+                setReturnPaidAmount(data.meta.return_amount);
 
             })
             .catch((error) => {
@@ -1245,6 +1249,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                     "Net Profit": netProfit,
                                     "Net Profit %": netProfit && totalSales ? ((netProfit / totalSales) * 100) : "",
                                     "Net Loss": loss,
+                                    "Return Count": returnCount,
+                                    "Return Paid Amount": returnPaidAmount,
                                 }}
                                 onToggle={handleSummaryToggle}
                             />
@@ -1708,11 +1714,30 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             sort("return_count");
                                                         }}
                                                     >
-                                                        Returns
+                                                        Return Count
                                                         {sortField === "return_count" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "return_count" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("return_amount");
+                                                        }}
+                                                    >
+                                                        Return Paid Amount
+                                                        {sortField === "return_amount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "return_amount" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
@@ -2044,6 +2069,16 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="return_amount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("return_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
 
                                                 <th>
                                                     <Typeahead
@@ -2311,6 +2346,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                                 {order.return_count}
                                                             </Button>
 
+                                                        </td>
+                                                        <td>
+                                                            <Button variant="link" onClick={() => {
+                                                                openOrderReturnsDialogue(order);
+                                                            }}>
+                                                                {order.return_amount}
+                                                            </Button>
                                                         </td>
 
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{order.created_by_name}</td>

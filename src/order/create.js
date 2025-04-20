@@ -6,7 +6,6 @@ import CustomerCreate from "./../customer/create.js";
 import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
 import SignatureCreate from "./../signature/create.js";
-
 import { Typeahead } from "react-bootstrap-typeahead";
 import NumberFormat from "react-number-format";
 import DatePicker from "react-datepicker";
@@ -238,13 +237,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 // let searchLabel = formData.customer_name;
 
-                let selectedCustomers = [
-                    {
-                        id: formData.customer_id,
-                        name: formData.customer_name,
-                        search_label: formData.customer.search_label,
-                    }
-                ];
+
 
                 /*
                 let selectedOrderPlacedByUsers = [
@@ -259,7 +252,17 @@ const OrderCreate = forwardRef((props, ref) => {
                 */
 
                 setSelectedStores([...selectedStores]);
-                setSelectedCustomers([...selectedCustomers]);
+                if (formData.customer_id) {
+                    let selectedCustomers = [
+                        {
+                            id: formData.customer_id,
+                            name: formData.customer_name,
+                            search_label: formData.customer.search_label,
+                        }
+                    ];
+                    setSelectedCustomers([...selectedCustomers]);
+                }
+
 
                 reCalculate();
                 setFormData({ ...formData });
@@ -1720,7 +1723,7 @@ function findDiscount() {
 
 
                         <div className="col-md-6" style={{ border: "solid 0px" }}>
-                            <label className="form-label">Customer*</label>
+                            <label className="form-label">Customer</label>
                             <Typeahead
                                 id="customer_id"
                                 labelKey="search_label"
@@ -1730,8 +1733,8 @@ function findDiscount() {
                                     errors.customer_id = "";
                                     setErrors(errors);
                                     if (selectedItems.length === 0) {
-                                        errors.customer_id = "Invalid Customer selected";
-                                        setErrors(errors);
+                                        // errors.customer_id = "Invalid Customer selected";
+                                        //setErrors(errors);
                                         formData.customer_id = "";
                                         setFormData({ ...formData });
                                         setSelectedCustomers([]);
@@ -1746,7 +1749,9 @@ function findDiscount() {
                                 selected={selectedCustomers}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
-                                    formData.customerName = searchTerm;
+                                    if (searchTerm) {
+                                        formData.customerName = searchTerm;
+                                    }
                                     suggestCustomers(searchTerm);
                                 }}
                             />
@@ -2237,7 +2242,7 @@ function findDiscount() {
                                                             reCalculate();
 
                                                             let stock = 0;
-                                                            if (selectedProducts[index].product_stores[formData.store_id]?.stock) {
+                                                            if (selectedProducts[index].product_stores && selectedProducts[index].product_stores[formData.store_id]?.stock) {
                                                                 stock = selectedProducts[index].product_stores[formData.store_id].stock;
                                                                 // stock = GetProductStockInStore(formData.store_id, selectedProducts[index].stores);
                                                             }
@@ -2883,7 +2888,7 @@ function findDiscount() {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
-                                                            <option value="customer_account">Customer Account</option>
+                                                            {formData.customer_id && <option value="customer_account">Customer Account</option>}
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
