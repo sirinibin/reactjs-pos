@@ -829,7 +829,7 @@ function PurchaseReturnIndex(props) {
                         {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllPurchaseReturns} >{fettingAllRecordsInProgress ? "Preparing.." : "Purchase Return Report"}</Button> : ""}
                         &nbsp;&nbsp;
 
-                        <div className="col text-end">
+                        {/*<div className="col text-end">
                             {props.purchase ? <Button
                                 hide={true.toString()}
                                 variant="primary"
@@ -838,7 +838,7 @@ function PurchaseReturnIndex(props) {
                             >
                                 <i className="bi bi-plus-lg"></i> Create
                             </Button> : ""}
-                        </div>
+                        </div>*/}
 
 
                         <Button
@@ -1581,7 +1581,7 @@ function PurchaseReturnIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.vendor_invoice_no}</td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <OverflowTooltip value={purchasereturn.vendor_name} />
+                                                            {purchasereturn.vendor_name && <OverflowTooltip value={purchasereturn.vendor_name} />}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.purchase_code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >

@@ -205,6 +205,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     purchase_code: purchaseReturn.purchase_code,
                     store_id: purchaseReturn.store_id,
                     vendor_id: purchaseReturn.vendor_id,
+                    vendor_name: purchaseReturn.vendor_name,
                     date_str: purchaseReturn.date,
                     // date: purchase.date,
                     vat_percent: purchaseReturn.vat_percent,
@@ -1697,7 +1698,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
-                                                            <option value="vendor_account">Vendor Account</option>
+                                                            {formData.vendor_name && <option value="vendor_account">Vendor Account</option>}
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
@@ -1721,7 +1722,11 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                 <b>Total</b>
                                             </td>
                                             <td><b style={{ marginLeft: "14px" }}>{totalPaymentAmount?.toFixed(2)}</b>
-
+                                                {errors["total_payment"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["total_payment"]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td>
                                                 <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {balanceAmount?.toFixed(2)}</b>

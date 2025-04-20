@@ -34,6 +34,8 @@ function PurchaseIndex(props) {
     let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
     let [netRetailProfit, setNetRetailProfit] = useState(0.00);
     let [netWholesaleProfit, setNetWholesaleProfit] = useState(0.00);
+    const [returnCount, setReturnCount] = useState(0.00);
+    const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
 
     //list
     const [purchaseList, setPurchaseList] = useState([]);
@@ -602,7 +604,7 @@ function PurchaseIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,net_total,return_count,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
+            "select=id,code,date,net_total,return_count,return_amount,cash_discount,discount,vat_price,total,store_id,created_by_name,vendor_name,vendor_invoice_no,status,created_at,updated_at,net_retail_profit,net_wholesale_profit,total_payment_paid,payments_count,payment_methods,payment_status,balance_amount";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -670,6 +672,8 @@ function PurchaseIndex(props) {
                 setTotalUnPaidPurchase(data.meta.unpaid_purchase);
                 setTotalCashPurchase(data.meta.cash_purchase);
                 setTotalBankAccountPurchase(data.meta.bank_account_purchase);
+                setReturnCount(data.meta.return_count);
+                setReturnPaidAmount(data.meta.return_amount);
 
             })
             .catch((error) => {
@@ -822,6 +826,8 @@ function PurchaseIndex(props) {
                                     "Cash discount": totalCashDiscount,
                                     "Shipping/Handling fees": totalShippingHandlingFees,
                                     "VAT paid": vatPrice,
+                                    "Return Count": returnCount,
+                                    "Return Paid Amount": returnPaidAmount,
                                     "Net retail profit": netRetailProfit,
                                     "Net retail Profit %": netRetailProfit && totalPurchase ? ((netRetailProfit / totalPurchase) * 100) : "",
                                     "Net wholesale profit": netWholesaleProfit,
@@ -1241,11 +1247,30 @@ function PurchaseIndex(props) {
                                                             sort("return_count");
                                                         }}
                                                     >
-                                                        Returns
+                                                        Return Count
                                                         {sortField === "return_count" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
                                                         {sortField === "return_count" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("return_amount");
+                                                        }}
+                                                    >
+                                                        Return Paid Amount
+                                                        {sortField === "return_amount" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "return_amount" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
@@ -1592,6 +1617,16 @@ function PurchaseIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="return_amount"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("return_amount", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 {localStorage.getItem("admin") === "true" ?
                                                     <th>
                                                         <input
@@ -1828,7 +1863,7 @@ function PurchaseIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.vendor_invoice_no}</td>
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <OverflowTooltip value={purchase.vendor_name} />
+                                                            {purchase.vendor_name && <OverflowTooltip value={purchase.vendor_name} />}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(purchase.date), "MMM dd yyyy h:mma")}
@@ -1886,6 +1921,13 @@ function PurchaseIndex(props) {
                                                                 openPurchaseReturnsDialogue(purchase);
                                                             }}>
                                                                 {purchase.return_count}
+                                                            </Button>
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Button variant="link" onClick={() => {
+                                                                openPurchaseReturnsDialogue(purchase);
+                                                            }}>
+                                                                {purchase.return_amount}
                                                             </Button>
                                                         </td>
                                                         {localStorage.getItem("admin") === "true" ?

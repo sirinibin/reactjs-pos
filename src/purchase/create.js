@@ -258,6 +258,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     code: purchase.code,
                     store_id: purchase.store_id,
                     vendor_id: purchase.vendor_id,
+                    vendor_name: purchase.vendor_name,
                     date_str: purchase.date,
                     // date: purchase.date,
                     vat_percent: purchase.vat_percent,
@@ -300,13 +301,18 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     }
                 ];
 
-                let selectedVendors = [
-                    {
-                        id: purchase.vendor_id,
-                        name: purchase.vendor_name,
-                        search_label: purchase.vendor.search_label,
-                    }
-                ];
+                setSelectedVendors([]);
+                if (purchase.vendor_id && purchase.vendor_name) {
+                    let selectedVendors = [
+                        {
+                            id: purchase.vendor_id,
+                            name: purchase.vendor_name,
+                            search_label: purchase.vendor.search_label,
+                        }
+                    ];
+                    setSelectedVendors([...selectedVendors]);
+                }
+
 
                 let selectedOrderPlacedByUsers = [
                     {
@@ -320,7 +326,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 setSelectedOrderPlacedByUsers([...selectedOrderPlacedByUsers]);
 
                 setSelectedStores([...selectedStores]);
-                setSelectedVendors([...selectedVendors]);
+
 
                 reCalculate();
                 setFormData({ ...formData });
@@ -1255,7 +1261,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             </div>
                         </div> : ""}
                         <div className="col-md-6">
-                            <label className="form-label">Purchase From Vendor*</label>
+                            <label className="form-label">Vendor</label>
                             <Typeahead
                                 id="vendor_id"
                                 labelKey="search_label"
@@ -1265,8 +1271,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     errors.vendor_id = "";
                                     setErrors(errors);
                                     if (selectedItems.length === 0) {
-                                        errors.vendor_id = "Invalid Vendor selected";
-                                        setErrors(errors);
+                                        // errors.vendor_id = "Invalid Vendor selected";
+                                        //setErrors(errors);
                                         formData.vendor_id = "";
                                         setFormData({ ...formData });
                                         setSelectedVendors([]);
@@ -1287,7 +1293,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
                             {errors.vendor_id && (
                                 <div style={{ color: "red" }}>
-                                    <i className="bi bi-x-lg"> </i>
                                     {errors.vendor_id}
                                 </div>
                             )}
@@ -2247,7 +2252,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
-                                                            <option value="vendor_account">Vendor Account</option>
+                                                            {formData.vendor_name && <option value="vendor_account">Vendor Account</option>}
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>

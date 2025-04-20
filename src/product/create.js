@@ -977,7 +977,7 @@ const ProductCreate = forwardRef((props, ref) => {
             </div>
 
             <div className="col-md-4">
-              <label className="form-label">Categories*</label>
+              <label className="form-label">Category</label>
 
               <div className="input-group mb-4">
                 <Typeahead
@@ -1020,7 +1020,6 @@ const ProductCreate = forwardRef((props, ref) => {
                     {errors.category_id}
                   </div>
                 )}
-
               </div>
             </div>
 
