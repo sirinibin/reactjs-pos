@@ -728,13 +728,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 item.purchase_unit_price = parseFloat(product.purchase_unit_price).toFixed(2);
             }
 
+            /*
             if (product.retail_unit_price) {
                 item.retail_unit_price = parseFloat(product.retail_unit_price).toFixed(2);
             }
 
             if (product.wholesale_unit_price) {
                 item.wholesale_unit_price = parseFloat(product.wholesale_unit_price).toFixed(2);
-            }
+            }*/
 
             selectedProducts.push(item);
 

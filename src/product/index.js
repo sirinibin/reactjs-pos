@@ -4,8 +4,8 @@ import ProductJson from "./json.js";
 import ProductView from "./view.js";
 
 import { Typeahead } from "react-bootstrap-typeahead";
-//import { format } from "date-fns";
-//import DatePicker from "react-datepicker";
+import { format } from "date-fns";
+import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 //import { Button, Spinner, Badge, Tooltip, OverlayTrigger } from "react-bootstrap";
 import { Button, Spinner } from "react-bootstrap";
@@ -30,7 +30,9 @@ function ProductIndex(props) {
 
 
 
-    // const selectedDate = new Date();
+    let [selectedDate, setSelectedDate] = useState(new Date());
+    let [selectedFromDate, setSelectedFromDate] = useState(new Date());
+    let [selectedToDate, setSelectedToDate] = useState(new Date());
 
     //list
     const [productList, setProductList] = useState([]);
@@ -45,12 +47,12 @@ function ProductIndex(props) {
 
 
     //Created At filter
-    /*
+
     const [showCreatedAtDateRange, setShowCreatedAtDateRange] = useState(false);
     const [createdAtValue, setCreatedAtValue] = useState("");
     const [createdAtFromValue, setCreatedAtFromValue] = useState("");
     const [createdAtToValue, setCreatedAtToValue] = useState("");
-    */
+
 
     //loader flag
     const [isListLoading, setIsListLoading] = useState(false);
@@ -58,7 +60,7 @@ function ProductIndex(props) {
 
     //Created By Product Auto Suggestion
     //const [productOptions, setProductOptions] = useState([]);
-    //const [selectedCreatedByProducts, setSelectedCreatedByProducts] = useState([]);
+    const [selectedCreatedByProducts, setSelectedCreatedByProducts] = useState([]);
 
     //Created By Product Auto Suggestion
     const [categoryOptions, setCategoryOptions] = useState([]);
@@ -165,7 +167,7 @@ function ProductIndex(props) {
     }
 
 
-    /*
+
     async function suggestUsers(searchTerm) {
         console.log("Inside handle suggest Users");
 
@@ -197,9 +199,9 @@ function ProductIndex(props) {
         );
         let data = await result.json();
 
-       // setProductOptions(data.result);
+        setProductOptions(data.result);
     }
-    */
+
 
     function searchByFieldValue(field, value) {
         searchParams[field] = value;
@@ -209,7 +211,7 @@ function ProductIndex(props) {
         list(); //load  only documents
     }
 
-    /*
+
     function searchByDateField(field, value) {
         if (!value) {
             page = 1;
@@ -225,41 +227,40 @@ function ProductIndex(props) {
         value = format(d, "MMM dd yyyy");
 
         if (field === "created_at") {
-            /*
+
             setCreatedAtValue(value);
             setCreatedAtFromValue("");
             setCreatedAtToValue("");
-            */
-    /*     searchParams["created_at_from"] = "";
-         searchParams["created_at_to"] = "";
-         searchParams[field] = value;
-     }
-     if (field === "created_at_from") {
-         /*
-         setCreatedAtFromValue(value);
-         setCreatedAtValue("");
-         */
-    /*      searchParams["created_at"] = "";
-          searchParams[field] = value;
-      } else if (field === "created_at_to") {
-          /*
-          setCreatedAtToValue(value);
-          setCreatedAtValue("");
-          */
-    /*       searchParams["created_at"] = "";
-           searchParams[field] = value;
-       }
 
-       page = 1;
-       setPage(page);
+            searchParams["created_at_from"] = "";
+            searchParams["created_at_to"] = "";
+            searchParams[field] = value;
+        }
+        if (field === "created_at_from") {
 
-       list();
-   }
-   */
+            setCreatedAtFromValue(value);
+            setCreatedAtValue("");
+
+            searchParams["created_at"] = "";
+            searchParams[field] = value;
+        } else if (field === "created_at_to") {
+
+            setCreatedAtToValue(value);
+            setCreatedAtValue("");
+            searchParams["created_at"] = "";
+            searchParams[field] = value;
+        }
+
+        page = 1;
+        setPage(page);
+
+        list();
+    }
+
 
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
-            // setSelectedCreatedByProducts(values);
+            setSelectedCreatedByProducts(values);
         } else if (field === "category_id") {
             setSelectedProductCategories(values);
         } else if (field === "brand_id") {
@@ -1553,7 +1554,7 @@ function ProductIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                {/*
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1591,9 +1592,8 @@ function ProductIndex(props) {
                                                             <i className="bi bi-sort-up"></i>
                                                         ) : null}
                                                     </b>
-                                                        </th>
+                                                </th>
                                                 <th>Actions</th>
-                                                */}
                                             </tr>
                                         </thead>
 
@@ -2037,7 +2037,7 @@ function ProductIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                {/*<th>
+                                                <th>
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
@@ -2064,6 +2064,7 @@ function ProductIndex(props) {
                                                         selected={selectedDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
+                                                        isClearable={true}
                                                         onChange={(date) => {
                                                             if (!date) {
                                                                 setCreatedAtValue("");
@@ -2071,6 +2072,8 @@ function ProductIndex(props) {
                                                                 return;
                                                             }
                                                             searchByDateField("created_at", date);
+                                                            selectedDate = date;
+                                                            setSelectedDate(date);
                                                         }}
                                                     />
                                                     <small
@@ -2093,9 +2096,10 @@ function ProductIndex(props) {
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtFromValue("");
@@ -2103,15 +2107,18 @@ function ProductIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_from", date);
+                                                                    selectedFromDate = date;
+                                                                    setSelectedFromDate(date);
                                                                 }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
+                                                                isClearable={true}
                                                                 onChange={(date) => {
                                                                     if (!date) {
                                                                         setCreatedAtFromValue("");
@@ -2119,12 +2126,14 @@ function ProductIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_to", date);
+                                                                    selectedToDate = date;
+                                                                    setSelectedToDate(date);
                                                                 }}
                                                             />
                                                         </span>
                                                     ) : null}
-                                                            </th>
-                                                <th></th>*/}
+                                                </th>
+                                                <th></th>
                                             </tr>
                                         </thead>
 
@@ -2656,16 +2665,16 @@ function ProductIndex(props) {
                                                             })}
                                                         </td>
 
-                                                        {/*} <td>{product.created_by_name}</td>
-                                                        <td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.created_by_name}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(product.created_at),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
                                                         </td>
-                                                            */}
-                                                        {/*
-                                                        <td>
+
+
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(product.id);
                                                             }}>
@@ -2742,7 +2751,7 @@ function ProductIndex(props) {
                                                                 </li>
                                                             </ul>
 
-                                                                </td>*/}
+                                                        </td>
                                                     </tr>
                                                 ))}
                                         </tbody>
