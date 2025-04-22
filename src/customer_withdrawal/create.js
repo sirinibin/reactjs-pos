@@ -133,15 +133,16 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
                 formData = data.result;
 
-                let selectedCustomers = [
-                    {
-                        id: formData.customer_id,
-                        name: formData.customer_name,
-                        search_label: formData.customer_name,
-                    }
-                ];
-
-                setSelectedCustomers([...selectedCustomers]);
+                if (formData.customer_name && formData.customer_id) {
+                    let selectedCustomers = [
+                        {
+                            id: formData.customer_id,
+                            name: formData.customer_name,
+                            search_label: formData.customer.search_label,
+                        }
+                    ];
+                    setSelectedCustomers([...selectedCustomers]);
+                }
 
                 let selectedStores = [
                     {

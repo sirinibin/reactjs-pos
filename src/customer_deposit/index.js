@@ -10,6 +10,7 @@ import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import CustomerDepositPreview from './preview.js';
 
 function CustomerDepositIndex(props) {
 
@@ -238,7 +239,7 @@ function CustomerDepositIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,amount,payment_method,description,customer_name,created_by_name,created_at";
+            "select=id,code,date,amount,payment_method,bank_reference_no,description,remarks,customer_id,customer_name,created_by_name,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -340,9 +341,15 @@ function CustomerDepositIndex(props) {
         CreateFormRef.current.open();
     }
 
+    const PreviewRef = useRef();
+    function openPreview(model) {
+        PreviewRef.current.open(model);
+    }
+
 
     return (
         <>
+            <CustomerDepositPreview ref={PreviewRef} />
             <CustomerDepositCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <CustomerDepositView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
 
@@ -518,7 +525,7 @@ function CustomerDepositIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-
+                                                <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -555,6 +562,26 @@ function CustomerDepositIndex(props) {
                                                         ) : null}
                                                         {sortField === "date" && sortCustomerDeposit === "" ? (
                                                             <i className="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("customer_name");
+                                                        }}
+                                                    >
+                                                        Customer
+                                                        {sortField === "customer_name" &&
+                                                            sortCustomerDeposit === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "customer_name" && sortCustomerDeposit === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -616,26 +643,7 @@ function CustomerDepositIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("customer_name");
-                                                        }}
-                                                    >
-                                                        Customer
-                                                        {sortField === "customer_name" &&
-                                                            sortCustomerDeposit === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "customer_name" && sortCustomerDeposit === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
 
                                                 <th>
                                                     <b
@@ -681,6 +689,7 @@ function CustomerDepositIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -757,6 +766,27 @@ function CustomerDepositIndex(props) {
                                                     ) : null}
                                                 </th>
                                                 <th>
+                                                    <Typeahead
+                                                        id="customer_id"
+                                                        labelKey="search_label"
+                                                        style={{ minWidth: "300px" }}
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "customer_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={customerOptions}
+                                                        placeholder="Customer Name / Mob / VAT # / ID"
+                                                        selected={selectedCustomers}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestCustomers(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="amount"
@@ -786,26 +816,7 @@ function CustomerDepositIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="customer_id"
-                                                        labelKey="search_label"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "customer_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={customerOptions}
-                                                        placeholder="Customer Name / Mob / VAT # / ID"
-                                                        selected={selectedCustomers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestCustomers(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -901,20 +912,38 @@ function CustomerDepositIndex(props) {
                                             {customerdepositList &&
                                                 customerdepositList.map((customerdeposit) => (
                                                     <tr key={customerdeposit.code}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(customerdeposit.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+                                                            &nbsp;
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openDetailsView(customerdeposit.id);
+                                                            }}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                            &nbsp;
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openPreview(customerdeposit);
+                                                            }}>
+                                                                <i className="bi bi-printer"></i>
+                                                            </Button>
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(customerdeposit.date), "MMM dd yyyy h:mma")}
                                                         </td>
-
-
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={customerdeposit.customer_name} maxWidth={300} />
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.amount.toFixed(2)} SAR</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.payment_method}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={customerdeposit.description} maxWidth={300} />
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customerdeposit.customer_name}
-                                                        </td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.created_by_name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(

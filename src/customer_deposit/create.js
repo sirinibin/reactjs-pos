@@ -9,6 +9,8 @@ import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import CustomerCreate from "./../customer/create.js";
 import CustomerView from "./../customer/view.js";
+import Customers from "./../utils/customers.js";
+import CustomerDepositPreview from './preview.js';
 
 
 const CustomerDepositCreate = forwardRef((props, ref) => {
@@ -21,8 +23,10 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         open(id) {
             formData = {
                 images_content: [],
+                date_str: new Date(),
             };
-            setFormData({ formData });
+            setFormData({ ...formData });
+            setSelectedCustomers([]);
 
             if (id) {
                 getCustomerDeposit(id);
@@ -90,6 +94,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     //fields
     let [formData, setFormData] = useState({
         images_content: [],
+        date_str: new Date(),
     });
 
     const [show, SetShow] = useState(false);
@@ -132,16 +137,18 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 formData = data.result;
+                formData.date_str = data.result.date;
 
-                let selectedCustomers = [
-                    {
-                        id: formData.customer_id,
-                        name: formData.customer_name,
-                        search_label: formData.customer_name,
-                    }
-                ];
-
-                setSelectedCustomers([...selectedCustomers]);
+                if (formData.customer_name && formData.customer_id) {
+                    let selectedCustomers = [
+                        {
+                            id: formData.customer_id,
+                            name: formData.customer_name,
+                            search_label: formData.customer.search_label,
+                        }
+                    ];
+                    setSelectedCustomers([...selectedCustomers]);
+                }
 
                 let selectedStores = [
                     {
@@ -381,8 +388,31 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         CustomerDetailsViewRef.current.open(id);
     }
 
+    const CustomersRef = useRef();
+    function openCustomers(model) {
+        CustomersRef.current.open();
+    }
+
+    const handleSelectedCustomer = (selectedCustomer) => {
+        console.log("selectedCustomer:", selectedCustomer);
+        setSelectedCustomers([selectedCustomer])
+        formData.customer_id = selectedCustomer.id;
+        setFormData({ ...formData });
+    };
+
+
+    const PreviewRef = useRef();
+    function openPreview() {
+        if (!formData.date) {
+            formData.date = formData.date_str;
+        }
+        PreviewRef.current.open(formData);
+    }
+
     return (
         <>
+            <CustomerDepositPreview ref={PreviewRef} />
+            <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
@@ -396,6 +426,12 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
 
                     <div className="col align-self-end text-end">
+                        &nbsp;&nbsp;
+                        <Button variant="primary" onClick={openPreview}>
+                            <i className="bi bi-printer"></i> Print
+                        </Button>
+                        &nbsp;&nbsp;
+
                         {formData.id ? <Button variant="primary" onClick={() => {
                             handleClose();
                             props.openDetailsView(formData.id);
@@ -515,116 +551,86 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                             </div>
                         </div> : ""}
 
-                        <div className="col-md-6">
+                        <div className="col-md-6" style={{ border: "solid 0px" }}>
                             <label className="form-label">Customer*</label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="customer_id"
-                                    labelKey="search_label"
-                                    isLoading={isCustomersLoading}
-                                    isInvalid={errors.customer_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.customer_id = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.customer_id = "Invalid Customer selected";
-                                            setErrors(errors);
-                                            formData.customer_id = "";
-                                            setFormData({ ...formData });
-                                            setSelectedCustomers([]);
-                                            return;
-                                        }
-                                        formData.customer_id = selectedItems[0].id;
+                            <Typeahead
+                                id="customer_id"
+                                labelKey="search_label"
+                                isLoading={isCustomersLoading}
+                                isInvalid={errors.customer_id ? true : false}
+                                onChange={(selectedItems) => {
+                                    errors.customer_id = "";
+                                    setErrors(errors);
+                                    if (selectedItems.length === 0) {
+                                        // errors.customer_id = "Invalid Customer selected";
+                                        //setErrors(errors);
+                                        formData.customer_id = "";
                                         setFormData({ ...formData });
-                                        setSelectedCustomers(selectedItems);
-                                    }}
-                                    options={customerOptions}
-                                    placeholder="Customer Name / Mob / VAT # / ID"
-                                    selected={selectedCustomers}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestCustomers(searchTerm);
-                                    }}
-                                />
-                                <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                {errors.customer_id && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.customer_id}
-                                    </div>
-                                )}
-                            </div>
+                                        setSelectedCustomers([]);
+                                        return;
+                                    }
+                                    formData.customer_id = selectedItems[0].id;
+                                    if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                        formData.remarks = selectedItems[0].remarks;
+                                    }
+
+                                    setFormData({ ...formData });
+                                    setSelectedCustomers(selectedItems);
+                                }}
+                                options={customerOptions}
+                                placeholder="Customer Name / Mob / VAT # / ID"
+                                selected={selectedCustomers}
+                                highlightOnlyResult={true}
+                                onInputChange={(searchTerm, e) => {
+                                    if (searchTerm) {
+                                        formData.customerName = searchTerm;
+                                    }
+                                    suggestCustomers(searchTerm);
+                                }}
+                            />
+                            <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+
+
+                            {errors.customer_id && (
+                                <div style={{ color: "red" }}>
+                                    {errors.customer_id}
+                                </div>
+                            )}
+
+                        </div>
+                        <div className="col-md-1">
+                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
+                                <i class="bi bi-list"></i>
+                            </Button>
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Amount*</label>
+                        <div className="col-md-3">
+                            <label className="form-label">ID</label>
 
                             <div className="input-group mb-3">
                                 <input
-                                    value={formData.amount ? formData.amount : ""}
-                                    type='number'
+                                    value={formData.code ? formData.code : ""}
+                                    type='string'
                                     onChange={(e) => {
-                                        errors["amount"] = "";
+                                        errors["code"] = "";
                                         setErrors({ ...errors });
-                                        formData.amount = parseFloat(e.target.value);
+                                        formData.code = e.target.value;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="amount"
-                                    placeholder="Amount"
+                                    id="id"
+                                    placeholder="ID"
                                 />
-                                {errors.amount && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.amount}
-                                    </div>
-                                )}
-                                {formData.amount && !errors.amount && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
                             </div>
+                            {errors.code && (
+                                <div style={{ color: "red" }}>
+                                    {errors.code}
+                                </div>
+                            )}
                         </div>
-
-
-
-                        <div className="col-md-6">
-                            <label className="form-label">Description*</label>
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.description ? formData.description : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["description"] = "";
-                                        setErrors({ ...errors });
-                                        formData.description = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control description"
-                                    id="description"
-                                    placeholder="Description"
-                                />
-                                {errors.description && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.description}
-                                    </div>
-                                )}
-                                {formData.description && !errors.description && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="col-md-6">
-                            <label className="form-label">Date Time*</label>
+                        <div className="col-md-3">
+                            <label className="form-label">Date*</label>
 
                             <div className="input-group mb-3">
                                 <DatePicker
@@ -648,11 +654,38 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                                 {errors.date_str && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
                                         {errors.date_str}
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Amount*</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.amount ? formData.amount : ""}
+                                    type='number'
+                                    onChange={(e) => {
+                                        errors["amount"] = "";
+                                        setErrors({ ...errors });
+                                        formData.amount = parseFloat(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="amount"
+                                    placeholder="Amount"
+                                />
+
+
+                            </div>
+                            {errors.amount && (
+                                <div style={{ color: "red" }}>
+                                    {errors.amount}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-2">
@@ -687,17 +720,94 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                     <option value="bank_transfer">Bank Transfer</option>
                                     <option value="bank_cheque">Bank Cheque</option>
                                 </select>
-                                {errors.payment_method && (
+
+                            </div>
+                            {errors.payment_method && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.payment_method}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Bank Ref. No.</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.bank_reference_no ? formData.bank_reference_no : ""}
+                                    type='text'
+                                    onChange={(e) => {
+                                        errors["bank_reference_no"] = "";
+                                        setErrors({ ...errors });
+                                        formData.bank_reference_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="bank_reference_no"
+                                    placeholder="Bank reference no."
+                                />
+                            </div>
+                            {errors.bank_reference_no && (
+                                <div style={{ color: "red" }}>
+                                    {errors.bank_reference_no}
+                                </div>
+                            )}
+                        </div>
+                        <div className="col-md-3">
+                            <label className="form-label">Description</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.description ? formData.description : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["description"] = "";
+                                        setErrors({ ...errors });
+                                        formData.description = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control description"
+                                    id="description"
+                                    placeholder="Description"
+                                />
+                                {errors.description && (
                                     <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.payment_method}
+                                        {errors.description}
                                     </div>
                                 )}
                             </div>
                         </div>
+                        <div className="col-md-3">
+                            <label className="form-label">Remarks</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.remarks ? formData.remarks : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["remarks"] = "";
+                                        setErrors({ ...errors });
+                                        formData.remarks = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="remarks"
+                                    placeholder="Remarks"
+                                />
+                            </div>
+                            {errors.remarks && (
+                                <div style={{ color: "red" }}>
+                                    {errors.remarks}
+                                </div>
+                            )}
+                        </div>
+
+
+
 
                         <div className="col-md-6">
-                            <label className="form-label">Image(Optional)</label>
+                            <label className="form-label">Image</label>
 
                             <div className="input-group mb-3">
                                 <input

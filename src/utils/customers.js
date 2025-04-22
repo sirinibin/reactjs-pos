@@ -170,6 +170,8 @@ const Customers = forwardRef((props, ref) => {
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
+        } else if (field === "customer_id") {
+            setSelectedCustomers(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -294,6 +296,44 @@ const Customers = forwardRef((props, ref) => {
         handleClose();
     };
 
+
+    //Customer Auto Suggestion
+    const [customerOptions, setCustomerOptions] = useState([]);
+    const [selectedCustomers, setSelectedCustomers] = useState([]);
+    async function suggestCustomers(searchTerm) {
+        console.log("Inside handle suggestCustomers");
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = `&${queryString}`;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let result = await fetch(
+            `/v1/customer?${Select}${queryString}`,
+            requestOptions
+        );
+        let data = await result.json();
+
+        setCustomerOptions(data.result);
+    }
 
 
     return (
@@ -1098,13 +1138,24 @@ const Customers = forwardRef((props, ref) => {
                                                                 />
                                                             </th>
                                                             <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="name"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("name", e.target.value)
-                                                                    }
-                                                                    className="form-control"
+                                                                <Typeahead
+                                                                    id="customer_id"
+                                                                    labelKey="search_label"
+                                                                    style={{ minWidth: "300px" }}
+                                                                    onChange={(selectedItems) => {
+                                                                        searchByMultipleValuesField(
+                                                                            "customer_id",
+                                                                            selectedItems
+                                                                        );
+                                                                    }}
+                                                                    options={customerOptions}
+                                                                    placeholder="Customer Name / Mob / VAT # / ID"
+                                                                    selected={selectedCustomers}
+                                                                    highlightOnlyResult={true}
+                                                                    onInputChange={(searchTerm, e) => {
+                                                                        suggestCustomers(searchTerm);
+                                                                    }}
+                                                                    multiple
                                                                 />
                                                             </th>
                                                             <th>

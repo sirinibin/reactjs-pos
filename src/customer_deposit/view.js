@@ -1,21 +1,15 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { Modal, Table } from 'react-bootstrap';
-
-
-
 import { Button } from "react-bootstrap";
-
-
+import CustomerDepositPreview from './preview.js';
 
 const CustomerDepositView = forwardRef((props, ref) => {
-
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
                 getCustomerDeposit(id);
                 SetShow(true);
             }
-
         },
 
     }));
@@ -82,15 +76,26 @@ const CustomerDepositView = forwardRef((props, ref) => {
 
 
 
+    const PreviewRef = useRef();
+    function openPreview() {
+        PreviewRef.current.open(model);
+    }
 
 
 
     return (<>
+        <CustomerDepositPreview ref={PreviewRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Customer Receivable #{model.code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
+                    &nbsp;&nbsp;
+                    <Button variant="primary" onClick={openPreview}>
+                        <i className="bi bi-printer"></i> Print
+                    </Button>
+                    &nbsp;&nbsp;
+
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {
                         handleClose();
                         props.openCreateForm();
