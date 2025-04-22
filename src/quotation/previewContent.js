@@ -120,6 +120,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     {props.model.customer ? props.model.customer.name : ""}
                                     {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
                                     {!props.model.customerName && !props.model.customer ? "N/A" : ""}
+                                    {props.model.customer ? " | " + props.model.customer.name_in_arabic : ""}
                                 </div>
                             </div>
                             <div class="row">
