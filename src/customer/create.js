@@ -740,6 +740,49 @@ const CustomerCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <div className="col-md-3">
+                            <label className="form-label">Remarks
+                                |&nbsp;<input type="checkbox" style={{ marginLeft: "3px" }}
+                                    value={formData.use_remarks_in_sales}
+                                    checked={formData.use_remarks_in_sales}
+                                    onChange={(e) => {
+
+                                        errors["formData.show_address_in_invoice_footer"] = "";
+                                        formData.use_remarks_in_sales = !formData.use_remarks_in_sales
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="formData.show_address_in_invoice_footer"
+
+                                /> Use in Sales / Sales Return
+                            </label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.remarks}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.remarks = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="remarks"
+                                    placeholder="Remarks"
+                                />
+                            </div>
+                            {errors.remarks && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.remarks}
+                                </div>
+                            )}
+                        </div>
+
+
+
                         {/*
                         <div className="col-md-3">
                             <label className="form-label">Address</label>

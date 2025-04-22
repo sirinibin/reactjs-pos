@@ -371,7 +371,7 @@ function CustomerWithdrawalIndex(props) {
             <div className="container-fluid p-0">
                 <div className="row">
                     <div className="col">
-                        <h1 className="h3">Customer Withdrawals</h1>
+                        <h1 className="h3">Customer Payables</h1>
                     </div>
 
 

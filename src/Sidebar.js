@@ -197,7 +197,7 @@ function Sidebar(props) {
                 }} className={toggleActiveStyles(appState.tabs[16])}>
                     <Link to="/dashboard/customer_withdrawals" className="sidebar-link">
                         <i className="bi bi-currency-dollar" />
-                        <span className="align-middle">Customer Drawings</span>
+                        <span className="align-middle">Customer Payables</span>
                     </Link>
                 </li>
                 <li onClick={() => {

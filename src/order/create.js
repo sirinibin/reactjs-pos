@@ -252,7 +252,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 */
 
                 setSelectedStores([...selectedStores]);
-                if (formData.customer_id) {
+                if (formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
                             id: formData.customer_id,
@@ -439,7 +439,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
@@ -1741,6 +1741,10 @@ function findDiscount() {
                                         return;
                                     }
                                     formData.customer_id = selectedItems[0].id;
+                                    if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                        formData.remarks = selectedItems[0].remarks;
+                                    }
+
                                     setFormData({ ...formData });
                                     setSelectedCustomers(selectedItems);
                                 }}

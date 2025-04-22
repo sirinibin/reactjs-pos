@@ -1109,8 +1109,8 @@ function SalesReturnIndex(props) {
     }
 
     const CreateFormRef = useRef();
-    function openUpdateForm(id) {
-        CreateFormRef.current.open(id);
+    function openUpdateForm(id, orderID) {
+        CreateFormRef.current.open(id, orderID);
     }
 
     function openCreateForm(sale) {
@@ -2053,7 +2053,7 @@ function SalesReturnIndex(props) {
                                                     <tr key={index}>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
-                                                                openUpdateForm(salesreturn.id);
+                                                                openUpdateForm(salesreturn.id, salesreturn.order_id);
                                                             }}>
                                                                 <i className="bi bi-pencil"></i>
                                                             </Button>

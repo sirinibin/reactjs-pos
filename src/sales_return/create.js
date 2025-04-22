@@ -25,8 +25,12 @@ import Products from "./../utils/products.js";
 
 const SalesReturnCreate = forwardRef((props, ref) => {
 
+    let [saleReturnID, setSaleReturnID] = useState();
     useImperativeHandle(ref, () => ({
         open(id, orderId) {
+            saleReturnID = id;
+            setSaleReturnID(id);
+
             errors = {};
             setErrors({ ...errors });
 
@@ -71,7 +75,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             }
 
             if (orderId) {
-                reCalculate();
+                // reCalculate();
                 getOrder(orderId);
             }
             setShow(true);
@@ -241,6 +245,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         };
     }, []);
 
+    let [order, setOrder] = useState({});
+
     function getOrder(id) {
         console.log("inside get SalesReturn");
         const requestOptions = {
@@ -274,72 +280,72 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                 setErrors({});
 
-                console.log("Response:");
+                console.log("Response sale:");
                 console.log(data);
 
-                let order = data.result;
+                order = data.result;
+                setOrder(order);
+                if (!saleReturnID) {
+                    let selectedProductsTemp = order.products;
+                    selectedProducts = [];
+                    for (let i = 0; i < selectedProductsTemp.length; i++) {
+                        selectedProductsTemp[i].selected = false;
+                        let soldQty = selectedProductsTemp[i].quantity - selectedProductsTemp[i].quantity_returned;
+                        selectedProductsTemp[i].quantity = soldQty;
 
-                let selectedProductsTemp = order.products;
-                selectedProducts = [];
-                for (let i = 0; i < selectedProductsTemp.length; i++) {
-                    selectedProductsTemp[i].selected = false;
-                    let soldQty = selectedProductsTemp[i].quantity - selectedProductsTemp[i].quantity_returned;
-                    selectedProductsTemp[i].quantity = soldQty;
-
-                    if (soldQty > 0) {
-                        selectedProducts.push(selectedProductsTemp[i]);
+                        if (soldQty > 0) {
+                            selectedProducts.push(selectedProductsTemp[i]);
+                        }
                     }
+
+                    // selectedProducts = selectedProductsTemp
+
+                    console.log("selectedProducts:", selectedProducts);
+                    setSelectedProducts([...selectedProducts]);
+
+                    //formData = order;
+                    console.log("order.id:", order.id);
+                    formData.id = "";
+                    formData.products = order.products;
+                    // formData.order_id = order.id;
+                    //console.log("formData.order_id:", formData.order_id);
+                    formData.order_code = order.code;
+                    formData.store_id = order.store_id;
+                    formData.remarks = order.remarks;
+                    /*
+                    formData.received_by = order.delivered_by;
+                    formData.received_by_signature_id = order.delivered_by_signature_id;
+                    */
+                    formData.customer_id = order.customer_id;
+
+                    // formData.is_discount_percent = order.is_discount_percent;
+                    formData.is_discount_percent = true;
+                    formData.discount_percent = order.discount_percent;
+                    formData.shipping_handling_fees = order.shipping_handling_fees;
+                    formData.cash_discount = parseFloat(order.cash_discount - order.return_cash_discount);
+                    // formData.discount = (order.discount - order.return_discount);
+
+                    // formData.discount_percent = order.discount_percent;
+
+
+
+                    // setFormData({ ...formData });
+                    console.log("formData:", formData);
+
+
+                    selectedStores = [
+                        {
+                            id: order.store_id,
+                            name: order.store_name,
+                        }
+                    ];
+
+                    setSelectedStores(selectedStores);
+                    console.log("selectedStores:", selectedStores);
+                    setFormData({ ...formData });
+                    reCalculate();
+                    setFormData({ ...formData });
                 }
-
-                // selectedProducts = selectedProductsTemp
-
-                console.log("selectedProducts:", selectedProducts);
-                setSelectedProducts([...selectedProducts]);
-
-
-
-                //formData = order;
-                console.log("order.id:", order.id);
-                formData.id = "";
-                formData.products = order.products;
-                // formData.order_id = order.id;
-                //console.log("formData.order_id:", formData.order_id);
-                formData.order_code = order.code;
-                formData.store_id = order.store_id;
-                /*
-                formData.received_by = order.delivered_by;
-                formData.received_by_signature_id = order.delivered_by_signature_id;
-                */
-                formData.customer_id = order.customer_id;
-
-                // formData.is_discount_percent = order.is_discount_percent;
-                formData.is_discount_percent = true;
-                formData.discount_percent = order.discount_percent;
-                formData.shipping_handling_fees = order.shipping_handling_fees;
-                formData.cash_discount = parseFloat(order.cash_discount - order.return_cash_discount);
-                // formData.discount = (order.discount - order.return_discount);
-
-                // formData.discount_percent = order.discount_percent;
-
-
-
-                // setFormData({ ...formData });
-                console.log("formData:", formData);
-
-
-                selectedStores = [
-                    {
-                        id: order.store_id,
-                        name: order.store_name,
-                    }
-                ];
-
-                setSelectedStores(selectedStores);
-                console.log("selectedStores:", selectedStores);
-
-                setFormData({ ...formData });
-                reCalculate();
-                setFormData({ ...formData });
             })
             .catch(error => {
                 setProcessing(false);
@@ -589,6 +595,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         formData.net_total = parseFloat(formData.net_total);
 
+        if (order.payment_status === "not_paid") {
+            formData.payments_input = [];
+        }
+
 
         let endPoint = "/v1/sales-return";
         let method = "POST";
@@ -739,7 +749,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         }
 
 
-        if (!formData.id) {
+        if (!formData.id && order && order.payment_status !== "not_paid") {
             let method = "";
             if (formData.payments_input && formData.payments_input[0]) {
                 method = formData.payments_input[0].method;
@@ -871,6 +881,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
             haveErrors = true
             return false;
+        }
+
+        if (order.payment_status === "not_paid") {
+            return true;
         }
 
         // errors["payment_date"] = [];
@@ -1752,8 +1766,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                         <div className="col-md-8">
                             <label className="form-label">Payments given</label>
 
-                            <div class="table-responsive" style={{ maxWidth: "900px" }}>
-                                <Button variant="secondary" style={{ alignContent: "right" }} onClick={addNewPayment}>
+                            <div class="table-responsive" style={{ maxWidth: "900px" }} >
+                                <Button variant="secondary" style={{ alignContent: "right" }} disabled={order.payment_status === "not_paid"} onClick={addNewPayment}>
                                     Create new payment
                                 </Button>
                                 <table class="table table-striped table-sm table-bordered">
@@ -1778,6 +1792,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     <td style={{ minWidth: "220px" }}>
 
                                                         <DatePicker
+                                                            disabled={order.payment_status === "not_paid"}
                                                             id="date_str"
                                                             selected={formData.payments_input[key].date_str ? new Date(formData.payments_input[key].date_str) : null}
                                                             value={formData.payments_input[key].date_str ? format(
@@ -1802,7 +1817,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         )}
                                                     </td>
                                                     <td style={{ width: "300px" }}>
-                                                        <input type='number' value={formData.payments_input[key].amount} className="form-control "
+                                                        <input type='number' disabled={order.payment_status === "not_paid"} value={formData.payments_input[key].amount} className="form-control "
                                                             onChange={(e) => {
                                                                 errors["payment_amount_" + key] = "";
                                                                 setErrors({ ...errors });
@@ -1829,7 +1844,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         )}
                                                     </td>
                                                     <td style={{ width: "200px" }}>
-                                                        <select value={formData.payments_input[key].method} className="form-control "
+                                                        <select value={formData.payments_input[key].method} disabled={order.payment_status === "not_paid"} className="form-control "
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
                                                                 errors["payment_method_" + key] = "";
@@ -1863,13 +1878,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>
-                                                                <i className="bi bi-x-lg"> </i>
                                                                 {errors["payment_method_" + key]}
                                                             </div>
                                                         )}
                                                     </td>
                                                     <td style={{ width: "200px" }}>
-                                                        <Button variant="danger" onClick={(event) => {
+                                                        <Button variant="danger" disabled={order.payment_status === "not_paid"} onClick={(event) => {
                                                             removePayment(key);
                                                         }}>
                                                             Remove

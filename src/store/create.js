@@ -62,6 +62,36 @@ const StoreCreate = forwardRef((props, ref) => {
                     start_from_count: 1,
                     padding_count: 4
                 },
+                expense_serial_number: {
+                    prefix: "EXP",
+                    start_from_count: 1,
+                    padding_count: 4
+                },
+                customer_deposit_serial_number: {
+                    prefix: "CUST-RCVBLE",
+                    start_from_count: 1,
+                    padding_count: 4
+                },
+                customer_withdrawal_serial_number: {
+                    prefix: "CUST-PYBLE",
+                    start_from_count: 1,
+                    padding_count: 4
+                },
+                capital_deposit_serial_number: {
+                    prefix: "CAP-DPST",
+                    start_from_count: 1,
+                    padding_count: 4
+                },
+                divident_serial_number: {
+                    prefix: "CAP-DRWNG",
+                    start_from_count: 1,
+                    padding_count: 4
+                },
+                delivery_note_serial_number: {
+                    prefix: "DEL-NOTE",
+                    start_from_count: 1,
+                    padding_count: 6
+                },
             };
             setFormData({ ...formData });
             if (id) {
@@ -155,6 +185,36 @@ const StoreCreate = forwardRef((props, ref) => {
             prefix: "VND",
             start_from_count: 1,
             padding_count: 4
+        },
+        expense_serial_number: {
+            prefix: "EXP",
+            start_from_count: 1,
+            padding_count: 4
+        },
+        customer_deposit_serial_number: {
+            prefix: "CUST-RCVBLE",
+            start_from_count: 1,
+            padding_count: 4
+        },
+        customer_withdrawal_serial_number: {
+            prefix: "CUST-PAYBLE",
+            start_from_count: 1,
+            padding_count: 4
+        },
+        capital_deposit_serial_number: {
+            prefix: "CAP-DPST",
+            start_from_count: 1,
+            padding_count: 4
+        },
+        divident_serial_number: {
+            prefix: "CAP-DRWNG",
+            start_from_count: 1,
+            padding_count: 4
+        },
+        delivery_note_serial_number: {
+            prefix: "DEL-NOTE",
+            start_from_count: 1,
+            padding_count: 6
         },
     });
 
@@ -2106,7 +2166,7 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <h5><b>Customer ID's:</b> {formData.customer_serial_number.prefix.toUpperCase()}{String(formData.customer_serial_number.start_from_count).padStart(formData.customer_serial_number.padding_count, '0')}, {formData.customer_serial_number.prefix.toUpperCase()}{String((formData.customer_serial_number.start_from_count + 1)).padStart(formData.customer_serial_number.padding_count, '0')}...</h5>
+                        <h5><b>Customer ID's:</b> {formData.customer_serial_number.prefix.toUpperCase()}-{String(formData.customer_serial_number.start_from_count).padStart(formData.customer_serial_number.padding_count, '0')}, {formData.customer_serial_number.prefix.toUpperCase()}-{String((formData.customer_serial_number.start_from_count + 1)).padStart(formData.customer_serial_number.padding_count, '0')}...</h5>
                         <div className="col-md-2">
                             <label className="form-label">Prefix</label>
                             <div className="input-group mb-3">
@@ -2192,7 +2252,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <h5><b>Vendor ID's:</b> {formData.vendor_serial_number.prefix.toUpperCase()}{String(formData.vendor_serial_number.start_from_count).padStart(formData.vendor_serial_number.padding_count, '0')}, {formData.vendor_serial_number.prefix.toUpperCase()}{String((formData.vendor_serial_number.start_from_count + 1)).padStart(formData.vendor_serial_number.padding_count, '0')}...</h5>
+                        <h5><b>Vendor ID's:</b> {formData.vendor_serial_number.prefix.toUpperCase()}-{String(formData.vendor_serial_number.start_from_count).padStart(formData.vendor_serial_number.padding_count, '0')}, {formData.vendor_serial_number.prefix.toUpperCase()}-{String((formData.vendor_serial_number.start_from_count + 1)).padStart(formData.vendor_serial_number.padding_count, '0')}...</h5>
                         <div className="col-md-2">
                             <label className="form-label">Prefix</label>
                             <div className="input-group mb-3">
@@ -2259,7 +2319,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                             setFormData({ ...formData });
                                             return
                                         }
-                                        errors["formData.vendor_serial_number.start_from_count"] = "";
+                                        errors["vendor_serial_number_start_from_count"] = "";
                                         formData.vendor_serial_number.start_from_count = parseInt(e.target.value);
                                         setFormData({ ...formData });
                                         console.log(formData);
@@ -2277,6 +2337,513 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <h5><b>Expense ID's:</b> {formData.expense_serial_number?.prefix.toUpperCase()}-{String(formData.expense_serial_number?.start_from_count).padStart(formData.expense_serial_number.padding_count, '0')}, {formData.expense_serial_number?.prefix.toUpperCase()}-{String((formData.expense_serial_number?.start_from_count + 1)).padStart(formData.expense_serial_number?.padding_count, '0')}...</h5>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.expense_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["expense_serial_number_prefix"] = "";
+                                        formData.expense_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.expense_serial_number.prefix"
+                                    placeholder="EXP-UMLJ"
+                                />
+
+
+                            </div>
+                            {errors.expense_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.expense_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.expense_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["expense_serial_number.padding_count"] = "";
+                                        formData.expense_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.expense_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+                            </div>
+                            {errors.expense_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.expense_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.expense_serial_number.start_from_count}
+
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.expense_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["expense_serial_number.start_from_count"] = "";
+                                        formData.expense_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.expense_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.expense_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.expense_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <h5><b>Delivery Note ID's:</b> {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String(formData.delivery_note_serial_number?.start_from_count).padStart(formData.delivery_note_serial_number.padding_count, '0')}, {formData.delivery_note_serial_number?.prefix.toUpperCase()}-{String((formData.delivery_note_serial_number?.start_from_count + 1)).padStart(formData.delivery_note_serial_number?.padding_count, '0')}...</h5>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.delivery_note_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["delivery_note_serial_number.prefix"] = "";
+                                        formData.delivery_note_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.delivery_note_serial_number.prefix"
+                                    placeholder="DEL-NOTE"
+                                />
+
+
+                            </div>
+                            {errors.delivery_note_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.delivery_note_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.delivery_note_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["delivery_note_serial_number.padding_count"] = "";
+                                        formData.delivery_note_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.delivery_note_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+                            </div>
+                            {errors.delivery_note_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.delivery_note_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.delivery_note_serial_number.start_from_count}
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.delivery_note_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["delivery_note_serial_number.start_from_count"] = "";
+                                        formData.delivery_note_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.delivery_note_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.delivery_note_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.delivery_note_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
+                        <h5><b>Customer Receivable ID's:</b> {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.customer_deposit_serial_number?.start_from_count).padStart(formData.customer_deposit_serial_number.padding_count, '0')}, {formData.customer_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.ustomer_deposit_serial_number?.start_from_count + 1)).padStart(formData.ustomer_deposit_serial_number?.padding_count, '0')}...</h5>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.customer_deposit_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["customer_deposit_serial_number.prefix"] = "";
+                                        formData.customer_deposit_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.customer_deposit_serial_number.prefix"
+                                    placeholder="CUST-RCVBLE"
+                                />
+
+
+                            </div>
+                            {errors.customer_deposit_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.customer_deposit_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.customer_deposit_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["customer_deposit_serial_number.padding_count"] = "";
+                                        formData.customer_deposit_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="customer_deposit_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+                            </div>
+                            {errors.customer_deposit_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.customer_deposit_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.customer_deposit_serial_number.start_from_count}
+
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.customer_deposit_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["customer_deposit_serial_number.start_from_count"] = "";
+                                        formData.customer_deposit_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="customer_deposit_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.customer_deposit_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.customer_deposit_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <h5><b>Customer Payable ID's:</b> {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String(formData.customer_withdrawal_serial_number?.start_from_count).padStart(formData.customer_withdrawal_serial_number.padding_count, '0')}, {formData.customer_withdrawal_serial_number?.prefix.toUpperCase()}-{String((formData.customer_withdrawal_serial_number?.start_from_count + 1)).padStart(formData.customer_withdrawal_serial_number?.padding_count, '0')}...</h5>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.customer_withdrawal_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["customer_withdrawal_serial_number.prefix"] = "";
+                                        formData.customer_withdrawal_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.customer_withdrawal_serial_number.prefix"
+                                    placeholder="CUST-PYBLE"
+                                />
+
+
+                            </div>
+                            {errors.customer_withdrawal_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.customer_withdrawal_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.customer_withdrawal_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["customer_withdrawal_serial_number.padding_count"] = "";
+                                        formData.customer_withdrawal_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="customer_withdrawal_serial_number.padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+                            </div>
+                            {errors.customer_withdrawal_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.customer_withdrawal_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.customer_withdrawal_serial_number.start_from_count}
+
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.customer_withdrawal_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["customer_deposit_serial_number.start_from_count"] = "";
+                                        formData.customer_withdrawal_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="customer_withdrawal_serial_number.start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.customer_withdrawal_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.customer_withdrawal_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <h5><b>Capital ID's:</b> {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String(formData.capital_deposit_serial_number?.start_from_count).padStart(formData.capital_deposit_serial_number.padding_count, '0')}, {formData.capital_deposit_serial_number?.prefix.toUpperCase()}-{String((formData.capital_deposit_serial_number?.start_from_count + 1)).padStart(formData.capital_deposit_serial_number?.padding_count, '0')}...</h5>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.capital_deposit_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["capital_deposit_serial_number.prefix"] = "";
+                                        formData.capital_deposit_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="formData.capital_deposit_serial_number.prefix"
+                                    placeholder="CAP-DEPO"
+                                />
+
+
+                            </div>
+                            {errors.capital_deposit_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.capital_deposit_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.capital_deposit_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["capital_deposit_serial_number_padding_count"] = "";
+                                        formData.capital_deposit_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="capital_deposit_serial_number_padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+                            </div>
+                            {errors.capital_deposit_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.capital_deposit_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.capital_deposit_serial_number.start_from_count}
+
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.capital_deposit_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["capital_deposit_serial_number.start_from_count"] = "";
+                                        formData.capital_deposit_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="capital_deposit_serial_number_start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.capital_deposit_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.capital_deposit_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <h5><b>Drawing ID's:</b> {formData.divident_serial_number?.prefix.toUpperCase()}-{String(formData.divident_serial_number?.start_from_count).padStart(formData.divident_serial_number.padding_count, '0')}, {formData.divident_serial_number?.prefix.toUpperCase()}-{String((formData.divident_serial_number?.start_from_count + 1)).padStart(formData.divident_serial_number?.padding_count, '0')}...</h5>
+                        <div className="col-md-2">
+                            <label className="form-label">Prefix</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.divident_serial_number.prefix}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["divident_serial_number.prefix"] = "";
+                                        formData.divident_serial_number.prefix = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="divident_serial_number.prefix"
+                                    placeholder="CAP-DRWNG"
+                                />
+
+
+                            </div>
+                            {errors.divident_serial_number_prefix && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.divident_serial_number_prefix}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Padding count</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.divident_serial_number.padding_count}
+                                    type='number'
+                                    onChange={(e) => {
+
+                                        errors["divident_serial_number_padding_count"] = "";
+                                        formData.divident_serial_number.padding_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="divident_serial_number_padding_count"
+                                    placeholder="4 will make counter value: 0001"
+                                />
+                            </div>
+                            {errors.divident_serial_number_padding_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.divident_serial_number_padding_count}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Counting start from</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.divident_serial_number.start_from_count}
+
+                                    type='number'
+                                    onChange={(e) => {
+                                        if (!e.target.value) {
+                                            formData.divident_serial_number.start_from_count = e.target.value;
+                                            setFormData({ ...formData });
+                                            return
+                                        }
+                                        errors["divident_serial_number.start_from_count"] = "";
+                                        formData.divident_serial_number.start_from_count = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="divident_serial_number_start_from_count"
+                                    placeholder="eg: Start counting from 1000"
+                                />
+                            </div>
+                            {errors.divident_serial_number_start_from_count && (
+                                <div style={{ color: "red" }}>
+                                    <i className="bi bi-x-lg"> </i>
+                                    {errors.divident_serial_number_start_from_count}
+                                </div>
+                            )}
+                        </div>
 
                         <h6><b>Bank Account:</b></h6>
                         <div className="col-md-4">
@@ -2415,7 +2982,6 @@ const StoreCreate = forwardRef((props, ref) => {
                         <h6><b>Settings</b></h6>
 
                         <div className="col-md-2">
-
                             <div className="input-group mb-3">
                                 <input type="checkbox"
                                     value={formData.show_address_in_invoice_footer}
@@ -2438,6 +3004,91 @@ const StoreCreate = forwardRef((props, ref) => {
                                     {errors.show_address_in_invoice_footer}
                                 </div>
                             )}
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Default quotation validity (# of Days)*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    type="number"
+                                    className="text-center"
+                                    style={{ width: "50px" }}
+                                    value={formData.default_quotation_validity_days}
+                                    onChange={(e) => {
+                                        console.log("Inside onchange validity days");
+                                        if (!e.target.value) {
+                                            formData.default_quotation_validity_days = null;
+                                            errors["default_quotation_validity_days"] = "";
+                                            setFormData({ ...formData });
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        if (parseInt(e.target.value) <= 0) {
+                                            formData.default_quotation_validity_days = parseInt(e.target.value);
+                                            setFormData({ ...formData });
+                                            errors["default_quotation_validity_days"] =
+                                                "Deafult quotation validity days should be > 0";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        errors["default_quotation_validity_days"] = "";
+                                        setErrors({ ...errors });
+                                        formData.default_quotation_validity_days = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+
+                                {errors.default_quotation_validity_days && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.default_quotation_validity_days}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Default quotation delivery (# of Days)*</label>
+                            <div className="input-group mb-3">
+                                <input
+                                    type="number"
+                                    className="text-center"
+                                    style={{ width: "50px" }}
+                                    value={formData.default_quotation_delivery_days}
+                                    onChange={(e) => {
+                                        console.log("Inside onchange delivery days");
+                                        if (!e.target.value) {
+                                            formData.default_quotation_delivery_days = null;
+                                            errors["default_quotation_delivery_days"] = "";
+                                            setFormData({ ...formData });
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        if (parseInt(e.target.value) <= 0) {
+                                            formData.default_quotation_delivery_days = parseInt(e.target.value);
+                                            setFormData({ ...formData });
+                                            errors["default_quotation_delivery_days"] =
+                                                "Default quotation delivery days should be > 0";
+                                            setErrors({ ...errors });
+                                            return;
+                                        }
+
+                                        errors["default_quotation_delivery_days"] = "";
+                                        setErrors({ ...errors });
+                                        formData.default_quotation_delivery_days = parseInt(e.target.value);
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                />
+
+                                {errors.default_quotation_delivery_days && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.default_quotation_delivery_days}
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <Modal.Footer>

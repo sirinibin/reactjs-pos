@@ -415,7 +415,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         setIsVendorsLoading(true);
         let result = await fetch(
             "/v1/vendor?" + Select + queryString,
@@ -1280,6 +1280,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         return;
                                     }
                                     formData.vendor_id = selectedItems[0].id;
+                                    if (selectedItems[0].use_remarks_in_purchases && selectedItems[0].remarks) {
+                                        formData.remarks = selectedItems[0].remarks;
+                                    }
                                     setFormData({ ...formData });
                                     setSelectedVendors(selectedItems);
                                 }}

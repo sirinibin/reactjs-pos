@@ -397,7 +397,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
-                        {formData.id ? "Update Customer Withdrawal #" + formData.description : "Create New Customer Withdrawal"}
+                        {formData.id ? "Update Customer Payable #" + formData.code : "Create New Customer Payable"}
                     </Modal.Title>
 
 

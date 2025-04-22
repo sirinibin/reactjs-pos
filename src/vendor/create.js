@@ -283,7 +283,7 @@ const VendorCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="lg" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Vendor #" + formData.name : "Create New Vendor"}
@@ -322,7 +322,7 @@ const VendorCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Name*</label>
 
                             <div className="input-group mb-3">
@@ -350,7 +350,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Name In Arabic</label>
 
                             <div className="input-group mb-3">
@@ -378,7 +378,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">ID</label>
 
                             <div className="input-group mb-3">
@@ -404,7 +404,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Phone*</label>
 
                             <div className="input-group mb-3">
@@ -432,7 +432,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Email</label>
 
                             <div className="input-group mb-3">
@@ -460,124 +460,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Title(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.title ? formData.title : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["title"] = "";
-                                        setErrors({ ...errors });
-                                        formData.title = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="title"
-                                    placeholder="Title"
-                                />
-                                {errors.title && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.title}
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Title In Arabic(Optional)</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.title_in_arabic ? formData.title_in_arabic : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["title_in_arabic"] = "";
-                                        setErrors({ ...errors });
-                                        formData.title_in_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="title_in_arabic"
-                                    placeholder="Title In Arabic"
-                                />
-                                {errors.title_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.title_in_arabic}
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-
-
-                        <div className="col-md-6">
-                            <label className="form-label">Address</label>
-
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["address"] = "";
-                                        setErrors({ ...errors });
-                                        formData.address = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address"
-                                    placeholder="Address"
-                                />
-                                {errors.address && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.address}
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-
-                        <div className="col-md-6">
-                            <label className="form-label">Address In Arabic</label>
-
-                            <div className="input-group mb-3">
-                                <textarea
-                                    value={formData.address_in_arabic}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["address_in_arabic"] = "";
-                                        setErrors({ ...errors });
-                                        formData.address_in_arabic = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="address_in_arabic"
-                                    placeholder="Address In Arabic"
-                                />
-                                {errors.address_in_arabic && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.address_in_arabic}
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-
-
-
-
-
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Registration Number(C.R NO.)</label>
 
                             <div className="input-group mb-3">
@@ -605,7 +488,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">VAT NO.</label>
 
                             <div className="input-group mb-3">
@@ -633,7 +516,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Contact Person</label>
                             <div className="input-group mb-3">
                                 <input
@@ -732,10 +615,51 @@ const VendorCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <div className="col-md-3">
+                            <label className="form-label">Remarks
+                                |&nbsp;<input type="checkbox" style={{ marginLeft: "3px" }}
+                                    value={formData.use_remarks_in_purchases}
+                                    checked={formData.use_remarks_in_purchases}
+                                    onChange={(e) => {
+
+                                        errors["formData.show_address_in_invoice_footer"] = "";
+                                        formData.use_remarks_in_purchases = !formData.use_remarks_in_purchases
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="formData.use_remarks_in_sales"
+
+                                /> Use in Purchase / Purchase Return
+                            </label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.remarks}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.remarks = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="remarks"
+                                    placeholder="Remarks"
+                                />
+                            </div>
+                            {errors.remarks && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.remarks}
+                                </div>
+                            )}
+                        </div>
+
 
                         <h2>National Address:</h2>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Building Number</label>
 
                             <div className="input-group mb-3">
@@ -763,68 +687,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-
-                        <div className="col-md-6">
-                            <label className="form-label">Unit Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.unit_no ? formData.national_address.unit_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_unit_no"] = "";
-                                        formData.national_address.unit_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.unit_no"
-                                    placeholder="Unit Number"
-                                />
-
-                                {errors.national_address_unit_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_unit_no}
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-
-
-                        <div className="col-md-6">
-                            <label className="form-label">Additional Number</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={formData.national_address.additional_no ? formData.national_address.additional_no : ""}
-                                    type='string'
-                                    onChange={(e) => {
-
-                                        errors["national_address_additional_no"] = "";
-                                        formData.national_address.additional_no = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-                                    id="national_address.additional_no"
-                                    placeholder="Additional Number"
-                                />
-
-                                {errors.national_address_additional_no && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.national_address_additional_no}
-                                    </div>
-                                )}
-
-                            </div>
-                        </div>
-
-
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Street Name</label>
 
                             <div className="input-group mb-3">
@@ -853,7 +716,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Street Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -883,7 +746,7 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">District Name</label>
 
                             <div className="input-group mb-3">
@@ -912,7 +775,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">District Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -941,8 +804,37 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
+                        <div className="col-md-3">
+                            <label className="form-label">Unit Number</label>
 
-                        <div className="col-md-6">
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address.unit_no ? formData.national_address.unit_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_unit_no"] = "";
+                                        formData.national_address.unit_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.unit_no"
+                                    placeholder="Unit Number"
+                                />
+
+                                {errors.national_address_unit_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_unit_no}
+                                    </div>
+                                )}
+
+                            </div>
+                        </div>
+
+
+                        <div className="col-md-3">
                             <label className="form-label">City Name</label>
 
                             <div className="input-group mb-3">
@@ -971,7 +863,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">City Name(Arabic)</label>
 
                             <div className="input-group mb-3">
@@ -1000,7 +892,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
+                        <div className="col-md-3">
                             <label className="form-label">Zipcode</label>
 
                             <div className="input-group mb-3">
@@ -1023,6 +915,35 @@ const VendorCreate = forwardRef((props, ref) => {
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>
                                         {errors.national_address_zipcode}
+                                    </div>
+                                )}
+
+                            </div>
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Additional Number</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address.additional_no ? formData.national_address.additional_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_additional_no"] = "";
+                                        formData.national_address.additional_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.additional_no"
+                                    placeholder="Additional Number"
+                                />
+
+                                {errors.national_address_additional_no && (
+                                    <div style={{ color: "red" }}>
+                                        <i className="bi bi-x-lg"> </i>
+                                        {errors.national_address_additional_no}
                                     </div>
                                 )}
 

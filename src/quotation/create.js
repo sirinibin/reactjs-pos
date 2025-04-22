@@ -92,10 +92,53 @@ const QuotationCreate = forwardRef((props, ref) => {
       setFormData({ ...formData });
       if (id) {
         getQuotation(id);
+      } else {
+        getStore(localStorage.getItem("store_id"));
       }
       SetShow(true);
     },
   }));
+
+
+
+  function getStore(id) {
+    console.log("inside get Store");
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('access_token'),
+      },
+    };
+
+    fetch('/v1/store/' + id, requestOptions)
+      .then(async response => {
+        const isJson = response.headers.get('content-type')?.includes('application/json');
+        const data = isJson && await response.json();
+
+        // check for error response
+        if (!response.ok) {
+          const error = (data && data.errors);
+          return Promise.reject(error);
+        }
+
+        console.log("Response:");
+        console.log(data);
+        let storeData = data.result;
+        if (storeData.default_quotation_validity_days) {
+          formData.validity_days = storeData.default_quotation_validity_days;
+        }
+
+        if (storeData.default_quotation_delivery_days) {
+          formData.delivery_days = storeData.default_quotation_delivery_days;
+        }
+
+        setFormData(formData);
+      })
+      .catch(error => {
+
+      });
+  }
 
   useEffect(() => {
     const listener = (event) => {
@@ -2151,11 +2194,8 @@ const QuotationCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-
-
             <div className="col-md-3">
               <label className="form-label">Validity (# of Days)*</label>
-
               <div className="input-group mb-3">
                 <input
                   type="number"
@@ -2198,13 +2238,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                   <div style={{ color: "red" }}>
                     <i className="bi bi-x-lg"> </i>
                     {errors.validity_days}
-                  </div>
-                )}
-
-                {formData.validity_days > 0 && formData.validity_days && !errors.validity_days && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
                   </div>
                 )}
               </div>
@@ -2255,12 +2288,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                   <div style={{ color: "red" }}>
                     <i className="bi bi-x-lg"> </i>
                     {errors.delivery_days}
-                  </div>
-                )}
-                {formData.delivery_days > 0 && formData.delivery_days && !errors.delivery_days && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
                   </div>
                 )}
               </div>
