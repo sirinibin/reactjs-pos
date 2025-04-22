@@ -1843,6 +1843,7 @@ function SalesReturnIndex(props) {
                                                     <Typeahead
                                                         id="customer_id"
                                                         labelKey="search_label"
+                                                        style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "customer_id",

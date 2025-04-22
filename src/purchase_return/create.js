@@ -85,7 +85,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             }
 
             if (purchaseId) {
-                reCalculate();
+                // reCalculate();
                 getPurchase(purchaseId);
             }
             setShow(true);
@@ -221,6 +221,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     payment_status: purchaseReturn.payment_status,
                     shipping_handling_fees: purchaseReturn.shipping_handling_fees,
                     remarks: purchaseReturn.remarks,
+                    address: purchaseReturn.address,
+                    phone: purchaseReturn.phone,
+                    vat_no: purchaseReturn.vat_no,
                 };
 
                 if (!formData.payments_input) {
@@ -324,6 +327,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     purchase_id: purchase.id,
                     purchase_code: purchase.code,
                     remarks: purchase.remarks,
+                    address: purchase.address,
+                    phone: purchase.phone,
+                    vat_no: purchase.vat_no,
                     //   vendor_invoice_no: purchase.vendor_invoice_no,
                     store_id: purchase.store_id,
                     vendor_id: purchase.vendor_id,
@@ -1019,6 +1025,88 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+
+                        {selectedProducts?.length > 0 && <div className="col-md-2">
+                            <label className="form-label">Phone ( 05.. / +966..)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.phone ? formData.phone : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["phone"] = "";
+                                        setErrors({ ...errors });
+                                        formData.phone = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="phone"
+                                    placeholder="Phone"
+                                />
+                            </div>
+                            {errors.phone && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.phone}
+                                </div>
+                            )}
+                        </div>}
+
+
+
+                        {selectedProducts?.length > 0 && <div className="col-md-2">
+                            <label className="form-label">VAT NO.(15 digits)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vat_no ? formData.vat_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["vat_no"] = "";
+                                        setErrors({ ...errors });
+                                        formData.vat_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="vat_no"
+                                    placeholder="VAT NO."
+                                />
+                            </div>
+                            {errors.vat_no && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.vat_no}
+                                </div>
+                            )}
+                        </div>}
+
+                        {selectedProducts?.length > 0 && <div className="col-md-3">
+                            <label className="form-label">Address</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.address}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address"
+                                    placeholder="Address"
+                                />
+                            </div>
+                            {errors.address && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address}
+                                </div>
+                            )}
+                        </div>}
 
                         <div className="col-md-3" >
                             <label className="form-label">Remarks</label>

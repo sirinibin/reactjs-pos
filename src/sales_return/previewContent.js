@@ -151,12 +151,16 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                             <div class="row fw-bold">
                                 <div class="col-7 text-start" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
                                 <div class="col-6 " dir="ltr" style={{ marginLeft: "-66px" }}>
-                                    <span dir="ltr">{props.model.customer?.vat_no ? "#" + props.model.customer.vat_no : "N/A"}</span>
+                                    <span dir="ltr">
+                                        {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
+                                        {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
+                                        {!props.model.customer && !props.model.vat_no ? "N/A" : ""}
+                                    </span>
                                 </div>
                             </div>
                             <div className="row">
                                 <div className="col-7 text-start fw-bold" >Customer C.R | رقم تسجيل شركة العميل:</div>
-                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
+                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-66px" }}>
                                     <span dir="ltr">
                                         {props.model.customer?.registration_number ? props.model.customer.registration_number : "N/A"}
                                     </span>
@@ -167,7 +171,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                 <div class="col-6 " dir="ltr" style={{ marginLeft: "-66px" }}>
 
                                     <span dir="ltr">
-                                        {props.model.address ? props.model.address : ""}
+                                        {props.model.address && !props.model.customer ? props.model.address : ""}
                                         {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
                                         {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
                                         {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}

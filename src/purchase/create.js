@@ -260,6 +260,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     vendor_id: purchase.vendor_id,
                     vendor_name: purchase.vendor_name,
                     date_str: purchase.date,
+                    phone: purchase.phone,
+                    vat_no: purchase.vat_no,
+                    address: purchase.address,
                     // date: purchase.date,
                     vat_percent: purchase.vat_percent,
                     discount: purchase.discount,
@@ -1397,6 +1400,88 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        <div className="col-md-2">
+                            <label className="form-label">Phone ( 05.. / +966..)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.phone ? formData.phone : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["phone"] = "";
+                                        setErrors({ ...errors });
+                                        formData.phone = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="phone"
+                                    placeholder="Phone"
+                                />
+                            </div>
+                            {errors.phone && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.phone}
+                                </div>
+                            )}
+                        </div>
+
+
+
+                        <div className="col-md-2">
+                            <label className="form-label">VAT NO.(15 digits)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vat_no ? formData.vat_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["vat_no"] = "";
+                                        setErrors({ ...errors });
+                                        formData.vat_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="vat_no"
+                                    placeholder="VAT NO."
+                                />
+                            </div>
+                            {errors.vat_no && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.vat_no}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-3">
+                            <label className="form-label">Address</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.address}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address"
+                                    placeholder="Address"
+                                />
+                            </div>
+                            {errors.address && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-3" >

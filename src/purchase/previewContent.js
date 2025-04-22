@@ -128,8 +128,8 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                 <div class="col-7 text-start fw-bold" >Vendor VAT | ضريبة القيمة المضافة للعملاء:</div>
                                 <div class="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
                                     <span dir="ltr">
-                                        {props.model.vendor?.vat_no ? "#" + props.model.vendor.vat_no : ""}
-                                        {!props.model.vendor && props.model.vat_no ? "#" + props.model.vat_no : ""}
+                                        {props.model.vendor?.vat_no ? props.model.vendor.vat_no : ""}
+                                        {!props.model.vendor && props.model.vat_no ? props.model.vat_no : ""}
                                         {!props.model.vendor && !props.model.vat_no ? "N/A" : ""}
                                     </span>
                                 </div>
@@ -147,7 +147,7 @@ const PurchasePreviewContent = forwardRef((props, ref) => {
                                 <div class="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
 
                                     <span dir="ltr">
-                                        {props.model.address ? props.model.address : ""}
+                                        {props.model.address && !props.model.vendor ? props.model.address : ""}
                                         {!props.model.vendor?.national_address?.building_no && !props.model.vendor?.national_address?.unit_no && props.model.vendor?.national_address?.street_name && props.model.vendor?.national_address?.district_name && props.model.vendor?.national_address?.city_name ? props.model.vendor?.address : ""}
                                         {props.model.vendor?.national_address?.building_no ? `${props.model.vendor.national_address.building_no}` : ""}
                                         {props.model.vendor?.national_address?.street_name ? ` ${props.model.vendor.national_address.street_name}` : ""}

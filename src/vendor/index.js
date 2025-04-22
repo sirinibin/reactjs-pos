@@ -145,6 +145,8 @@ function VendorIndex(props) {
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
+        } else if (field === "vendor_id") {
+            setSelectedVendors(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -264,6 +266,40 @@ function VendorIndex(props) {
     const CreateFormRef = useRef();
     function openCreateForm() {
         CreateFormRef.current.open();
+    }
+
+    //Vendor Auto Suggestion
+    const [vendorOptions, setVendorOptions] = useState([]);
+    const [selectedVendors, setSelectedVendors] = useState([]);
+    async function suggestVendors(searchTerm) {
+        console.log("Inside handle suggestVendors");
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = `&${queryString}`;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
+        let data = await result.json();
+
+        setVendorOptions(data.result);
     }
 
     return (
@@ -910,13 +946,24 @@ function VendorIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
-                                                    <input
-                                                        type="text"
-                                                        id="name"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("name", e.target.value)
-                                                        }
-                                                        className="form-control"
+                                                    <Typeahead
+                                                        style={{ minWidth: "300px" }}
+                                                        id="vendor_id"
+                                                        labelKey="search_label"
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "vendor_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={vendorOptions}
+                                                        placeholder="Vendor Name / Mob / VAT # / ID"
+                                                        selected={selectedVendors}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestVendors(searchTerm);
+                                                        }}
+                                                        multiple
                                                     />
                                                 </th>
                                                 <th>

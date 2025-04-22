@@ -1276,6 +1276,7 @@ function PurchaseReturnIndex(props) {
                                                     <Typeahead
                                                         id="vendor_id"
                                                         labelKey="search_label"
+                                                        style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "vendor_id",

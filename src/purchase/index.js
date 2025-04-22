@@ -1408,6 +1408,7 @@ function PurchaseIndex(props) {
                                                 </th>
                                                 <th>
                                                     <Typeahead
+                                                        style={{ minWidth: "300px" }}
                                                         id="vendor_id"
                                                         labelKey="search_label"
                                                         onChange={(selectedItems) => {

@@ -160,7 +160,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                 <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
 
                                     <span dir="ltr">
-                                        {props.model.address ? props.model.address : ""}
+                                        {props.model.address && !props.model.customer ? props.model.address : ""}
                                         {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
                                         {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
                                         {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}

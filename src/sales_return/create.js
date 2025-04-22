@@ -147,6 +147,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     date_str: salesReturn.date,
                     payments_input: salesReturn.payments,
                     cash_discount: salesReturn.cash_discount,
+                    vat_no: salesReturn.vat_no,
+                    address: salesReturn.address,
+                    phone: salesReturn.phone,
+                    remarks: salesReturn.remarks,
                     // date: purchase.date,
                     vat_percent: salesReturn.vat_percent,
                     discount: salesReturn.discount,
@@ -154,7 +158,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     is_discount_percent: salesReturn.is_discount_percent,
                     payment_status: salesReturn.payment_status,
                     shipping_handling_fees: salesReturn.shipping_handling_fees,
-                    remarks: salesReturn.remarks,
                     customer: salesReturn.customer,
                 };
 
@@ -171,7 +174,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 }
 
 
-                if (formData.customer_id) {
+                if (formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
                             id: formData.customer_id,
@@ -312,6 +315,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     formData.order_code = order.code;
                     formData.store_id = order.store_id;
                     formData.remarks = order.remarks;
+                    formData.address = order.address;
+                    formData.phone = order.phone;
+                    formData.vat_no = order.vat_no;
                     /*
                     formData.received_by = order.delivered_by;
                     formData.received_by_signature_id = order.delivered_by_signature_id;
@@ -1123,6 +1129,88 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                         </div>}
 
+                        {selectedProducts?.length > 0 && <div className="col-md-2">
+                            <label className="form-label">Phone ( 05.. / +966..)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.phone ? formData.phone : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["phone"] = "";
+                                        setErrors({ ...errors });
+                                        formData.phone = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="phone"
+                                    placeholder="Phone"
+                                />
+                            </div>
+                            {errors.phone && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.phone}
+                                </div>
+                            )}
+                        </div>}
+
+
+
+                        {selectedProducts?.length > 0 && <div className="col-md-2">
+                            <label className="form-label">VAT NO.(15 digits)</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.vat_no ? formData.vat_no : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["vat_no"] = "";
+                                        setErrors({ ...errors });
+                                        formData.vat_no = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="vat_no"
+                                    placeholder="VAT NO."
+                                />
+                            </div>
+                            {errors.vat_no && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.vat_no}
+                                </div>
+                            )}
+                        </div>}
+
+                        {selectedProducts?.length > 0 && <div className="col-md-3">
+                            <label className="form-label">Address</label>
+                            <div className="input-group mb-3">
+                                <textarea
+                                    value={formData.address}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["address"] = "";
+                                        setErrors({ ...errors });
+                                        formData.address = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="address"
+                                    placeholder="Address"
+                                />
+                            </div>
+                            {errors.address && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.address}
+                                </div>
+                            )}
+                        </div>}
+
                         {selectedProducts?.length > 0 && <div className="col-md-3" >
                             <label className="form-label">Remarks</label>
                             <div className="input-group mb-3">
@@ -1874,7 +1962,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             <option value="bank_card">Bank Card</option>
                                                             <option value="bank_transfer">Bank Transfer</option>
                                                             <option value="bank_cheque">Bank Cheque</option>
-                                                            {formData.customer_id && <option value="customer_account">Customer Account</option>}
+                                                            {formData.customer_name && <option value="customer_account">Customer Account</option>}
                                                         </select>
                                                         {errors["payment_method_" + key] && (
                                                             <div style={{ color: "red" }}>

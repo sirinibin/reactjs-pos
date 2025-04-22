@@ -615,7 +615,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-3">
+                        <div className="col-md-4">
                             <label className="form-label">Remarks
                                 |&nbsp;<input type="checkbox" style={{ marginLeft: "3px" }}
                                     value={formData.use_remarks_in_purchases}

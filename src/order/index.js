@@ -1933,6 +1933,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                     <Typeahead
                                                         id="customer_id"
                                                         labelKey="search_label"
+                                                        style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "customer_id",
