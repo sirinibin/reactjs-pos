@@ -20,6 +20,21 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
         });
     }
 
+    function getArabicDate(engishDate) {
+        let event = new Date(engishDate);
+        let options = {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric",
+            //  timeZoneName: "short",
+        };
+        return event.toLocaleDateString('ar-EG', options)
+    }
+
+
     /*
     function getArabicDate(engishDate) {
         let event = new Date(engishDate);
@@ -110,7 +125,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                     <span dir="ltr"> {props.model.date ? format(
                                         new Date(props.model.date),
                                         "yyyy-MM-dd h:mma"
-                                    ) : "<DATETIME>"}
+                                    ) : "<DATETIME>"}  {" | " + getArabicDate(props.model.date)}
                                     </span>
                                 </div>
                             </div>
@@ -127,9 +142,11 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                 <div class="col-7 text-start fw-bold" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
                                 <div class="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
                                     <span dir="ltr">
-                                        {props.model.customer?.vat_no ? "#" + props.model.customer.vat_no : ""}
-                                        {!props.model.customer && props.model.vat_no ? "#" + props.model.vat_no : ""}
+                                        {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
+                                        {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
                                         {!props.model.customer && !props.model.vat_no ? "N/A" : ""}
+                                        {props.model.customer?.vat_no_in_arabic ? " | " + props.model.customer.vat_no_in_arabic : ""}
+                                        {!props.model.customer && props.model.vat_no ? " | " + convertToArabicNumber(props.model.vat_no) : ""}
                                     </span>
                                 </div>
                             </div>
@@ -137,7 +154,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                                 <div className="col-7 text-start fw-bold" >Customer C.R | رقم تسجيل شركة العميل:</div>
                                 <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
                                     <span dir="ltr">
-                                        {props.model.customer?.registration_number ? props.model.customer.registration_number : "N/A"}
+                                        {props.model.customer?.registration_number ? props.model.customer.registration_number + " | " + convertToArabicNumber(props.model.customer.registration_number) : "N/A"}
                                     </span>
                                 </div>
                             </div>

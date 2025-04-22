@@ -15,6 +15,31 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
             return persianMap[parseInt(m)];
         });
     }
+
+
+    function getArabicDate(engishDate) {
+        let event = new Date(engishDate);
+        let options = {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: "numeric",
+            minute: "numeric",
+            second: "numeric",
+            //  timeZoneName: "short",
+        };
+        return event.toLocaleDateString('ar-EG', options)
+    }
+
+    function convertToArabicNumber(input) {
+        if (Number.isInteger(input)) {
+            input = input.toString();
+        }
+
+        return input.replace(/\d/g, function (m) {
+            return persianMap[parseInt(m)];
+        });
+    }
     /*
         function getArabicDate(engishDate) {
             let event = new Date(engishDate);
@@ -95,7 +120,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                 </div>
 
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
-                    <div className="col-md-5" style={{ border: "solid 0px", width: "77%" }}>
+                    <div className="col-md-5" style={{ border: "solid 0px", width: "79%" }}>
 
                         <div class="container fw-bold" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
                             {props.model.store?.zatca?.phase === "2" && <div class="row" style={{ border: "solid 0px" }}>
@@ -122,7 +147,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                     <span dir="ltr"> {props.model.date ? format(
                                         new Date(props.model.date),
                                         "yyyy-MM-dd h:mma"
-                                    ) : "<DATETIME>"}
+                                    ) : "<DATETIME>"}  {" | " + getArabicDate(props.model.date)}
                                     </span>
                                 </div>
                             </div>
@@ -136,16 +161,19 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                 <div class="col-7 text-start" dir="ltr" >Original Invoice Date | تاريخ الفاتورة الأصلية:</div>
                                 <div class="col-6 " dir="ltr" style={{ marginLeft: "-66px" }}>
                                     <span dir="ltr"> {props.model.order?.date ? format(
-                                        new Date(props.model.order.date),
+                                        new Date(props.model.order?.date),
                                         "yyyy-MM-dd h:mma"
-                                    ) : "<DATETIME>"}
+                                    ) : "<DATETIME>"}  {" | " + getArabicDate(props.model.order?.date)}
                                     </span>
                                 </div>
                             </div>
                             <div class="row fw-bold">
                                 <div class="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
                                 <div class="col-6 " dir="ltr" style={{ marginLeft: "-66px" }}>
-                                    {props.model.customer ? props.model.customer.name : "N/A"}
+                                    {props.model.customer ? props.model.customer.name : ""}
+                                    {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
+                                    {!props.model.customerName && !props.model.customer ? "N/A" : ""}
+                                    {props.model.customer ? " | " + props.model.customer.name_in_arabic : ""}
                                 </div>
                             </div>
                             <div class="row fw-bold">
@@ -155,6 +183,8 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                         {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
                                         {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
                                         {!props.model.customer && !props.model.vat_no ? "N/A" : ""}
+                                        {props.model.customer?.vat_no_in_arabic ? " | " + props.model.customer.vat_no_in_arabic : ""}
+                                        {!props.model.customer && props.model.vat_no ? " | " + convertToArabicNumber(props.model.vat_no) : ""}
                                     </span>
                                 </div>
                             </div>
@@ -162,7 +192,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                                 <div className="col-7 text-start fw-bold" >Customer C.R | رقم تسجيل شركة العميل:</div>
                                 <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-66px" }}>
                                     <span dir="ltr">
-                                        {props.model.customer?.registration_number ? props.model.customer.registration_number : "N/A"}
+                                        {props.model.customer?.registration_number ? props.model.customer.registration_number + " | " + convertToArabicNumber(props.model.customer.registration_number) : "N/A"}
                                     </span>
                                 </div>
                             </div>
@@ -220,7 +250,7 @@ const SalesReturnPreviewContent = forwardRef((props, ref) => {
                             </li>
                         </ul>*/}
                     </div>
-                    <div className="col-md-5" style={{ border: "solid 0px", width: "23%" }}>
+                    <div className="col-md-5" style={{ border: "solid 0px", width: "21%" }}>
                         {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "108px", height: "108px" }} alt="Invoice QR Code" /> : ""}
                         {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "108px", height: "108px" }} size={108} /> : ""}
                         {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img className="text-start" src={props.model.QRImageData} style={{ width: "108px", height: "108px" }} alt="Invoice QR Code" /> : ""}
