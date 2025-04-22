@@ -971,7 +971,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   const handleSendSelected = () => {
     const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.id));
     if (props.onSelectProducts) {
-      props.onSelectProducts(newlySelectedProducts); // Send to parent
+      props.onSelectProducts(newlySelectedProducts, selectedCustomers); // Send to parent
     }
 
     handleClose();
@@ -1431,14 +1431,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                   {errors.product_id}
                 </div>
               ) : null}
-              {selectedProduct[0] &&
-                selectedProduct[0].id &&
-                !errors.product_id && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
             </div>
 
 

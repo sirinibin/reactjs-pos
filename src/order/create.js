@@ -1412,6 +1412,7 @@ function findDiscount() {
     const QuotationRef = useRef();
     const handleSelectedQuotation = (selectedQuotation) => {
         console.log("Selected Quotation:", selectedQuotation);
+        // formData.customer_id = selectedQuotation.customer_id;
         QuotationRef.current.open(selectedQuotation.id, "product_selection");
         //ProductsRef.current.open(selectedQuotation, "quotation_products");
     };
@@ -1482,7 +1483,7 @@ function findDiscount() {
     }
 
 
-    const handleSelectedProducts = (selected) => {
+    const handleSelectedProducts = (selected, selectedCustomers) => {
         console.log("Selected Products:", selected);
         let addedCount = 0;
         for (var i = 0; i < selected.length; i++) {
@@ -1492,7 +1493,12 @@ function findDiscount() {
         }
         setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
         setShowToast(true);
+        if (selectedCustomers && !formData.id) {
+            setSelectedCustomers(selectedCustomers);
+        }
         setTimeout(() => setShowToast(false), 3000);
+
+
 
         // props.showToastMessage("Successfully Added " + selected.length + " products", "success");
     };
