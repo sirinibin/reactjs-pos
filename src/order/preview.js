@@ -17,11 +17,11 @@ const OrderPreview = forwardRef((props, ref) => {
     }
 
     useImperativeHandle(ref, () => ({
-        open(modelObj) {
+        async open(modelObj) {
             if (modelObj) {
                 model = modelObj;
                 setModel({ ...model })
-
+                await getOrder(model.id);
                 if (model.store_id) {
                     getStore(model.store_id);
                 }
@@ -108,6 +108,46 @@ const OrderPreview = forwardRef((props, ref) => {
         },
 
     }));
+
+
+    async function getOrder(id) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        await fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                model = data.result;
+                setModel({ ...model });
+                return model;
+            })
+            .catch(error => {
+
+            });
+    }
 
 
 

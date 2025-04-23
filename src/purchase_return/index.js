@@ -18,6 +18,7 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import Purchases from "./../utils/purchases.js";
+import PurchaseReturnPreview from "./preview.js"
 
 import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
@@ -779,8 +780,14 @@ function PurchaseReturnIndex(props) {
     };
 
 
+    const PreviewRef = useRef();
+    function openPreview(model) {
+        PreviewRef.current.open(model);
+    }
+
     return (
         <>
+            <PurchaseReturnPreview ref={PreviewRef} />
             <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />
             <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} />
             <PurchaseReturnView ref={DetailsViewRef} />
@@ -1577,6 +1584,13 @@ function PurchaseReturnIndex(props) {
                                                                 openDetailsView(purchasereturn.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                            &nbsp;
+
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openPreview(purchasereturn);
+                                                            }}>
+                                                                <i className="bi bi-printer"></i>
                                                             </Button>
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchasereturn.code}</td>

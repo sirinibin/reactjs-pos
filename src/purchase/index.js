@@ -17,6 +17,7 @@ import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
+import PurchasePreview from "./preview.js";
 
 
 import ReactExport from 'react-data-export';
@@ -802,9 +803,15 @@ function PurchaseIndex(props) {
     const PurchaseReturnListRef = useRef();
 
 
+    const PreviewRef = useRef();
+    function openPreview(model) {
+        PreviewRef.current.open(model);
+    }
+
 
     return (
         <>
+            <PurchasePreview ref={PreviewRef} />
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
             <PurchaseReturnCreate ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />
@@ -1847,6 +1854,13 @@ function PurchaseIndex(props) {
                                                                 openDetailsView(purchase.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                            &nbsp;
+
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openPreview(purchase);
+                                                            }}>
+                                                                <i className="bi bi-printer"></i>
                                                             </Button>
 
                                                             &nbsp;<button

@@ -22,6 +22,7 @@ import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
+import OrderPreview from "./preview.js";
 
 import "./../utils/stickyHeader.css";
 
@@ -1174,11 +1175,16 @@ const OrderIndex = forwardRef((props, ref) => {
     const [successMessage, setSuccessMessage] = useState(false);
 
 
+    const PreviewRef = useRef();
+    function openPreview(model) {
+        PreviewRef.current.open(model);
+    }
 
 
 
     return (
         <>
+            <OrderPreview ref={PreviewRef} />
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
             <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />
             <SalesReturnCreate ref={SalesReturnCreateRef} showToastMessage={props.showToastMessage} refreshSalesList={list} />
@@ -2220,6 +2226,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>&nbsp;
+
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openPreview(order);
+                                                            }}>
+                                                                <i className="bi bi-printer"></i>
+                                                            </Button>
+                                                            &nbsp;
                                                             <Button
                                                                 className="btn btn-dark btn-sm"
                                                                 data-bs-toggle="tooltip"

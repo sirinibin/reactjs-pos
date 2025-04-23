@@ -22,6 +22,7 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import Sales from "./../utils/sales.js";
+import SalesReturnPreview from "./preview.js";
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -1140,8 +1141,14 @@ function SalesReturnIndex(props) {
 
 
 
+    const PreviewRef = useRef();
+    function openPreview(model) {
+        PreviewRef.current.open(model);
+    }
+
     return (
         <>
+            <SalesReturnPreview ref={PreviewRef} />
             <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
             <SalesReturnCreate ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />
             <SalesReturnView ref={DetailsViewRef} />
@@ -2064,6 +2071,13 @@ function SalesReturnIndex(props) {
                                                                 openDetailsView(salesreturn.id);
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                            &nbsp;
+
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openPreview(salesreturn);
+                                                            }}>
+                                                                <i className="bi bi-printer"></i>
                                                             </Button>
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.code}</td>

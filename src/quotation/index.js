@@ -14,6 +14,7 @@ import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
+import QuotationPreview from "./preview.js"
 
 function QuotationIndex(props) {
   const { lastMessage } = useContext(WebSocketContext);
@@ -425,10 +426,16 @@ function QuotationIndex(props) {
     CreateFormRef.current.open();
   }
 
+  const PreviewRef = useRef();
+  function openPreview(model) {
+    PreviewRef.current.open(model);
+  }
+
 
 
   return (
     <>
+      <QuotationPreview ref={PreviewRef} />
       <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
       <div className="container-fluid p-0">
@@ -1025,6 +1032,13 @@ function QuotationIndex(props) {
                                 openDetailsView(quotation.id);
                               }}>
                                 <i className="bi bi-eye"></i>
+                              </Button>
+                              &nbsp;
+
+                              <Button className="btn btn-primary btn-sm" onClick={() => {
+                                openPreview(quotation);
+                              }}>
+                                <i className="bi bi-printer"></i>
                               </Button>
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.code}</td>
