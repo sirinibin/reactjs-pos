@@ -181,7 +181,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         >
 
                             <table
-                                className="table table-bordered"
+                                className="table table-bordered no-bold"
                                 style={{ borderRadius: "6px" }}
                             >
                                 <thead style={{ fontSize: "3mm" }}>

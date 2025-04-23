@@ -852,6 +852,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     QuotationHistoryRef.current.open(model, selectedCustomers);
   }
 
+  /*
 
   const handleSelectedProducts = (selected) => {
     console.log("Selected Products:", selected);
@@ -867,6 +868,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
     // props.showToastMessage("Successfully Added " + selected.length + " products", "success");
   };
+  */
 
 
   const [showToast, setShowToast] = useState(false);
@@ -915,10 +917,28 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     handleClose();
   };
 
+  function openProducts() {
+    ProductsRef.current.open();
+  }
+
+
+  const handleSelectedProductsToDeliveryNote = (selected) => {
+    console.log("Selected Products:", selected);
+    let addedCount = 0;
+    for (var i = 0; i < selected.length; i++) {
+      if (addProduct(selected[i])) {
+        addedCount++;
+      }
+    }
+    setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
   return (
     <>
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
-      <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
+      <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsToDeliveryNote} showToastMessage={props.showToastMessage} />
       <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
       <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
       <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1160,7 +1180,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               </div>
             </div>
 
-            <div className="col-md-12">
+            <div className="col-md-8">
               <label className="form-label">Product*</label>
               <Typeahead
                 id="product_id"
@@ -1201,14 +1221,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   {errors.product_id}
                 </div>
               ) : null}
-              {selectedProduct[0] &&
-                selectedProduct[0].id &&
-                !errors.product_id && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
+            </div>
+            <div className="col-md-1">
+              <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
+                <i class="bi bi-list"></i>
+              </Button>
             </div>
 
             <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>

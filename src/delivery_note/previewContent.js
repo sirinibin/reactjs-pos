@@ -149,7 +149,7 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                         >
 
                             <table
-                                className="table table-bordered"
+                                className="table table-bordered no-bold"
                                 style={{ fontSize: "3mm", borderRadius: "6px" }}
                             >
                                 <thead>
@@ -214,7 +214,7 @@ const DeliveryNotePreviewContent = forwardRef((props, ref) => {
                                 </tbody>
                             </table>
 
-                            <table className="table table-bordered" style={{ fontSize: "3mm" }}>
+                            <table className="table table-bordered no-bold" style={{ fontSize: "3mm" }}>
                                 <thead>
                                     <tr>
                                         <th className="text-end" style={{ width: "13%", padding: "0px" }}>

@@ -29,6 +29,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
             formData = {
                 images_content: [],
             };
+            formData.date_str = new Date();
             setFormData({ formData });
 
             if (id) {
@@ -98,6 +99,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
     //fields
     let [formData, setFormData] = useState({
         images_content: [],
+        date_str: new Date(),
     });
 
     const [show, SetShow] = useState(false);
@@ -155,6 +157,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 setSelectedCategories(selectedCategories);
 
                 formData = data.result;
+                formData.date_str = formData.date;
 
                 let selectedStores = [
                     {
@@ -525,6 +528,35 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                 )}
                             </div>
                         </div>
+                        <div className="col-md-4">
+                            <label className="form-label">Date*</label>
+                            <div className="input-group mb-3">
+                                <DatePicker
+                                    id="date_str"
+                                    selected={formData.date_str ? new Date(formData.date_str) : new Date()}
+                                    value={formData.date_str ? format(
+                                        new Date(formData.date_str),
+                                        "MMMM d, yyyy h:mm aa"
+                                    ) : null}
+                                    className="form-control"
+                                    dateFormat="MMMM d, yyyy h:mm aa"
+                                    showTimeSelect
+                                    timeIntervals="1"
+                                    onChange={(value) => {
+                                        console.log("Value", value);
+                                        formData.date_str = value;
+                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
+                                        setFormData({ ...formData });
+                                    }}
+                                />
+
+                                {errors.date_str && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.date_str}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
 
                         <div className="col-md-6">
                             <label className="form-label">Description*</label>
@@ -605,37 +637,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-6">
-                            <label className="form-label">Date Time*</label>
 
-                            <div className="input-group mb-3">
-                                <DatePicker
-                                    id="date_str"
-                                    selected={formData.date_str ? new Date(formData.date_str) : null}
-                                    value={formData.date_str ? format(
-                                        new Date(formData.date_str),
-                                        "MMMM d, yyyy h:mm aa"
-                                    ) : null}
-                                    className="form-control"
-                                    dateFormat="MMMM d, yyyy h:mm aa"
-                                    showTimeSelect
-                                    timeIntervals="1"
-                                    onChange={(value) => {
-                                        console.log("Value", value);
-                                        formData.date_str = value;
-                                        // formData.date_str = format(new Date(value), "MMMM d yyyy h:mm aa");
-                                        setFormData({ ...formData });
-                                    }}
-                                />
-
-                                {errors.date_str && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.date_str}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
 
 
                         <div className="col-md-2">

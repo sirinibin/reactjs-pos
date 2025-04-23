@@ -11,3 +11,24 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+/*
+.table th {
+  font-weight: bold;
+  font-size: 0.53rem;
+}*/
+
+.table:not(.no-bold) td {
+  font-weight: bold;
+  font-size: 0.90rem;
+}
+
+.table:not(.no-bold) td button span {
+  font-weight: bold;
+  font-size: 0.90rem;
+}
+
+.table:not(.no-bold) thead input {
+  min-width: 120px;
+}

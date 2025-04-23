@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import ProductCreate from "./create.js";
 import ProductJson from "./json.js";
 import ProductView from "./view.js";
+import { confirm } from 'react-bootstrap-confirmation';
 
 import { Typeahead } from "react-bootstrap-typeahead";
 import { format } from "date-fns";
@@ -311,11 +312,11 @@ function ProductIndex(props) {
             // Select =
             //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + localStorage.getItem("store_id") + ".stock,product_stores." + localStorage.getItem("store_id") + ".purchase_unit_price,product_stores." + localStorage.getItem("store_id") + ".wholesale_unit_price,product_stores." + localStorage.getItem("store_id") + ".retail_unit_price,product_stores." + localStorage.getItem("store_id") + ".store_id";
             Select =
-                "select=id,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+                "select=id,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
 
         } else {
             Select =
-                "select=id,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+                "select=id,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
 
 
             //Select =
@@ -641,6 +642,106 @@ function ProductIndex(props) {
     };
 
 
+    function restoreProduct(id) {
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/product/restore/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                props.showToastMessage("Product restored successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+
+    function deleteProduct(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/product/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                props.showToastMessage("Product deleted successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+    const confirmDelete = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to delete this product?');
+        console.log(result);
+        if (result) {
+            deleteProduct(id);
+        }
+    };
+
+    const confirmRestore = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to restore this product?');
+        console.log(result);
+        if (result) {
+            restoreProduct(id);
+        }
+    };
+
+    let [deleted, setDeleted] = useState(false);
 
     return (
         <>
@@ -842,8 +943,8 @@ function ProductIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-
-                                                <th>Actions</th>
+                                                <th>Deleted</th>
+                                                <th style={{}}>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1599,6 +1700,23 @@ function ProductIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("deleted", e.target.value);
+                                                            if (e.target.value === "1") {
+                                                                deleted = true;
+                                                                setDeleted(deleted);
+                                                            } else {
+                                                                deleted = false;
+                                                                setDeleted(deleted);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="0" >NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
                                                 <th style={{ minWidth: "100px" }}></th>
                                                 <th>
                                                     <input
@@ -2141,8 +2259,20 @@ function ProductIndex(props) {
                                             {productList &&
                                                 productList.map((product) => (
                                                     <tr key={product.id}>
+                                                        <td>{product.deleted ? "YES" : "NO"}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}  >
-                                                            <span style={{ marginLeft: "-30px", }}>
+                                                            <span style={{ marginLeft: "-40px" }}>
+                                                                {!product.deleted && <Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                    confirmDelete(product.id);
+                                                                }}>
+                                                                    <i className="bi bi-trash"></i>
+                                                                </Button>}
+                                                                {product.deleted && <Button className="btn btn-success btn-sm" onClick={() => {
+                                                                    confirmRestore(product.id);
+                                                                }}>
+                                                                    <i className="bi bi-arrow-counterclockwise"></i>
+                                                                </Button>}
+
                                                                 <Button className="btn btn-light btn-sm" onClick={() => {
                                                                     openUpdateForm(product.id);
                                                                 }}>
@@ -2151,12 +2281,12 @@ function ProductIndex(props) {
 
                                                                 <Button className="btn btn-primary btn-sm" onClick={() => {
                                                                     openDetailsView(product.id);
-                                                                }} style={{ marginRight: "5px" }}>
+                                                                }} style={{}}>
                                                                     <i className="bi bi-eye"></i>
                                                                 </Button>
 
-                                                                <Dropdown style={{ marginLeft: "70px", height: "0px" }}>
-                                                                    <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{ marginTop: "-48px", height: "28px" }}>
+                                                                <Dropdown style={{ marginLeft: "100px", marginTop: "-27px", }}>
+                                                                    <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{ height: "27px" }}>
 
                                                                     </Dropdown.Toggle>
 
@@ -2206,77 +2336,11 @@ function ProductIndex(props) {
 
                                                                     </Dropdown.Menu>
                                                                 </Dropdown>
-
-
-                                                                {/*
-                                                            <button
-                                                                className="btn btn-outline-secondary dropdown-toggle"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                aria-expanded="false"
-                                                                style={{ height: "28px" }}
-                                                            ></button>
-                                                            <ul className="dropdown-menu">
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openSalesHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Sales History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openPurchaseHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Purchase History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openSalesReturnHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Sales Return History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openPurchaseReturnHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Purchase Return History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openQuotationHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Quotation History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openDeliveryNoteHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Delivert Note History
-                                                                    </button>
-                                                                </li>
-                                                            </ul>
-                                                            */}
                                                             </span>
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} className="bold-stronger" >{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start">
+
                                                             <OverflowTooltip value={product.name + (product.name_in_arabic ? " | " + product.name_in_arabic : "")} maxWidth={300} />
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.ean_12}</td>
@@ -2686,71 +2750,6 @@ function ProductIndex(props) {
                                                             }}>
                                                                 <i className="bi bi-eye"></i>
                                                             </Button>
-                                                            &nbsp;  &nbsp;
-
-                                                            <button
-                                                                className="btn btn-outline-secondary dropdown-toggle"
-                                                                type="button"
-                                                                data-bs-toggle="dropdown"
-                                                                aria-expanded="false"
-                                                            ></button>
-                                                            <ul className="dropdown-menu">
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openSalesHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Sales History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openPurchaseHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Purchase History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openSalesReturnHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Sales Return History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openPurchaseReturnHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Purchase Return History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openQuotationHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Quotation History
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button className="dropdown-item" onClick={() => {
-                                                                        openDeliveryNoteHistory(product);
-                                                                    }}>
-                                                                        <i className="bi bi-clock-history"></i>
-                                                                        &nbsp;
-                                                                        Delivert Note History
-                                                                    </button>
-                                                                </li>
-                                                            </ul>
-
                                                         </td>
                                                     </tr>
                                                 ))}

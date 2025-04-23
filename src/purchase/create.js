@@ -641,7 +641,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         if (!formData.store_id) {
             errors.product_id = "Please Select a Store and try again";
             setErrors({ ...errors });
-            return;
+            return false;
         }
 
 
@@ -649,7 +649,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         if (!product) {
             errors.product_id = "Invalid Product";
             setErrors({ ...errors });
-            return;
+            return false;
         }
 
         if (product.product_stores) {
@@ -759,6 +759,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             });
         }
         setFormData({ ...formData });
+        return true;
     }
 
     function getProductIndex(productID) {
@@ -1150,12 +1151,51 @@ const PurchaseCreate = forwardRef((props, ref) => {
         QuotationHistoryRef.current.open(model);
     }
 
+    function openProducts() {
+        ProductsRef.current.open();
+    }
 
+
+    const handleSelectedProducts = (selected) => {
+        console.log("Selected Products:", selected);
+        let addedCount = 0;
+        for (var i = 0; i < selected.length; i++) {
+            if (addProduct(selected[i])) {
+                addedCount++;
+            }
+        }
+        setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+        setShowToast(true);
+        setTimeout(() => setShowToast(false), 3000);
+    };
+
+    const [showToast, setShowToast] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
 
     return (
         <>
+            <div
+                className="toast-container position-fixed top-0 end-0 p-3"
+                style={{ zIndex: 9999 }}
+            >
+                <div
+                    className={`toast align-items-center text-white bg-success ${showToast ? "show" : "hide"}`}
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+                >
+                    <div className="d-flex">
+                        <div className="toast-body">{toastMessage}</div>
+                        <button
+                            type="button"
+                            className="btn-close btn-close-white me-2 m-auto"
+                            onClick={() => setShowToast(false)}
+                        ></button>
+                    </div>
+                </div>
+            </div>
 
-            <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
+            <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
             <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1510,7 +1550,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-12">
+                        <div className="col-md-8">
                             <label className="form-label">Product*</label>
 
 
@@ -1553,15 +1593,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     {errors.product_id}
                                 </div>
                             ) : ""}
-                            {selectedProduct[0] &&
-                                selectedProduct[0].id &&
-                                !errors.product_id && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
 
+
+                        </div>
+                        <div className="col-md-1">
+                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
+                                <i class="bi bi-list"></i>
+                            </Button>
                         </div>
 
                         <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>

@@ -59,8 +59,8 @@ const Products = forwardRef((props, ref) => {
             type = productType;
             setType(type);
             console.log("Model: ", model);
-            if (!model)
-                return;
+            //if (!model)
+            //   return;
             searchParams["linked_products_of_product_id"] = "";
             searchParams["delivery_note_products_of_delivery_note_id"] = "";
             searchParams["quotation_products_of_quotation_id"] = "";
@@ -78,11 +78,14 @@ const Products = forwardRef((props, ref) => {
                 setDeliveryNote(deliveryNote);
                 searchParams.delivery_note_products_of_delivery_note_id = model.id;
             }
+            page = 1;
+            setPage(page);
 
             list();
 
             SetShow(true);
-            setSelectedIds([]);
+            // setSelectedIds([]);
+            setChoosenProducts([]);
         },
 
     }));
@@ -527,38 +530,44 @@ const Products = forwardRef((props, ref) => {
     };
 
 
-    //Select Products
-    const [selectedIds, setSelectedIds] = useState([]);
 
-    // Handle all select
+    const [choosenProducts, setChoosenProducts] = useState([]);
+    const handleSelect = (product) => {
+        setChoosenProducts((prev) => {
+            const exists = prev.some((p) => p.id === product.id);
+            if (exists) {
+                return prev.filter((p) => p.id !== product.id); // remove
+            } else {
+                return [...prev, product]; // add
+            }
+        });
+    };
+
+    const isAllSelected = productList.every((p) =>
+        choosenProducts.some((cp) => cp.id === p.id)
+    );
+
     const handleSelectAll = (e) => {
         if (e.target.checked) {
-            setSelectedIds(productList.map((p) => p.id));
+            // Add all products from current page
+            const newSelections = productList.filter(
+                (p) => !choosenProducts.some((cp) => cp.id === p.id)
+            );
+            setChoosenProducts((prev) => [...prev, ...newSelections]);
         } else {
-            setSelectedIds([]);
+            // Remove all current page products
+            setChoosenProducts((prev) =>
+                prev.filter((cp) => !productList.some((p) => p.id === cp.id))
+            );
         }
     };
-
-    // Handle individual selection
-    const handleSelect = (id) => {
-        setSelectedIds((prev) =>
-            prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-        );
-    };
-
-    const isAllSelected = selectedIds?.length === productList?.length;
 
     const handleSendSelected = () => {
-        const selectedProducts = productList.filter((p) => selectedIds.includes(p.id));
         if (props.onSelectProducts) {
-            props.onSelectProducts(selectedProducts); // Send to parent
+            props.onSelectProducts(choosenProducts);
         }
-
         handleClose();
     };
-
-
-
 
 
     return (
@@ -777,14 +786,9 @@ const Products = forwardRef((props, ref) => {
                                                                 {totalItems}
 
                                                             </p>
-                                                            {enableProductSelection && <button
-                                                                style={{ marginBottom: "3px" }}
-                                                                className="btn btn-success mt-2"
-                                                                disabled={selectedIds.length === 0}
-                                                                onClick={handleSendSelected}
-                                                            >
-                                                                Select {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
-                                                            </button>}
+                                                            {enableProductSelection && <Button onClick={handleSendSelected}>
+                                                                Select {choosenProducts.length} products
+                                                            </Button>}
 
 
                                                         </div>
@@ -2238,8 +2242,8 @@ const Products = forwardRef((props, ref) => {
                                                                     {enableProductSelection && <td>
                                                                         <input
                                                                             type="checkbox"
-                                                                            checked={selectedIds.includes(product.id)}
-                                                                            onChange={() => handleSelect(product.id)}
+                                                                            checked={choosenProducts.some((p) => p.id === product.id)}
+                                                                            onChange={() => handleSelect(product)}
                                                                         />
                                                                     </td>}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""}{product.part_number}</td>

@@ -1423,6 +1423,7 @@ const Purchases = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="vendor_id"
                                                                     labelKey="search_label"
+                                                                    style={{ minWidth: "300px" }}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "vendor_id",

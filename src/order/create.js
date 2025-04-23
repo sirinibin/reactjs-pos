@@ -1487,6 +1487,10 @@ function findDiscount() {
         CustomersRef.current.open();
     }
 
+    function openProducts() {
+        ProductsRef.current.open();
+    }
+
 
     const handleSelectedProducts = (selected, selectedCustomers) => {
         console.log("Selected Products:", selected);
@@ -1942,7 +1946,7 @@ function findDiscount() {
                         </div>
 
 
-                        <div className="col-md-10">
+                        <div className="col-md-8">
                             <label className="form-label">Product Search*</label>
                             <Typeahead
                                 id="product_id"
@@ -1983,6 +1987,12 @@ function findDiscount() {
                                     {errors.product_id}
                                 </div>
                             ) : ""}
+                        </div>
+
+                        <div className="col-md-1">
+                            <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
+                                <i class="bi bi-list"></i>
+                            </Button>
                         </div>
 
                         <div className="col-md-2">

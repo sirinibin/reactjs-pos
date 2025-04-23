@@ -200,7 +200,7 @@ const CustomerWithdrawalPreviewContent = forwardRef((props, ref) => {
                         >
 
                             <table
-                                className="table table-bordered"
+                                className="table table-bordered no-bold"
                                 style={{ borderRadius: "6px" }}
                             >
                                 <thead style={{ fontSize: "2.2mm" }} className="fw-bold">

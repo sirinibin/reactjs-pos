@@ -694,6 +694,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     if (alreadyAdded) {
       selectedProducts[index].quantity = parseFloat(quantity);
+      selectedProducts[index].unit_price = product.unit_price;
     }
 
     if (!alreadyAdded) {
@@ -914,6 +915,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     QuotationHistoryRef.current.open(model, selectedCustomers);
   }
 
+  /*
 
   const handleSelectedProducts = (selected) => {
     console.log("Selected Products:", selected);
@@ -928,7 +930,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     setTimeout(() => setShowToast(false), 3000);
 
     // props.showToastMessage("Successfully Added " + selected.length + " products", "success");
-  };
+  };*/
 
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
@@ -977,10 +979,32 @@ const QuotationCreate = forwardRef((props, ref) => {
     handleClose();
   };
 
+
+
+  function openProducts() {
+    ProductsRef.current.open();
+  }
+
+
+  const handleSelectedProductsToQuotation = (selected) => {
+    console.log("Selected Products:", selected);
+    let addedCount = 0;
+    for (var i = 0; i < selected.length; i++) {
+      if (addProduct(selected[i])) {
+        addedCount++;
+      }
+    }
+    setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+
+
   return (
     <>
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
-      <Products ref={ProductsRef} onSelectProducts={handleSelectedProducts} showToastMessage={props.showToastMessage} />
+      <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsToQuotation} showToastMessage={props.showToastMessage} />
       <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
       <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
       <PurchaseHistory ref={PurchaseHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1382,7 +1406,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               )}
             </div>
 
-            <div className="col-md-12">
+            <div className="col-md-8">
               <label className="form-label">Product*</label>
               <Typeahead
                 id="product_id"
@@ -1431,6 +1455,12 @@ const QuotationCreate = forwardRef((props, ref) => {
                   {errors.product_id}
                 </div>
               ) : null}
+            </div>
+
+            <div className="col-md-1">
+              <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openProducts}>
+                <i class="bi bi-list"></i>
+              </Button>
             </div>
 
 

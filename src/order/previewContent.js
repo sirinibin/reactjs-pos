@@ -5,6 +5,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import '@emran-alhaddad/saudi-riyal-font/index.css';
 import Amount from "../utils/amount.js";
+import "./a4Print.css";
 
 const OrderPreviewContent = forwardRef((props, ref) => {
 
@@ -39,7 +40,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
     return (<><span ref={ref}>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
             <div
-                className="container"
+                className="container a4print"
                 id="printableArea"
                 style={{
                     backgroundColor: "white",
@@ -248,7 +249,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                         >
 
                             <table
-                                className="table table-bordered"
+                                className="table no-bold table-bordered no-bold"
                                 style={{ borderRadius: "6px" }}
                             >
                                 <thead style={{ fontSize: "2.2mm" }} className="fw-bold">
@@ -387,67 +388,67 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
                                             Total (without VAT) الإجمالي (بدون ضريبة القيمة المضافة):
                                         </th>
-                                        <th className="text-end" colSpan="1" style={{ padding: "2px", }} >
+                                        <td className="text-end" colSpan="1" style={{ padding: "2px", }} >
                                             <Amount amount={trimTo2Decimals(props.model.total)} />
-                                        </th>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th className="text-end" colSpan="8" style={{ padding: "2px" }}>
 
                                             Shipping / Handling Fees   رسوم الشحن / المناولة:
                                         </th>
-                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                        <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
                                             <Amount amount={trimTo2Decimals(props.model.shipping_handling_fee)} />
-                                        </th>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th className="text-end" colSpan="8" style={{ padding: "2px" }}>
                                             Total Discount الخصم الإجمالي:
                                         </th>
-                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                        <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
                                             <Amount amount={trimTo2Decimals(props.model.discount)} />
-                                        </th>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
                                             Total Taxable Amount (without VAT)  إجمالي المبلغ الخاضع للضريبة (بدون ضريبة القيمة المضافة):
                                         </th>
-                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                        <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
                                             <Amount amount={trimTo2Decimals((props.model.net_total - props.model.vat_price))} />
-                                        </th>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <th className="text-end" colSpan="8" style={{ padding: "2px" }}>
                                             Total VAT {trimTo2Decimals(props.model.vat_percent)}% إجمالي ضريبة القيمة المضافة :
                                         </th>
 
-                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                        <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
                                             <Amount amount={trimTo2Decimals(props.model.vat_price)} />
 
-                                        </th>
+                                        </td>
                                     </tr>
 
                                     <tr>
                                         <th colSpan="8" className="text-end" style={{ padding: "2px" }}>
                                             Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة):
                                         </th>
-                                        <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
+                                        <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
                                             <span className="icon-saudi_riyal">
                                                 <Amount amount={trimTo2Decimals(props.model.net_total)} />
                                             </span>
-                                        </th>
+                                        </td>
                                     </tr>
                                     {props.model.remarks ? <tr>
                                         <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
                                             Remarks ملاحظات:
                                         </th>
-                                        <th
+                                        <td
                                             colSpan="7"
                                             style={{ padding: "2px" }}
 
                                         >
                                             {props.model.remarks ? props.model.remarks : ""}
-                                        </th>
+                                        </td>
 
                                     </tr> : ""}
                                     <tr>
@@ -455,7 +456,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                         <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
                                             In Words بكلمات:
                                         </th>
-                                        <th
+                                        <td
                                             colSpan="7"
                                             style={{ padding: "2px" }}
 
@@ -467,7 +468,7 @@ const OrderPreviewContent = forwardRef((props, ref) => {
                                                 <li>{n2words(props.model.net_total, { lang: 'ar' }) + " ريال سعودي  "}</li>
                                                 <li>{n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}</li>
                                             </ul>
-                                        </th>
+                                        </td>
                                     </tr>
                                 </tfoot>
                             </table>
