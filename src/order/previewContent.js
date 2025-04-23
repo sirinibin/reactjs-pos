@@ -5,7 +5,6 @@ import { QRCodeCanvas } from "qrcode.react";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import '@emran-alhaddad/saudi-riyal-font/index.css';
 import Amount from "../utils/amount.js";
-import "./a4Print.css";
 
 const OrderPreviewContent = forwardRef((props, ref) => {
 
