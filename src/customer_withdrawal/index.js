@@ -10,6 +10,7 @@ import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import CustomerWithdrawalPreview from './preview.js';
 
 function CustomerWithdrawalIndex(props) {
 
@@ -201,7 +202,6 @@ function CustomerWithdrawalIndex(props) {
             params.store_id = localStorage.getItem("store_id");
         }
 
-
         var queryString = ObjectToSearchQueryParams(params);
         if (queryString !== "") {
             queryString = `&${queryString}`;
@@ -228,6 +228,8 @@ function CustomerWithdrawalIndex(props) {
 
     let [totalCustomerWithdrawals, setTotalCustomerWithdrawals] = useState(0.00);
 
+    let sortOrder = "-";
+
     function list() {
         const requestOptions = {
             method: "GET",
@@ -237,7 +239,7 @@ function CustomerWithdrawalIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,amount,payment_method,description,customer_name,created_by_name,created_at";
+            "select=id,code,date,amount,payment_method,bank_reference_no,description,remarks,customer_id,customer_name,created_by_name,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -339,12 +341,15 @@ function CustomerWithdrawalIndex(props) {
         CreateFormRef.current.open();
     }
 
-    let sortOrder = "-";
-
+    const PreviewRef = useRef();
+    function openPreview(model) {
+        PreviewRef.current.open(model);
+    }
 
 
     return (
         <>
+            <CustomerWithdrawalPreview ref={PreviewRef} />
             <CustomerWithdrawalCreate ref={CreateFormRef} refreshList={list} openDetailsView={openDetailsView} showToastMessage={props.showToastMessage} />
             <CustomerWithdrawalView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} showToastMessage={props.showToastMessage} />
 
@@ -520,7 +525,7 @@ function CustomerWithdrawalIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
-
+                                                <th>Actions</th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -557,6 +562,26 @@ function CustomerWithdrawalIndex(props) {
                                                         ) : null}
                                                         {sortField === "date" && sortCustomerWithdrawal === "" ? (
                                                             <i className="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("customer_name");
+                                                        }}
+                                                    >
+                                                        Customer
+                                                        {sortField === "customer_name" &&
+                                                            sortCustomerWithdrawal === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "customer_name" && sortCustomerWithdrawal === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -618,26 +643,7 @@ function CustomerWithdrawalIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("customer_name");
-                                                        }}
-                                                    >
-                                                        Customer
-                                                        {sortField === "customer_name" &&
-                                                            sortCustomerWithdrawal === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "customer_name" && sortCustomerWithdrawal === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
 
                                                 <th>
                                                     <b
@@ -683,6 +689,7 @@ function CustomerWithdrawalIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th></th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -759,6 +766,27 @@ function CustomerWithdrawalIndex(props) {
                                                     ) : null}
                                                 </th>
                                                 <th>
+                                                    <Typeahead
+                                                        id="customer_id"
+                                                        labelKey="search_label"
+                                                        style={{ minWidth: "300px" }}
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "customer_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={customerOptions}
+                                                        placeholder="Customer Name / Mob / VAT # / ID"
+                                                        selected={selectedCustomers}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestCustomers(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="amount"
@@ -788,26 +816,7 @@ function CustomerWithdrawalIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <Typeahead
-                                                        id="customer_id"
-                                                        labelKey="search_label"
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "customer_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={customerOptions}
-                                                        placeholder="Customer Name / Mob / VAT # / ID"
-                                                        selected={selectedCustomers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestCustomers(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -903,20 +912,38 @@ function CustomerWithdrawalIndex(props) {
                                             {customerwithdrawalList &&
                                                 customerwithdrawalList.map((customerwithdrawal) => (
                                                     <tr key={customerwithdrawal.code}>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Button className="btn btn-light btn-sm" onClick={() => {
+                                                                openUpdateForm(customerwithdrawal.id);
+                                                            }}>
+                                                                <i className="bi bi-pencil"></i>
+                                                            </Button>
+                                                            &nbsp;
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openDetailsView(customerwithdrawal.id);
+                                                            }}>
+                                                                <i className="bi bi-eye"></i>
+                                                            </Button>
+                                                            &nbsp;
+                                                            <Button className="btn btn-primary btn-sm" onClick={() => {
+                                                                openPreview(customerwithdrawal);
+                                                            }}>
+                                                                <i className="bi bi-printer"></i>
+                                                            </Button>
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(new Date(customerwithdrawal.date), "MMM dd yyyy h:mma")}
                                                         </td>
-
-
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={customerwithdrawal.customer_name} maxWidth={300} />
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.amount.toFixed(2)} SAR</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.payment_method}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={customerwithdrawal.description} maxWidth={300} />
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            {customerwithdrawal.customer_name}
-                                                        </td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.created_by_name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(

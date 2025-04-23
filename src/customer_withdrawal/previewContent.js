@@ -6,7 +6,7 @@ import { trimTo2Decimals } from "../utils/numberUtils";
 import '@emran-alhaddad/saudi-riyal-font/index.css';
 import Amount from "../utils/amount.js";
 
-const CustomerDepositPreviewContent = forwardRef((props, ref) => {
+const CustomerWithdrawalPreviewContent = forwardRef((props, ref) => {
 
     let persianDigits = "۰۱۲۳۴۵۶۷۸۹";
     let persianMap = persianDigits.split("");
@@ -97,14 +97,14 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                     <div className="col">
                         <u
                         ><h1 className="text-center" style={{ fontSize: "3mm" }}>
-                                PAYMENT RECEIPT (RECEIVABLE) | إيصال الدفع (مستحق القبض)
+                                PAYMENT RECEIPT (PAYABLE / REFUND) | إيصال الدفع (مستحق الدفع / مسترد)
                             </h1>
                         </u>
                     </div>
                 </div>
 
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
-                    <div className="col-md-5" style={{ border: "solid 0px", width: "79%" }}>
+                    <div className="col-md-5" style={{ border: "solid 0px", width: "82%" }}>
                         <div className="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
                             <div className="row">
                                 <div className="col-7 text-start fw-bold" dir="ltr">Receipt No. | رقم الإيصال:</div>
@@ -179,7 +179,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
 
                     </div>
 
-                    <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "21%", padding: "0px" }}>
+                    <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "18%", padding: "0px" }}>
                         {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "108px", height: "108px" }} alt="Invoice QR Code" /> : ""}
                         {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "108px", height: "108px" }} size={108} /> : ""}
                     </div>
@@ -271,7 +271,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                     <tr className="text-center"  >
                                         <td style={{ padding: "1px", height: "16px" }}>{1}</td>
                                         <td style={{ padding: "1px" }}>
-                                            Payment Received from {props.model.customer?.name} {props.model.description ? " | " + props.model.description : ""}
+                                            Paid to {props.model.customer?.name} {props.model.description ? " | " + props.model.description : ""}
                                         </td>
                                         <td style={{ padding: "1px" }} className="text-end">{props.model.payment_method ? GetPaymentMode(props.model.payment_method) : ""} </td>
                                         <td style={{ padding: "1px" }} className="text-end">{props.model.bank_reference_no ? props.model.bank_reference_no : ""} </td>
@@ -329,11 +329,11 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                 <thead>
                                     <tr style={{ height: "50px" }}>
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
-                                            Received From تم الاستلام من:
+                                            Paid To مدفوعة ل:
                                         </th>
                                         <th style={{ width: "30%", padding: "2px" }}> {props.model.customer?.name ? props.model.customer.name : null}</th>
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
-                                            Received By تم الاستلام بواسطة:
+                                            Paid By المدفوعة بواسطة:
                                         </th>
                                         <th style={{ width: "30%", padding: "2px" }}>
                                             {props.model.store?.name ? props.model.store.name : null}
@@ -410,4 +410,4 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
 
 });
 
-export default CustomerDepositPreviewContent;
+export default CustomerWithdrawalPreviewContent;

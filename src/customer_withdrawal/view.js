@@ -1,20 +1,15 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { Modal, Table } from 'react-bootstrap';
-
-
 import { Button } from "react-bootstrap";
-
-
+import CustomerWithdrawalPreview from './preview.js';
 
 const CustomerWithdrawalView = forwardRef((props, ref) => {
-
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
                 getCustomerWithdrawal(id);
                 SetShow(true);
             }
-
         },
 
     }));
@@ -28,7 +23,6 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
     function handleClose() {
         SetShow(false);
     };
-
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -47,6 +41,8 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
                 'Authorization': localStorage.getItem('access_token'),
             },
         };
+
+
 
         let searchParams = {};
         if (localStorage.getItem("store_id")) {
@@ -80,15 +76,26 @@ const CustomerWithdrawalView = forwardRef((props, ref) => {
 
 
 
+    const PreviewRef = useRef();
+    function openPreview() {
+        PreviewRef.current.open(model);
+    }
 
 
 
     return (<>
+        <CustomerWithdrawalPreview ref={PreviewRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
-                <Modal.Title>Details of CustomerWithdrawal #{model.description} </Modal.Title>
+                <Modal.Title>Details of Customer Payable #{model.code} </Modal.Title>
 
                 <div className="col align-self-end text-end">
+                    &nbsp;&nbsp;
+                    <Button variant="primary" onClick={openPreview}>
+                        <i className="bi bi-printer"></i> Print
+                    </Button>
+                    &nbsp;&nbsp;
+
                     {props.openCreateForm ? <Button variant="primary" onClick={() => {
                         handleClose();
                         props.openCreateForm();
