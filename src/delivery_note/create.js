@@ -24,6 +24,7 @@ import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
 import Customers from "./../utils/customers.js";
+import ResizableTableCell from './../utils/ResizableTableCell';
 
 const DeliveryNoteCreate = forwardRef((props, ref) => {
   const [enableProductSelection, setEnableProductSelection] = useState(false);
@@ -1222,7 +1223,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
-                    <th style={{ width: "3%" }}></th>
+                    <th></th>
                     {enableProductSelection && <th>
                       <input
                         type="checkbox"
@@ -1230,11 +1231,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                         onChange={handleSelectAll}
                       /> Select All
                     </th>}
-                    <th style={{ width: "5%" }}>SI No.</th>
-                    <th style={{ width: "10%" }}>Part No.</th>
-                    <th style={{ width: "30%" }} className="text-start">Name</th>
-                    <th style={{ width: "4%%" }}>Info</th>
-                    <th style={{ width: "11%" }}>Qty</th>
+                    <th >SI No.</th>
+                    <th >Part No.</th>
+                    <th style={{ minWidth: "250px" }}>Name</th>
+                    <th >Info</th>
+                    <th >Qty</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1259,17 +1260,53 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       </td>}
                       <td>{index + 1}</td>
                       <td>{product.part_number}</td>
-                      <td style={{
-                        textDecoration: "underline",
-                        color: "blue",
-                        cursor: "pointer",
-                      }}
-                        className="text-start"
-                        onClick={() => {
-                          openProductDetailsView(product.product_id);
-                          console.log("okk,id:", product.product_id);
-                        }}>{product.name}
-                      </td>
+                      <ResizableTableCell
+                      >
+                        <div className="input-group mb-3">
+                          <input type="text" onWheel={(e) => e.target.blur()} value={product.name} disabled={!selectedProducts[index].can_edit_name} className="form-control"
+                            placeholder="Name" onChange={(e) => {
+                              errors["name_" + index] = "";
+                              setErrors({ ...errors });
+
+                              if (!e.target.value) {
+                                //errors["purchase_unit_price_" + index] = "Invalid purchase unit price";
+                                selectedProducts[index].name = "";
+                                setSelectedProducts([...selectedProducts]);
+                                //setErrors({ ...errors });
+                                console.log("errors:", errors);
+                                return;
+                              }
+
+
+                              selectedProducts[index].name = e.target.value;
+                              setSelectedProducts([...selectedProducts]);
+                            }} />
+                          <div
+                            style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
+                            onClick={() => {
+                              selectedProducts[index].can_edit_name = !selectedProducts[index].can_edit_name;
+                              setSelectedProducts([...selectedProducts]);
+                            }}
+                          >
+                            {selectedProducts[index].can_edit_name ? <i className="bi bi-floppy"> </i> : <i className="bi bi-pencil"> </i>}
+                          </div>
+
+                          <div
+                            style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                            onClick={() => {
+                              openProductDetailsView(product.product_id);
+                            }}
+                          >
+                            <i className="bi bi-eye"> </i>
+                          </div>
+                        </div>
+                        {errors["name_" + index] && (
+                          <div style={{ color: "red" }}>
+
+                            {errors["name_" + index]}
+                          </div>
+                        )}
+                      </ResizableTableCell>
                       <td>
                         <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
                           <Dropdown drop="top">

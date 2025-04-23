@@ -22,6 +22,7 @@ import PurchaseReturnHistory from "./../product/purchase_return_history.js";
 import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
+import ResizableTableCell from './../utils/ResizableTableCell';
 
 const SalesReturnCreate = forwardRef((props, ref) => {
 
@@ -549,6 +550,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
+                name: selectedProducts[i].name,
                 quantity: parseFloat(selectedProducts[i].quantity),
                 unit_price: unitPrice,
                 unit: selectedProducts[i].unit,
@@ -1284,17 +1286,17 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
-                                        <th style={{ width: "3%" }}>Select</th>
-                                        <th style={{ width: "5%" }}>SI No.</th>
-                                        <th style={{ width: "10%" }}>Part No.</th>
-                                        <th style={{ width: "22%" }} className="text-start">Name</th>
-                                        <th style={{ width: "6%" }} className="text-start">Info</th>
-                                        <th style={{ width: "10%" }} >Purchase Unit Price</th>
-                                        <th style={{ width: "10%" }}>Qty</th>
-                                        <th style={{ width: "10%" }}>Unit Price</th>
-                                        <th style={{ width: "10%" }}>Unit Disc.</th>
-                                        <th style={{ width: "10%" }}>Unit Disc. %</th>
-                                        <th style={{ width: "14%" }} >Price</th>
+                                        <th>Select</th>
+                                        <th>SI No.</th>
+                                        <th>Part No.</th>
+                                        <th className="text-start" style={{ minWidth: "250px" }}>Name</th>
+                                        <th className="text-start">Info</th>
+                                        <th>Purchase Unit Price</th>
+                                        <th>Qty</th>
+                                        <th>Unit Price</th>
+                                        <th>Unit Disc.</th>
+                                        <th>Unit Disc. %</th>
+                                        <th>Price</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1310,7 +1312,55 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>{index + 1}</td>
                                             <td>{product.part_number}</td>
-                                            <td style={{
+                                            <ResizableTableCell
+                                            >
+                                                <div className="input-group mb-3">
+                                                    <input type="text" onWheel={(e) => e.target.blur()} value={product.name} disabled={!selectedProducts[index].can_edit_name} className="form-control"
+                                                        placeholder="Name" onChange={(e) => {
+                                                            errors["name_" + index] = "";
+                                                            setErrors({ ...errors });
+
+                                                            if (!e.target.value) {
+                                                                //errors["purchase_unit_price_" + index] = "Invalid purchase unit price";
+                                                                selectedProducts[index].name = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                //setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
+
+
+                                                            selectedProducts[index].name = e.target.value;
+                                                            setSelectedProducts([...selectedProducts]);
+                                                        }} />
+                                                    <div
+                                                        style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
+                                                        onClick={() => {
+                                                            selectedProducts[index].can_edit_name = !selectedProducts[index].can_edit_name;
+                                                            setSelectedProducts([...selectedProducts]);
+                                                        }}
+                                                    >
+                                                        {selectedProducts[index].can_edit_name ? <i className="bi bi-floppy"> </i> : <i className="bi bi-pencil"> </i>}
+                                                    </div>
+
+                                                    <div
+                                                        style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                                                        onClick={() => {
+                                                            openProductDetailsView(product.product_id);
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-eye"> </i>
+                                                    </div>
+                                                </div>
+                                                {errors["name_" + index] && (
+                                                    <div style={{ color: "red" }}>
+
+                                                        {errors["name_" + index]}
+                                                    </div>
+                                                )}
+                                            </ResizableTableCell>
+
+                                            {/*<td style={{
                                                 textDecoration: "underline",
                                                 color: "blue",
                                                 cursor: "pointer",
@@ -1319,7 +1369,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 onClick={() => {
                                                     openProductDetailsView(product.product_id);
                                                 }}>{product.name}
-                                            </td>
+                                            </td>*/}
                                             <td>
                                                 <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
                                                     <Dropdown drop="top">
