@@ -786,7 +786,7 @@ const Products = forwardRef((props, ref) => {
                                                                 {totalItems}
 
                                                             </p>
-                                                            {enableProductSelection && <Button onClick={handleSendSelected}>
+                                                            {enableProductSelection && <Button className="btn btn-success btn-sm" onClick={handleSendSelected}>
                                                                 Select {choosenProducts.length} products
                                                             </Button>}
 
