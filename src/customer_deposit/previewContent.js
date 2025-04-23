@@ -1,7 +1,6 @@
 import { React, forwardRef } from "react";
 import { format } from "date-fns";
 import n2words from 'n2words'
-import { QRCodeCanvas } from "qrcode.react";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import '@emran-alhaddad/saudi-riyal-font/index.css';
 import Amount from "../utils/amount.js";
@@ -180,8 +179,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                     </div>
 
                     <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "21%", padding: "0px" }}>
-                        {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "108px", height: "108px" }} alt="Invoice QR Code" /> : ""}
-                        {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "108px", height: "108px" }} size={108} /> : ""}
+
                     </div>
                 </div>
                 <div className="row" style={{ fontSize: "2.2mm" }}>

@@ -111,7 +111,7 @@ const QuotationPreviewContent = forwardRef((props, ref) => {
                 </div>
 
                 <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
-                    <div className="col-md-5" style={{ border: "solid 0px", width: "77%" }}>
+                    <div className="col-md-5" style={{ border: "solid 0px", width: "82%" }}>
                         <div class="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
                             <div class="row">
                                 <div class="col-7 text-start fw-bold" dir="ltr">Quotation No. | رقم الفاتورة:</div>

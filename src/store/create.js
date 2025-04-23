@@ -1326,7 +1326,7 @@ const StoreCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-3">
-                            <label className="form-label">Country</label>
+                            <label className="form-label">Country*</label>
 
                             <div className="input-group mb-3">
                                 <Typeahead
@@ -1358,6 +1358,11 @@ const StoreCreate = forwardRef((props, ref) => {
                                     }}
                                 />
                             </div>
+                            {errors.country_code && (
+                                <div style={{ color: "red" }}>
+                                    {errors.country_code}
+                                </div>
+                            )}
                         </div>
 
                         <div className="col-md-2">
