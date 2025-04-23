@@ -101,7 +101,7 @@ const Products = forwardRef((props, ref) => {
     const [productList, setProductList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(100);
+    let [pageSize, setPageSize] = useState(5);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);

@@ -40,7 +40,7 @@ const Vendors = forwardRef((props, ref) => {
     const [vendorList, setVendorList] = useState([]);
 
     //pagination
-    let [pageSize, setPageSize] = useState(20);
+    let [pageSize, setPageSize] = useState(5);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);

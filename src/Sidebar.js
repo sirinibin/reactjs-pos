@@ -176,14 +176,14 @@ function Sidebar(props) {
                         <span className="align-middle">Expenses</span>
                     </Link>
                 </li>
-                <li onClick={() => {
+                {localStorage.getItem("user_role") === "Admin" ? <li onClick={() => {
                     toggleActive(appState.tabs[14]);
                 }} className={toggleActiveStyles(appState.tabs[14])}>
                     <Link to="/dashboard/analytics" className="sidebar-link">
                         <i className="bi bi-graph-up" />
                         <span className="align-middle">Analytics</span>
                     </Link>
-                </li>
+                </li> : ""}
                 <li onClick={() => {
                     toggleActive(appState.tabs[15]);
                 }} className={toggleActiveStyles(appState.tabs[15])}>

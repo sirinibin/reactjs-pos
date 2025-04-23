@@ -558,7 +558,7 @@ const Sales = forwardRef((props, ref) => {
     const [orderList, setOrderList] = useState([]);
 
     //pagination
-    const [pageSize, setPageSize] = useState(20);
+    const [pageSize, setPageSize] = useState(5);
     let [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
     const [totalItems, setTotalItems] = useState(1);
