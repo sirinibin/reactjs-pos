@@ -36,6 +36,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
             formData = {
                 order_id: orderId,
+                enable_report_to_zatca: false,
                 vat_percent: 15.0,
                 discount: 0.0,
                 discount_percent: 0.0,
@@ -78,11 +79,49 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 // reCalculate();
                 getOrder(orderId);
             }
+
+            if (localStorage.getItem('store_id')) {
+                getStore(localStorage.getItem('store_id'));
+            }
             setShow(true);
 
         },
 
     }));
+
+    let [store, setStore] = useState({});
+
+    function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+                store = data.result;
+                setStore(store);
+            })
+            .catch(error => {
+
+            });
+    }
+
 
 
 
@@ -318,6 +357,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     formData.address = order.address;
                     formData.phone = order.phone;
                     formData.vat_no = order.vat_no;
+                    formData.enable_report_to_zatca = false;
                     /*
                     formData.received_by = order.delivered_by;
                     formData.received_by_signature_id = order.delivered_by_signature_id;
@@ -1051,6 +1091,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     <Modal.Title>
                         {formData.id ? "Update Sales Return #" + formData.code + " for sale #" + formData.order_code : "Create Sales Return for sale #" + formData.order_code}
                     </Modal.Title>
+                    {store.zatca?.phase === "2" && !formData.id && < div style={{ marginLeft: "20px" }}>
+                        <input type="checkbox" checked={formData.enable_report_to_zatca} onChange={(e) => {
+                            formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
+                            setFormData({ ...formData });
+                        }} /> Report to Zatca <br />
+                    </div>}
 
                     <div className="col align-self-end text-end">
 
@@ -1091,12 +1137,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                     return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
                                 })}
                             </ul></div> : ""}
-                    {errors.reporting_to_zatca && (<div style={{ marginBottom: "30px" }}>
-                        <input type="checkbox" checked={formData.skip_zatca_reporting} onChange={(e) => {
-                            formData.skip_zatca_reporting = !formData.skip_zatca_reporting;
-                            setFormData({ ...formData });
-                        }} /> Report Later to Zatca
-                    </div>)}
                     <div className="row">
                         {selectedProducts?.length > 0 && <div className="col-md-3" >
                             <label className="form-label">Date*</label>
@@ -1347,7 +1387,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                                                 <div className="input-group mb-3">
                                                     <input type="number" onWheel={(e) => e.target.blur()} value={product.purchase_unit_price} disabled={!selectedProducts[index].can_edit} className="form-control text-end"
-
                                                         placeholder="Purchase Unit Price" onChange={(e) => {
                                                             errors["purchase_unit_price_" + index] = "";
                                                             setErrors({ ...errors });
@@ -1378,17 +1417,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 //reCalculate();
                                                             }
-
-
                                                         }} />
                                                     <div
                                                         style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
                                                         onClick={() => {
-
                                                             selectedProducts[index].can_edit = !selectedProducts[index].can_edit;
                                                             setSelectedProducts([...selectedProducts]);
-
-
                                                         }}
                                                     >
                                                         {selectedProducts[index].can_edit ? <i className="bi bi-floppy"> </i> : <i className="bi bi-pencil"> </i>}
@@ -2037,7 +2071,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     </form>}
                 </Modal.Body>
 
-            </Modal>
+            </Modal >
 
 
         </>

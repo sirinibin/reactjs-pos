@@ -87,6 +87,7 @@ const OrderCreate = forwardRef((props, ref) => {
             }
 
             formData.id = undefined;
+            formData.enable_report_to_zatca = false;
             formData.discount = 0.00;
             formData.discount_percent = 0.00;
             formData.shipping_handling_fees = 0.00;
@@ -118,6 +119,7 @@ const OrderCreate = forwardRef((props, ref) => {
         },
     }));
 
+    let [store, setStore] = useState({});
 
     function getStore(id) {
         console.log("inside get Store");
@@ -142,7 +144,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                let store = data.result;
+                store = data.result;
+                setStore(store);
                 formData.vat_percent = parseFloat(store.vat_percent);
                 setFormData({ ...formData });
             })
@@ -185,6 +188,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 formData = data.result;
+                formData.enable_report_to_zatca = false;
                 formData.date_str = data.result.date;
                 if (data.result.payments) {
                     console.log("data.result.payments:", data.result.payments);
@@ -1573,8 +1577,14 @@ function findDiscount() {
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Sales Order #" + formData.code : "Create New Sales Order"}
-                    </Modal.Title>
 
+                    </Modal.Title>
+                    {store.zatca?.phase === "2" && !formData.id && <div style={{ marginLeft: "20px" }}>
+                        <input type="checkbox" checked={formData.enable_report_to_zatca} onChange={(e) => {
+                            formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
+                            setFormData({ ...formData });
+                        }} /> Report to Zatca <br />
+                    </div>}
                     <div className="col align-self-end text-end">
 
                         <Button variant="primary" onClick={openPreview}>
@@ -1621,14 +1631,6 @@ function findDiscount() {
 
                                 })}
                             </ul></div> : ""}
-
-                    {errors && errors.reporting_to_zatca && (<div style={{ marginBottom: "30px" }}>
-                        <input type="checkbox" checked={formData.skip_zatca_reporting} onChange={(e) => {
-                            formData.skip_zatca_reporting = !formData.skip_zatca_reporting;
-                            setFormData({ ...formData });
-                        }} /> Report Later to Zatca
-                    </div>)}
-
                     <form className="row g-3 needs-validation" onSubmit={e => { e.preventDefault(); handleCreate(e); }} >
                         {!localStorage.getItem('store_name') ? <div className="col-md-6">
                             <label className="form-label">Store*</label>
@@ -1803,7 +1805,6 @@ function findDiscount() {
 
                         <div className="col-md-3">
                             <label className="form-label">Date*</label>
-
                             <div className="input-group mb-3">
                                 <DatePicker
                                     id="date_str"
@@ -1826,7 +1827,6 @@ function findDiscount() {
 
                                 {errors.date_str && (
                                     <div style={{ color: "red" }}>
-
                                         {errors.date_str}
                                     </div>
                                 )}
