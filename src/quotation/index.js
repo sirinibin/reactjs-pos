@@ -645,6 +645,26 @@ function QuotationIndex(props) {
                               cursor: "pointer",
                             }}
                             onClick={() => {
+                              sort("customer_name");
+                            }}
+                          >
+                            Customer
+                            {sortField === "customer_name" &&
+                              sortOrder === "-" ? (
+                              <i className="bi bi-sort-alpha-up-alt"></i>
+                            ) : null}
+                            {sortField === "customer_name" && sortOrder === "" ? (
+                              <i className="bi bi-sort-alpha-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
                               sort("net_total");
                             }}
                           >
@@ -716,26 +736,7 @@ function QuotationIndex(props) {
                             ) : null}
                           </b>
                         </th>
-                        <th>
-                          <b
-                            style={{
-                              textDecoration: "underline",
-                              cursor: "pointer",
-                            }}
-                            onClick={() => {
-                              sort("customer_name");
-                            }}
-                          >
-                            Customer
-                            {sortField === "customer_name" &&
-                              sortOrder === "-" ? (
-                              <i className="bi bi-sort-alpha-up-alt"></i>
-                            ) : null}
-                            {sortField === "customer_name" && sortOrder === "" ? (
-                              <i className="bi bi-sort-alpha-up"></i>
-                            ) : null}
-                          </b>
-                        </th>
+
                         <th>
                           <b
                             style={{
@@ -857,6 +858,27 @@ function QuotationIndex(props) {
                           ) : null}
                         </th>
                         <th>
+                          <Typeahead
+                            id="customer_id"
+                            labelKey="search_label"
+                            style={{ minWidth: "300px" }}
+                            onChange={(selectedItems) => {
+                              searchByMultipleValuesField(
+                                "customer_id",
+                                selectedItems
+                              );
+                            }}
+                            options={customerOptions}
+                            placeholder="Customer Name / Mob / VAT # / ID"
+                            selected={selectedCustomers}
+                            highlightOnlyResult={true}
+                            onInputChange={(searchTerm, e) => {
+                              suggestCustomers(searchTerm);
+                            }}
+                            multiple
+                          />
+                        </th>
+                        <th>
                           <input
                             type="text"
                             id="net_total"
@@ -908,27 +930,7 @@ function QuotationIndex(props) {
                             multiple
                           />
                         </th>
-                        <th>
-                          <Typeahead
-                            id="customer_id"
-                            labelKey="search_label"
-                            style={{ minWidth: "300px" }}
-                            onChange={(selectedItems) => {
-                              searchByMultipleValuesField(
-                                "customer_id",
-                                selectedItems
-                              );
-                            }}
-                            options={customerOptions}
-                            placeholder="Customer Name / Mob / VAT # / ID"
-                            selected={selectedCustomers}
-                            highlightOnlyResult={true}
-                            onInputChange={(searchTerm, e) => {
-                              suggestCustomers(searchTerm);
-                            }}
-                            multiple
-                          />
-                        </th>
+
                         <th>
                           <Typeahead
                             id="status"
@@ -1045,6 +1047,9 @@ function QuotationIndex(props) {
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               {format(new Date(quotation.date), "MMM dd yyyy h:mma")}
                             </td>
+                            <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                              <OverflowTooltip value={quotation.customer_name} />
+                            </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
                             {localStorage.getItem("admin") === "true" ?
                               <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? <Amount amount={trimTo2Decimals(quotation.profit)} /> : 0.00} </td>
@@ -1053,9 +1058,7 @@ function QuotationIndex(props) {
                               <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.loss ? <Amount amount={trimTo2Decimals(quotation.loss)} /> : 0.00} </td>
                               : ""}
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.created_by_name}</td>
-                            <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-                              <OverflowTooltip value={quotation.customer_name} />
-                            </td>
+
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               <span className="badge bg-success">
                                 {quotation.status}

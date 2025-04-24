@@ -1741,12 +1741,11 @@ function findDiscount() {
                                 id="customer_id"
                                 labelKey="search_label"
                                 isLoading={isCustomersLoading}
-                                isInvalid={errors.customer_id ? true : false}
                                 onChange={(selectedItems) => {
                                     errors.customer_id = "";
                                     setErrors(errors);
                                     if (selectedItems.length === 0) {
-                                        // errors.customer_id = "Invalid Customer selected";
+                                        errors.customer_id = "";
                                         //setErrors(errors);
                                         formData.customer_id = "";
                                         setFormData({ ...formData });

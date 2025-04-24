@@ -26,6 +26,8 @@ const OrderPreview = forwardRef((props, ref) => {
                     getStore(model.store_id);
                 }
 
+
+
                 if (model.customer_id) {
                     getCustomer(model.customer_id);
                 }
@@ -37,6 +39,8 @@ const OrderPreview = forwardRef((props, ref) => {
                 if (model.delivered_by_signature_id) {
                     getSignature(model.delivered_by_signature_id);
                 }
+
+
 
                 let pageSize = 20;
                 model.pageSize = pageSize;
@@ -54,6 +58,7 @@ const OrderPreview = forwardRef((props, ref) => {
 
 
                 model.pages = [];
+                model.qrOnLeftBottom = true;
 
 
                 let offset = 0;
@@ -375,6 +380,8 @@ const OrderPreview = forwardRef((props, ref) => {
             handleClose();
         }
     });
+
+
 
 
     // Wrap handlePrint in useCallback to avoid unnecessary re-creations

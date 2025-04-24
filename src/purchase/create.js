@@ -1311,12 +1311,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 id="vendor_id"
                                 labelKey="search_label"
                                 isLoading={isVendorsLoading}
-                                isInvalid={errors.vendor_id ? true : false}
                                 onChange={(selectedItems) => {
                                     errors.vendor_id = "";
                                     setErrors(errors);
                                     if (selectedItems.length === 0) {
-                                        // errors.vendor_id = "Invalid Vendor selected";
+                                        errors.vendor_id = "";
                                         //setErrors(errors);
                                         formData.vendor_id = "";
                                         setFormData({ ...formData });

@@ -1416,25 +1416,7 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
-                                                            sort("order_code");
-                                                        }}
-                                                    >
-                                                        Sales ID
-                                                        {sortField === "order_code" && sortSalesReturn === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "order_code" && sortSalesReturn === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
+
                                                 <th>
                                                     <b
                                                         style={{
@@ -1451,6 +1433,26 @@ function SalesReturnIndex(props) {
                                                         ) : null}
                                                         {sortField === "date" && sortSalesReturn === "" ? (
                                                             <i className="bi bi-sort-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("customer_name");
+                                                        }}
+                                                    >
+                                                        Customer
+                                                        {sortField === "customer_name" &&
+                                                            sortSalesReturn === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "customer_name" && sortSalesReturn === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
@@ -1519,19 +1521,19 @@ function SalesReturnIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("customer_name");
+                                                            sort("order_code");
                                                         }}
                                                     >
-                                                        Customer
-                                                        {sortField === "customer_name" &&
-                                                            sortSalesReturn === "-" ? (
+                                                        Sales ID
+                                                        {sortField === "order_code" && sortSalesReturn === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "customer_name" && sortSalesReturn === "" ? (
+                                                        {sortField === "order_code" && sortSalesReturn === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
                                                 </th>
+
                                                 {/*<th>
                                                     <b
                                                         style={{
@@ -1729,16 +1731,7 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                <th>
-                                                    <input
-                                                        type="text"
-                                                        id="order_code"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("order_code", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
-                                                </th>
+
                                                 <th>
                                                     <div style={{ minWidth: "125px" }}>
                                                         <DatePicker
@@ -1816,6 +1809,27 @@ function SalesReturnIndex(props) {
                                                     </div>
                                                 </th>
                                                 <th>
+                                                    <Typeahead
+                                                        id="customer_id"
+                                                        labelKey="search_label"
+                                                        style={{ minWidth: "300px" }}
+                                                        onChange={(selectedItems) => {
+                                                            searchByMultipleValuesField(
+                                                                "customer_id",
+                                                                selectedItems
+                                                            );
+                                                        }}
+                                                        options={customerOptions}
+                                                        placeholder="Customer Name / Mob / VAT # / ID"
+                                                        selected={selectedCustomers}
+                                                        highlightOnlyResult={true}
+                                                        onInputChange={(searchTerm, e) => {
+                                                            suggestCustomers(searchTerm);
+                                                        }}
+                                                        multiple
+                                                    />
+                                                </th>
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="net_total"
@@ -1847,26 +1861,16 @@ function SalesReturnIndex(props) {
                                                     />
                                                 </th>
                                                 <th>
-                                                    <Typeahead
-                                                        id="customer_id"
-                                                        labelKey="search_label"
-                                                        style={{ minWidth: "300px" }}
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "customer_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={customerOptions}
-                                                        placeholder="Customer Name / Mob / VAT # / ID"
-                                                        selected={selectedCustomers}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestCustomers(searchTerm);
-                                                        }}
-                                                        multiple
+                                                    <input
+                                                        type="text"
+                                                        id="order_code"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("order_code", e.target.value)
+                                                        }
+                                                        className="form-control"
                                                     />
                                                 </th>
+
                                                 {/*<th>
                                                     <input
                                                         type="text"
@@ -2081,12 +2085,15 @@ function SalesReturnIndex(props) {
                                                             </Button>
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.code}</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.order_code}</td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(salesreturn.date),
                                                                 "MMM dd yyyy h:mma"
                                                             )}
+                                                        </td>
+                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <OverflowTooltip value={salesreturn.customer_name} />
                                                         </td>
                                                         <td> <Amount amount={salesreturn.net_total} /> </td>
                                                         <td>
@@ -2099,9 +2106,8 @@ function SalesReturnIndex(props) {
 
                                                         </td>
                                                         <td> <Amount amount={trimTo2Decimals(salesreturn.balance_amount)} /></td>
-                                                        <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                            <OverflowTooltip value={salesreturn.customer_name} />
-                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.order_code}</td>
+
                                                         {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
 
                                                             {!salesreturn.zatca?.compliance_passed && salesreturn.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">

@@ -242,13 +242,17 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           }
         ];
 
-        let selectedCustomers = [
-          {
-            id: deliverynote.customer_id,
-            name: deliverynote.customer.name,
-            search_label: deliverynote.customer.search_label,
-          }
-        ];
+        if (deliverynote.customer_id && deliverynote.customer?.name) {
+          let selectedCustomers = [
+            {
+              id: deliverynote.customer_id,
+              name: deliverynote.customer.name,
+              search_label: deliverynote.customer.search_label,
+            }
+          ];
+          setSelectedCustomers([...selectedCustomers]);
+        }
+
 
         let selectedDeliveredByUsers = [
           {
@@ -261,7 +265,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
 
         setSelectedStores([...selectedStores]);
-        setSelectedCustomers([...selectedCustomers]);
+
 
 
         setFormData({ ...formData });
@@ -1069,26 +1073,19 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   <i className="bi x-lg"> </i>
                   {errors.store_id}
                 </div>
-                {formData.store_id && !errors.store_id && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
-                  </div>
-                )}
               </div>
             </div> : ""}
             <div className="col-md-6">
-              <label className="form-label">Customer*</label>
+              <label className="form-label">Customer</label>
               <Typeahead
                 id="customer_id"
                 labelKey="search_label"
                 isLoading={isCustomersLoading}
-                isInvalid={errors.customer_id ? true : false}
                 onChange={(selectedItems) => {
                   errors.customer_id = "";
                   setErrors(errors);
                   if (selectedItems.length === 0) {
-                    errors.customer_id = "Invalid Customer selected";
+                    errors.customer_id = "";
                     setErrors(errors);
                     formData.customer_id = "";
                     setFormData({ ...formData });
@@ -1110,7 +1107,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
               {errors.customer_id && (
                 <div style={{ color: "red" }}>
-                  <i className="bi bi-x-lg"> </i>
                   {errors.customer_id}
                 </div>
               )}

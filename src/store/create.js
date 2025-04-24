@@ -3011,6 +3011,30 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.zatca_qr_on_left_bottom}
+                                    checked={formData.zatca_qr_on_left_bottom}
+                                    onChange={(e) => {
+
+                                        errors["formData.zatca_qr_on_left_bottom"] = "";
+                                        formData.zatca_qr_on_left_bottom = !formData.zatca_qr_on_left_bottom
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="formData.zatca_qr_on_left_bottom"
+                                /> &nbsp;Zatca QR on left bottom
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.zatca_qr_on_left_bottom && (
+                                <div style={{ color: "red" }}>
+                                    {errors.zatca_qr_on_left_bottom}
+                                </div>
+                            )}
+                        </div>
+
                         <div className="col-md-3">
                             <label className="form-label">Default quotation validity (# of Days)*</label>
                             <div className="input-group mb-3">

@@ -294,13 +294,17 @@ const QuotationCreate = forwardRef((props, ref) => {
           },
         ];
 
-        let selectedCustomers = [
-          {
-            id: quotation.customer_id,
-            name: quotation.customer.name,
-            search_label: quotation.customer.search_label,
-          },
-        ];
+        if (quotation.customer_id && quotation.customer?.name) {
+          let selectedCustomers = [
+            {
+              id: quotation.customer_id,
+              name: quotation.customer.name,
+              search_label: quotation.customer.search_label,
+            },
+          ];
+          setSelectedCustomers([...selectedCustomers]);
+        }
+
 
         let selectedDeliveredByUsers = [
           {
@@ -313,7 +317,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
 
         setSelectedStores([...selectedStores]);
-        setSelectedCustomers([...selectedCustomers]);
+
 
         setFormData({ ...formData });
 
@@ -1177,19 +1181,16 @@ const QuotationCreate = forwardRef((props, ref) => {
               ""
             )}
             <div className="col-md-6">
-              <label className="form-label">Customer*</label>
-
-
+              <label className="form-label">Customer</label>
               <Typeahead
                 id="customer_id"
                 labelKey="search_label"
                 isLoading={isCustomersLoading}
-                isInvalid={errors.customer_id ? true : false}
                 onChange={(selectedItems) => {
                   errors.customer_id = "";
                   setErrors(errors);
                   if (selectedItems.length === 0) {
-                    errors.customer_id = "Invalid Customer selected";
+                    errors.customer_id = "";
                     setErrors(errors);
                     formData.customer_id = "";
                     setFormData({ ...formData });

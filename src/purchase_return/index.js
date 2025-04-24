@@ -994,7 +994,7 @@ function PurchaseReturnIndex(props) {
                                                             sort("code");
                                                         }}
                                                     >
-                                                        ID
+                                                        Purchase Return ID
                                                         {sortField === "code" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -1013,7 +1013,7 @@ function PurchaseReturnIndex(props) {
                                                             sort("vendor_invoice_no");
                                                         }}
                                                     >
-                                                        Vendor Invoice No.
+                                                        Vendor Return Invoice No.
                                                         {sortField === "vendor_invoice_no" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
