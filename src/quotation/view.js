@@ -2,7 +2,7 @@ import React, { useState, useRef, forwardRef, useImperativeHandle } from "react"
 import { Modal, Button, Table } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
-import QuotationPreview from './preview.js';
+import Preview from './../order/preview.js';
 import QuotationPrint from './print.js';
 import { format } from "date-fns";
 
@@ -84,7 +84,7 @@ const QuotationView = forwardRef((props, ref) => {
 
     const PreviewRef = useRef();
     function openPreview() {
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "quotation");
     }
 
     const PrintRef = useRef();
@@ -93,7 +93,7 @@ const QuotationView = forwardRef((props, ref) => {
     }
 
     return (<>
-        <QuotationPreview ref={PreviewRef} />
+        <Preview ref={PreviewRef} />
         <QuotationPrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>

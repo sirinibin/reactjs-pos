@@ -14,7 +14,7 @@ import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
-import QuotationPreview from "./preview.js"
+import Preview from "./../order/preview.js"
 
 function QuotationIndex(props) {
   const { lastMessage } = useContext(WebSocketContext);
@@ -428,14 +428,14 @@ function QuotationIndex(props) {
 
   const PreviewRef = useRef();
   function openPreview(model) {
-    PreviewRef.current.open(model);
+    PreviewRef.current.open(model, undefined, "quotation");
   }
 
 
 
   return (
     <>
-      <QuotationPreview ref={PreviewRef} />
+      <Preview ref={PreviewRef} />
       <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
       <div className="container-fluid p-0">

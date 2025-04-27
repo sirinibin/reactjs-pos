@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import PurchasePreview from "./preview.js";
+import Preview from "./../order/preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import VendorCreate from "./../vendor/create.js";
@@ -1108,7 +1108,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         model.date = formData.date_str;
         model.code = formData.code;
 
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "purchase");
     }
 
 
@@ -1203,7 +1203,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
             <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
-            <PurchasePreview ref={PreviewRef} />
+            <Preview ref={PreviewRef} />
             <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} showToastMessage={props.showToastMessage} />
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />

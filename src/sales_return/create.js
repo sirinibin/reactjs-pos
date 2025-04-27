@@ -13,7 +13,7 @@ import { Spinner } from "react-bootstrap";
 import SalesReturnView from "./view.js";
 import ProductView from "./../product/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
-import SalesReturnPreview from "./preview.js";
+import Preview from "./../order/preview.js";
 import { Dropdown } from 'react-bootstrap';
 import SalesHistory from "./../product/sales_history.js";
 import SalesReturnHistory from "./../product/sales_return_history.js";
@@ -1020,7 +1020,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         model.uuid = formData.uuid;
         model.invoice_count_value = formData.invoice_count_value;
         model.code = formData.code;
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "sales_return");
     }
 
 
@@ -1078,7 +1078,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
             <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
-            <SalesReturnPreview ref={PreviewRef} />
+            <Preview ref={PreviewRef} />
             <SalesReturnView ref={DetailsViewRef} />
             <ProductView ref={ProductDetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -1359,17 +1359,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </ResizableTableCell>
-
-                                            {/*<td style={{
-                                                textDecoration: "underline",
-                                                color: "blue",
-                                                cursor: "pointer",
-                                            }}
-                                                className="text-start"
-                                                onClick={() => {
-                                                    openProductDetailsView(product.product_id);
-                                                }}>{product.name}
-                                            </td>*/}
                                             <td>
                                                 <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
                                                     <Dropdown drop="top">

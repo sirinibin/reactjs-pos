@@ -1177,11 +1177,11 @@ const OrderIndex = forwardRef((props, ref) => {
 
     const PreviewRef = useRef();
     function openPreview(model) {
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "sales");
     }
 
     function sendWhatsAppMessage(model) {
-        PreviewRef.current.open(model, "whatsapp");
+        PreviewRef.current.open(model, "whatsapp", "sales");
     }
 
 

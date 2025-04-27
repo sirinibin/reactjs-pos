@@ -9,7 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
-import DeliveryNotePreview from "./preview.js"
+import Preview from "./../order/preview.js"
 
 function DeliveryNoteIndex(props) {
 
@@ -360,13 +360,13 @@ function DeliveryNoteIndex(props) {
 
   const PreviewRef = useRef();
   function openPreview(model) {
-    PreviewRef.current.open(model);
+    PreviewRef.current.open(model, undefined, "delivery_note");
   }
 
 
   return (
     <>
-      <DeliveryNotePreview ref={PreviewRef} />
+      <Preview ref={PreviewRef} />
       <DeliveryNoteCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       <DeliveryNoteView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
       <div className="container-fluid p-0">

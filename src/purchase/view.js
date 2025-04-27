@@ -1,5 +1,5 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
-import PurchasePreview from './preview.js';
+import Preview from './../order/preview.js';
 import { Modal, Button, Table } from 'react-bootstrap';
 
 import NumberFormat from "react-number-format";
@@ -192,7 +192,7 @@ const PurchaseView = forwardRef((props, ref) => {
 
     const PreviewRef = useRef();
     function openPreview() {
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "purchase");
     }
 
     const PrintRef = useRef();
@@ -201,7 +201,7 @@ const PurchaseView = forwardRef((props, ref) => {
     }
 
     return (<>
-        <PurchasePreview ref={PreviewRef} />
+        <Preview ref={PreviewRef} />
         <PurchasePrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>

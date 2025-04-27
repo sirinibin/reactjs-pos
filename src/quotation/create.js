@@ -5,7 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from "react";
-import QuotationPreview from "./preview.js";
+import Preview from "./../order/preview.js";
 import { Modal, Button, } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
@@ -876,7 +876,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     if (!formData.code) {
       formData.code = Math.floor(10000 + Math.random() * 90000).toString();;
     }
-    PreviewRef.current.open(model);
+    PreviewRef.current.open(model, undefined, "quotation");
   }
 
 
@@ -1037,7 +1037,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         </div>
       </div>
 
-      <QuotationPreview ref={PreviewRef} />
+      <Preview ref={PreviewRef} />
       <ProductView
         ref={ProductDetailsViewRef}
         openUpdateForm={openProductUpdateForm}

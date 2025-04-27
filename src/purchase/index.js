@@ -17,7 +17,7 @@ import Amount from "../utils/amount.js";
 import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
-import PurchasePreview from "./preview.js";
+import Preview from "./../order/preview.js";
 
 
 import ReactExport from 'react-data-export';
@@ -805,13 +805,13 @@ function PurchaseIndex(props) {
 
     const PreviewRef = useRef();
     function openPreview(model) {
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "purchase");
     }
 
 
     return (
         <>
-            <PurchasePreview ref={PreviewRef} />
+            <Preview ref={PreviewRef} />
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
             <PurchaseReturnCreate ref={PurchaseReturnCreateRef} showToastMessage={props.showToastMessage} />

@@ -22,7 +22,7 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import Sales from "./../utils/sales.js";
-import SalesReturnPreview from "./preview.js";
+import Preview from "./../order/preview.js";
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -1143,12 +1143,12 @@ function SalesReturnIndex(props) {
 
     const PreviewRef = useRef();
     function openPreview(model) {
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "sales_return");
     }
 
     return (
         <>
-            <SalesReturnPreview ref={PreviewRef} />
+            <Preview ref={PreviewRef} />
             <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
             <SalesReturnCreate ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />
             <SalesReturnView ref={DetailsViewRef} />

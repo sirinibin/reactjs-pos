@@ -14,7 +14,7 @@ import PurchaseReturnedView from "./view.js";
 import ProductView from "../product/view.js";
 import PurchaseView from "./../purchase/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
-import PurchaseReturnPreview from "./preview.js";
+import Preview from "./../order/preview.js";
 
 import { Dropdown } from 'react-bootstrap';
 import SalesHistory from "./../product/sales_history.js";
@@ -404,6 +404,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
+                name: selectedProducts[i].name,
                 quantity: parseFloat(selectedProducts[i].quantity),
                 unit: selectedProducts[i].unit,
                 purchasereturn_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
@@ -832,7 +833,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         model.uuid = formData.uuid;
         model.invoice_count_value = formData.invoice_count_value;
         model.code = formData.code;
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "purchase_return");
     }
 
 
@@ -887,7 +888,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             <QuotationHistory ref={QuotationHistoryRef} showToastMessage={props.showToastMessage} />
             <DeliveryNoteHistory ref={DeliveryNoteHistoryRef} showToastMessage={props.showToastMessage} />
 
-            <PurchaseReturnPreview ref={PreviewRef} />
+            <Preview ref={PreviewRef} />
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
 

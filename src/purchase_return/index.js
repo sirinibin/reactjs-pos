@@ -18,7 +18,7 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import Purchases from "./../utils/purchases.js";
-import PurchaseReturnPreview from "./preview.js"
+import Preview from "./../order/preview.js"
 
 import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
@@ -782,12 +782,12 @@ function PurchaseReturnIndex(props) {
 
     const PreviewRef = useRef();
     function openPreview(model) {
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "purchase_return");
     }
 
     return (
         <>
-            <PurchaseReturnPreview ref={PreviewRef} />
+            <Preview ref={PreviewRef} />
             <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />
             <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} />
             <PurchaseReturnView ref={DetailsViewRef} />

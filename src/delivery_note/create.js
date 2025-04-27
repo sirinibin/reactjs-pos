@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import DeliveryNotePreview from "./preview.js";
+import Preview from "./../order/preview.js";
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "../customer/create.js";
@@ -814,7 +814,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     model.total = totalPrice;
 
     //setFormData({ ...formData });
-    PreviewRef.current.open(model);
+    PreviewRef.current.open(model, undefined, "delivery_note");
   }
 
   const ProductsRef = useRef();
@@ -974,7 +974,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
       <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
 
-      <DeliveryNotePreview ref={PreviewRef} />
+      <Preview ref={PreviewRef} />
 
       <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
       <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />

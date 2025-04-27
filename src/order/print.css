@@ -3,3 +3,17 @@
     min-height: 100vh;
     overflow: visible;
   }
+
+
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+  }
+
+  .clickable-text {
+    cursor: pointer;
+  }
+  
+  .clickable-text:hover {
+  }

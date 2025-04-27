@@ -1,7 +1,7 @@
 import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button, Table } from 'react-bootstrap';
 
-import DeliveryNotePreview from './preview.js';
+import Preview from './../order/preview.js';
 import DeliveryNotePrint from './print.js';
 import { format } from "date-fns";
 
@@ -82,7 +82,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
 
     const PreviewRef = useRef();
     function openPreview() {
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "delivery_note");
     }
 
     const PrintRef = useRef();
@@ -91,7 +91,7 @@ const DeliveryNoteView = forwardRef((props, ref) => {
     }
 
     return (<>
-        <DeliveryNotePreview ref={PreviewRef} />
+        <Preview ref={PreviewRef} />
         <DeliveryNotePrint ref={PrintRef} />
         <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>

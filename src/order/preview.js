@@ -1,6 +1,6 @@
-import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback } from "react";
+import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback, useMemo } from "react";
 import { Modal, Button } from 'react-bootstrap';
-import OrderPreviewContent from './previewContent.js';
+import PreviewContent from './previewContent.js';
 import WhatsAppContent from './whatsAppContent.js';
 
 import { useReactToPrint } from 'react-to-print';
@@ -9,7 +9,7 @@ import html2pdf from 'html2pdf.js';
 import "./print.css";
 
 
-const OrderPreview = forwardRef((props, ref) => {
+const Preview = forwardRef((props, ref) => {
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -20,8 +20,76 @@ const OrderPreview = forwardRef((props, ref) => {
     }
     let [whatsAppShare, setWhatsAppShare] = useState(false);
     let [phone, setPhone] = useState("");
+
+    function setInvoiceTitle(modelName) {
+        model.modelName = modelName;
+
+        console.log("model.modelName", model.modelName);
+        console.log("model:", model);
+        if (model.modelName === "sales") {
+            if (model.store?.zatca?.phase === "1") {
+                if (model.payment_status !== "not_paid") {
+                    model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
+                } else if (model.payment_status === "not_paid") {
+                    model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
+                }
+            } else if (model.store?.zatca?.phase === "2") {
+                if (model.zatca?.is_simplified) {
+                    model.invoiceTitle = "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة";
+                } else if (!model.zatca?.is_simplified) {
+                    model.invoiceTitle = "STANDARD TAX INVOICE | فاتورة ضريبية قياسية";
+                }
+            }
+        } else if (model.modelName === "sales_return") {
+            if (model.store?.zatca?.phase === "1") {
+                model.invoiceTitle = "SALES RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
+            } else if (model.store?.zatca?.phase === "2") {
+                if (model.zatca?.is_simplified) {
+                    model.invoiceTitle = "SIMPLIFIED CREDIT NOTE TAX INVOICE | مذكرة ائتمان مبسطة، فاتورة ضريبية";
+                } else if (!model.zatca?.is_simplified) {
+                    model.invoiceTitle = "STANDARD CREDIT NOTE TAX INVOICE | مذكرة ائتمان قياسية، فاتورة ضريبية";
+                }
+            }
+        } else if (model.modelName === "purchase") {
+            if (model.store?.zatca?.phase === "1") {
+                if (model.payment_status !== "not_paid") {
+                    model.invoiceTitle = "PURCHASE TAX INVOICE | الفاتورة الضريبية";
+                } else if (model.payment_status === "not_paid") {
+                    model.invoiceTitle = "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الائتمان";
+                }
+            } else if (model.store?.zatca?.phase === "2") {
+                if (model.zatca?.is_simplified) {
+                    model.invoiceTitle = "SIMPLIFIED PURCHASE TAX INVOICE | فاتورة ضريبية مبسطة";
+                } else if (!model.zatca?.is_simplified) {
+                    model.invoiceTitle = "STANDARD PURCHASE TAX INVOICE | فاتورة ضريبية قياسية";
+                }
+            }
+        } else if (model.modelName === "purchase_return") {
+            if (model.store?.zatca?.phase === "1") {
+                model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
+            } else if (model.store?.zatca?.phase === "2") {
+                if (model.zatca?.is_simplified) {
+                    model.invoiceTitle = "SIMPLIFIED CREDIT NOTE TAX INVOICE | مذكرة ائتمان مبسطة، فاتورة ضريبية";
+                } else if (!model.zatca?.is_simplified) {
+                    model.invoiceTitle = "STANDARD CREDIT NOTE TAX INVOICE | مذكرة ائتمان قياسية، فاتورة ضريبية";
+                }
+            }
+        } else if (model.modelName === "quotation") {
+            model.invoiceTitle = "QUOTATION / اقتباس";
+        } else if (model.modelName === "delivery_note") {
+            model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";
+        }
+
+        setModel({ ...model });
+    }
+
+    let [modelName, setModelName] = useState("sales");
+
     useImperativeHandle(ref, () => ({
-        async open(modelObj, whatsapp) {
+        async open(modelObj, whatsapp, modelNameStr) {
+            modelName = modelNameStr;
+            setModelName(modelName);
+
             if (whatsapp) {
                 whatsAppShare = true;
                 setWhatsAppShare(whatsAppShare)
@@ -32,6 +100,7 @@ const OrderPreview = forwardRef((props, ref) => {
 
             if (modelObj) {
                 model = modelObj;
+
                 if (model.phone) {
                     phone = model.phone;
                     setPhone(model.phone);
@@ -40,17 +109,26 @@ const OrderPreview = forwardRef((props, ref) => {
 
                 setModel({ ...model })
                 if (model.id) {
-                    await getOrder(model.id);
+                    await getModel(model.id, modelName);
+                }
+
+                if (model.order_id) {
+                    await getOrder(model.order_id);
                 }
 
                 if (model.store_id) {
-                    getStore(model.store_id);
+                    await getStore(model.store_id);
                 }
 
+                setInvoiceTitle(modelName);
 
 
                 if (model.customer_id) {
                     getCustomer(model.customer_id);
+                }
+
+                if (model.vendor_id) {
+                    getVendor(model.vendor_id);
                 }
 
                 if (model.delivered_by) {
@@ -136,6 +214,60 @@ const OrderPreview = forwardRef((props, ref) => {
     }));
 
 
+    async function getModel(id, modelName) {
+        console.log("inside get Order");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        let apiPath = "";
+        if (modelName && modelName === "sales") {
+            apiPath = "order"
+        } else if (modelName && modelName === "sales_return") {
+            apiPath = "sales-return"
+        } else if (modelName && modelName === "purchase") {
+            apiPath = "purchase"
+        } else if (modelName && modelName === "purchase_return") {
+            apiPath = "purchase-return"
+        } else if (modelName && modelName === "quotation") {
+            apiPath = "quotation"
+        } else if (modelName && modelName === "delivery_note") {
+            apiPath = "delivery-note"
+        }
+
+        await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+
+                model = data.result;
+                setModel({ ...model });
+                return model;
+            })
+            .catch(error => {
+
+            });
+    }
+
     async function getOrder(id) {
         console.log("inside get Order");
         const requestOptions = {
@@ -152,6 +284,8 @@ const OrderPreview = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
+
+
         await fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
@@ -166,8 +300,9 @@ const OrderPreview = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
 
-                model = data.result;
+                model.order = data.result;
                 setModel({ ...model });
+
                 return model;
             })
             .catch(error => {
@@ -217,7 +352,7 @@ const OrderPreview = forwardRef((props, ref) => {
         return model.qr_content;
     }
 
-    function getStore(id) {
+    async function getStore(id) {
         console.log("inside get Store");
         const requestOptions = {
             method: 'GET',
@@ -227,7 +362,7 @@ const OrderPreview = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/store/' + id, requestOptions)
+        await fetch('/v1/store/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -296,6 +431,44 @@ const OrderPreview = forwardRef((props, ref) => {
                 console.log(data);
                 let customerData = data.result;
                 model.customer = customerData;
+                setModel({ ...model });
+            })
+            .catch(error => {
+
+            });
+    }
+
+    function getVendor(id) {
+        console.log("inside get Customer");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Customer Response:");
+                console.log(data);
+                let vendorData = data.result;
+                model.vendor = vendorData;
                 setModel({ ...model });
             })
             .catch(error => {
@@ -493,7 +666,7 @@ const OrderPreview = forwardRef((props, ref) => {
             if (whatsAppShare) {
                 openWhatsAppShare();
             } else {
-                autoPrint();
+                // autoPrint();
             }
         }, 800); // give some buffer for content to render
 
@@ -501,11 +674,256 @@ const OrderPreview = forwardRef((props, ref) => {
 
     }, [autoPrint, whatsAppShare, openWhatsAppShare]);
 
+    const [showSlider, setShowSlider] = useState(false);
+
+
+
+    let [selectedText, setSelectedText] = useState("");
+
+    /*
+    const handleFontSizeChange = (e) => {
+        console.log("selectedText:", selectedText);
+        console.log("parseFloat(e.target.value):", parseFloat(e.target.value));
+        if (selectedText) {
+            fontSizes[selectedText].value = parseFloat(e.target.value);
+            setFontSizes({ ...fontSizes });
+        }
+    };*/
+
+
+
+
+    const defaultFontSizes = useMemo(() => ({
+        "storeName": {
+            "value": 3.5,
+            "unit": "mm",
+            "size": "3.5mm",
+            "step": 0.1,
+        },
+        "storeTitle": {
+            "value": 2.8,
+            "unit": "mm",
+            "size": "3.8mm",
+            "step": 0.1,
+        },
+        "storeCR": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "storeVAT": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "storeNameArabic": {
+            "value": 3.5,
+            "unit": "mm",
+            "size": "3.5mm",
+            "step": 0.1,
+        },
+        "storeTitleArabic": {
+            "value": 2.8,
+            "unit": "mm",
+            "size": "3.8mm",
+            "step": 0.1,
+        },
+        "storeCRArabic": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "storeVATArabic": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "invoiceTitle": {
+            "value": 3,
+            "unit": "mm",
+            "size": "3mm",
+            "step": 0.1,
+        },
+        "invoiceDetails": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "invoicePageCount": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "tableHead": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "tableBody": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "tableFooter": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "signature": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "footer": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "bankAccountHeader": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "bankAccountBody": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+    }), []);
+
+    const selectText = (name) => {
+        selectedText = name;
+        setSelectedText(name);
+        if (!fontSizes[modelName + "_" + selectedText]) {
+            fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
+        }
+        setShowSlider(true);
+    };
+
+    const saveToLocalStorage = (key, obj) => {
+        localStorage.setItem(key, JSON.stringify(obj));
+    };
+
+    const getFromLocalStorage = (key) => {
+        const stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : null;
+    };
+
+
+    let [fontSizes, setFontSizes] = useState(defaultFontSizes);
+
+    useEffect(() => {
+        let storedFontSizes = getFromLocalStorage("fontSizes");
+        if (storedFontSizes) {
+            setFontSizes({ ...storedFontSizes });
+        } else {
+            let initFontSizes = {};
+            let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note"];
+            for (let key1 in modelNames) {
+                for (let key2 in defaultFontSizes) {
+                    initFontSizes[modelNames[key1] + "_" + key2] = defaultFontSizes[key2];
+                }
+            }
+
+            setFontSizes({ ...initFontSizes });
+        }
+
+    }, [setFontSizes, modelName, defaultFontSizes]);
+
+
+    const increment = () => {
+        if (selectedText) {
+            if (!fontSizes[modelName + "_" + selectedText]) {
+                fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
+            }
+
+            fontSizes[modelName + "_" + selectedText].value += fontSizes[modelName + "_" + selectedText].step;
+            fontSizes[modelName + "_" + selectedText]["value"] = parseFloat(Math.min(fontSizes[modelName + "_" + selectedText]?.value).toFixed(2));
+            fontSizes[modelName + "_" + selectedText]["size"] = fontSizes[modelName + "_" + selectedText]?.value + fontSizes[modelName + "_" + selectedText]?.unit;
+            setFontSizes({ ...fontSizes });
+            saveToLocalStorage("fontSizes", fontSizes);
+        }
+    };
+
+    const decrement = () => {
+        if (selectedText) {
+            if (!fontSizes[modelName + "_" + selectedText]) {
+                fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
+            }
+
+            fontSizes[modelName + "_" + selectedText].value -= fontSizes[modelName + "_" + selectedText].step;
+            fontSizes[modelName + "_" + selectedText].value = parseFloat(Math.min(fontSizes[modelName + "_" + selectedText].value).toFixed(2));
+            fontSizes[modelName + "_" + selectedText].size = fontSizes[modelName + "_" + selectedText].value + fontSizes[modelName + "_" + selectedText].unit;
+            setFontSizes({ ...fontSizes });
+            saveToLocalStorage("fontSizes", fontSizes);
+        }
+    };
+
+
+    function formatModelName(str) {
+        return str
+            .replace(/_/g, ' ')                   // Replace _ with space
+            .split(' ')                            // Split by spaces
+            .map(word =>
+                word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() // Capitalize
+            )
+            .join(' ');                            // Join words back with space
+    }
 
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header>
-                <Modal.Title>Invoice Preview</Modal.Title>
+                <Modal.Title>{formatModelName(modelName)} Preview</Modal.Title>
+                {showSlider && (
+                    <div
+                        className="border rounded bg-light p-2"
+                        style={{ maxWidth: '300px', marginLeft: '200px' }}
+                    >
+
+
+                        <div className="d-flex align-items-center">
+                            {/* Range Input */}
+                            <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
+                            &nbsp;Font Size:{fontSizes[modelName + "_" + selectedText]?.size}&nbsp;
+                            {/*<input
+                                type="range"
+                                className="form-range me-2 flex-grow-1"
+                                id="customRange"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                value={fontSizes[selectedText]?.value}
+                                onChange={handleFontSizeChange}
+                            />*/}
+
+                            <button className="btn btn-outline-secondary" onClick={increment}>+</button>
+
+                            {/* Close Button */}
+                            <button
+                                className="btn-close"
+                                onClick={() => {
+                                    setShowSlider(false);
+                                }}
+                            ></button>
+                        </div>
+                    </div>
+
+
+                )}
+
                 <div className="col align-self-end text-end">
                     <Button variant="primary" className={`btn ${whatsAppShare ? "btn-success" : "btn-primary"}`} onClick={whatsAppShare ? openWhatsAppShare : handlePrint}>
                         {!whatsAppShare && <><i className="bi bi-printer"></i> Print</>}
@@ -526,7 +944,7 @@ const OrderPreview = forwardRef((props, ref) => {
             <Modal.Body>
                 <div ref={printAreaRef} id="print-area">
                     {whatsAppShare && <WhatsAppContent model={model} />}
-                    {!whatsAppShare && <OrderPreviewContent model={model} />}
+                    {!whatsAppShare && <PreviewContent model={model} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />}
                 </div>
             </Modal.Body>
             <Modal.Footer>
@@ -536,4 +954,4 @@ const OrderPreview = forwardRef((props, ref) => {
 
 });
 
-export default OrderPreview;
+export default Preview;
