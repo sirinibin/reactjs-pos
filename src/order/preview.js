@@ -1,7 +1,6 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback, useMemo } from "react";
 import { Modal, Button } from 'react-bootstrap';
 import PreviewContent from './previewContent.js';
-import WhatsAppContent from './whatsAppContent.js';
 
 import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
@@ -664,7 +663,7 @@ const Preview = forwardRef((props, ref) => {
         console.log("whatsAppShare:", whatsAppShare);
         const timeout = setTimeout(() => {
             if (whatsAppShare) {
-                openWhatsAppShare();
+                // openWhatsAppShare();
             } else {
                 // autoPrint();
             }
@@ -943,8 +942,7 @@ const Preview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef} id="print-area">
-                    {whatsAppShare && <WhatsAppContent model={model} />}
-                    {!whatsAppShare && <PreviewContent model={model} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />}
+                    <PreviewContent model={model} whatsAppShare={whatsAppShare} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />
                 </div>
             </Modal.Body>
             <Modal.Footer>
