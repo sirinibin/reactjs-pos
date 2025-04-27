@@ -1525,7 +1525,7 @@ function findDiscount() {
         if (!formData.code) {
             formData.code = Math.floor(10000 + Math.random() * 90000).toString();;
         }
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "sales");
     }
 
 
@@ -1550,7 +1550,7 @@ function findDiscount() {
             }
         }
 
-        PreviewRef.current.open(model, "whatsapp");
+        PreviewRef.current.open(model, "whatsapp", "sales");
     }
 
     function validateSaudiNumber(input) {

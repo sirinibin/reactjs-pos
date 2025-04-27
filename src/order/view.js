@@ -189,7 +189,7 @@ const OrderView = forwardRef((props, ref) => {
 
     const PreviewRef = useRef();
     function openPreview() {
-        PreviewRef.current.open(model);
+        PreviewRef.current.open(model, undefined, "sales");
     }
 
     const PrintRef = useRef();
@@ -206,14 +206,8 @@ const OrderView = forwardRef((props, ref) => {
     }
 
     function sendWhatsAppMessage() {
-        PreviewRef.current.open(model, "whatsapp");
+        PreviewRef.current.open(model, "whatsapp", "sales");
     }
-
-    /*
-    function trimTo2Decimals(value) {
-        return Math.trunc(value * 100) / 100;
-    }
-        */
 
 
 
