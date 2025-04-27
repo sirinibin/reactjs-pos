@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import CustomerCreate from "./../customer/create.js";
 import CustomerView from "./../customer/view.js";
 import Customers from "./../utils/customers.js";
-import CustomerWithdrawalPreview from './preview.js';
+import CustomerDepositPreview from './../customer_deposit/preview.js';
 
 
 const CustomerWithdrawalCreate = forwardRef((props, ref) => {
@@ -406,12 +406,12 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         if (!formData.date) {
             formData.date = formData.date_str;
         }
-        PreviewRef.current.open(formData);
+        PreviewRef.current.open(formData, undefined, "customer_withdrawal");
     }
 
     return (
         <>
-            <CustomerWithdrawalPreview ref={PreviewRef} />
+            <CustomerDepositPreview ref={PreviewRef} />
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />

@@ -1065,24 +1065,19 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
 
 
-    function validateSaudiNumber(input) {
-        // remove everything except digits and plus
+    function validatePhoneNumber(input) {
+        // Remove everything except digits and plus
         let s = input.trim().replace(/[^\d+]/g, "");
 
-        // if it starts with "+", drop that for the digit-only test
         if (s.startsWith("+")) {
-            s = s.slice(1);
-        }
-
-        // now s must be all digits
-        if (!/^\d+$/.test(s)) {
+            // International number: must be + followed by 6 to 15 digits
+            return /^\+\d{6,15}$/.test(s);
+        } else if (s.startsWith("05")) {
+            // Saudi local number: must be 05 followed by 8 digits
+            return /^05\d{8}$/.test(s);
+        } else {
             return false;
         }
-
-        // Accept either:
-        //  • 9665 followed by 8 digits
-        //  • 05 followed by 8 digits
-        return /^(?:9665|05)\d{8}$/.test(s);
     }
 
     function sendWhatsAppMessage() {
@@ -1099,7 +1094,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         setErrors({ ...errors });
 
         if (model.phone) {
-            if (!validateSaudiNumber(model.phone)) {
+            if (!validatePhoneNumber(model.phone)) {
                 errors["phone"] = "Invalid phone no."
                 setErrors({ ...errors });
                 return;

@@ -58,9 +58,9 @@ const Preview = forwardRef((props, ref) => {
                 }
             } else if (model.store?.zatca?.phase === "2") {
                 if (model.zatca?.is_simplified) {
-                    model.invoiceTitle = "SIMPLIFIED PURCHASE TAX INVOICE | فاتورة ضريبية مبسطة";
+                    model.invoiceTitle = "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء";
                 } else if (!model.zatca?.is_simplified) {
-                    model.invoiceTitle = "STANDARD PURCHASE TAX INVOICE | فاتورة ضريبية قياسية";
+                    model.invoiceTitle = "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء";
                 }
             }
         } else if (model.modelName === "purchase_return") {
@@ -68,9 +68,9 @@ const Preview = forwardRef((props, ref) => {
                 model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
             } else if (model.store?.zatca?.phase === "2") {
                 if (model.zatca?.is_simplified) {
-                    model.invoiceTitle = "SIMPLIFIED CREDIT NOTE TAX INVOICE | مذكرة ائتمان مبسطة، فاتورة ضريبية";
+                    model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
                 } else if (!model.zatca?.is_simplified) {
-                    model.invoiceTitle = "STANDARD CREDIT NOTE TAX INVOICE | مذكرة ائتمان قياسية، فاتورة ضريبية";
+                    model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
                 }
             }
         } else if (model.modelName === "quotation") {
@@ -102,7 +102,6 @@ const Preview = forwardRef((props, ref) => {
 
                 if (model.phone) {
                     phone = model.phone;
-                    setPhone(model.phone);
                 }
                 setPhone(phone);
 
@@ -652,6 +651,8 @@ const Preview = forwardRef((props, ref) => {
             whatsAppNo = phone;
         } else if (model.customer?.phone) {
             whatsAppNo = model.customer?.phone
+        } else if (model.vendor?.phone) {
+            whatsAppNo = model.vendor?.phone
         }
 
         if (!whatsAppNo) {

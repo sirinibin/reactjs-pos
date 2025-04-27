@@ -406,7 +406,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         if (!formData.date) {
             formData.date = formData.date_str;
         }
-        PreviewRef.current.open(formData);
+        PreviewRef.current.open(formData, undefined, "customer_deposit");
     }
 
     return (
