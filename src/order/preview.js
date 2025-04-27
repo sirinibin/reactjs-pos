@@ -558,14 +558,29 @@ const Preview = forwardRef((props, ref) => {
 
     const getFileName = useCallback(() => {
         // function getFileName() {
-        let filename = "Sales";
+
+        let filename = "";
+
+        if (modelName === "sales") {
+            filename = "Sales";
+        } else if (modelName === "sales_return") {
+            filename = "Sales_Return";
+        } else if (modelName === "purchase") {
+            filename = "Purchase";
+        } else if (modelName === "purchase_return") {
+            filename = "Purchase_Return";
+        } else if (modelName === "quotation") {
+            filename = "Quotation";
+        } else if (modelName === "delivery_note") {
+            filename = "Delivery_Note";
+        }
 
         if (model.code) {
             filename += "-" + model.code;
         }
 
         return filename;
-    }, [model])
+    }, [model, modelName])
 
     const handlePrint = useReactToPrint({
         content: () => printAreaRef.current,
