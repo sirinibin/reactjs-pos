@@ -556,8 +556,6 @@ const Preview = forwardRef((props, ref) => {
     const printAreaRef = useRef();
 
     const getFileName = useCallback(() => {
-        // function getFileName() {
-
         let filename = "";
 
         if (modelName === "sales") {
@@ -655,9 +653,16 @@ const Preview = forwardRef((props, ref) => {
             whatsAppNo = model.vendor?.phone
         }
 
+
         if (!whatsAppNo) {
-            handleClose();
-            return
+            whatsAppNo = prompt("Enter the WhatsApp number (with country code, e.g., 9665xxxxxxxx):");
+
+            if (!whatsAppNo) {
+                // User cancelled or entered nothing
+                alert("No number entered. Cannot send message.");
+                handleClose();
+                return;
+            }
         }
 
 

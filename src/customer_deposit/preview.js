@@ -357,9 +357,16 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             whatsAppNo = model.vendor?.phone
         }
 
+
         if (!whatsAppNo) {
-            handleClose();
-            return
+            whatsAppNo = prompt("Enter the WhatsApp number (with country code, e.g., 9665xxxxxxxx):");
+
+            if (!whatsAppNo) {
+                // User cancelled or entered nothing
+                alert("No number entered. Cannot send message.");
+                handleClose();
+                return;
+            }
         }
 
 
