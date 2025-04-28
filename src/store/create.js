@@ -1437,6 +1437,33 @@ const StoreCreate = forwardRef((props, ref) => {
 
                         <h6><b>National Address:</b></h6>
                         <div className="col-md-2">
+                            <label className="form-label">Short code</label>
+
+                            <div className="input-group mb-3">
+                                <input
+                                    value={formData.national_address.short_code ? formData.national_address.short_code : ""}
+                                    type='string'
+                                    onChange={(e) => {
+
+                                        errors["national_address_short_code"] = "";
+                                        formData.national_address.short_code = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+                                    id="national_address.short_code "
+                                    placeholder="Short code "
+                                />
+                            </div>
+                            {errors.national_address_short_code && (
+                                <div style={{ color: "red" }}>
+
+                                    {errors.national_address_short_code}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="col-md-2">
                             <label className="form-label">Building Number(4 digits)*</label>
 
                             <div className="input-group mb-3">
@@ -1454,9 +1481,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                     id="national_address.building_no"
                                     placeholder="Building Number"
                                 />
-
-
-
                             </div>
                             {errors.national_address_building_no && (
                                 <div style={{ color: "red" }}>

@@ -279,7 +279,7 @@ function QuotationIndex(props) {
       },
     };
     let Select =
-      "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
+      "select=id,type,payment_status,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
     }
@@ -680,6 +680,44 @@ function QuotationIndex(props) {
                             ) : null}
                           </b>
                         </th>
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("type");
+                            }}
+                          >
+                            Type
+                            {sortField === "type" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "type" && sortOrder === "" ? (
+                              <i className="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("payment_status");
+                            }}
+                          >
+                            Payment status
+                            {sortField === "payment_status" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "payment_status" && sortOrder === "" ? (
+                              <i className="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
                         {localStorage.getItem("admin") === "true" ?
                           <th>
                             <b
@@ -891,6 +929,30 @@ function QuotationIndex(props) {
                             className="form-control"
                           />
                         </th>
+                        <th>
+                          <select
+                            onChange={(e) => {
+                              searchByFieldValue("type", e.target.value);
+
+                            }}
+                          >
+                            <option value="" >All</option>
+                            <option value="quotation" >Quotation</option>
+                            <option value="invoice">Invoice</option>
+                          </select>
+                        </th>
+                        <th>
+                          <select
+                            onChange={(e) => {
+                              searchByFieldValue("payment_status", e.target.value);
+
+                            }}
+                          >
+                            <option value="" >All</option>
+                            <option value="credit" >Credit</option>
+                            <option value="paid">Paid</option>
+                          </select>
+                        </th>
                         {localStorage.getItem("admin") === "true" ?
                           <th>
                             <input
@@ -1065,6 +1127,8 @@ function QuotationIndex(props) {
                               <OverflowTooltip value={quotation.customer_name} />
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.payment_status}</td>
                             {localStorage.getItem("admin") === "true" ?
                               <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? <Amount amount={trimTo2Decimals(quotation.profit)} /> : 0.00} </td>
                               : ""}

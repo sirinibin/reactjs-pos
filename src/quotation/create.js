@@ -55,6 +55,8 @@ const QuotationCreate = forwardRef((props, ref) => {
         price_type: "retail",
         delivery_days: 7,
         validity_days: 2,
+        type: "quotation",
+        payment_status: "credit",
       };
 
       selectedProducts = [];
@@ -186,6 +188,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     is_discount_percent: false,
     validity_days: 2,
     delivery_days: 7,
+    type: "quotation",
+    payment_status: "credit",
   });
 
   //Store Auto Suggestion
@@ -260,6 +264,8 @@ const QuotationCreate = forwardRef((props, ref) => {
         let quotation = data.result;
         formData = {
           id: quotation.id,
+          type: quotation.type,
+          payment_status: quotation.payment_status,
           code: quotation.code,
           store_id: quotation.store_id,
           customer_id: quotation.customer_id,
@@ -1217,6 +1223,83 @@ const QuotationCreate = forwardRef((props, ref) => {
             ) : (
               ""
             )}
+            <div className="row">
+              <div className="col-md-2">
+                <label className="form-label">Type*</label>
+
+                <div className="input-group mb-3">
+                  <select
+                    value={formData.type}
+                    onChange={(e) => {
+                      console.log("Inside onchange payment method");
+                      if (!e.target.value) {
+                        formData.type = "";
+                        errors["type"] = "Invalid type";
+                        setErrors({ ...errors });
+                        return;
+                      }
+
+                      errors["type"] = "";
+                      setErrors({ ...errors });
+
+                      formData.type = e.target.value;
+                      if (formData.type === "quotation") {
+                        formData.payment_status = "";
+                      } else if (formData.type === "invoice") {
+                        formData.payment_status = "credit";
+                      }
+                      setFormData({ ...formData });
+                      console.log(formData);
+                    }}
+                    className="form-control"
+                  >
+                    <option value="quotation" SELECTED>Quotation</option>
+                    <option value="invoice">Invoice</option>
+
+                  </select>
+                </div>
+                {errors.type && (
+                  <div style={{ color: "red" }}>
+                    {errors.type}
+                  </div>
+                )}
+              </div>
+              {formData.type === "invoice" ? <div className="col-md-2">
+                <label className="form-label">Payment status*</label>
+                <div className="input-group mb-3">
+                  <select
+                    value={formData.payment_status}
+                    onChange={(e) => {
+                      console.log("Inside onchange .payment_status");
+                      if (!e.target.value) {
+                        formData.payment_status = "";
+                        errors[".payment_status"] = "Invalid payment status";
+                        setErrors({ ...errors });
+                        return;
+                      }
+
+                      errors[".payment_status"] = "";
+                      setErrors({ ...errors });
+
+                      formData.payment_status = e.target.value;
+                      setFormData({ ...formData });
+                      console.log(formData);
+                    }}
+                    className="form-control"
+                  >
+                    <option value="" SELECTED></option>
+                    <option value="credit" >Credit</option>
+                    <option value="paid" >Paid</option>
+                  </select>
+                </div>
+                {errors.payment_status && (
+                  <div style={{ color: "red" }}>
+                    {errors.payment_status}
+                  </div>
+                )}
+              </div> : ""}
+            </div>
+
             <div className="col-md-6">
               <label className="form-label">Customer</label>
               <Typeahead
