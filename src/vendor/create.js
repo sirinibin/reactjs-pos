@@ -405,7 +405,7 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
                         <div className="col-md-3">
-                            <label className="form-label">Phone*</label>
+                            <label className="form-label">Phone</label>
 
                             <div className="input-group mb-3">
                                 <input

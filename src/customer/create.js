@@ -533,7 +533,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
 
                         <div className="col-md-2">
-                            <label className="form-label">Phone* ( 05.. / +966..)</label>
+                            <label className="form-label">Phone ( 05.. / +966..)</label>
 
                             <div className="input-group mb-3">
                                 <input
