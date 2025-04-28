@@ -34,9 +34,19 @@ const Preview = forwardRef((props, ref) => {
                 }
             } else if (model.store?.zatca?.phase === "2") {
                 if (model.zatca?.is_simplified) {
-                    model.invoiceTitle = "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة";
+                    if (model.payment_status === "not_paid") {
+                        model.invoiceTitle = "SIMPLIFIED CREDIT TAX INVOICE | فاتورة ضريبة الائتمان المبسطة";
+                    } else {
+                        model.invoiceTitle = "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة";
+                    }
+
                 } else if (!model.zatca?.is_simplified) {
-                    model.invoiceTitle = "STANDARD TAX INVOICE | فاتورة ضريبية قياسية";
+                    if (model.payment_status === "not_paid") {
+                        model.invoiceTitle = "STANDARD CREDIT TAX INVOICE | فاتورة ضريبة الائتمان القياسية";
+                    } else {
+                        model.invoiceTitle = "STANDARD TAX INVOICE | فاتورة ضريبية قياسية";
+                    }
+
                 }
             }
         } else if (model.modelName === "sales_return") {
