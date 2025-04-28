@@ -126,12 +126,12 @@ const PreviewContent = forwardRef((props, ref) => {
                         props.selectText("invoiceDetails");
                     }}>
                         <div className="col-md-12" style={{ border: "solid 1px", marginLeft: "0px", width: `${props.model.store?.zatca_qr_on_left_bottom ? "100%" : "74%"}` }}>
-                            {props.model.invoice_count_value && props.model.store?.zatca?.phase === "2" ? <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
+                            {props.model.invoice_count_value && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
                                 <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >Invoice Count Value | عد الفاتورة (ICV):</div>
                                 <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >  {props.model.invoice_count_value ? props.model.invoice_count_value : ""}</div>
                             </div> : ""}
-                            {props.model.uuid && props.model.store?.zatca?.phase === "2" ? <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >UUID:</div>
+                            {props.model.uuid && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >UUID | معرف فريد:</div>
                                 <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} > {props.model.uuid ? props.model.uuid : ""}</div>
                             </div> : ""}
                             <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
@@ -256,9 +256,10 @@ const PreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </> : ""}
                         </div>
-                        {!props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
+                        {!props.model.store?.zatca_qr_on_left_bottom && (props.modelName === "sales" || props.modelName === "sales_return") && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
                             {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
-                            {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px" }} size={128} /> : ""}
+                            {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px" }} size={138} /> : ""}
+                            {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                         </div>}
                     </div>
 
@@ -439,7 +440,8 @@ const PreviewContent = forwardRef((props, ref) => {
                                             {props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <th colSpan={2} rowSpan={6} style={{ maxWidth: "138px", maxHeight: "138px", }}>
                                                 <div className="col-md-1 text-center" style={{ border: "solid 0px", padding: "0px", maxWidth: "138px", maxHeight: "138px", marginLeft: "-7px", marginTop: "-7px" }}>
                                                     {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "138px", height: "138px" }} alt="Invoice QR Code" /> : ""}
-                                                    {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px", border: "solid 0px", }} size={138} /> : ""}
+                                                    {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px", border: "solid 0px", }} size={138} /> : ""}
+                                                    {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                                                 </div>
                                             </th>}
                                             <th colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
