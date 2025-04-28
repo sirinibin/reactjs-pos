@@ -228,10 +228,7 @@ const CustomerCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
-        if (!formData.phone) {
-            errors["phone"] = "Phone is required";
-            haveErrors = true;
-        } else if (!validateSaudiPhone(formData.phone)) {
+        if (formData.phone && !validateSaudiPhone(formData.phone)) {
             errors["phone"] = "Invalid phone no.";
             haveErrors = true;
         }
