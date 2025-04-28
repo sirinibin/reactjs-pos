@@ -753,6 +753,7 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.discount_percent = parseFloat(formData.discount_percent);
         formData.vat_percent = parseFloat(formData.vat_percent);
         formData.net_total = parseFloat(formData.net_total);
+        formData.balance_amount = parseFloat(balanceAmount);
 
         if (localStorage.getItem('store_id')) {
             formData.store_id = localStorage.getItem('store_id');

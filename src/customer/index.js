@@ -618,7 +618,7 @@ function CustomerIndex(props) {
                                                             sort("stores.sales_balance_amount");
                                                         }}
                                                     >
-                                                        Sales balance amount
+                                                        Credit balance
                                                         {sortField === "stores.sales_balance_amount" && sortCustomer === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
