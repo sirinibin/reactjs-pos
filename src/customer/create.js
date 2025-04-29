@@ -767,7 +767,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="col-md-2">
                                 <label className="form-label">Qtn. Credit Invoice Amount</label>
-                                <input type='number' disabled={true} value={formData.stores[localStorage.getItem("store_id")]?.quotation_invoice_credit_amount} className="form-control "
+                                <input type='number' disabled={true} value={formData.stores && formData.stores[localStorage.getItem("store_id")]?.quotation_invoice_credit_amount} className="form-control "
                                     onChange={(e) => {
 
                                     }}
@@ -787,7 +787,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="col-md-2">
                                 <label className="form-label">Qtn. Paid Invoice Amount</label>
-                                <input type='number' disabled={true} value={formData.stores[localStorage.getItem("store_id")]?.quotation_invoice_paid_amount} className="form-control "
+                                <input type='number' disabled={true} value={formData.stores && formData.stores[localStorage.getItem("store_id")]?.quotation_invoice_paid_amount} className="form-control "
                                     onChange={(e) => {
 
                                     }}
