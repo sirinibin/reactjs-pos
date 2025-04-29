@@ -1106,6 +1106,11 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 selected={selectedCustomers}
                 highlightOnlyResult={true}
                 onInputChange={(searchTerm, e) => {
+                  if (searchTerm) {
+                    formData.customer_name = searchTerm;
+                  }
+                  setFormData({ ...formData });
+
                   suggestCustomers(searchTerm);
                 }}
               />

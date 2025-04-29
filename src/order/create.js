@@ -1812,6 +1812,8 @@ function findDiscount() {
                                 onInputChange={(searchTerm, e) => {
                                     if (searchTerm) {
                                         formData.customerName = searchTerm;
+                                        formData.customer_name = searchTerm;
+                                        setFormData({ ...formData });
                                     }
                                     suggestCustomers(searchTerm);
                                 }}

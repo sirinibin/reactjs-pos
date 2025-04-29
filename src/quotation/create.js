@@ -1330,6 +1330,10 @@ const QuotationCreate = forwardRef((props, ref) => {
                 highlightOnlyResult={true}
                 onInputChange={(searchTerm, e) => {
                   formData.customerName = searchTerm;
+                  if (searchTerm) {
+                    formData.customer_name = searchTerm;
+                  }
+                  setFormData({ ...formData });
                   suggestCustomers(searchTerm);
                 }}
               />

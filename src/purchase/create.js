@@ -1373,6 +1373,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 selected={selectedVendors}
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
+                                    if (searchTerm) {
+                                        formData.vendor_name = searchTerm;
+                                    }
+                                    setFormData({ ...formData });
                                     suggestVendors(searchTerm);
                                 }}
                             />
