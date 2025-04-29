@@ -27,6 +27,14 @@ const PostingIndex = forwardRef((props, ref) => {
             setShowAccountBalanceSheet(true);
             selectedAccount = account;
             setSelectedAccount(selectedAccount);
+
+            dateValue = "";
+            fromDateValue = "";
+            toDateValue = "";
+
+            setDateValue(dateValue);
+            setFromDateValue(fromDateValue);
+            setToDateValue(toDateValue);
             list();
         },
     }));
@@ -37,9 +45,9 @@ const PostingIndex = forwardRef((props, ref) => {
     let [selectedDate, setSelectedDate] = useState(new Date());
     let [selectedFromDate, setSelectedFromDate] = useState(new Date());
     let [selectedToDate, setSelectedToDate] = useState(new Date());
-    const [dateValue, setDateValue] = useState("");
-    const [fromDateValue, setFromDateValue] = useState("");
-    const [toDateValue, setToDateValue] = useState("");
+    let [dateValue, setDateValue] = useState("");
+    let [fromDateValue, setFromDateValue] = useState("");
+    let [toDateValue, setToDateValue] = useState("");
 
     //list
     const [postingList, setPostingList] = useState([]);
@@ -1169,7 +1177,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                     {posting.posts &&
                                                                         posting.posts.map((post, key) => (
                                                                             <tr key={key} style={{ border: "solid 1px" }}>
-                                                                                <td style={{ border: "solid 1px", minWidth: "184px" }}>{format(new Date(post.date), "MMM dd yyyy h:mma")}</td>
+                                                                                <td style={{ border: "solid 1px", minWidth: "248px" }}>{format(new Date(post.date), "MMM dd yyyy h:mma")}</td>
                                                                                 <td colSpan={2} style={{ border: "solid 0px" }}>
                                                                                     <td style={{ border: "solid 0px", borderRight: "solid 0px", paddingLeft: "5px" }}>
                                                                                         <td style={{ textAlign: "left", border: "solid 0px", minWidth: "162px" }}>
@@ -1211,8 +1219,8 @@ const PostingIndex = forwardRef((props, ref) => {
 
 
                                                                 </td>
-                                                                <td style={{ minWidth: "155px", maxWidth: "155px" }} >{posting.reference_model}</td>
-                                                                <td style={{ minWidth: "120px", maxWidth: "120px" }}>{posting.reference_code}</td>
+                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }} >{posting.reference_model}</td>
+                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }}>{posting.reference_code}</td>
 
 
                                                             </tr>

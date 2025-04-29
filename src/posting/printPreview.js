@@ -1,4 +1,4 @@
-import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback } from "react";
+import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo, useEffect } from "react";
 import { Modal, Button } from 'react-bootstrap';
 import BalanceSheetPrintPreviewContent from './printPreviewContent.js';
 
@@ -33,6 +33,15 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
                 if (model.store_id) {
                     getStore(model.store_id);
+                }
+
+                if (model.reference_model === "customer" && model.reference_id) {
+                    getCustomer(model.reference_id);
+                }
+
+
+                if (model.reference_model === "vendor" && model.reference_id) {
+                    getVendor(model.reference_id);
                 }
 
                 /*
@@ -153,12 +162,96 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
     let [model, setModel] = useState({});
 
-    const [show, setShow] = useState(props.show);
+    let [show, setShow] = useState(props.show);
 
     function handleClose() {
         setShow(false);
     }
 
+
+    function getCustomer(id) {
+        console.log("inside get Customer");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/customer/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Customer Response:");
+                console.log(data);
+                let customerData = data.result;
+                model.customer = customerData;
+                setModel({ ...model });
+            })
+            .catch(error => {
+
+            });
+    }
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
+
+    function getVendor(id) {
+        console.log("inside get Customer");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Customer Response:");
+                console.log(data);
+                let vendorData = data.result;
+                model.vendor = vendorData;
+                setModel({ ...model });
+            })
+            .catch(error => {
+
+            });
+    }
 
     function getStore(id) {
         console.log("inside get Store");
@@ -308,13 +401,187 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
     }, [getFileName, model, formatPhoneForWhatsApp, phone]);
 
+    const [showSlider, setShowSlider] = useState(false);
+
+    const defaultFontSizes = useMemo(() => ({
+        "storeName": {
+            "value": 3.5,
+            "unit": "mm",
+            "size": "3.5mm",
+            "step": 0.1,
+        },
+        "storeTitle": {
+            "value": 2.8,
+            "unit": "mm",
+            "size": "3.8mm",
+            "step": 0.1,
+        },
+        "storeCR": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "storeVAT": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "storeNameArabic": {
+            "value": 3.5,
+            "unit": "mm",
+            "size": "3.5mm",
+            "step": 0.1,
+        },
+        "storeTitleArabic": {
+            "value": 2.8,
+            "unit": "mm",
+            "size": "3.8mm",
+            "step": 0.1,
+        },
+        "storeCRArabic": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "storeVATArabic": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+        "invoiceTitle": {
+            "value": 3,
+            "unit": "mm",
+            "size": "3mm",
+            "step": 0.1,
+        },
+        "accountDetails": {
+            "value": 2.2,
+            "unit": "mm",
+            "size": "2.2mm",
+            "step": 0.1,
+        },
+    }), []);
+
+    //let [modelName, setModelName] = useState("balanceSheet");
+
+    let [selectedText, setSelectedText] = useState("");
+
+    const selectText = (name) => {
+        selectedText = name;
+        setSelectedText(name);
+        if (!fontSizes[modelName + "_" + selectedText]) {
+            fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
+        }
+        setShowSlider(true);
+    };
+
+    const saveToLocalStorage = (key, obj) => {
+        localStorage.setItem(key, JSON.stringify(obj));
+    };
+
+    const getFromLocalStorage = (key) => {
+        const stored = localStorage.getItem(key);
+        return stored ? JSON.parse(stored) : null;
+    };
+
+
+    let [fontSizes, setFontSizes] = useState(defaultFontSizes);
+    let modelName = "balanceSheet";
+    useEffect(() => {
+        let initFontSizes = {};
+        let storedFontSizes = getFromLocalStorage("fontSizes");
+        if (storedFontSizes) {
+            initFontSizes = storedFontSizes;
+            setFontSizes({ ...storedFontSizes });
+        }
+
+        let modelNames = ["balanceSheet"];
+
+        for (let key1 in modelNames) {
+            for (let key2 in defaultFontSizes) {
+                if (!initFontSizes[modelNames[key1] + "_" + key2]) {
+                    initFontSizes[modelNames[key1] + "_" + key2] = defaultFontSizes[key2];
+                }
+            }
+        }
+
+        setFontSizes({ ...initFontSizes });
+
+    }, [setFontSizes, modelName, defaultFontSizes]);
+
+
+    const increment = () => {
+        if (selectedText) {
+            if (!fontSizes[modelName + "_" + selectedText]) {
+                fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
+            }
+
+            fontSizes[modelName + "_" + selectedText].value += fontSizes[modelName + "_" + selectedText].step;
+            fontSizes[modelName + "_" + selectedText]["value"] = parseFloat(Math.min(fontSizes[modelName + "_" + selectedText]?.value).toFixed(2));
+            fontSizes[modelName + "_" + selectedText]["size"] = fontSizes[modelName + "_" + selectedText]?.value + fontSizes[modelName + "_" + selectedText]?.unit;
+            setFontSizes({ ...fontSizes });
+            saveToLocalStorage("fontSizes", fontSizes);
+        }
+    };
+
+    const decrement = () => {
+        if (selectedText) {
+            if (!fontSizes[modelName + "_" + selectedText]) {
+                fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
+            }
+
+            fontSizes[modelName + "_" + selectedText].value -= fontSizes[modelName + "_" + selectedText].step;
+            fontSizes[modelName + "_" + selectedText].value = parseFloat(Math.min(fontSizes[modelName + "_" + selectedText].value).toFixed(2));
+            fontSizes[modelName + "_" + selectedText].size = fontSizes[modelName + "_" + selectedText].value + fontSizes[modelName + "_" + selectedText].unit;
+            setFontSizes({ ...fontSizes });
+            saveToLocalStorage("fontSizes", fontSizes);
+        }
+    };
+
+
+
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header>
                 <Modal.Title>Balance sheet preview</Modal.Title>
+                {showSlider && (
+                    <div
+                        className="border rounded bg-light p-2"
+                        style={{ maxWidth: '300px', marginLeft: '200px' }}
+                    >
+                        <div className="d-flex align-items-center">
+                            {/* Range Input */}
+                            <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
+                            &nbsp;Font Size:{fontSizes[modelName + "_" + selectedText]?.size}&nbsp;
+                            {/*<input
+                                type="range"
+                                className="form-range me-2 flex-grow-1"
+                                id="customRange"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                value={fontSizes[selectedText]?.value}
+                                onChange={handleFontSizeChange}
+                            />*/}
+
+                            <button className="btn btn-outline-secondary" onClick={increment}>+</button>
+
+                            {/* Close Button */}
+                            <button
+                                className="btn-close"
+                                onClick={() => {
+                                    setShowSlider(false);
+                                }}
+                            ></button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="col align-self-end text-end">
-
-
                     <Button variant="primary" className={`btn ${whatsAppShare ? "btn-success" : "btn-primary"}`} onClick={whatsAppShare ? openWhatsAppShare : handlePrint}>
                         {!whatsAppShare && <><i className="bi bi-printer"></i> Print</>}
                         {whatsAppShare && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
@@ -334,7 +601,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <BalanceSheetPrintPreviewContent model={model} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
+                    <BalanceSheetPrintPreviewContent model={model} modelName={"balanceSheet"} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
                 </div>
             </Modal.Body>
             <Modal.Footer>

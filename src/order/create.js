@@ -61,11 +61,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
             selectedCustomers = [];
             setSelectedCustomers([]);
-
-
-
-
-
+            formData.customer_id = "";
+            formData.customer_name = "";
 
             if (localStorage.getItem("user_id")) {
                 selectedDeliveredByUsers = [{

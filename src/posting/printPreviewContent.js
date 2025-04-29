@@ -21,7 +21,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
 
 
-    function getArabicDate(engishDate) {
+    function getArabicDateTime(engishDate) {
         let event = new Date(engishDate);
         let options = {
             /*weekday: 'long', */
@@ -35,6 +35,23 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
         };
         return event.toLocaleDateString('ar-EG', options)
     }
+
+    function getArabicDate(engishDate) {
+        let event = new Date(engishDate);
+        let options = {
+            /*weekday: 'long', */
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            //  timeZoneName: "short",
+        };
+        return event.toLocaleDateString('ar-EG', options)
+    }
+
+
+    let detailsLabelsColumnWidthPercent = "25%";
+    let detailsValuesColumnWidthPercent = "75%";
+    let detailsBorderThickness = "solid 0.2px";
 
     return (<>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
@@ -96,14 +113,176 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     </div>
                 </div>
 
-                <div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
+                <div className="row col-md-14 fw-bold" style={{ border: "solid 0px", fontSize: props.fontSizes[props.modelName + "_accountDetails"]?.size, padding: "10px" }} onClick={() => {
+                    props.selectText("accountDetails");
+                }}>
+                    <div className="col-md-12" style={{ border: detailsBorderThickness, marginLeft: "0px", width: `${(props.model.store?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
+                        <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Account Name | إسم الحساب:</div>
+                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                {props.model.name ? props.model.name : ""}
+                            </div>
+                        </div>
+                        <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Account Number | رقم الحساب:</div>
+                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                {props.model.number ? props.model.number : ""}
+                            </div>
+                        </div>
+                        {props.model.phone && <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Phone | هاتف:</div>
+                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                {props.model.phone}
+                            </div>
+                        </div>}
+                        {props.model.dateValue && <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Date: | تاريخ:</div>
+                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                {props.model.dateValue ? format(new Date(props.model.dateValue), "MMM dd yyyy") : ""}
+                            </div>
+                        </div>}
+
+                        {props.model.fromDateValue && props.model.toDateValue && <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Date: | تاريخ:</div>
+                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                {format(new Date(props.model.fromDateValue), "MMM dd yyyy") + " - " + format(new Date(props.model.toDateValue), "MMM dd yyyy")}
+
+                                {" | " + getArabicDate(props.model.fromDateValue) + " - " + getArabicDate(props.model.toDateValue)}
+                            </div>
+                        </div>}
+
+                        {props.model.fromDateValue && !props.model.toDateValue && !props.model.dateValue && <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Date: | تاريخ:</div>
+                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                {format(new Date(props.model.fromDateValue), "MMM dd yyyy") + " to present | لتقديم"}
+                            </div>
+                        </div>}
+
+                        {props.model.toDateValue && !props.model.fromDateValue && !props.model.dateValue && <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Date: | تاريخ:</div>
+                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                {"upto | تصل " + format(new Date(props.model.toDateValue), "MMM dd yyyy")}
+                            </div>
+                        </div>}
+
+                        {props.model.reference_model === "customer" ? <>
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Customer Name | اسم العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.customer ? props.model.customer.name : ""}
+                                    {!props.model.customer ? "N/A" : ""}
+                                    {props.model.customer?.name_in_arabic ? " | " + props.model.customer.name_in_arabic : ""}
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >   Customer VAT  | ضريبة القيمة المضافة للعملاء:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
+                                    {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
+                                    {!props.model.customer && !props.model.vat_no ? "N/A" : ""}
+                                    {props.model.customer?.vat_no_in_arabic ? " | " + props.model.customer.vat_no_in_arabic : ""}
+                                    {!props.model.customer && props.model.vat_no ? " | " + convertToArabicNumber(props.model.vat_no) : ""}
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer C.R | رقم تسجيل شركة العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.customer?.registration_number ? props.model.customer.registration_number + " | " + convertToArabicNumber(props.model.customer.registration_number) : "N/A"}
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer Address | عنوان العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.address && !props.model.customer ? props.model.address : ""}
+
+                                    {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
+                                    <span dir="ltr">
+                                        {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
+                                        {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}
+                                        {props.model.customer?.national_address?.district_name ? ` - ${props.model.customer.national_address.district_name}` : ""}
+                                        {props.model.customer?.national_address?.unit_no ? `, Unit #${props.model.customer.national_address.unit_no}` : ""}
+                                        {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
+                                        {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
+                                        {props.model.customer?.national_address?.additional_no ? ` - ${props.model.customer.national_address.additional_no}` : ""}
+                                        {/*props.model.customer?.country_name ? `, ${props.model.customer.country_name}` : ""*/}
+                                    </span>
+
+                                    {props.model.address && !props.model.customer ? props.model.address : ""}
+                                    {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
+                                    {props.model.customer?.national_address?.building_no_arabic && props.model.customer?.national_address?.street_name_arabic && props.model.customer?.national_address?.district_name_arabic && props.model.customer?.national_address?.city_name_arabic && props.model.customer?.national_address?.zipcode_arabic && <span dir="rtl">
+                                        <br />
+                                        {props.model.customer?.national_address?.building_no_arabic ? `${props.model.customer.national_address.building_no_arabic}  ` : ""}
+                                        {props.model.customer?.national_address?.street_name_arabic ? ` ${props.model.customer.national_address.street_name_arabic}` : ""}
+                                        {props.model.customer?.national_address?.district_name_arabic ? ` - ${props.model.customer.national_address.district_name_arabic}` : ""}
+                                        {props.model.customer?.national_address?.unit_no_arabic ? `,رقم الوحدة ${props.model.customer.national_address.unit_no_arabic}` : ""}
+                                        {props.model.customer?.national_address?.city_name_arabic ? `, ${props.model.customer.national_address.city_name_arabic}` : ""}
+                                        {props.model.customer?.national_address?.zipcode_arabic ? ` - ${props.model.customer.national_address.zipcode_arabic} ` : ""}
+                                        {props.model.customer?.national_address?.additional_no_arabic ? `- ${props.model.customer.national_address.additional_no_arabic} ` : ""}
+                                        {/*props.model.customer?.country_name === "Saudi Arabia" ? `المملكة العربية السعودية , ` : ""*/}
+                                    </span>}
+                                </div>
+                            </div>
+                        </> : ""}
+                        {props.model.reference_model === "vendor" ? <>
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Vendor Name | اسم العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.vendor ? props.model.vendor.name : ""}
+                                    {!props.model.vendor ? "N/A" : ""}
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Vendor VAT | ضريبة القيمة المضافة للعملاء:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.vendor?.vat_no ? props.model.vendor.vat_no : "N/A"}
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Vendor C.R | رقم تسجيل الشركة الموردة:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.vendor?.registration_number ? props.model.vendor.registration_number : "N/A"}
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Vendor Address | عنوان العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {!props.model.vendor?.national_address?.building_no && !props.model.vendor?.national_address?.unit_no && props.model.vendor?.national_address?.street_name && props.model.vendor?.national_address?.district_name && props.model.vendor?.national_address?.city_name ? props.model.vendor?.address : ""}
+                                    <span dir="ltr">
+                                        {props.model.vendor?.national_address?.building_no ? `${props.model.vendor.national_address.building_no}` : ""}
+                                        {props.model.vendor?.national_address?.street_name ? ` ${props.model.vendor.national_address.street_name}` : ""}
+                                        {props.model.vendor?.national_address?.district_name ? ` - ${props.model.vendor.national_address.district_name}` : ""}
+                                        {props.model.vendor?.national_address?.unit_no ? `, Unit #${props.model.vendor.national_address.unit_no}` : ""}
+                                        {props.model.vendor?.national_address?.city_name ? `, ${props.model.vendor.national_address.city_name}` : ""}
+                                        {props.model.vendor?.national_address?.zipcode ? ` - ${props.model.vendor.national_address.zipcode}` : ""}
+                                        {props.model.vendor?.national_address?.additional_no ? ` - ${props.model.vendor.national_address.additional_no}` : ""}
+                                        {/*props.model.customer?.country_name ? `, ${props.model.customer.country_name}` : ""*/}
+                                    </span>
+                                    {props.model.vendor?.national_address?.building_no_arabic && props.model.vendor?.national_address?.street_name_arabic && props.model.vendor?.national_address?.district_name_arabic && props.model.vendor?.national_address?.city_name_arabic && props.model.vendor?.national_address?.zipcode_arabic && <span dir="rtl">
+                                        <br />
+                                        {props.model.vendor?.national_address?.building_no_arabic ? `${props.model.vendor.national_address.building_no_arabic}  ` : ""}
+                                        {props.model.vendor?.national_address?.street_name_arabic ? ` ${props.model.vendor.national_address.street_name_arabic}` : ""}
+                                        {props.model.vendor?.national_address?.district_name_arabic ? ` - ${props.model.vendor.national_address.district_name_arabic}` : ""}
+                                        {props.model.vendor?.national_address?.unit_no_arabic ? `,رقم الوحدة ${props.model.vendor.national_address.unit_no_arabic}` : ""}
+                                        {props.model.vendor?.national_address?.city_name_arabic ? `, ${props.model.vendor.national_address.city_name_arabic}` : ""}
+                                        {props.model.vendor?.national_address?.zipcode_arabic ? ` - ${props.model.vendor.national_address.zipcode_arabic} ` : ""}
+                                        {props.model.vendor?.national_address?.additional_no_arabic ? `- ${props.model.vendor.national_address.additional_no_arabic} ` : ""}
+                                        {/*props.model.customer?.country_name === "Saudi Arabia" ? `المملكة العربية السعودية , ` : ""*/}
+                                    </span>}
+                                </div>
+                            </div>
+                        </> : ""}
+                    </div>
+                </div>
+
+                {/*<div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
                     <div className="col-md-5" style={{ border: "solid 0px", width: "50%" }}>
                         <ul className="list-unstyled mb0 text-start">
-                            {/*<li><strong>Order: </strong>#{props.model.code ? props.model.code : "<ID_NUMBER>"}</li>
-                            <li><strong>Order Date: </strong> {props.model.date ? format(
-                                new Date(props.model.date),
-                                "MMM dd yyyy h:mma"
-                            ) : "<DATETIME>"} </li>*/}
                             <li>
                                 <strong>Account Name: </strong>{props.model.name ? props.model.name : "N/A"}
                             </li>
@@ -130,16 +309,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                         </ul>
                     </div>
 
-                    {/*
-                    <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "20%", padding: "0px" }}>
-                        {props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "70px", height: "72px" }} alt="Invoice QR Code" /> : ""}
-                        </div>*/}
-
                     <div className="col-md-5" style={{ border: "solid 0px", width: "50%", alignSelf: "end" }} dir="ltr">
                         <ul className="list-unstyled mb0 text-end" dir="ltr">
-                            {/*
-                            <li>{props.model.code ? props.model.code : "<ID_NUMBER_ARABIC>"}<strong> :طلب </strong></li>
-                    <li><strong>تاريخ الطلب:  </strong>{props.model.date ? getArabicDate(props.model.date) : "<DATETIME_ARABIC>"}</li>*/}
                             <li dir="ltr">
                                 {props.model.name ? props.model.name : "غير متاح"} <strong dir="ltr"> :إسم الحساب</strong>
                             </li>
@@ -161,7 +332,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
                         </ul>
                     </div>
-                </div>
+                </div>*/}
                 <div className="row" style={{ fontSize: "3.5mm" }}>
                     <div className="col text-start">
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
@@ -418,7 +589,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             Date تاريخ:
                                         </th>
                                         <th style={{ padding: "2px" }} className="text-center">
-                                            {format(new Date(), "MMM dd yyyy h:mma")}  {" / " + getArabicDate(new Date())}
+                                            {format(new Date(), "MMM dd yyyy h:mma")}  {" / " + getArabicDateTime(new Date())}
                                         </th>
                                         {/*
                                         <th className="text-end" style={{ padding: "2px" }}>

@@ -161,10 +161,6 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         {props.model.customer?.national_address?.additional_no ? ` - ${props.model.customer.national_address.additional_no}` : ""}
                                         {/*props.model.customer?.country_name ? `, ${props.model.customer.country_name}` : ""*/}
                                     </span>
-
-                                    {props.model.address && !props.model.customer ? props.model.address : ""}
-                                    {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
-
                                     {props.model.customer?.national_address?.building_no_arabic && props.model.customer?.national_address?.street_name_arabic && props.model.customer?.national_address?.district_name_arabic && props.model.customer?.national_address?.city_name_arabic && props.model.customer?.national_address?.zipcode_arabic && <span dir="rtl">
                                         <br />
                                         {props.model.customer?.national_address?.building_no_arabic ? `${props.model.customer.national_address.building_no_arabic}  ` : ""}

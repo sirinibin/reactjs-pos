@@ -234,7 +234,6 @@ const PreviewContent = forwardRef((props, ref) => {
                                         </span>
 
                                         {props.model.address && !props.model.customer ? props.model.address : ""}
-                                        {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
                                         {props.model.customer?.national_address?.building_no_arabic && props.model.customer?.national_address?.street_name_arabic && props.model.customer?.national_address?.district_name_arabic && props.model.customer?.national_address?.city_name_arabic && props.model.customer?.national_address?.zipcode_arabic && <span dir="rtl">
                                             <br />
                                             {props.model.customer?.national_address?.building_no_arabic ? `${props.model.customer.national_address.building_no_arabic}  ` : ""}
@@ -271,7 +270,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                 <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
                                     <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Vendor C.R | رقم تسجيل الشركة الموردة:</div>
                                     <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
-                                        {props.model.customer?.registration_number ? props.model.customer.registration_number : "N/A"}
+                                        {props.model.vendor?.registration_number ? props.model.vendor.registration_number : "N/A"}
                                     </div>
                                 </div>
 
@@ -292,8 +291,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             {/*props.model.customer?.country_name ? `, ${props.model.customer.country_name}` : ""*/}
                                         </span>
 
-                                        {props.model.address && !props.model.customer ? props.model.address : ""}
-                                        {!props.model.vendor?.national_address?.building_no && !props.model.vendor?.national_address?.unit_no && props.model.vendor?.national_address?.street_name && props.model.vendor?.national_address?.district_name && props.model.vendor?.national_address?.city_name ? props.model.vendor?.address : ""}
+                                        {props.model.address && !props.model.vendor ? props.model.address : ""}
                                         {props.model.vendor?.national_address?.building_no_arabic && props.model.vendor?.national_address?.street_name_arabic && props.model.vendor?.national_address?.district_name_arabic && props.model.vendor?.national_address?.city_name_arabic && props.model.vendor?.national_address?.zipcode_arabic && <span dir="rtl">
                                             <br />
                                             {props.model.vendor?.national_address?.building_no_arabic ? `${props.model.vendor.national_address.building_no_arabic}  ` : ""}
@@ -309,7 +307,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </> : ""}
                         </div>
-                        {!props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && (props.modelName !== "quotation" || props.model.type === "invoice") && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
+                        {!props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && props.modelName !== "quotation" && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
                             {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                             {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px" }} size={138} /> : ""}
                             {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
@@ -490,7 +488,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         props.selectText("tableFooter");
                                     }} className="fw-bold clickable-text">
                                         <tr >
-                                            {props.model.store?.zatca_qr_on_left_bottom && (props.modelName !== "quotation" || props.model.type === "invoice") && props.modelName !== "delivery_note" && <th colSpan={2} rowSpan={6} style={{ maxWidth: "138px", maxHeight: "138px", }}>
+                                            {props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <th colSpan={2} rowSpan={6} style={{ maxWidth: "138px", maxHeight: "138px", }}>
                                                 <div className="col-md-1 text-center" style={{ border: "solid 0px", padding: "0px", maxWidth: "138px", maxHeight: "138px", marginLeft: "-7px", marginTop: "-7px" }}>
                                                     {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "138px", height: "138px" }} alt="Invoice QR Code" /> : ""}
                                                     {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px", border: "solid 0px", }} size={138} /> : ""}
@@ -583,7 +581,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </td>
 
                                         </tr>
-                                        {props.modelName === "quotation" && <>
+                                        {props.modelName === "quotation" && props.model.type === "quotation" && <>
                                             <tr>
 
                                                 <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
