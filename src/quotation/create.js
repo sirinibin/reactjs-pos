@@ -56,7 +56,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         delivery_days: 7,
         validity_days: 2,
         type: "quotation",
-        payment_status: "credit",
+        payment_status: "",
       };
 
       selectedProducts = [];
@@ -189,7 +189,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     validity_days: 2,
     delivery_days: 7,
     type: "quotation",
-    payment_status: "credit",
+    payment_status: "",
   });
 
   //Store Auto Suggestion
@@ -545,6 +545,9 @@ const QuotationCreate = forwardRef((props, ref) => {
     event.preventDefault();
     console.log("Inside handle Create");
     console.log("selectedProducts:", selectedProducts);
+    if (formData.type === "quotation") {
+      formData.payment_status = ""
+    }
 
     formData.products = [];
     for (var i = 0; i < selectedProducts.length; i++) {
@@ -1273,12 +1276,12 @@ const QuotationCreate = forwardRef((props, ref) => {
                       console.log("Inside onchange .payment_status");
                       if (!e.target.value) {
                         formData.payment_status = "";
-                        errors[".payment_status"] = "Invalid payment status";
+                        errors["payment_status"] = "Invalid payment status";
                         setErrors({ ...errors });
                         return;
                       }
 
-                      errors[".payment_status"] = "";
+                      errors["payment_status"] = "";
                       setErrors({ ...errors });
 
                       formData.payment_status = e.target.value;
