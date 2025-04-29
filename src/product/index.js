@@ -312,11 +312,11 @@ function ProductIndex(props) {
             // Select =
             //"select=id,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,product_stores." + localStorage.getItem("store_id") + ".stock,product_stores." + localStorage.getItem("store_id") + ".purchase_unit_price,product_stores." + localStorage.getItem("store_id") + ".wholesale_unit_price,product_stores." + localStorage.getItem("store_id") + ".retail_unit_price,product_stores." + localStorage.getItem("store_id") + ".store_id";
             Select =
-                "select=id,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+                "select=id,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
 
         } else {
             Select =
-                "select=id,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,created_by_name,created_at,rack,product_stores";
+                "select=id,deleted,deleted_at,prefix_part_number,brand_name,country_name,item_code,ean_12,bar_code,part_number,name,name_in_arabic,category_name,category_id,created_by_name,created_at,rack,product_stores";
 
 
             //Select =
@@ -1721,7 +1721,8 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="part_number"
+                                                        id="product_search_by_part_number"
+                                                        name="product_search_by_part_number"
                                                         onChange={(e) =>
                                                             searchByFieldValue("part_number", e.target.value)
                                                         }
@@ -1795,7 +1796,8 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="ean_12"
+                                                        id="product_search_by_ean_12"
+                                                        name="product_search_by_part_number_ean_12"
                                                         onChange={(e) => {
                                                             if (e.target.value.length === 13) {
                                                                 e.target.value = e.target.value.slice(0, -1);
@@ -1820,7 +1822,8 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="purchase_unit_price"
+                                                        id="product_search_by_purchase_unit_price"
+                                                        name="product_search_by_purchase_unit_price"
                                                         onChange={(e) =>
                                                             searchByFieldValue("purchase_unit_price", e.target.value)
                                                         }
@@ -1831,7 +1834,8 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="wholesale_unit_price"
+                                                        id="product_search_by_wholesale_unit_price"
+                                                        name="product_search_by_wholesale_unit_price"
                                                         onChange={(e) =>
                                                             searchByFieldValue("wholesale_unit_price", e.target.value)
                                                         }
@@ -1842,7 +1846,8 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="retail_unit_price"
+                                                        id="product_search_by_retail_unit_price"
+                                                        name="product_search_by_retail_unit_price"
                                                         onChange={(e) =>
                                                             searchByFieldValue("retail_unit_price", e.target.value)
                                                         }
@@ -1894,7 +1899,8 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="stock"
+                                                        id="product_search_by_stock"
+                                                        name="product_search_by_stock"
                                                         onChange={(e) =>
                                                             searchByFieldValue("stock", e.target.value)
                                                         }
@@ -1967,7 +1973,8 @@ function ProductIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-
+                                                        id="product_search_by_sales_count"
+                                                        name="product_search_by_sales_count"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales_count", e.target.value)
                                                         }
@@ -1976,6 +1983,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_sales"
+                                                        name="product_search_by_sales"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales", e.target.value)
@@ -1985,6 +1994,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_sales_quantity"
+                                                        name="product_search_by_sales_quantity"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales_quantity", e.target.value)
@@ -1994,6 +2005,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_sales_profit"
+                                                        name="product_search_by_sales_profit"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales_profit", e.target.value)
@@ -2003,6 +2016,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_sales_loss"
+                                                        name="product_search_by_sales_loss"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales_loss", e.target.value)
@@ -2012,6 +2027,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_sales_return_count"
+                                                        name="product_search_by_sales_return_count"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales_return_count", e.target.value)
@@ -2021,6 +2038,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_sales_count"
+                                                        name="product_search_by_sales_count"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales_return", e.target.value)
@@ -2030,6 +2049,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_sales_return_quantity"
+                                                        name="product_search_by_sales_return_quantity"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales_return_quantity", e.target.value)
@@ -2039,6 +2060,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_sales_return_profit"
+                                                        name="product_search_by_sales_return_profit"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales_return_profit", e.target.value)
@@ -2048,6 +2071,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_sales_return_loss"
+                                                        name="product_search_by_sales_return_loss"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("sales_return_loss", e.target.value)
@@ -2057,6 +2082,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_purchase_count"
+                                                        name="product_search_by_purchase_count"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("purchase_count", e.target.value)
@@ -2066,6 +2093,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_purchase"
+                                                        name="product_search_by_purchase"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("purchase", e.target.value)
@@ -2075,6 +2104,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_purchase_quantity"
+                                                        name="product_search_by_purchase_quantity"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("purchase_quantity", e.target.value)
@@ -2085,6 +2116,8 @@ function ProductIndex(props) {
 
                                                 <th>
                                                     <input
+                                                        id="product_search_by_purchase_return_count"
+                                                        name="product_search_by_purchase_return_count"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("purchase_return_count", e.target.value)
@@ -2094,6 +2127,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_purchase_return"
+                                                        name="product_search_by_purchase_return"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("purchase_return", e.target.value)
@@ -2103,6 +2138,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_purchase_return_quantity"
+                                                        name="product_search_by_purchase_return_quantity"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("purchase_return_quantity", e.target.value)
@@ -2112,6 +2149,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_quotation_count"
+                                                        name="product_search_by_quotation_count"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("quotation_count", e.target.value)
@@ -2121,6 +2160,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_quotation"
+                                                        name="product_search_by_quotation"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("quotation", e.target.value)
@@ -2130,6 +2171,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_quotation_quantity"
+                                                        name="product_search_by_quotation_quantity"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("quotation_quantity", e.target.value)
@@ -2139,6 +2182,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_delivery_note_count"
+                                                        name="product_search_by_delivery_note_count"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("delivery_note_count", e.target.value)
@@ -2148,6 +2193,8 @@ function ProductIndex(props) {
                                                 </th>
                                                 <th>
                                                     <input
+                                                        id="product_search_by_delivery_note_quantity"
+                                                        name="product_search_by_delivery_note_quantity"
                                                         type="text"
                                                         onChange={(e) =>
                                                             searchByFieldValue("delivery_note_quantity", e.target.value)

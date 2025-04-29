@@ -2,7 +2,7 @@ import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, us
 import { Modal, Button } from 'react-bootstrap';
 import PreviewContent from './previewContent.js';
 
-import { useReactToPrint } from 'react-to-print';
+//import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
 import html2pdf from 'html2pdf.js';
 import "./print.css";
@@ -85,6 +85,13 @@ const Preview = forwardRef((props, ref) => {
             }
         } else if (model.modelName === "quotation") {
             model.invoiceTitle = "QUOTATION / اقتباس";
+
+            if (model.type === "invoice" && model.payment_status === "credit") {
+                model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
+
+            } else if (model.type === "invoice" && model.payment_status === "paid") {
+                model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
+            }
         } else if (model.modelName === "delivery_note") {
             model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";
         }
@@ -589,13 +596,42 @@ const Preview = forwardRef((props, ref) => {
         return filename;
     }, [model, modelName])
 
+    const handlePrint = useCallback(async () => {
+        const element = printAreaRef.current;
+        if (!element) return;
+
+        const opt = {
+            margin: 0,
+            filename: `${getFileName()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, logging: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+
+        // Create a blob URL
+        const blobUrl = URL.createObjectURL(pdfBlob);
+
+        // Open the PDF in a new window or iframe and trigger print
+        const printWindow = window.open(blobUrl);
+        if (printWindow) {
+            printWindow.onload = function () {
+                printWindow.focus();
+                printWindow.print();
+            };
+        } else {
+            alert("Popup blocked! Please allow popups for this website.");
+        }
+    }, [getFileName]);
+    /*
     const handlePrint = useReactToPrint({
         content: () => printAreaRef.current,
         documentTitle: getFileName(),
         onAfterPrint: () => {
             handleClose();
         }
-    });
+    });*/
 
     /*
     const saveFileToServer = useReactToPrint({
@@ -972,7 +1008,7 @@ const Preview = forwardRef((props, ref) => {
 
             </Modal.Header>
             <Modal.Body>
-                <div ref={printAreaRef} id="print-area">
+                <div ref={printAreaRef} className="print-area" id="print-area">
                     <PreviewContent model={model} whatsAppShare={whatsAppShare} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />
                 </div>
             </Modal.Body>

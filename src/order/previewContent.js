@@ -37,6 +37,10 @@ const PreviewContent = forwardRef((props, ref) => {
         return event.toLocaleDateString('ar-EG', options)
     }
 
+    let detailsLabelsColumnWidthPercent = "21%";
+    let detailsValuesColumnWidthPercent = "79%";
+    let detailsBorderThickness = "solid 0.2px";
+
     return (<>
         <span ref={ref}>
             {props.model.pages && props.model.pages.map((page, pageIndex) => (
@@ -54,7 +58,7 @@ const PreviewContent = forwardRef((props, ref) => {
                         paddingBottom: "4px",
                         marginTop: page.top + "px",
                         height: "auto",
-                        width: `${props.whatsAppShare ? "750px" : "900px"}`
+                        width: `${props.whatsAppShare ? "750px" : "750px"}`
                     }}
 
                 >
@@ -125,53 +129,68 @@ const PreviewContent = forwardRef((props, ref) => {
                     <div className="row col-md-14 fw-bold" style={{ border: "solid 0px", fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
                         props.selectText("invoiceDetails");
                     }}>
-                        <div className="col-md-12" style={{ border: "solid 1px", marginLeft: "0px", width: `${props.model.store?.zatca_qr_on_left_bottom ? "100%" : "74%"}` }}>
-                            {props.model.invoice_count_value && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >Invoice Count Value | عد الفاتورة (ICV):</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >  {props.model.invoice_count_value ? props.model.invoice_count_value : ""}</div>
+                        <div className="col-md-12" style={{ border: detailsBorderThickness, marginLeft: "0px", width: `${(props.model.store?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
+                            {props.model.invoice_count_value && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Invoice Count Value | عد الفاتورة (ICV):</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >  {props.model.invoice_count_value ? props.model.invoice_count_value : ""}</div>
                             </div> : ""}
-                            {props.model.uuid && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >UUID | معرف فريد:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} > {props.model.uuid ? props.model.uuid : ""}</div>
+                            {props.model.uuid && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >UUID | معرف فريد:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.uuid ? props.model.uuid : ""}</div>
                             </div> : ""}
-                            <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >Invoice No. | رقم الفاتورة:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >    {props.model.code ? props.model.code : ""}</div>
-                            </div>
-                            <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} > Invoice Date | تاريخ الفاتورة:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} > {props.model.date ? format(
-                                    new Date(props.model.date),
-                                    "yyyy-MM-dd h:mma"
-                                ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
-                            </div>
+                            {props.modelName === "quotation" && props.model.type !== "invoice" && <>
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Quotation No. | رقم الاقتباس: </div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >    {props.model.code ? props.model.code : ""}</div>
+                                </div>
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Quotation Date | تاريخ الاقتباس: </div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.date ? format(
+                                        new Date(props.model.date),
+                                        "yyyy-MM-dd h:mma"
+                                    ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
+                                </div>
+                            </>}
+                            {(props.modelName !== "quotation" || props.model.type === "invoice") && <>
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Invoice No. | رقم الفاتورة:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >    {props.model.code ? props.model.code : ""}</div>
+                                </div>
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Invoice Date | تاريخ الفاتورة:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.date ? format(
+                                        new Date(props.model.date),
+                                        "yyyy-MM-dd h:mma"
+                                    ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
+                                </div>
+                            </>}
                             {props.model && props.model.order_code && props.modelName === "sales_return" && <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >Original Invoice No. | رقم الفاتورة الأصلية:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >    {props.model.order_code ? props.model.order_code : ""}</div>
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Original Invoice No. | رقم الفاتورة الأصلية:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >    {props.model.order_code ? props.model.order_code : ""}</div>
                             </div>}
                             {props.model && props.model.order_code && props.model.order?.date && props.modelName === "sales_return" && <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} > Original Invoice Date | تاريخ الفاتورة الأصلية:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} > {props.model.order?.date ? format(
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Original Invoice Date | تاريخ الفاتورة الأصلية:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.order?.date ? format(
                                     new Date(props.model.order?.date),
                                     "yyyy-MM-dd h:mma"
                                 ) : "<DATETIME>"} {" | " + getArabicDate(props.model.order?.date)}</div>
                             </div>}
                             {props.model && props.model.purchase_code && props.modelName === "purchase_return" && <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >Original Invoice No. | رقم الفاتورة الأصلية:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >    {props.model.purchase_code ? props.model.purchase_code : ""}</div>
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Original Invoice No. | رقم الفاتورة الأصلية:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >    {props.model.purchase_code ? props.model.purchase_code : ""}</div>
                             </div>}
                             {props.model && props.model.purchase_code && props.model.purchase?.date && props.modelName === "purchase_return" && <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} > Original Invoice Date | تاريخ الفاتورة الأصلية:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} > {props.model.purchase?.date ? format(
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Original Invoice Date | تاريخ الفاتورة الأصلية:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.purchase?.date ? format(
                                     new Date(props.model.purchase?.date),
                                     "yyyy-MM-dd h:mma"
                                 ) : "<DATETIME>"} {" | " + getArabicDate(props.model.purchase?.date)}</div>
                             </div>}
 
                             {props.modelName === "sales" || props.modelName === "sales_return" || props.modelName === "quotation" || props.modelName === "delivery_note" ? <>
-                                <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                    <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >  Customer Name | اسم العميل:</div>
-                                    <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Customer Name | اسم العميل:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.customer ? props.model.customer.name : ""}
                                         {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
                                         {!props.model.customerName && !props.model.customer ? "N/A" : ""}
@@ -179,9 +198,9 @@ const PreviewContent = forwardRef((props, ref) => {
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                    <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >   Customer VAT  | ضريبة القيمة المضافة للعملاء:</div>
-                                    <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >   Customer VAT  | ضريبة القيمة المضافة للعملاء:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
                                         {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
                                         {!props.model.customer && !props.model.vat_no ? "N/A" : ""}
@@ -190,16 +209,16 @@ const PreviewContent = forwardRef((props, ref) => {
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                    <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} > Customer C.R | رقم تسجيل شركة العميل:</div>
-                                    <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer C.R | رقم تسجيل شركة العميل:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.customer?.registration_number ? props.model.customer.registration_number + " | " + convertToArabicNumber(props.model.customer.registration_number) : "N/A"}
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                    <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} > Customer Address | عنوان العميل:</div>
-                                    <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer Address | عنوان العميل:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.address && !props.model.customer ? props.model.address : ""}
                                         {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
                                         {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
@@ -214,34 +233,34 @@ const PreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </> : ""}
                             {props.modelName === "purchase" || props.modelName === "purchase_return" ? <>
-                                <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                    <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >  Vendor Name | اسم العميل:</div>
-                                    <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Vendor Name | اسم العميل:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.vendor ? props.model.vendor.name : ""}
                                         {!props.model.vendor && props.model.vendorName ? props.model.vendorName : ""}
                                         {!props.model.vendorName && !props.model.vendor ? "N/A" : ""}
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                    <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} >  Vendor VAT | ضريبة القيمة المضافة للعملاء:</div>
-                                    <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Vendor VAT | ضريبة القيمة المضافة للعملاء:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.vendor?.vat_no ? props.model.vendor.vat_no : ""}
                                         {!props.model.vendor && props.model.vat_no ? props.model.vat_no : ""}
                                         {!props.model.vendor && !props.model.vat_no ? "N/A" : ""}
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                    <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} > Vendor C.R | رقم تسجيل الشركة الموردة:</div>
-                                    <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Vendor C.R | رقم تسجيل الشركة الموردة:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.customer?.registration_number ? props.model.customer.registration_number : "N/A"}
                                     </div>
                                 </div>
 
-                                <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                    <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: "35%", padding: "3px" }} > Vendor Address | عنوان العميل:</div>
-                                    <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: "65%", padding: "3px" }} >
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Vendor Address | عنوان العميل:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.address && !props.model.vendor ? props.model.address : ""}
                                         {!props.model.vendor?.national_address?.building_no && !props.model.vendor?.national_address?.unit_no && props.model.vendor?.national_address?.street_name && props.model.vendor?.national_address?.district_name && props.model.vendor?.national_address?.city_name ? props.model.vendor?.address : ""}
                                         {props.model.vendor?.national_address?.building_no ? `${props.model.vendor.national_address.building_no}` : ""}
@@ -256,7 +275,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </> : ""}
                         </div>
-                        {!props.model.store?.zatca_qr_on_left_bottom && (props.modelName === "sales" || props.modelName === "sales_return") && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
+                        {!props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "delivery_note" && (props.modelName !== "quotation" || props.model.type === "invoice") && <div className="col-md-2" style={{ border: "solid 0px", width: "26%" }}>
                             {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                             {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px" }} size={138} /> : ""}
                             {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
@@ -291,7 +310,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         props.selectText("tableHead");
                                     }} className="fw-bold clickable-text">
                                         <tr style={{}}>
-                                            <th className="per1 text-center" style={{ padding: "0px", width: "3%" }}>
+                                            <th className="per3 text-center" style={{ padding: "0px", width: "3%" }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -302,7 +321,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>SI No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per3 text-center" style={{ padding: "0px", width: "4%" }}>
+                                            <th className="per12 text-center" style={{ padding: "0px", width: "12%", minWidth: "130px" }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -313,7 +332,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Part No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per68 text-center" style={{ padding: "0px", width: "16%" }}>
+                                            <th className="per39 text-center" style={{ padding: "0px", width: "39%" }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -324,7 +343,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Description</li>
                                                 </ul>
                                             </th>
-                                            <th className="per1 text-center" style={{ padding: "0px", width: "4%" }}>
+                                            <th className="per5 text-center" style={{ padding: "0px", width: "5%" }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -336,7 +355,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 </ul>
                                             </th>
                                             {props.modelName !== "delivery_note" && <>
-                                                <th className="per10 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                <th className="per8 text-center" style={{ padding: "0px", width: "8%" }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -347,7 +366,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Unit Price</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                <th className="per5 text-center" style={{ padding: "0px", width: "5%" }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -358,7 +377,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Discount</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per20 text-center" style={{ padding: "0px", width: "10%" }}>
+                                                <th className="per12 text-center" style={{ padding: "0px", width: "12%" }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -369,7 +388,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Price (without VAT)</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                <th className="per5 text-center" style={{ padding: "0px", width: "5%" }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -380,7 +399,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>VAT({trimTo2Decimals(props.model.vat_percent)}%)</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per20 text-center" style={{ padding: "0px", width: "6%" }}>
+                                                <th className="per12 text-center" style={{ padding: "0px", width: "12%" }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -437,14 +456,14 @@ const PreviewContent = forwardRef((props, ref) => {
                                         props.selectText("tableFooter");
                                     }} className="fw-bold clickable-text">
                                         <tr >
-                                            {props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <th colSpan={2} rowSpan={6} style={{ maxWidth: "138px", maxHeight: "138px", }}>
+                                            {props.model.store?.zatca_qr_on_left_bottom && (props.modelName !== "quotation" || props.model.type === "invoice") && props.modelName !== "delivery_note" && <th colSpan={2} rowSpan={6} style={{ maxWidth: "138px", maxHeight: "138px", }}>
                                                 <div className="col-md-1 text-center" style={{ border: "solid 0px", padding: "0px", maxWidth: "138px", maxHeight: "138px", marginLeft: "-7px", marginTop: "-7px" }}>
                                                     {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "138px", height: "138px" }} alt="Invoice QR Code" /> : ""}
                                                     {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px", border: "solid 0px", }} size={138} /> : ""}
                                                     {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                                                 </div>
                                             </th>}
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
+                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
                                                 Total (without VAT) الإجمالي (بدون ضريبة القيمة المضافة):
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ padding: "2px", }} >
@@ -452,7 +471,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th className="text-end" colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} style={{ padding: "2px" }}>
+                                            <th className="text-end" colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} style={{ padding: "2px" }}>
 
                                                 Shipping / Handling Fees   رسوم الشحن / المناولة:
                                             </th>
@@ -461,7 +480,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th className="text-end" colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} style={{ padding: "2px" }}>
+                                            <th className="text-end" colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} style={{ padding: "2px" }}>
                                                 Total Discount الخصم الإجمالي:
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
@@ -469,7 +488,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
+                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
                                                 Total Taxable Amount (without VAT)  إجمالي المبلغ الخاضع للضريبة (بدون ضريبة القيمة المضافة):
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
@@ -477,7 +496,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th className="text-end" colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} style={{ padding: "2px" }}>
+                                            <th className="text-end" colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} style={{ padding: "2px" }}>
                                                 Total VAT {trimTo2Decimals(props.model.vat_percent)}% إجمالي ضريبة القيمة المضافة :
                                             </th>
 
@@ -488,7 +507,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         </tr>
 
                                         <tr>
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
+                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} className="text-end" style={{ padding: "2px" }}>
                                                 Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة):
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ padding: "2px" }}>
@@ -497,19 +516,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 </span>
                                             </td>
                                         </tr>
-                                        {props.model.remarks ? <tr>
-                                            <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
-                                                Remarks ملاحظات:
-                                            </th>
-                                            <td
-                                                colSpan="7"
-                                                style={{ padding: "2px" }}
 
-                                            >
-                                                {props.model.remarks ? props.model.remarks : ""}
-                                            </td>
-
-                                        </tr> : ""}
                                         <tr>
 
                                             <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
@@ -528,6 +535,19 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>{n2words(props.model.net_total, { lang: 'en' }) + " saudi riyals"}</li>
                                                 </ul>
                                             </td>
+                                        </tr>
+                                        <tr>
+                                            <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
+                                                Remarks ملاحظات:
+                                            </th>
+                                            <td
+                                                colSpan="7"
+                                                style={{ padding: "2px" }}
+
+                                            >
+                                                {props.model.remarks ? props.model.remarks : ""}
+                                            </td>
+
                                         </tr>
                                         {props.modelName === "quotation" && <>
                                             <tr>
@@ -679,7 +699,21 @@ const PreviewContent = forwardRef((props, ref) => {
                                     props.selectText("signature");
                                 }} >
                                     <thead>
-                                        <tr>
+                                        {props.modelName === "delivery_note" && <tr>
+                                            <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
+                                                Remarks ملاحظات:
+                                            </th>
+                                            <th
+                                                colSpan="7"
+                                                style={{ padding: "2px" }}
+
+                                            >
+                                                {props.model.remarks ? props.model.remarks : ""}
+                                            </th>
+
+
+                                        </tr>}
+                                        {props.model?.store?.show_received_by_footer_in_invoice && <tr>
                                             <th className="text-end" style={{ width: "20%", padding: "2px" }}>
                                                 Delivered By سلمت بواسطة:
                                             </th>
@@ -690,7 +724,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             <th style={{ width: "30%" }}>
 
                                             </th>
-                                        </tr>
+                                        </tr>}
                                         {/*} <tr>
                                         <th className="text-end" style={{ padding: "2px" }}>
                                             Signature إمضاء:

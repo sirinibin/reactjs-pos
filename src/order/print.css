@@ -17,3 +17,21 @@
   
   .clickable-text:hover {
   }
+  @page {
+    size: A4 portrait;
+    margin: 0mm;
+  }
+  
+  @media print {
+    body {
+      margin: 0;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  
+    .print-area {
+      width: 100% !important;
+      max-width: 100% !important;
+      margin: 0 auto;
+    }
+  }

@@ -673,8 +673,10 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                         </th>
                                                         {!localStorage.getItem("store_id") ? <th>
                                                             <input
+                                                                id="delivery_note_search_by_store_name"
+                                                                name="delivery_note_search_by_store_name"
                                                                 type="text"
-                                                                id="store_name"
+
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("store_name", e.target.value)
                                                                 }
@@ -684,7 +686,8 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <input
                                                                 type="text"
-                                                                id="delivery_note_code"
+                                                                id="delivery_note_history_by_code"
+                                                                name="delivery_note_history_by_code"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("delivery_note_code", e.target.value)
                                                                 }
@@ -714,8 +717,9 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
 
                                                         <th>
                                                             <input
+                                                                id="delivery_note_history_by_quantity"
+                                                                name="delivery_note_history_by_quantity"
                                                                 type="text"
-                                                                id="quantity"
                                                                 onChange={(e) =>
                                                                     searchByFieldValue("quantity", e.target.value)
                                                                 }

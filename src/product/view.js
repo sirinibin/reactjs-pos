@@ -532,28 +532,6 @@ const ProductView = forwardRef((props, ref) => {
                         </tbody>
                     </table>
                 </div>
-                {/*
-                    <form className="row g-3 needs-validation" >
-                        
-                  
-                        <div className="col-md-6">
-                            <label className="form-label"
-                            >Delivered By*</label
-                            >
-
-                            <div className="input-group mb-3">
-                                <input type="text" className="form-control" id="validationCustom06" placeholder="Select User" aria-label="Select User" aria-describedby="button-addon4" />
-                                <UserCreate showCreateButton={true} />
-                                <div className="valid-feedback">Looks good!</div>
-                                <div className="invalid-feedback">
-                                    Please provide a valid User.
-                  </div>
-                            </div>
-                        </div>
-                       
-
-                    </form>
-                    */}
             </Modal.Body>
             {/*
                 <Modal.Footer>

@@ -612,6 +612,44 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("type");
+                                                                }}
+                                                            >
+                                                                Type
+                                                                {sortField === "type" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-numeric-down"></i>
+                                                                ) : null}
+                                                                {sortField === "type" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-numeric-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("payment_status");
+                                                                }}
+                                                            >
+                                                                Payment status
+                                                                {sortField === "payment_status" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-numeric-down"></i>
+                                                                ) : null}
+                                                                {sortField === "payment_status" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-numeric-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
 
                                                         <th>
                                                             <b
@@ -917,6 +955,30 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 multiple
                                                             />
                                                         </th>
+                                                        <th>
+                                                            <select
+                                                                onChange={(e) => {
+                                                                    searchByFieldValue("type", e.target.value);
+
+                                                                }}
+                                                            >
+                                                                <option value="" >All</option>
+                                                                <option value="quotation" >Quotation</option>
+                                                                <option value="invoice">Invoice</option>
+                                                            </select>
+                                                        </th>
+                                                        <th>
+                                                            <select
+                                                                onChange={(e) => {
+                                                                    searchByFieldValue("payment_status", e.target.value);
+
+                                                                }}
+                                                            >
+                                                                <option value="" >All</option>
+                                                                <option value="credit" >Credit</option>
+                                                                <option value="paid">Paid</option>
+                                                            </select>
+                                                        </th>
 
                                                         <th>
                                                             <input
@@ -1042,6 +1104,8 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                         openCustomerDetailsView(history.customer_id);
                                                                     }}>{history.customer_name}
                                                                 </td>
+                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {history.type}</td>
+                                                                <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {history.payment_status}</td>
                                                                 <td>{history.quantity}{history.unit ? history.unit : ""}</td>
                                                                 <td>{history.unit_price.toFixed(2)}</td>
                                                                 <td>{history.discount?.toFixed(2)}</td>

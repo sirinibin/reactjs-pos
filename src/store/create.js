@@ -3034,6 +3034,33 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.show_received_by_footer_in_invoice}
+                                    checked={formData.show_received_by_footer_in_invoice}
+                                    onChange={(e) => {
+
+                                        errors["show_received_by_footer_in_invoice"] = "";
+                                        formData.show_received_by_footer_in_invoice = !formData.show_received_by_footer_in_invoice
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="show_received_by_footer_in_invoice"
+                                    name="show_received_by_footer_in_invoice"
+
+                                /> &nbsp;Show received by footer in invoices
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.show_received_by_footer_in_invoice && (
+                                <div style={{ color: "red" }}>
+                                    {errors.show_received_by_footer_in_invoice}
+                                </div>
+                            )}
+                        </div>
+
+
 
                         <div className="col-md-2">
                             <div className="input-group mb-3">

@@ -23,7 +23,7 @@ const Quotations = forwardRef((props, ref) => {
         SetShow(false);
     };
 
-    let [order, setOrder] = useState({});
+
     let [searchParams, setSearchParams] = useState({});
 
     function ResetSearchParams() {
@@ -34,12 +34,33 @@ const Quotations = forwardRef((props, ref) => {
         }
     }
 
+    let [type, setType] = useState("");
+    let [paymentStatus, setPaymentStatus] = useState("");
+    let [enableSelection, setEnableSelection] = useState(false);
+
     useImperativeHandle(ref, () => ({
-        open(model, selectedCustomers) {
+        open(enableSelectionValue, selectedCustomers, typeValue, paymentStatusValue) {
+            enableSelection = enableSelectionValue;
+            setEnableSelection(enableSelection);
+
             ResetSearchParams();
 
-            order = model;
-            setOrder(order);
+            type = "";
+            setType(type);
+            paymentStatus = "";
+            setPaymentStatus(paymentStatus);
+
+
+            if (typeValue) {
+                type = typeValue
+                setType(type);
+            }
+
+            if (paymentStatusValue) {
+                paymentStatus = paymentStatusValue
+                setPaymentStatus(paymentStatus);
+            }
+
 
             console.log("selectedCustomers:", selectedCustomers);
             if (selectedCustomers?.length > 0) {
@@ -316,7 +337,7 @@ const Quotations = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
+            "select=id,code,date,net_total,type,payment_status,created_by_name,customer_name,status,created_at,profit,loss";
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
         }
@@ -328,6 +349,17 @@ const Quotations = forwardRef((props, ref) => {
             searchParams["stats"] = "1";
         } else {
             searchParams["stats"] = "0";
+        }
+
+        searchParams["type"] = "";
+        searchParams["payment_status"] = "";
+
+        if (type) {
+            searchParams["type"] = type;
+        }
+
+        if (paymentStatus) {
+            searchParams["payment_status"] = paymentStatus;
         }
 
         setSearchParams(searchParams);
@@ -384,7 +416,7 @@ const Quotations = forwardRef((props, ref) => {
                 setIsRefreshInProcess(false);
                 console.log(error);
             });
-    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams]);
+    }, [sortOrder, sortField, page, pageSize, statsOpen, searchParams, type, paymentStatus]);
 
     const handleSummaryToggle = (isOpen) => {
         statsOpen = isOpen
@@ -467,7 +499,7 @@ const Quotations = forwardRef((props, ref) => {
         <>
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
-                    <Modal.Title>Select Quotation</Modal.Title>
+                    <Modal.Title>{enableSelection && "Select Quotation"}</Modal.Title>
 
                     <div className="col align-self-end text-end">
                         <button
@@ -646,7 +678,7 @@ const Quotations = forwardRef((props, ref) => {
                                                     <thead>
                                                         <tr className="text-center">
                                                             <th>Actions</th>
-                                                            <th>Select</th>
+                                                            {enableSelection && <th>Select</th>}
                                                             <th>
                                                                 <b
                                                                     style={{
@@ -720,6 +752,44 @@ const Quotations = forwardRef((props, ref) => {
                                                                         <i className="bi bi-sort-numeric-down"></i>
                                                                     ) : null}
                                                                     {sortField === "net_total" && sortOrder === "" ? (
+                                                                        <i className="bi bi-sort-numeric-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("type");
+                                                                    }}
+                                                                >
+                                                                    Type
+                                                                    {sortField === "type" && sortOrder === "-" ? (
+                                                                        <i className="bi bi-sort-numeric-down"></i>
+                                                                    ) : null}
+                                                                    {sortField === "type" && sortOrder === "" ? (
+                                                                        <i className="bi bi-sort-numeric-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("payment_status");
+                                                                    }}
+                                                                >
+                                                                    Payment status
+                                                                    {sortField === "payment_status" && sortOrder === "-" ? (
+                                                                        <i className="bi bi-sort-numeric-down"></i>
+                                                                    ) : null}
+                                                                    {sortField === "payment_status" && sortOrder === "" ? (
                                                                         <i className="bi bi-sort-numeric-up"></i>
                                                                     ) : null}
                                                                 </b>
@@ -829,7 +899,7 @@ const Quotations = forwardRef((props, ref) => {
                                                     <thead>
                                                         <tr className="text-center">
                                                             <th></th>
-                                                            <th></th>
+
                                                             <th>
                                                                 <input
                                                                     type="text"
@@ -936,6 +1006,36 @@ const Quotations = forwardRef((props, ref) => {
                                                                     }
                                                                     className="form-control"
                                                                 />
+                                                            </th>
+                                                            <th>
+                                                                <select
+                                                                    value={type}
+                                                                    onChange={(e) => {
+                                                                        type = e.target.value;
+                                                                        setType(type);
+                                                                        searchByFieldValue("type", e.target.value);
+
+                                                                    }}
+                                                                >
+                                                                    <option value="" >All</option>
+                                                                    <option value="quotation" >Quotation</option>
+                                                                    <option value="invoice">Invoice</option>
+                                                                </select>
+                                                            </th>
+                                                            <th>
+                                                                <select
+                                                                    value={paymentStatus}
+                                                                    onChange={(e) => {
+                                                                        paymentStatus = e.target.value;
+                                                                        setPaymentStatus(paymentStatus);
+                                                                        searchByFieldValue("payment_status", e.target.value);
+
+                                                                    }}
+                                                                >
+                                                                    <option value="" >All</option>
+                                                                    <option value="credit" >Credit</option>
+                                                                    <option value="paid">Paid</option>
+                                                                </select>
                                                             </th>
                                                             {localStorage.getItem("admin") === "true" ?
                                                                 <th>
@@ -1085,13 +1185,13 @@ const Quotations = forwardRef((props, ref) => {
                                                                             <i className="bi bi-eye"></i>
                                                                         </Button>
                                                                     </td>
-                                                                    <td>
+                                                                    {enableSelection && <td>
                                                                         <Button className="btn btn-success btn-sm" onClick={() => {
                                                                             handleSelected(quotation);
                                                                         }}>
                                                                             Select
                                                                         </Button>
-                                                                    </td>
+                                                                    </td>}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.code}</td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {format(new Date(quotation.date), "MMM dd yyyy h:mma")}
@@ -1100,6 +1200,8 @@ const Quotations = forwardRef((props, ref) => {
                                                                         <OverflowTooltip value={quotation.customer_name} />
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.payment_status}</td>
                                                                     {localStorage.getItem("admin") === "true" ?
                                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? <Amount amount={trimTo2Decimals(quotation.profit)} /> : 0.00} </td>
                                                                         : ""}

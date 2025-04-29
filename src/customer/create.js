@@ -1,9 +1,10 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
 import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
+import Quotations from "./../utils/quotations.js";
 
 
 const CustomerCreate = forwardRef((props, ref) => {
@@ -150,7 +151,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                let customerData = data.result;
+                formData = data.result;
 
                 selectedCountries = [];
                 if (data.result.country_code && data.result.country_name) {
@@ -161,8 +162,8 @@ const CustomerCreate = forwardRef((props, ref) => {
                 }
                 setSelectedCountries(selectedCountries);
 
-                customerData.logo = "";
-                setFormData({ ...customerData });
+                formData.logo = "";
+                setFormData({ ...formData });
             })
             .catch(error => {
                 setProcessing(false);
@@ -406,8 +407,34 @@ const CustomerCreate = forwardRef((props, ref) => {
     //const [selectedCountry, setSelectedCountry] = useState('')
     let [selectedCountries, setSelectedCountries] = useState([]);
 
+    const QuotationsRef = useRef();
+    function openCreditQuotationInvoices() {
+        let selectedCustomers = [
+            {
+                id: formData.id,
+                name: formData.name,
+                search_label: formData.search_label,
+            }
+        ];
+
+        QuotationsRef.current.open(false, selectedCustomers, "invoice", "credit");
+    }
+
+    function openPaidQuotationInvoices() {
+        let selectedCustomers = [
+            {
+                id: formData.id,
+                name: formData.name,
+                search_label: formData.search_label,
+            }
+        ];
+
+        QuotationsRef.current.open(false, selectedCustomers, "invoice", "paid");
+    }
+
     return (
         <>
+            <Quotations ref={QuotationsRef} showToastMessage={props.showToastMessage} />
             {/*  <CustomerView ref={DetailsViewRef} />*/}
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
@@ -664,7 +691,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-3">
+                        <div className="col-md-2">
                             <label className="form-label">Country</label>
 
                             <div className="input-group mb-3">
@@ -723,19 +750,60 @@ const CustomerCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        <div className="col-md-2">
-                            <label className="form-label">Credit balance</label>
-                            <input type='number' disabled={true} value={formData.credit_balance} className="form-control "
-                                onChange={(e) => {
+                        {formData.id && <>
+                            <div className="col-md-2">
+                                <label className="form-label">Credit balance</label>
+                                <input type='number' disabled={true} value={formData.credit_balance} className="form-control "
+                                    onChange={(e) => {
 
-                                }}
-                            />
-                            {errors.credit_balance && (
-                                <div style={{ color: "red" }}>
-                                    {errors.credit_balance}
-                                </div>
-                            )}
-                        </div>
+                                    }}
+                                />
+                                {errors.credit_balance && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.credit_balance}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="col-md-2">
+                                <label className="form-label">Qtn. Credit Invoice Amount</label>
+                                <input type='number' disabled={true} value={formData.stores[localStorage.getItem("store_id")]?.quotation_invoice_credit_amount} className="form-control "
+                                    onChange={(e) => {
+
+                                    }}
+                                />
+                                {errors.quotation_invoice_credit_amount && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.quotation_invoice_credit_amount}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="col-md-1">
+                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCreditQuotationInvoices}>
+                                    <i class="bi bi-list"></i>
+                                </Button>
+                            </div>
+
+                            <div className="col-md-2">
+                                <label className="form-label">Qtn. Paid Invoice Amount</label>
+                                <input type='number' disabled={true} value={formData.stores[localStorage.getItem("store_id")]?.quotation_invoice_paid_amount} className="form-control "
+                                    onChange={(e) => {
+
+                                    }}
+                                />
+                                {errors.quotation_invoice_paid_amount && (
+                                    <div style={{ color: "red" }}>
+                                        {errors.quotation_invoice_paid_amount}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="col-md-1">
+                                <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openPaidQuotationInvoices}>
+                                    <i class="bi bi-list"></i>
+                                </Button>
+                            </div>
+                        </>}
 
                         <div className="col-md-3">
                             <label className="form-label">Remarks

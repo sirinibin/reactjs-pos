@@ -729,6 +729,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
               <div className="input-group mb-3">
                 <input
+                  id="product_name"
+                  name="product_name"
                   value={formData.name ? formData.name : ""}
                   type="string"
                   onChange={(e) => {
@@ -739,8 +741,8 @@ const ProductCreate = forwardRef((props, ref) => {
                     console.log(formData);
                   }}
                   className="form-control"
-                  id="name"
                   placeholder="Name"
+
                 />
                 {errors.name && (
                   <div style={{ color: "red" }}>
@@ -786,6 +788,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
               <div className="input-group mb-3">
                 <input
+                  id="product_name_arabic"
+                  name="product_name_arabic"
                   value={formData.name_in_arabic ? formData.name_in_arabic : ""}
                   type="string"
                   onChange={(e) => {
@@ -796,7 +800,6 @@ const ProductCreate = forwardRef((props, ref) => {
                     console.log(formData);
                   }}
                   className="form-control"
-                  id="name_in_arabic"
                   placeholder="Name In Arabic"
                 />
                 {errors.name_in_arabic && (
@@ -898,6 +901,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
               <div className="input-group mb-3">
                 <input
+                  id="product_prefix_part_no"
+                  name="product_prefix_part_no"
                   value={formData.prefix_part_number ? formData.prefix_part_number : ""}
                   type="string"
                   onChange={(e) => {
@@ -908,7 +913,6 @@ const ProductCreate = forwardRef((props, ref) => {
                     console.log(formData);
                   }}
                   className="form-control"
-                  id="prefix_part_number"
                   placeholder="Prefix"
                 />
                 {errors.prefix_part_number && (
@@ -925,6 +929,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
               <div className="input-group mb-3">
                 <input
+                  id="product_part_no"
+                  name="product_part_no"
                   value={formData.part_number ? formData.part_number : ""}
                   type="string"
                   onChange={(e) => {
@@ -935,7 +941,6 @@ const ProductCreate = forwardRef((props, ref) => {
                     console.log(formData);
                   }}
                   className="form-control"
-                  id="part_number"
                   placeholder="Part Number"
                 />
                 {errors.part_number && (
@@ -953,6 +958,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
               <div className="input-group mb-3">
                 <input
+                  id="product_rack"
+                  name="product_rack"
                   value={formData.rack ? formData.rack : ""}
                   type="string"
                   onChange={(e) => {
@@ -963,7 +970,6 @@ const ProductCreate = forwardRef((props, ref) => {
                     console.log(formData);
                   }}
                   className="form-control"
-                  id="rack"
                   placeholder="Rack/Location"
                 />
                 {errors.rack && (
@@ -1075,6 +1081,8 @@ const ProductCreate = forwardRef((props, ref) => {
                       {!localStorage.getItem('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
                       <td style={{ width: "150px" }}>
                         <input
+                          id={`${"product_purchase_unit_price" + index}`}
+                          name={`${"product_purchase_unit_price" + index}`}
                           type="number"
                           value={
                             productStores[index]?.purchase_unit_price || productStores[index]?.purchase_unit_price === 0
@@ -1117,6 +1125,8 @@ const ProductCreate = forwardRef((props, ref) => {
                       </td>
                       <td style={{ width: "150px" }}>
                         <input
+                          id={`${"product_wholesale_unit_price" + index}`}
+                          name={`${"product_wholesale_unit_price" + index}`}
                           type="number"
                           value={
                             productStores[index]?.wholesale_unit_price || productStores[index]?.wholesale_unit_price === 0
@@ -1159,6 +1169,8 @@ const ProductCreate = forwardRef((props, ref) => {
                       </td>
                       <td style={{ width: "150px" }}>
                         <input
+                          id={`${"product_retail_unit_price" + index}`}
+                          name={`${"product_retail_unit_price" + index}`}
                           type="number"
                           value={
                             productStores[index]?.retail_unit_price || productStores[index]?.retail_unit_price === 0
@@ -1207,6 +1219,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
                       <td style={{ width: "150px" }}>
                         <input
+                          id={`${"product_damaged_stock" + index}`}
+                          name={`${"product_damaged_stock" + index}`}
                           value={productStores[index]?.damaged_stock || productStores[index]?.damaged_stock === 0
                             ? productStores[index].damaged_stock
                             : ""
@@ -1227,7 +1241,6 @@ const ProductCreate = forwardRef((props, ref) => {
                             productStores[index].damaged_stock = parseFloat(e.target.value);
                           }}
                           className="form-control"
-                          id="damaged_stock"
                           placeholder="Damaged stock"
                         />
                         {errors["damaged_stock_" + index] && (
@@ -1238,6 +1251,8 @@ const ProductCreate = forwardRef((props, ref) => {
                       </td>
                       <td style={{ width: "150px" }}>
                         <input
+                          id={`${"product_stock" + index}`}
+                          name={`${"product_stock" + index}`}
                           value={productStores[index]?.stock || productStores[index]?.stock === 0
                             ? productStores[index].stock
                             : ""
@@ -1259,7 +1274,6 @@ const ProductCreate = forwardRef((props, ref) => {
                             productStores[index].stock = parseFloat(e.target.value);
                           }}
                           className="form-control"
-                          id="stock"
                           placeholder="Stock"
                         />
                         {errors["stock_" + index] && (
@@ -1304,6 +1318,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
               <div className="input-group mb-3">
                 <input
+                  id="product_image"
+                  name="product_image"
                   value={selectedImage ? selectedImage : ""}
                   type="file"
                   onChange={(e) => {
@@ -1365,7 +1381,6 @@ const ProductCreate = forwardRef((props, ref) => {
                                         */
                   }}
                   className="form-control"
-                  id="image"
                 />
                 {errors.image && (
                   <div style={{ color: "red" }}>

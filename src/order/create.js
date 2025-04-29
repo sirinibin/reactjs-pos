@@ -1411,8 +1411,8 @@ function findDiscount() {
 
     //Import products from quotations
     const QuotationsRef = useRef();
-    function openQuotations(model) {
-        QuotationsRef.current.open(model, selectedCustomers);
+    function openQuotations() {
+        QuotationsRef.current.open(true, selectedCustomers);
     }
 
 

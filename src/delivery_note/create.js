@@ -221,6 +221,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           is_discount_percent: deliverynote.is_discount_percent,
           shipping_handling_fees: deliverynote.shipping_handling_fees,
           customer: deliverynote.customer,
+          remarks: deliverynote.remarks,
         };
 
         formData.date_str = data.result.date;
@@ -353,7 +354,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+    let Select = "select=id,code,vat_no,remarks,name,phone,name_in_arabic,phone_in_arabic,search_label";
     setIsCustomersLoading(true);
     let result = await fetch(
       "/v1/customer?" + Select + queryString,
@@ -1093,6 +1094,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     return;
                   }
                   formData.customer_id = selectedItems[0].id;
+                  if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                    formData.remarks = selectedItems[0].remarks;
+                  }
+
                   setFormData({ ...formData });
                   setSelectedCustomers(selectedItems);
                 }}
@@ -1174,6 +1179,32 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   </div>
                 )}
               </div>
+            </div>
+
+            <div className="col-md-3">
+              <label className="form-label">Remarks</label>
+              <div className="input-group mb-3">
+                <textarea
+                  value={formData.remarks}
+                  type='string'
+                  onChange={(e) => {
+                    errors["address"] = "";
+                    setErrors({ ...errors });
+                    formData.remarks = e.target.value;
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+                  id="remarks"
+                  placeholder="Remarks"
+                />
+              </div>
+              {errors.remarks && (
+                <div style={{ color: "red" }}>
+
+                  {errors.remarks}
+                </div>
+              )}
             </div>
 
             <div className="col-md-8">
