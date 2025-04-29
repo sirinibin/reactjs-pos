@@ -269,10 +269,10 @@ const OrderView = forwardRef((props, ref) => {
                                 <th>Disc. %</th>
                                 <th>Price</th>
                                 <th>Qty Returned</th>
-                                {localStorage.getItem("admin") === "true" ? <th>Purchase Unit Price</th> : ""}
-                                {localStorage.getItem("admin") === "true" ? <th>Purchase Price</th> : ""}
-                                {localStorage.getItem("admin") === "true" ? <th>Profit</th> : ""}
-                                {localStorage.getItem("admin") === "true" ? <th>Loss</th> : ""}
+                                <th>Purchase Unit Price</th>
+                                <th>Purchase Price</th>
+                                <th>Profit</th>
+                                <th>Loss</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -319,7 +319,7 @@ const OrderView = forwardRef((props, ref) => {
                                         />
                                     </td>
                                     <td>{product.quantity_returned}  {product.unit ? product.unit : ""} </td>
-                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(product.purchase_unit_price)}
                                             displayType={"text"}
@@ -327,8 +327,8 @@ const OrderView = forwardRef((props, ref) => {
                                             suffix={" "}
                                             renderText={(value, props) => value}
                                         />
-                                    </td> : ""}
-                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
+                                    </td>
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(product.purchase_unit_price * product.quantity)}
                                             displayType={"text"}
@@ -336,8 +336,8 @@ const OrderView = forwardRef((props, ref) => {
                                             suffix={" "}
                                             renderText={(value, props) => value}
                                         />
-                                    </td> : ""}
-                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
+                                    </td>
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(product.profit)}
                                             displayType={"text"}
@@ -345,8 +345,8 @@ const OrderView = forwardRef((props, ref) => {
                                             suffix={" "}
                                             renderText={(value, props) => value}
                                         />
-                                    </td> : ""}
-                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
+                                    </td>
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={trimTo2Decimals(product.loss)}
                                             displayType={"text"}
@@ -354,7 +354,7 @@ const OrderView = forwardRef((props, ref) => {
                                             suffix={" "}
                                             renderText={(value, props) => value}
                                         />
-                                    </td> : ""}
+                                    </td>
                                 </tr>
                             ))}
                             <tr>
@@ -369,17 +369,17 @@ const OrderView = forwardRef((props, ref) => {
                                     /> : "0.00 "}
                                 </td>
                                 <td colSpan="3" ></td>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(model.profit)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ? <td className="text-end">
+
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={trimTo2Decimals(model.profit)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-end">
                                     <NumberFormat
                                         value={trimTo2Decimals(model.loss)}
                                         displayType={"text"}
@@ -387,7 +387,7 @@ const OrderView = forwardRef((props, ref) => {
                                         suffix={" "}
                                         renderText={(value, props) => value}
                                     />
-                                </td> : ""}
+                                </td>
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">
@@ -420,20 +420,20 @@ const OrderView = forwardRef((props, ref) => {
                                     /> : "0.00 "}
                                 </td>
                                 <td colSpan="3"></td>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(model.discount - model.return_discount)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        0.00
-                                    </td> : ""}
+
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={trimTo2Decimals(model.discount - model.return_discount)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+
+                                <td className="text-end">
+                                    0.00
+                                </td>
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">VAT {trimTo2Decimals(model.vat_percent) + "%"}</th>
@@ -447,12 +447,8 @@ const OrderView = forwardRef((props, ref) => {
                                     />
                                 </td>
                                 <td colSpan="3"></td>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">0.00 </td>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">0.00</td>
-                                    : ""}
+                                <td className="text-end">0.00 </td>
+                                <td className="text-end">0.00</td>
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">Net Total</th>
@@ -479,30 +475,25 @@ const OrderView = forwardRef((props, ref) => {
                             </tr>
                             <tr>
                                 <td colSpan="8"></td>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th colSpan="3" className="text-end">Net Profit / Loss</th>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(model.net_profit)}
-                                            displayType={"text"}
-                                            suffix={""}
-                                            thousandSeparator={true}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={trimTo2Decimals(model.net_loss)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={""}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th> : ""}
+                                <th colSpan="3" className="text-end">Net Profit / Loss</th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={trimTo2Decimals(model.net_profit)}
+                                        displayType={"text"}
+                                        suffix={""}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={trimTo2Decimals(model.net_loss)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={""}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
                             </tr>
                         </tbody>
                     </table>
@@ -606,8 +597,8 @@ const OrderView = forwardRef((props, ref) => {
                         <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
-                            {localStorage.getItem("admin") === "true" ? <th>Profit:</th> : ""}{localStorage.getItem("admin") === "true" ? <td> {model.profit} </td> : ""}
-                            {localStorage.getItem("admin") === "true" ? <th>Loss:</th> : ""}{localStorage.getItem("admin") === "true" ? <td> {model.loss} </td> : ""}
+                            <th>Profit:</th>  <td> {model.profit} </td>
+                            <th>Loss:</th><td> {model.loss} </td>
                         </tr>
                         <tr>
                             {salesCashDiscountList.length > 0 ?

@@ -379,7 +379,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                         />
                                     </Badge>
                                 </h1>
-                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
+                                <h1 className="text-end">
                                     Net Retail Profit: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalRetailProfit}
@@ -389,8 +389,8 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
-                                </h1> : ""}
-                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
+                                </h1>
+                                <h1 className="text-end">
                                     Net Wholesale Profit: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalWholesaleProfit}
@@ -400,8 +400,8 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
-                                </h1> : ""}
-                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
+                                </h1>
+                                <h1 className="text-end">
                                     Retail Loss: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalRetailLoss}
@@ -411,8 +411,8 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
-                                </h1> : ""}
-                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
+                                </h1>
+                                <h1 className="text-end">
                                     Wholesale Loss: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalWholesaleLoss}
@@ -422,7 +422,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
-                                </h1> : ""}
+                                </h1>
                                 <h1 className="text-end">
                                     VAT Collected: <Badge bg="secondary">
                                         <NumberFormat
@@ -785,52 +785,46 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("retain_profit");
+                                                                }}
+                                                            >
+                                                                Retail Profit
+                                                                {sortField === "retail_profit" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "retail_profit" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
 
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <th>
-                                                                <b
-                                                                    style={{
-                                                                        textDecoration: "underline",
-                                                                        cursor: "pointer",
-                                                                    }}
-                                                                    onClick={() => {
-                                                                        sort("retain_profit");
-                                                                    }}
-                                                                >
-                                                                    Retail Profit
-                                                                    {sortField === "retail_profit" && sortProduct === "-" ? (
-                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                    ) : null}
-                                                                    {sortField === "retail_profit" && sortProduct === "" ? (
-                                                                        <i className="bi bi-sort-alpha-up"></i>
-                                                                    ) : null}
-                                                                </b>
-
-
-                                                            </th> : ""}
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <th>
-                                                                <b
-                                                                    style={{
-                                                                        textDecoration: "underline",
-                                                                        cursor: "pointer",
-                                                                    }}
-                                                                    onClick={() => {
-                                                                        sort("profit");
-                                                                    }}
-                                                                >
-                                                                    Wholesale Profit
-                                                                    {sortField === "wholesale_profit" && sortProduct === "-" ? (
-                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                    ) : null}
-                                                                    {sortField === "wholesale_profit" && sortProduct === "" ? (
-                                                                        <i className="bi bi-sort-alpha-up"></i>
-                                                                    ) : null}
-                                                                </b>
-
-
-                                                            </th> : ""}
-                                                        {localStorage.getItem("admin") === "true" ? <th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("profit");
+                                                                }}
+                                                            >
+                                                                Wholesale Profit
+                                                                {sortField === "wholesale_profit" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "wholesale_profit" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -848,8 +842,8 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
-                                                        </th> : ""}
-                                                        {localStorage.getItem("admin") === "true" ? <th>
+                                                        </th>
+                                                        <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -867,7 +861,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
-                                                        </th> : ""}
+                                                        </th>
 
                                                     </tr>
                                                 </thead>
@@ -1064,50 +1058,49 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 className="form-control"
                                                             />
                                                         </th>
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="retail_profit"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("retail_profit", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="wholesale_profit"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("wholesale_profit", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="retail_loss"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("retail_loss", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="wholesale_loss"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("wholesale_loss", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
+
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="retail_profit"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("retail_profit", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="wholesale_profit"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("wholesale_profit", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="retail_loss"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("retail_loss", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="wholesale_loss"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("wholesale_loss", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
                                                     </tr>
                                                 </thead>
 
@@ -1147,10 +1140,10 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 <td>{history.price.toFixed(2) + " "}</td>
                                                                 <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " "}</td>
-                                                                {localStorage.getItem("admin") === "true" ? <td>{history.retail_profit.toFixed(2) + " "}</td> : ""}
-                                                                {localStorage.getItem("admin") === "true" ? <td>{history.wholesale_profit.toFixed(2) + " "}</td> : ""}
-                                                                {localStorage.getItem("admin") === "true" ? <td>{history.retail_loss.toFixed(2) + " "}</td> : ""}
-                                                                {localStorage.getItem("admin") === "true" ? <td>{history.wholesale_loss.toFixed(2) + " "}</td> : ""}
+                                                                <td>{history.retail_profit.toFixed(2) + " "}</td>
+                                                                <td>{history.wholesale_profit.toFixed(2) + " "}</td>
+                                                                <td>{history.retail_loss.toFixed(2) + " "}</td>
+                                                                <td>{history.wholesale_loss.toFixed(2) + " "}</td>
 
                                                                 {/* <td>   
                                                         <button

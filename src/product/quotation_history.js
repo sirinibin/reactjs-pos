@@ -367,7 +367,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                         />
                                     </Badge>
                                 </h1>
-                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
+                                <h1 className="text-end">
                                     Net Profit: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalProfit}
@@ -377,8 +377,8 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
-                                </h1> : ""}
-                                {localStorage.getItem("admin") === "true" ? <h1 className="text-end">
+                                </h1>
+                                <h1 className="text-end">
                                     Loss: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalLoss}
@@ -388,7 +388,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </Badge>
-                                </h1> : ""}
+                                </h1>
                                 <h1 className="text-end">
                                     VAT: <Badge bg="secondary">
                                         <NumberFormat
@@ -788,30 +788,26 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 ) : null}
                                                             </b>
                                                         </th>
-
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <th>
-                                                                <b
-                                                                    style={{
-                                                                        textDecoration: "underline",
-                                                                        cursor: "pointer",
-                                                                    }}
-                                                                    onClick={() => {
-                                                                        sort("profit");
-                                                                    }}
-                                                                >
-                                                                    Profit
-                                                                    {sortField === "profit" && sortProduct === "-" ? (
-                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
-                                                                    ) : null}
-                                                                    {sortField === "profit" && sortProduct === "" ? (
-                                                                        <i className="bi bi-sort-alpha-up"></i>
-                                                                    ) : null}
-                                                                </b>
-
-
-                                                            </th> : ""}
-                                                        {localStorage.getItem("admin") === "true" ? <th>
+                                                        <th>
+                                                            <b
+                                                                style={{
+                                                                    textDecoration: "underline",
+                                                                    cursor: "pointer",
+                                                                }}
+                                                                onClick={() => {
+                                                                    sort("profit");
+                                                                }}
+                                                            >
+                                                                Profit
+                                                                {sortField === "profit" && sortProduct === "-" ? (
+                                                                    <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                ) : null}
+                                                                {sortField === "profit" && sortProduct === "" ? (
+                                                                    <i className="bi bi-sort-alpha-up"></i>
+                                                                ) : null}
+                                                            </b>
+                                                        </th>
+                                                        <th>
                                                             <b
                                                                 style={{
                                                                     textDecoration: "underline",
@@ -829,8 +825,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                     <i className="bi bi-sort-alpha-up"></i>
                                                                 ) : null}
                                                             </b>
-                                                        </th> : ""}
-
+                                                        </th>
                                                     </tr>
                                                 </thead>
 
@@ -1050,28 +1045,27 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 className="form-control"
                                                             />
                                                         </th>
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="profit"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("profit", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <th>
-                                                                <input
-                                                                    type="text"
-                                                                    id="loss"
-                                                                    onChange={(e) =>
-                                                                        searchByFieldValue("loss", e.target.value)
-                                                                    }
-                                                                    className="form-control"
-                                                                />
-                                                            </th> : ""}
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="profit"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("profit", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
+
+                                                        <th>
+                                                            <input
+                                                                type="text"
+                                                                id="loss"
+                                                                onChange={(e) =>
+                                                                    searchByFieldValue("loss", e.target.value)
+                                                                }
+                                                                className="form-control"
+                                                            />
+                                                        </th>
                                                     </tr>
                                                 </thead>
 
@@ -1113,8 +1107,8 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 <td>{history.price.toFixed(2) + " "}</td>
                                                                 <td>{history.vat_price.toFixed(2) + "   (" + history.vat_percent.toFixed(2) + "%)"}</td>
                                                                 <td>{history.net_price.toFixed(2) + " "}</td>
-                                                                {localStorage.getItem("admin") === "true" ? <td>{history.profit.toFixed(2) + " "}</td> : ""}
-                                                                {localStorage.getItem("admin") === "true" ? <td>{history.loss.toFixed(2) + " "}</td> : ""}
+                                                                <td>{history.profit.toFixed(2) + " "}</td>
+                                                                <td>{history.loss.toFixed(2) + " "}</td>
 
                                                                 {/* <td>   
                                                         <button

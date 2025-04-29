@@ -1676,7 +1676,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         ) : null}
                                                     </b>
                                                 </th>*/}
-                                                {localStorage.getItem("admin") === "true" ? <th>
+                                                <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1694,8 +1694,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th> : ""}
-                                                {localStorage.getItem("admin") === "true" ? <th>
+                                                </th>
+                                                <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1713,7 +1713,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th> : ""}
+                                                </th>
 
                                                 <th>
                                                     <b
@@ -2051,7 +2051,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         className="form-control"
                                                     />
                                                 </th>*/}
-                                                {localStorage.getItem("admin") === "true" ? <th>
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="net_profit"
@@ -2060,8 +2060,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th> : ""}
-                                                {localStorage.getItem("admin") === "true" ? <th>
+                                                </th>
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="net_loss"
@@ -2070,7 +2070,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th> : ""}
+                                                </th>
 
                                                 <th>
                                                     <input
@@ -2366,12 +2366,9 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td><Amount amount={trimTo2Decimals(order.cash_discount)} /> </td>
                                                         <td>{trimTo2Decimals(order.discount)} </td>
                                                         {/*<td>{trimTo2Decimals(order.discount_percent)} %</td>*/}
-                                                        {localStorage.getItem("admin") === "true" ? <td><Amount amount={trimTo2Decimals(order.net_profit)} /> </td> : ""}
-                                                        {localStorage.getItem("admin") === "true" ? <td><Amount amount={trimTo2Decimals(order.net_loss)} />  </td> : ""}
-
+                                                        <td><Amount amount={trimTo2Decimals(order.net_profit)} /> </td>
+                                                        <td><Amount amount={trimTo2Decimals(order.net_loss)} />  </td>
                                                         <td>
-
-
                                                             <Button variant="link" onClick={() => {
                                                                 openOrderReturnsDialogue(order);
                                                             }}>

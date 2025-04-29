@@ -1638,7 +1638,7 @@ function SalesReturnIndex(props) {
                                                 </th>
 
 
-                                                {localStorage.getItem("admin") === "true" ? <th>
+                                                <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1656,8 +1656,8 @@ function SalesReturnIndex(props) {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th> : ""}
-                                                {localStorage.getItem("admin") === "true" ? <th>
+                                                </th>
+                                                <th>
                                                     <b
                                                         style={{
                                                             textDecoration: "underline",
@@ -1675,8 +1675,7 @@ function SalesReturnIndex(props) {
                                                             <i className="bi bi-sort-numeric-up"></i>
                                                         ) : null}
                                                     </b>
-                                                </th> : ""}
-
+                                                </th>
 
 
 
@@ -1944,7 +1943,7 @@ function SalesReturnIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                {localStorage.getItem("admin") === "true" ? <th>
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="net_profit"
@@ -1953,8 +1952,8 @@ function SalesReturnIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th> : ""}
-                                                {localStorage.getItem("admin") === "true" ? <th>
+                                                </th>
+                                                <th>
                                                     <input
                                                         type="text"
                                                         id="net_loss"
@@ -1963,7 +1962,7 @@ function SalesReturnIndex(props) {
                                                         }
                                                         className="form-control"
                                                     />
-                                                </th> : ""}
+                                                </th>
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -2197,8 +2196,8 @@ function SalesReturnIndex(props) {
 
                                                         </td>
                                                         <td>{trimTo2Decimals(salesreturn.cash_discount)}</td>
-                                                        {localStorage.getItem("admin") === "true" ? <td> <Amount amount={trimTo2Decimals(salesreturn.net_profit)} /> </td> : ""}
-                                                        {localStorage.getItem("admin") === "true" ? <td> <Amount amount={trimTo2Decimals(salesreturn.net_loss)} />  </td> : ""}
+                                                        <td> <Amount amount={trimTo2Decimals(salesreturn.net_profit)} /> </td>
+                                                        <td> <Amount amount={trimTo2Decimals(salesreturn.net_loss)} />  </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{salesreturn.created_by_name}</td>
 
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >

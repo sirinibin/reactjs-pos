@@ -268,11 +268,10 @@ const PurchaseView = forwardRef((props, ref) => {
                                 <th>Qty Returned</th>
                                 <th>Wholesale Unit Price</th>
                                 <th>Retail Unit Price</th>
-
-                                {localStorage.getItem("admin") === "true" ? <th>Wholesale Profit</th> : ""}
-                                {localStorage.getItem("admin") === "true" ? <th>Retail Profit</th> : ""}
-                                {localStorage.getItem("admin") === "true" ? <th>Wholesale Loss</th> : ""}
-                                {localStorage.getItem("admin") === "true" ? <th>Retail Loss</th> : ""}
+                                <th>Wholesale Profit</th>
+                                <th>Retail Profit</th>
+                                <th>Wholesale Loss</th>
+                                <th>Retail Loss</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -340,50 +339,44 @@ const PurchaseView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td>
-                                    {localStorage.getItem("admin") === "true" ?
-                                        <td>
-                                            <NumberFormat
-                                                value={product.wholesale_profit?.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={" "}
-                                                renderText={(value, props) => value}
-                                            />
-                                        </td>
-                                        : ""}
-                                    {localStorage.getItem("admin") === "true" ?
-                                        <td>
-                                            <NumberFormat
-                                                value={product.retail_profit?.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={" "}
-                                                renderText={(value, props) => value}
-                                            />
-                                        </td>
-                                        : ""}
-                                    {localStorage.getItem("admin") === "true" ?
-                                        <td>
-                                            <NumberFormat
-                                                value={product.wholesale_loss?.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={" "}
-                                                renderText={(value, props) => value}
-                                            />
-                                        </td>
-                                        : ""}
-                                    {localStorage.getItem("admin") === "true" ?
-                                        <td>
-                                            <NumberFormat
-                                                value={product.retail_loss?.toFixed(2)}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={" "}
-                                                renderText={(value, props) => value}
-                                            />
-                                        </td>
-                                        : ""}
+
+                                    <td>
+                                        <NumberFormat
+                                            value={product.wholesale_profit?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+
+                                    <td>
+                                        <NumberFormat
+                                            value={product.retail_profit?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.wholesale_loss?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
+                                    <td>
+                                        <NumberFormat
+                                            value={product.retail_loss?.toFixed(2)}
+                                            displayType={"text"}
+                                            thousandSeparator={true}
+                                            suffix={" "}
+                                            renderText={(value, props) => value}
+                                        />
+                                    </td>
                                 </tr>
 
                             ))}
@@ -398,49 +391,46 @@ const PurchaseView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </td>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th colSpan="3" className="text-end">Total Profit/Loss</th>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={model.wholesale_profit?.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={model.retail_profit?.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={model.wholesale_loss?.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={model.retail_loss?.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
+                                <th colSpan="3" className="text-end">Total Profit/Loss</th>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.wholesale_profit?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.retail_profit?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.wholesale_loss?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.retail_loss?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">
@@ -474,46 +464,44 @@ const PurchaseView = forwardRef((props, ref) => {
                                 <th colSpan="3" className="text-end">
 
                                 </th>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={model.discount - model.return_discount}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={model.discount - model.return_discount}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.discount - model.return_discount}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.discount - model.return_discount}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">VAT {model.vat_percent?.toFixed(2) + "%"}</th>
@@ -529,47 +517,42 @@ const PurchaseView = forwardRef((props, ref) => {
                                 <th colSpan="3" className="text-end">
 
                                 </th>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={0}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={0}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
                             </tr>
 
                             <tr>
@@ -583,100 +566,89 @@ const PurchaseView = forwardRef((props, ref) => {
                                         renderText={(value, props) => value}
                                     />
                                 </th>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th colSpan="3" className="text-end" >Cash discount</th>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={model.cash_discount}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={model.cash_discount}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
 
-                                    </th> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={0.00}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={0.00}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th>
-                                    : ""}
+                                <th colSpan="3" className="text-end" >Cash discount</th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.cash_discount}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.cash_discount}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+
+                                </th>
+
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={0.00}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={0.00}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
                             </tr>
                             <tr>
                                 <td colSpan="8"></td>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th colSpan="3" className="text-end">Net Profit / Loss</th>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={model.net_wholesale_profit?.toFixed(2)}
-                                            displayType={"text"}
-                                            suffix={""}
-                                            thousandSeparator={true}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={model.net_retail_profit?.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={""}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={model.wholesale_loss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={model.retail_loss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th>
-                                    : ""}
+                                <th colSpan="3" className="text-end">Net Profit / Loss</th>
+
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.net_wholesale_profit?.toFixed(2)}
+                                        displayType={"text"}
+                                        suffix={""}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.net_retail_profit?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={""}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.wholesale_loss}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.retail_loss}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
                             </tr>
                         </tbody>
                     </table>

@@ -151,10 +151,10 @@ const QuotationView = forwardRef((props, ref) => {
                                 <th>Disc.</th>
                                 <th>Disc. %</th>
                                 <th>Price</th>
-                                {localStorage.getItem("admin") === "true" ? <th>Purchase Unit Price</th> : ""}
-                                {localStorage.getItem("admin") === "true" ? <th>Purchase Price</th> : ""}
-                                {localStorage.getItem("admin") === "true" ? <th>Profit</th> : ""}
-                                {localStorage.getItem("admin") === "true" ? <th>Loss</th> : ""}
+                                <th>Purchase Unit Price</th>
+                                <th>Purchase Price</th>
+                                <th>Profit</th>
+                                <th>Loss</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -200,7 +200,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             renderText={(value, props) => value}
                                         />
                                     </td>
-                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={product.purchase_unit_price?.toFixed(2)}
                                             displayType={"text"}
@@ -208,8 +208,8 @@ const QuotationView = forwardRef((props, ref) => {
                                             suffix={" "}
                                             renderText={(value, props) => value}
                                         />
-                                    </td> : ""}
-                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
+                                    </td>
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={(product.purchase_unit_price * product.quantity).toFixed(2)}
                                             displayType={"text"}
@@ -217,8 +217,8 @@ const QuotationView = forwardRef((props, ref) => {
                                             suffix={" "}
                                             renderText={(value, props) => value}
                                         />
-                                    </td> : ""}
-                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
+                                    </td>
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={product.profit?.toFixed(2)}
                                             displayType={"text"}
@@ -226,8 +226,8 @@ const QuotationView = forwardRef((props, ref) => {
                                             suffix={" "}
                                             renderText={(value, props) => value}
                                         />
-                                    </td> : ""}
-                                    {localStorage.getItem("admin") === "true" ? <td className="text-end">
+                                    </td>
+                                    <td className="text-end">
                                         <NumberFormat
                                             value={product.loss?.toFixed(2)}
                                             displayType={"text"}
@@ -235,7 +235,7 @@ const QuotationView = forwardRef((props, ref) => {
                                             suffix={" "}
                                             renderText={(value, props) => value}
                                         />
-                                    </td> : ""}
+                                    </td>
                                 </tr>
                             ))}
                             <tr>
@@ -250,17 +250,17 @@ const QuotationView = forwardRef((props, ref) => {
                                     /> : "0.00 "}
                                 </td>
                                 <td colSpan="2" ></td>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        <NumberFormat
-                                            value={model.profit?.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ? <td className="text-end">
+
+                                <td className="text-end">
+                                    <NumberFormat
+                                        value={model.profit?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={" "}
+                                        renderText={(value, props) => value}
+                                    />
+                                </td>
+                                <td className="text-end">
                                     <NumberFormat
                                         value={model.loss?.toFixed(2)}
                                         displayType={"text"}
@@ -268,7 +268,7 @@ const QuotationView = forwardRef((props, ref) => {
                                         suffix={" "}
                                         renderText={(value, props) => value}
                                     />
-                                </td> : ""}
+                                </td>
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">
@@ -295,14 +295,13 @@ const QuotationView = forwardRef((props, ref) => {
                                     {model.discount?.toFixed(2)}
                                 </td>
                                 <td colSpan="2"></td>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        {model.net_profit > 0 ? model.discount ? model.discount.toFixed(2) : "0.00" : "0.00"}
-                                    </td> : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">
-                                        {model.net_loss > 0 ? model.discount ? model.discount.toFixed(2) : "0.00" : "0.00"}
-                                    </td> : ""}
+
+                                <td className="text-end">
+                                    {model.net_profit > 0 ? model.discount ? model.discount.toFixed(2) : "0.00" : "0.00"}
+                                </td>
+                                <td className="text-end">
+                                    {model.net_loss > 0 ? model.discount ? model.discount.toFixed(2) : "0.00" : "0.00"}
+                                </td>
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">VAT {model.vat_percent?.toFixed(2) + "%"}</th>
@@ -316,12 +315,8 @@ const QuotationView = forwardRef((props, ref) => {
                                     />
                                 </td>
                                 <td colSpan="2"></td>
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">0.00 </td>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <td className="text-end">0.00</td>
-                                    : ""}
+                                <td className="text-end">0.00 </td>
+                                <td className="text-end">0.00</td>
                             </tr>
                             <tr>
                                 <th colSpan="7" className="text-end">Net Total</th>
@@ -336,31 +331,26 @@ const QuotationView = forwardRef((props, ref) => {
                                 </th>
 
 
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th colSpan="2" className="text-end">Net Profit / Loss</th>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={model.net_profit?.toFixed(2)}
-                                            displayType={"text"}
-                                            suffix={""}
-                                            thousandSeparator={true}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th>
-                                    : ""}
-                                {localStorage.getItem("admin") === "true" ?
-                                    <th className="text-end">
-                                        <NumberFormat
-                                            value={model.net_loss?.toFixed(2)}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={""}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </th> : ""}
 
+                                <th colSpan="2" className="text-end">Net Profit / Loss</th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.net_profit?.toFixed(2)}
+                                        displayType={"text"}
+                                        suffix={""}
+                                        thousandSeparator={true}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
+                                <th className="text-end">
+                                    <NumberFormat
+                                        value={model.net_loss?.toFixed(2)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        suffix={""}
+                                        renderText={(value, props) => value}
+                                    />
+                                </th>
                             </tr>
                         </tbody>
                     </table>
@@ -397,8 +387,8 @@ const QuotationView = forwardRef((props, ref) => {
                         <tr>
                             <th>Created By:</th><td> {model.created_by_name}</td>
                             <th>Updated By:</th><td> {model.updated_by_name}</td>
-                            {localStorage.getItem("admin") === "true" ? <th>Profit:</th> : ""}{localStorage.getItem("admin") === "true" ? <td> {model.profit} </td> : ""}
-                            {localStorage.getItem("admin") === "true" ? <th>Loss:</th> : ""}{localStorage.getItem("admin") === "true" ? <td> {model.loss} </td> : ""}
+                            <th>Profit:</th> <td> {model.profit} </td>
+                            <th>Loss:</th> <td> {model.loss} </td>
                         </tr>
 
                     </tbody>

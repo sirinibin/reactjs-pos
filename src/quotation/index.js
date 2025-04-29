@@ -718,46 +718,45 @@ function QuotationIndex(props) {
                             ) : null}
                           </b>
                         </th>
-                        {localStorage.getItem("admin") === "true" ?
-                          <th>
-                            <b
-                              style={{
-                                textDecoration: "underline",
-                                cursor: "pointer",
-                              }}
-                              onClick={() => {
-                                sort("profit");
-                              }}
-                            >
-                              Expected Profit
-                              {sortField === "profit" && sortOrder === "-" ? (
-                                <i className="bi bi-sort-numeric-down"></i>
-                              ) : null}
-                              {sortField === "profit" && sortOrder === "" ? (
-                                <i className="bi bi-sort-numeric-up"></i>
-                              ) : null}
-                            </b>
-                          </th> : ""}
-                        {localStorage.getItem("admin") === "true" ?
-                          <th>
-                            <b
-                              style={{
-                                textDecoration: "underline",
-                                cursor: "pointer",
-                              }}
-                              onClick={() => {
-                                sort("loss");
-                              }}
-                            >
-                              Expected Loss
-                              {sortField === "loss" && sortOrder === "-" ? (
-                                <i className="bi bi-sort-numeric-down"></i>
-                              ) : null}
-                              {sortField === "loss" && sortOrder === "" ? (
-                                <i className="bi bi-sort-numeric-up"></i>
-                              ) : null}
-                            </b>
-                          </th> : ""}
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("profit");
+                            }}
+                          >
+                            Expected Profit
+                            {sortField === "profit" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "profit" && sortOrder === "" ? (
+                              <i className="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("loss");
+                            }}
+                          >
+                            Expected Loss
+                            {sortField === "loss" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "loss" && sortOrder === "" ? (
+                              <i className="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
                         <th>
                           <b
                             style={{
@@ -953,28 +952,28 @@ function QuotationIndex(props) {
                             <option value="paid">Paid</option>
                           </select>
                         </th>
-                        {localStorage.getItem("admin") === "true" ?
-                          <th>
-                            <input
-                              type="text"
-                              id="profit"
-                              onChange={(e) =>
-                                searchByFieldValue("profit", e.target.value)
-                              }
-                              className="form-control"
-                            />
-                          </th> : ""}
-                        {localStorage.getItem("admin") === "true" ?
-                          <th>
-                            <input
-                              type="text"
-                              id="loss"
-                              onChange={(e) =>
-                                searchByFieldValue("loss", e.target.value)
-                              }
-                              className="form-control"
-                            />
-                          </th> : ""}
+
+                        <th>
+                          <input
+                            type="text"
+                            id="profit"
+                            onChange={(e) =>
+                              searchByFieldValue("profit", e.target.value)
+                            }
+                            className="form-control"
+                          />
+                        </th>
+
+                        <th>
+                          <input
+                            type="text"
+                            id="loss"
+                            onChange={(e) =>
+                              searchByFieldValue("loss", e.target.value)
+                            }
+                            className="form-control"
+                          />
+                        </th>
                         <th>
                           <Typeahead
                             id="created_by"
@@ -1129,14 +1128,9 @@ function QuotationIndex(props) {
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.payment_status}</td>
-                            {localStorage.getItem("admin") === "true" ?
-                              <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? <Amount amount={trimTo2Decimals(quotation.profit)} /> : 0.00} </td>
-                              : ""}
-                            {localStorage.getItem("admin") === "true" ?
-                              <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.loss ? <Amount amount={trimTo2Decimals(quotation.loss)} /> : 0.00} </td>
-                              : ""}
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? <Amount amount={trimTo2Decimals(quotation.profit)} /> : 0.00} </td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.loss ? <Amount amount={trimTo2Decimals(quotation.loss)} /> : 0.00} </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.created_by_name}</td>
-
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                               <span className="badge bg-success">
                                 {quotation.status}

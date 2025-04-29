@@ -1287,51 +1287,44 @@ function PurchaseIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
-                                                {localStorage.getItem("admin") === "true" ?
-                                                    <th>
-                                                        <b
-                                                            style={{
-                                                                textDecoration: "underline",
-                                                                cursor: "pointer",
-                                                            }}
-                                                            onClick={() => {
-                                                                sort("retail_profit");
-                                                            }}
-                                                        >
-                                                            Expected Net Retail Profit
-                                                            {sortField === "net_retail_profit" && sortOrder === "-" ? (
-                                                                <i className="bi bi-sort-numeric-down"></i>
-                                                            ) : null}
-                                                            {sortField === "net_retail_profit" && sortOrder === "" ? (
-                                                                <i className="bi bi-sort-numeric-up"></i>
-                                                            ) : null}
-                                                        </b>
-                                                    </th>
-                                                    : ""}
-                                                {localStorage.getItem("admin") === "true" ?
-                                                    <th>
-                                                        <b
-                                                            style={{
-                                                                textDecoration: "underline",
-                                                                cursor: "pointer",
-                                                            }}
-                                                            onClick={() => {
-                                                                sort("wholesale_profit");
-                                                            }}
-                                                        >
-                                                            Expected Net Wholesale Profit
-                                                            {sortField === "net_wholesale_profit" && sortOrder === "-" ? (
-                                                                <i className="bi bi-sort-numeric-down"></i>
-                                                            ) : null}
-                                                            {sortField === "net_wholesale_profit" && sortOrder === "" ? (
-                                                                <i className="bi bi-sort-numeric-up"></i>
-                                                            ) : null}
-                                                        </b>
-                                                    </th> : ""}
-
-
-
-
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("retail_profit");
+                                                        }}
+                                                    >
+                                                        Expected Net Retail Profit
+                                                        {sortField === "net_retail_profit" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "net_retail_profit" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("wholesale_profit");
+                                                        }}
+                                                    >
+                                                        Expected Net Wholesale Profit
+                                                        {sortField === "net_wholesale_profit" && sortOrder === "-" ? (
+                                                            <i className="bi bi-sort-numeric-down"></i>
+                                                        ) : null}
+                                                        {sortField === "net_wholesale_profit" && sortOrder === "" ? (
+                                                            <i className="bi bi-sort-numeric-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
                                                 <th>
                                                     <b
                                                         style={{
@@ -1640,31 +1633,28 @@ function PurchaseIndex(props) {
                                                         className="form-control"
                                                     />
                                                 </th>
-                                                {localStorage.getItem("admin") === "true" ?
-                                                    <th>
-                                                        <input
-                                                            type="text"
-                                                            id="net_retail_profit"
-                                                            onChange={(e) =>
-                                                                searchByFieldValue("net_retail_profit", e.target.value)
-                                                            }
-                                                            className="form-control"
-                                                        />
-                                                    </th>
-                                                    : ""}
-                                                {localStorage.getItem("admin") === "true" ?
-                                                    <th>
-                                                        <input
-                                                            type="text"
-                                                            id="net_wholesale_profit"
-                                                            onChange={(e) =>
-                                                                searchByFieldValue("net_wholesale_profit", e.target.value)
-                                                            }
-                                                            className="form-control"
-                                                        />
-                                                    </th> : ""}
 
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="net_retail_profit"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("net_retail_profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
 
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        id="net_wholesale_profit"
+                                                        onChange={(e) =>
+                                                            searchByFieldValue("net_wholesale_profit", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
@@ -1959,20 +1949,15 @@ function PurchaseIndex(props) {
                                                                 {purchase.return_amount}
                                                             </Button>
                                                         </td>
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                <Amount amount={purchase.net_retail_profit} />
 
-                                                            </td>
-                                                            : ""}
-                                                        {localStorage.getItem("admin") === "true" ?
-                                                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
-                                                                <Amount amount={purchase.net_wholesale_profit} />
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Amount amount={purchase.net_retail_profit} />
 
-                                                            </td>
-                                                            : ""}
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Amount amount={purchase.net_wholesale_profit} />
 
-
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{purchase.created_by_name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
