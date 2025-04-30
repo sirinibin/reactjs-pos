@@ -1394,7 +1394,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="code"
+                                                        id="purchase_code"
+                                                        name="purchase_code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("code", e.target.value)
                                                         }
@@ -1404,7 +1405,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="vendor_invoice_no"
+                                                        id="purchase_vendor_invoice_no"
+                                                        name="purchase_vendor_invoice_no"
                                                         onChange={(e) =>
                                                             searchByFieldValue("vendor_invoice_no", e.target.value)
                                                         }
@@ -1511,7 +1513,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_total"
+                                                        id="purchase_net_total"
+                                                        name="purchase_net_total"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_total", e.target.value)
                                                         }
@@ -1521,7 +1524,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="cash_discount"
+                                                        id="purchase_cash_discount"
+                                                        name="purchase_cash_discount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("cash_discount", e.target.value)
                                                         }
@@ -1541,7 +1545,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="balance_amount"
+                                                        id="purchase_balance_amount"
+                                                        name="purchase_balance_amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("balance_amount", e.target.value)
                                                         }
@@ -1551,7 +1556,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="payments_count"
+                                                        id="purchase_payments_count"
+                                                        name="purchase_payments_count"
                                                         onChange={(e) =>
                                                             searchByFieldValue("payments_count", e.target.value)
                                                         }
@@ -1596,7 +1602,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="discount"
+                                                        id="purchase_discount"
+                                                        name="purchase_discount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("discount", e.target.value)
                                                         }
@@ -1606,7 +1613,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="vat_price"
+                                                        id="purchase_vat_price"
+                                                        name="purchase_vat_price"
                                                         onChange={(e) =>
                                                             searchByFieldValue("vat_price", e.target.value)
                                                         }
@@ -1616,7 +1624,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="return_count"
+                                                        id="purchase_return_count"
+                                                        name="purchase_return_count"
                                                         onChange={(e) =>
                                                             searchByFieldValue("return_count", e.target.value)
                                                         }
@@ -1626,7 +1635,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="return_amount"
+                                                        id="purchase_return_amount"
+                                                        name="purchase_return_amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("return_amount", e.target.value)
                                                         }
@@ -1637,7 +1647,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_retail_profit"
+                                                        id="purchase_net_retail_profit"
+                                                        name="purchase_net_retail_profit"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_retail_profit", e.target.value)
                                                         }
@@ -1648,7 +1659,8 @@ function PurchaseIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_wholesale_profit"
+                                                        id="purchase_net_wholesale_profit"
+                                                        name="purchase_net_wholesale_profit"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_wholesale_profit", e.target.value)
                                                         }

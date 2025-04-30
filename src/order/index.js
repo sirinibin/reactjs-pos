@@ -1822,7 +1822,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th >
                                                     <input
                                                         type="text"
-                                                        id="code"
+                                                        id="sales_code"
+                                                        name="sales_code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("code", e.target.value)
                                                         }
@@ -1933,7 +1934,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_total"
+                                                        id="sales_net_total"
+                                                        name="sales_net_total"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_total", e.target.value)
                                                         }
@@ -1944,7 +1946,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="total_payment_received"
+                                                        id="sales_total_payment_received"
+                                                        name="sales_total_payment_received"
                                                         onChange={(e) =>
                                                             searchByFieldValue("total_payment_received", e.target.value)
                                                         }
@@ -1954,7 +1957,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="balance_amount"
+                                                        id="sales_balance_amount"
+                                                        name="sales_balance_amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("balance_amount", e.target.value)
                                                         }
@@ -1966,7 +1970,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="payments_count"
+                                                        id="sales_payments_count"
+                                                        name="sales_payments_count"
                                                         onChange={(e) =>
                                                             searchByFieldValue("payments_count", e.target.value)
                                                         }
@@ -2024,7 +2029,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="cash_discount"
+                                                        id="sales_cash_discount"
+                                                        name="sales_cash_discount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("cash_discount", e.target.value)
                                                         }
@@ -2034,7 +2040,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="discount"
+                                                        id="sales_discount"
+                                                        name="sales_discount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("discount", e.target.value)
                                                         }
@@ -2044,7 +2051,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 {/*<th>
                                                     <input
                                                         type="text"
-                                                        id="discount_percent"
+                                                        id="sales_discount_percent"
+                                                        name="sales_discount_percent"
                                                         onChange={(e) =>
                                                             searchByFieldValue("discount_percent", e.target.value)
                                                         }
@@ -2054,7 +2062,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_profit"
+                                                        id="sales_net_profit"
+                                                        name="sales_net_profit"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_profit", e.target.value)
                                                         }
@@ -2064,7 +2073,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_loss"
+                                                        id="sales_net_loss"
+                                                        name="sales_net_loss"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_loss", e.target.value)
                                                         }
@@ -2075,7 +2085,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="return_count"
+                                                        id="sales_return_count"
+                                                        name="sales_return_count"
                                                         onChange={(e) =>
                                                             searchByFieldValue("return_count", e.target.value)
                                                         }
@@ -2085,7 +2096,8 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="return_amount"
+                                                        id="sales_return_amount"
+                                                        name="sales_return_amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("return_amount", e.target.value)
                                                         }

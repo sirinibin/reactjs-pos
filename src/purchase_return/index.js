@@ -1266,7 +1266,8 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="code"
+                                                        id="purchase_return_code"
+                                                        name="purchase_return_code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("code", e.target.value)
                                                         }
@@ -1276,7 +1277,8 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="vendor_invoice_no"
+                                                        id="purchase_return_vendor_invoice_no"
+                                                        name="purchase_return_vendor_invoice_no"
                                                         onChange={(e) =>
                                                             searchByFieldValue("vendor_invoice_no", e.target.value)
                                                         }
@@ -1307,7 +1309,8 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="purchase_code"
+                                                        id="purchase_return_purchase_code"
+                                                        name="purchase_return_purchase_code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("purchase_code", e.target.value)
                                                         }
@@ -1393,7 +1396,8 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_total"
+                                                        id="purchase_return_net_total"
+                                                        name="purchase_return_net_total"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_total", e.target.value)
                                                         }
@@ -1403,7 +1407,8 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="cash_discount"
+                                                        id="purchase_return_cash_discount"
+                                                        name="purchase_return_cash_discount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("cash_discount", e.target.value)
                                                         }
@@ -1413,7 +1418,8 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="total_payment_paid"
+                                                        id="purchase_return_total_payment_paid"
+                                                        name="purchase_return_total_payment_paid"
                                                         onChange={(e) =>
                                                             searchByFieldValue("total_payment_paid", e.target.value)
                                                         }
@@ -1423,7 +1429,8 @@ function PurchaseReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="balance_amount"
+                                                        id="purchase_return_balance_amount"
+                                                        name="purchase_return_balance_amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("balance_amount", e.target.value)
                                                         }
@@ -1433,7 +1440,8 @@ function PurchaseReturnIndex(props) {
                                                 {/*<th>
                                                     <input
                                                         type="text"
-                                                        id="payments_count"
+                                                        id="purchase_return_payments_count"
+                                                        name="purchase_return_payments_count"
                                                         onChange={(e) =>
                                                             searchByFieldValue("payments_count", e.target.value)
                                                         }

@@ -480,6 +480,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_name"
+                                    name="customer_name"
                                     value={formData.name ? formData.name : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -490,7 +492,6 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="name"
                                     placeholder="Name"
                                 />
                             </div>
@@ -507,6 +508,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_name_in_arabic"
+                                    name="customer_name_in_arabic"
                                     value={formData.name_in_arabic ? formData.name_in_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -517,7 +520,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="name_in_arabic"
+
                                     placeholder="Name in Arabic"
                                 />
                             </div>
@@ -534,6 +537,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_id"
+                                    name="customer_id"
                                     value={formData.code ? formData.code : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -544,7 +549,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="id"
+
                                     placeholder="ID"
                                 />
                             </div>
@@ -561,6 +566,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_phone"
+                                    name="customer_phone"
                                     value={formData.phone ? formData.phone : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -571,7 +578,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="phone"
+
                                     placeholder="Phone"
                                 />
                             </div>
@@ -590,6 +597,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_vat_no"
+                                    name="customer_vat_no"
                                     value={formData.vat_no ? formData.vat_no : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -600,7 +609,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="vat_no"
+
                                     placeholder="VAT NO."
                                 />
                             </div>
@@ -627,7 +636,8 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="registration_number"
+                                    id="customer_registration_number"
+                                    name="customer_registration_number"
                                     placeholder="CRN"
                                 />
                             </div>
@@ -653,7 +663,8 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="email"
+                                    id="customer_email"
+                                    name="customer_email"
                                     placeholder="Email"
                                 />
                             </div>
@@ -669,6 +680,8 @@ const CustomerCreate = forwardRef((props, ref) => {
                             <label className="form-label">Contact Person</label>
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_contact_person"
+                                    name="customer_contact_person"
                                     value={formData.contact_person ? formData.contact_person : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -679,7 +692,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="contact_person"
+
                                     placeholder="Contact Person"
                                 />
                             </div>
@@ -728,7 +741,9 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-2">
                             <label className="form-label">Credit limit</label>
-                            <input type='number' value={formData.credit_limit} className="form-control "
+                            <input
+                                id="customer_credit_limit" name="customer_credit_limit"
+                                type='number' value={formData.credit_limit} className="form-control "
                                 onChange={(e) => {
                                     errors["credit_limit"] = "";
                                     setErrors({ ...errors });
@@ -818,7 +833,8 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className=""
-                                    id="formData.show_address_in_invoice_footer"
+                                    id="customer_use_remarks_in_sales"
+                                    phone="customer_use_remarks_in_sales"
 
                                 /> Use in Sales / Sales Return
                             </label>
@@ -918,7 +934,8 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.building_no"
+                                    id="customer_national_address_building_no"
+                                    name="customer_national_address_building_no"
                                     placeholder="Building Number"
                                 />
 
@@ -946,7 +963,8 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.street_name"
+                                    id="customer_national_address_street_name"
+                                    name="customer_national_address_street_name"
                                     placeholder="Street Name"
                                 />
                             </div>
@@ -963,6 +981,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_national_address_street_name_arabic"
+                                    name="customer_national_address_street_name_arabic"
                                     value={formData.national_address && formData.national_address.street_name_arabic ? formData.national_address.street_name_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -973,7 +993,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.street_name_arabic"
+
                                     placeholder="Street Name(Arabic)"
                                 />
                             </div>
@@ -991,6 +1011,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_national_address_district_name_arabic"
+                                    name="customer_national_address_district_name_arabic"
                                     value={formData.national_address && formData.national_address.district_name ? formData.national_address.district_name : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -1001,7 +1023,6 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.district_name"
                                     placeholder="District Name"
                                 />
                             </div>
@@ -1018,6 +1039,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="national_address.district_name_arabic"
+                                    name="national_address.district_name_arabic"
                                     value={formData.national_address && formData.national_address.district_name_arabic ? formData.national_address.district_name_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -1028,7 +1051,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.district_name_arabic"
+
                                     placeholder="District Name(Arabic)"
                                 />
                             </div>
@@ -1045,6 +1068,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_national_address_unit_no"
+                                    model="customer_national_address_unit_no"
                                     value={formData.national_address && formData.national_address.unit_no ? formData.national_address.unit_no : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -1055,7 +1080,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.unit_no"
+
                                     placeholder="Unit Number"
                                 />
                             </div>
@@ -1072,6 +1097,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_national_address_city_name"
+                                    name="customer_national_address_city_name"
                                     value={formData.national_address && formData.national_address.city_name ? formData.national_address.city_name : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -1082,7 +1109,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.city_name"
+
                                     placeholder="City Name"
                                 />
                             </div>
@@ -1099,6 +1126,9 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_national_address.city_name_arabic"
+                                    name="customer_national_address.city_name_arabic"
+
                                     value={formData.national_address && formData.national_address.city_name_arabic ? formData.national_address.city_name_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -1109,7 +1139,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.city_name_arabic"
+
                                     placeholder="City Name(Arabic)"
                                 />
                             </div>
@@ -1126,6 +1156,7 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_national_address_zipcode"
                                     value={formData.national_address && formData.national_address.zipcode ? formData.national_address.zipcode : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -1136,7 +1167,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.zipcode"
+
                                     placeholder="Zipcode"
                                 />
                             </div>
@@ -1153,6 +1184,8 @@ const CustomerCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_national_address.additional_no"
+                                    name="customer_national_address.additional_no"
                                     value={formData.national_address && formData.national_address.additional_no ? formData.national_address.additional_no : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -1163,7 +1196,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.additional_no"
+
                                     placeholder="Additional Number"
                                 />
                             </div>

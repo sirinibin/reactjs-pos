@@ -1623,7 +1623,7 @@ function findDiscount() {
 
                     </Modal.Title>
                     {store.zatca?.phase === "2" && !formData.id && <div style={{ marginLeft: "20px" }}>
-                        <input type="checkbox" checked={formData.enable_report_to_zatca} onChange={(e) => {
+                        <input type="checkbox" id="sales_report_to_zatca" name="report_to_zatca" checked={formData.enable_report_to_zatca} onChange={(e) => {
                             formData.enable_report_to_zatca = !formData.enable_report_to_zatca;
                             setFormData({ ...formData });
                         }} /> Report to Zatca <br />
@@ -1886,6 +1886,8 @@ function findDiscount() {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="sales_phone"
+                                    name="sales_phone"
                                     value={formData.phone ? formData.phone : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -1896,7 +1898,7 @@ function findDiscount() {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="phone"
+
                                     placeholder="Phone"
                                 />
                             </div>
@@ -1923,6 +1925,8 @@ function findDiscount() {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="sales_vat_no"
+                                    name="sales_vat_no"
                                     value={formData.vat_no ? formData.vat_no : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -1933,7 +1937,7 @@ function findDiscount() {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="vat_no"
+
                                     placeholder="VAT NO."
                                 />
                             </div>
@@ -2141,7 +2145,7 @@ function findDiscount() {
                                             <ResizableTableCell
                                             >
                                                 <div className="input-group mb-3">
-                                                    <input type="text" onWheel={(e) => e.target.blur()} value={product.name} disabled={!selectedProducts[index].can_edit_name} className="form-control"
+                                                    <input type="text" id={`${"sales_product_name" + index}`} name={`${"sales_product_name" + index}`} onWheel={(e) => e.target.blur()} value={product.name} disabled={!selectedProducts[index].can_edit_name} className="form-control"
                                                         placeholder="Name" onChange={(e) => {
                                                             errors["name_" + index] = "";
                                                             setErrors({ ...errors });
@@ -2252,7 +2256,7 @@ function findDiscount() {
                                             <td>
 
                                                 <div className="input-group mb-3">
-                                                    <input type="number" onWheel={(e) => e.target.blur()} value={product.purchase_unit_price} disabled={!selectedProducts[index].can_edit} className="form-control text-end"
+                                                    <input type="number" id={`${"sales_product_purchase_unit_price" + index}`} name={`${"sales_product_purchase_unit_price" + index}`} onWheel={(e) => e.target.blur()} value={product.purchase_unit_price} disabled={!selectedProducts[index].can_edit} className="form-control text-end"
 
                                                         placeholder="Purchase Unit Price" onChange={(e) => {
                                                             errors["purchase_unit_price_" + index] = "";
@@ -2312,7 +2316,7 @@ function findDiscount() {
                                             <td >
 
                                                 <div className="input-group mb-3">
-                                                    <input type="number" onWheel={(e) => e.target.blur()} value={product.quantity} className="form-control text-end"
+                                                    <input type="number" id={`${"sales_product_quantity" + index}`} name={`${"sales_product_quantity" + index}`} onWheel={(e) => e.target.blur()} value={product.quantity} className="form-control text-end"
 
                                                         placeholder="Quantity" onChange={(e) => {
                                                             errors["quantity_" + index] = "";
@@ -2369,7 +2373,7 @@ function findDiscount() {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" onWheel={(e) => e.target.blur()} value={product.unit_price} className="form-control text-end"
+                                                    <input type="number" id={`${"sales_product_unit_price" + index}`} name={`${"sales_product_unit_price" + index}`} onWheel={(e) => e.target.blur()} value={product.unit_price} className="form-control text-end"
 
                                                         placeholder="Unit Price" onChange={(e) => {
                                                             errors["unit_price_" + index] = "";
@@ -2415,7 +2419,7 @@ function findDiscount() {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount} onChange={(e) => {
+                                                    <input type="number" id={`${"sales_unit_discount" + index}`} name={`${"sales_unit_discount" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount} onChange={(e) => {
                                                         selectedProducts[index].is_discount_percent = false;
                                                         if (parseFloat(e.target.value) === 0) {
                                                             selectedProducts[index].unit_discount = parseFloat(e.target.value);
@@ -2470,7 +2474,7 @@ function findDiscount() {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" onWheel={(e) => e.target.blur()} disabled={true} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                                                    <input type="number" id={`${"sales_unit_discount_percent" + index}`} name={`${"sales_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} disabled={true} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                                         selectedProducts[index].is_discount_percent = true;
                                                         if (parseFloat(e.target.value) === 0) {
                                                             selectedProducts[index].unit_discount_percent = parseFloat(e.target.value);
@@ -2552,7 +2556,7 @@ function findDiscount() {
                                             Shipping & Handling Fees
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={formData.shipping_handling_fees} onChange={(e) => {
+                                            <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={formData.shipping_handling_fees} onChange={(e) => {
                                                 errors["shipping_handling_fees"] = "";
                                                 setErrors({ ...errors });
 
@@ -2602,7 +2606,7 @@ function findDiscount() {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Discount  <input type="number" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={formData.discount_percent} onChange={(e) => {
+                                            Discount  <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={formData.discount_percent} onChange={(e) => {
                                                 formData.is_discount_percent = true;
                                                 if (parseFloat(e.target.value) === 0) {
                                                     formData.discount_percent = parseFloat(e.target.value);
@@ -2647,7 +2651,7 @@ function findDiscount() {
                                             )}
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={formData.discount} onChange={(e) => {
+                                            <input type="number" id="sales_discount" name="sales_discount" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={formData.discount} onChange={(e) => {
                                                 formData.is_discount_percent = false;
                                                 if (parseFloat(e.target.value) === 0) {
                                                     formData.discount = parseFloat(e.target.value);
@@ -2702,7 +2706,7 @@ function findDiscount() {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end"> VAT  <input type="number" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
+                                        <th colSpan="8" className="text-end"> VAT  <input type="number" id="sales_vat_percent" name="sales_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
                                             console.log("Inside onchange vat percent");
                                             if (parseFloat(e.target.value) === 0) {
                                                 formData.vat_percent = parseFloat(e.target.value);
@@ -2846,7 +2850,7 @@ function findDiscount() {
                                 */}
                         <div className="col-md-2">
                             <label className="form-label">Cash discount</label>
-                            <input type='number' value={formData.cash_discount} className="form-control "
+                            <input type='number' id="sales_cash_discount" name="sales_cash_discount" value={formData.cash_discount} className="form-control "
                                 onChange={(e) => {
                                     errors["cash_discount"] = "";
                                     setErrors({ ...errors });
@@ -2929,7 +2933,7 @@ function findDiscount() {
                                                         )}
                                                     </td>
                                                     <td style={{ width: "300px" }}>
-                                                        <input type='number' value={formData.payments_input[key].amount} className="form-control "
+                                                        <input type='number' id={`${"sales_payment_amount" + key}`} name={`${"sales_payment_amount" + key}`} value={formData.payments_input[key].amount} className="form-control "
                                                             onChange={(e) => {
                                                                 errors["payment_amount_" + key] = "";
                                                                 setErrors({ ...errors });

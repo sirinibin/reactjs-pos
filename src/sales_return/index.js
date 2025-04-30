@@ -1728,7 +1728,8 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="code"
+                                                        id="sales_return_code"
+                                                        name="sales_return_code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("code", e.target.value)
                                                         }
@@ -1836,7 +1837,8 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_total"
+                                                        id="sales_return_net_total"
+                                                        name="sales_return_net_total"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_total", e.target.value)
                                                         }
@@ -1847,7 +1849,8 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="total_payment_paid"
+                                                        id="sales_return_total_payment_paid"
+                                                        name="sales_return_total_payment_paid"
                                                         onChange={(e) =>
                                                             searchByFieldValue("total_payment_paid", e.target.value)
                                                         }
@@ -1857,7 +1860,8 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="balance_amount"
+                                                        id="sales_return_balance_amount"
+                                                        name="sales_return_balance_amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("balance_amount", e.target.value)
                                                         }
@@ -1867,7 +1871,8 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="order_code"
+                                                        id="sales_return_order_code"
+                                                        name="sales_return_order_code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("order_code", e.target.value)
                                                         }
@@ -1878,7 +1883,8 @@ function SalesReturnIndex(props) {
                                                 {/*<th>
                                                     <input
                                                         type="text"
-                                                        id="payments_count"
+                                                        id="sales_return_payments_count"
+                                                        name="sales_return_payments_count"
                                                         onChange={(e) =>
                                                             searchByFieldValue("payments_count", e.target.value)
                                                         }
@@ -1936,7 +1942,8 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="cash_discount"
+                                                        id="sales_return_cash_discount"
+                                                        name="sales_return_cash_discount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("cash_discount", e.target.value)
                                                         }
@@ -1946,7 +1953,8 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_profit"
+                                                        id="sales_return_net_profit"
+                                                        name="sales_return_net_profit"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_profit", e.target.value)
                                                         }
@@ -1956,7 +1964,8 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_loss"
+                                                        id="sales_return_net_loss"
+                                                        name="sales_return_net_loss"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_loss", e.target.value)
                                                         }
