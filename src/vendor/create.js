@@ -337,7 +337,8 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="name"
+                                    id="vendor_name"
+                                    name="vendor_name"
                                     placeholder="Name"
                                 />
                                 {errors.name && (
@@ -355,6 +356,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_name_arabic"
+                                    name="vendor_name_arabic"
                                     value={formData.name_in_arabic ? formData.name_in_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -365,7 +368,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="name_in_arabic"
+
                                     placeholder="Name In Arabic"
                                 />
                                 {errors.name_in_arabic && (
@@ -383,6 +386,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_id"
+                                    name="vendor_id"
                                     value={formData.code ? formData.code : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -393,7 +398,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="id"
+
                                     placeholder="ID"
                                 />
                             </div>
@@ -409,6 +414,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_phone"
+                                    name="vendor_phone"
                                     value={formData.phone ? formData.phone : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -419,7 +426,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="phone"
+
                                     placeholder="Phone"
                                 />
                                 {errors.phone && (
@@ -437,6 +444,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_email"
+                                    name="vendor_email"
                                     value={formData.email ? formData.email : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -446,7 +455,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="email"
+
                                     placeholder="Email"
                                 />
 
@@ -465,6 +474,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_reg_no"
+                                    name="vendor_reg_no"
                                     value={formData.registration_number ? formData.registration_number : ""}
                                     type='number'
                                     onChange={(e) => {
@@ -475,7 +486,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="registration_number"
+
                                     placeholder="Registration Number(C.R NO.)"
                                 />
                                 {errors.registration_number && (
@@ -493,6 +504,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_vat_no"
+                                    name="vendor_vat_no"
                                     value={formData.vat_no ? formData.vat_no : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -503,7 +516,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="vat_no"
+
                                     placeholder="VAT NO."
                                 />
                                 {errors.vat_no && (
@@ -520,6 +533,8 @@ const VendorCreate = forwardRef((props, ref) => {
                             <label className="form-label">Contact Person</label>
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_contact_person"
+                                    name="vendor_contact_person"
                                     value={formData.contact_person ? formData.contact_person : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -530,7 +545,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="contact_person"
+
                                     placeholder="Contact Person"
                                 />
                             </div>
@@ -579,7 +594,10 @@ const VendorCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-2">
                             <label className="form-label">Credit limit</label>
-                            <input type='number' value={formData.credit_limit} className="form-control "
+                            <input
+                                id="vendor_credit_limit"
+                                name="vendor_credit_limit"
+                                type='number' value={formData.credit_limit} className="form-control "
                                 onChange={(e) => {
                                     errors["credit_limit"] = "";
                                     setErrors({ ...errors });
@@ -664,6 +682,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_building_no"
+                                    name="vendor_national_address_building_no"
                                     value={formData.national_address.building_no ? formData.national_address.building_no : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -674,7 +694,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.building_no"
+
                                     placeholder="Building Number"
                                 />
 
@@ -692,6 +712,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_street_name"
+                                    name="vendor_national_address_street_name"
                                     value={formData.national_address.street_name ? formData.national_address.street_name : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -702,7 +724,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.street_name"
+
                                     placeholder="Street Name"
                                 />
 
@@ -721,6 +743,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_street_name_arabic"
+                                    name="vendor_national_address_street_name_arabic"
                                     value={formData.national_address.street_name_arabic ? formData.national_address.street_name_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -731,7 +755,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.street_name_arabic"
+
                                     placeholder="Street Name(Arabic)"
                                 />
 
@@ -751,6 +775,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_district_name"
+                                    name="vendor_national_address_district_name"
                                     value={formData.national_address.district_name ? formData.national_address.district_name : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -761,7 +787,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.district_name"
+
                                     placeholder="District Name"
                                 />
 
@@ -780,6 +806,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_district_name_arabic"
+                                    name="vendor_national_address_district_name_arabic"
                                     value={formData.national_address.district_name_arabic ? formData.national_address.district_name_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -790,7 +818,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.district_name_arabic"
+
                                     placeholder="District Name(Arabic)"
                                 />
 
@@ -809,6 +837,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_unit_no"
+                                    name="vendor_national_address_unit_no"
                                     value={formData.national_address.unit_no ? formData.national_address.unit_no : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -819,7 +849,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.unit_no"
+
                                     placeholder="Unit Number"
                                 />
 
@@ -839,6 +869,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_city_name"
+                                    name="vendor_national_address_city_name"
                                     value={formData.national_address.city_name ? formData.national_address.city_name : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -849,7 +881,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.city_name"
+
                                     placeholder="City Name"
                                 />
 
@@ -868,6 +900,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_city_name_arabic"
+                                    name="vendor_national_address_city_name_arabic"
                                     value={formData.national_address.city_name_arabic ? formData.national_address.city_name_arabic : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -878,7 +912,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.city_name_arabic"
+
                                     placeholder="City Name(Arabic)"
                                 />
 
@@ -897,6 +931,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_zipcode"
+                                    name="vendor_national_address_zipcode"
                                     value={formData.national_address.zipcode ? formData.national_address.zipcode : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -907,7 +943,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.zipcode"
+
                                     placeholder="Zipcode"
                                 />
 
@@ -926,6 +962,8 @@ const VendorCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="vendor_national_address_additional_no"
+                                    name="vendor_national_address_additional_no"
                                     value={formData.national_address.additional_no ? formData.national_address.additional_no : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -936,7 +974,6 @@ const VendorCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="national_address.additional_no"
                                     placeholder="Additional Number"
                                 />
 

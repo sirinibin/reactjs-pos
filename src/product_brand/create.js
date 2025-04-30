@@ -249,6 +249,8 @@ const ProductBrandCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="product_brand_name"
+                                    name="product_brand_name"
                                     value={formData.name ? formData.name : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -259,7 +261,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="name"
+
                                     placeholder="Name"
                                 />
                                 {errors.name && (
@@ -281,6 +283,8 @@ const ProductBrandCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="product_brand_code"
+                                    name="product_brand_code"
                                     value={formData.code ? formData.code : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -291,7 +295,7 @@ const ProductBrandCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="code"
+
                                     placeholder="Code"
                                 />
                                 {errors.code && (

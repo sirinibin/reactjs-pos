@@ -311,6 +311,8 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="product_category_name"
+                                    name="product_category_name"
                                     value={formData.name ? formData.name : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -321,7 +323,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="name"
+
                                     placeholder="Name"
                                 />
                                 {errors.name && (

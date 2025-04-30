@@ -609,6 +609,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_deposit_code"
+                                    name="customer_deposit_code"
                                     value={formData.code ? formData.code : ""}
                                     type='string'
                                     onChange={(e) => {
@@ -619,7 +621,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="id"
+
                                     placeholder="ID"
                                 />
                             </div>
@@ -665,6 +667,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_deposit_amount"
+                                    name="customer_deposit_amount"
                                     value={formData.amount ? formData.amount : ""}
                                     type='number'
                                     onChange={(e) => {
@@ -675,7 +679,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="amount"
+
                                     placeholder="Amount"
                                 />
 
@@ -734,6 +738,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                             <label className="form-label">Bank Ref. No.</label>
                             <div className="input-group mb-3">
                                 <input
+                                    id="customer_deposit_bank_ref"
+                                    name="customer_deposit_bank_ref"
                                     value={formData.bank_reference_no ? formData.bank_reference_no : ""}
                                     type='text'
                                     onChange={(e) => {
@@ -744,7 +750,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         console.log(formData);
                                     }}
                                     className="form-control"
-                                    id="bank_reference_no"
+
                                     placeholder="Bank reference no."
                                 />
                             </div>
