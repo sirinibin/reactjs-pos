@@ -554,20 +554,12 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
                             {props.model.pages.length === (pageIndex + 1) ? <table className="table table-bordered" style={{ fontSize: "3mm" }}>
                                 <thead>
-                                    <tr>
+                                    {/*<tr>
                                         <th className="text-end" style={{ width: "20%", padding: "2px" }}>
                                             Account Manager إدارة حساب المستخدم:
                                         </th>
-                                        <th style={{ width: "30%", padding: "2px" }}> {props.userName ? props.userName : ""}{/*props.model.delivered_by_user ? props.model.delivered_by_user.name : null*/}</th>
-                                        {/*
-                                        <th className="text-end" style={{ width: "20%", padding: "2px" }}>
-                                            Received By استلمت من قبل:
-                                        </th>
-                                        <th style={{ width: "30%" }}>
-
-                                        </th>
-                                    */}
-                                    </tr>
+                                        <th style={{ width: "30%", padding: "2px" }}> {props.userName ? props.userName : ""}</th>
+                            </tr> */}
                                     <tr>
                                         <th className="text-end" style={{ padding: "2px" }}>
                                             Signature إمضاء:
@@ -602,41 +594,43 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                             </table> : ""}
                         </div>
                     </div>
-                </div>
-                {props.model.pages.length === (pageIndex + 1) ? <div className="row" style={{ fontSize: "3mm", height: "55px", }}>
-                    <div className="col-md-2 text-start">
-                        {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
-                    </div>
-                    <div className="col-md-8 text-center">
-                        <ul className="list-unstyled mb0 text-center">
-                            <li>
-                                <b
-                                > {props.model.store ? props.model.store.address_in_arabic : "<STORE_ADDRESS_ARABIC>"}
-                                </b>
-                            </li>
-                            <li>
-                                <strong
-                                >{props.model.store ? props.model.store.address : "<STORE_ADDRESS>"}
-                                </strong>
-                            </li>
+                </div >
+                {
+                    props.model.pages.length === (pageIndex + 1) && props.model.store?.show_address_in_invoice_footer ? <div className="row" style={{ fontSize: "3mm", height: "55px", }}>
+                        <div className="col-md-2 text-start">
+                            {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
+                        </div>
+                        <div className="col-md-8 text-center">
+                            <ul className="list-unstyled mb0 text-center">
+                                <li>
+                                    <b
+                                    > {props.model.store ? props.model.store.address_in_arabic : "<STORE_ADDRESS_ARABIC>"}
+                                    </b>
+                                </li>
+                                <li>
+                                    <strong
+                                    >{props.model.store ? props.model.store.address : "<STORE_ADDRESS>"}
+                                    </strong>
+                                </li>
 
-                            <li>
-                                هاتف:<b
-                                > {props.model.store ? props.model.store.phone_in_arabic : "<STORE_PHONE_ARABIC>"}
-                                </b>,
-                                Phone:<strong
-                                >{props.model.store ? props.model.store.phone : "<STORE_PHONE>"}
-                                </strong>
-                            </li>
-                            <li>
-                                <strong>الرمز البريدي:</strong>{props.model.store ? props.model.store.zipcode_in_arabic : "<STORE_ZIPCODE_ARABIC>"},
-                                <strong>Email:{props.model.store ? props.model.store.email : "<STORE_EMAIL>"} </strong>
+                                <li>
+                                    هاتف:<b
+                                    > {props.model.store ? props.model.store.phone_in_arabic : "<STORE_PHONE_ARABIC>"}
+                                    </b>,
+                                    Phone:<strong
+                                    >{props.model.store ? props.model.store.phone : "<STORE_PHONE>"}
+                                    </strong>
+                                </li>
+                                <li>
+                                    <strong>الرمز البريدي:</strong>{props.model.store ? props.model.store.zipcode_in_arabic : "<STORE_ZIPCODE_ARABIC>"},
+                                    <strong>Email:{props.model.store ? props.model.store.email : "<STORE_EMAIL>"} </strong>
 
-                            </li>
-                        </ul>
-                    </div>
-                </div> : ""}
-            </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div> : ""
+                }
+            </div >
         ))}
     </>);
 

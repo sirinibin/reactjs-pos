@@ -25,10 +25,25 @@ const Preview = forwardRef((props, ref) => {
 
         console.log("model.modelName", model.modelName);
         console.log("model:", model);
+        var IsCashOnly = true;
+        if (model.payment_methods?.length === 0 || model.payment_status === "not_paid") {
+            IsCashOnly = false;
+        }
+
+        for (let i = 0; i < model.payment_methods?.length; i++) {
+            if (model.payment_methods[i] !== "cash") {
+                IsCashOnly = false;
+                break;
+            }
+        }
+
         if (model.modelName === "sales") {
             if (model.store?.zatca?.phase === "1") {
                 if (model.payment_status !== "not_paid") {
                     model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
+                    if (IsCashOnly) {
+                        model.invoiceTitle = "CASH TAX INVOICE | فاتورة ضريبية نقدية";
+                    }
                 } else if (model.payment_status === "not_paid") {
                     model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
                 }
@@ -38,6 +53,9 @@ const Preview = forwardRef((props, ref) => {
                         model.invoiceTitle = "SIMPLIFIED CREDIT TAX INVOICE | فاتورة ضريبة الائتمان المبسطة";
                     } else {
                         model.invoiceTitle = "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة";
+                        if (IsCashOnly) {
+                            model.invoiceTitle = "SIMPLIFIED CASH TAX INVOICE | فاتورة ضريبية نقدية مبسطة";
+                        }
                     }
 
                 } else if (!model.zatca?.is_simplified) {
@@ -45,42 +63,48 @@ const Preview = forwardRef((props, ref) => {
                         model.invoiceTitle = "STANDARD CREDIT TAX INVOICE | فاتورة ضريبة الائتمان القياسية";
                     } else {
                         model.invoiceTitle = "STANDARD TAX INVOICE | فاتورة ضريبية قياسية";
+                        if (IsCashOnly) {
+                            model.invoiceTitle = "STANDARD CASH TAX INVOICE | فاتورة ضريبية نقدية قياسية";
+                        }
                     }
-
                 }
             }
         } else if (model.modelName === "sales_return") {
             if (model.store?.zatca?.phase === "1") {
                 model.invoiceTitle = "SALES RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
+                if (IsCashOnly) {
+                    model.invoiceTitle = "SALES RETURN CASH TAX INVOICE | إقرار مبيعات فاتورة ضريبية نقدية";
+                }
             } else if (model.store?.zatca?.phase === "2") {
                 if (model.zatca?.is_simplified) {
-                    model.invoiceTitle = "SIMPLIFIED CREDIT NOTE TAX INVOICE | مذكرة ائتمان مبسطة، فاتورة ضريبية";
+                    model.invoiceTitle = "SIMPLIFIED CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي مبسط لإقرار إقرار ائتماني";
+                    if (IsCashOnly) {
+                        model.invoiceTitle = "SIMPLIFIED CREDIT NOTE CASH RETURN TAX INVOICE | مذكرة ائتمان مبسطة، إقرار نقدي، فاتورة ضريبية";
+                    }
                 } else if (!model.zatca?.is_simplified) {
-                    model.invoiceTitle = "STANDARD CREDIT NOTE TAX INVOICE | مذكرة ائتمان قياسية، فاتورة ضريبية";
+                    model.invoiceTitle = "STANDARD CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي قياسي لإرجاع فاتورة الائتمان";
+                    if (IsCashOnly) {
+                        model.invoiceTitle = "STANDARD CREDIT NOTE CASH RETURN TAX INVOICE | سند ائتمان قياسي، إقرار نقدي، فاتورة ضريبية";
+                    }
                 }
             }
         } else if (model.modelName === "purchase") {
-            if (model.store?.zatca?.phase === "1") {
-                if (model.payment_status !== "not_paid") {
-                    model.invoiceTitle = "PURCHASE TAX INVOICE | الفاتورة الضريبية";
-                } else if (model.payment_status === "not_paid") {
-                    model.invoiceTitle = "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الائتمان";
-                }
-            } else if (model.store?.zatca?.phase === "2") {
-                if (model.zatca?.is_simplified) {
-                    model.invoiceTitle = "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء";
-                } else if (!model.zatca?.is_simplified) {
-                    model.invoiceTitle = "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء";
+            if (model.payment_status === "not_paid") {
+                model.invoiceTitle = "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الشراء بالائتمان";
+            } else {
+                model.invoiceTitle = "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء";
+                if (IsCashOnly) {
+                    model.invoiceTitle = "CASH PURCHASE TAX INVOICE | فاتورة ضريبة الشراء النقدي";
                 }
             }
+
         } else if (model.modelName === "purchase_return") {
-            if (model.store?.zatca?.phase === "1") {
-                model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
-            } else if (model.store?.zatca?.phase === "2") {
-                if (model.zatca?.is_simplified) {
-                    model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
-                } else if (!model.zatca?.is_simplified) {
-                    model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
+            if (model.payment_status === "not_paid") {
+                model.invoiceTitle = "CREDIT PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء بالائتمان";
+            } else {
+                model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع المشتريات";
+                if (IsCashOnly) {
+                    model.invoiceTitle = "CASH PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء النقدي";
                 }
             }
         } else if (model.modelName === "quotation") {

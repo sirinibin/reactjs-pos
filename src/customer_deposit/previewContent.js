@@ -370,19 +370,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             </span>
                                         </th>
                                     </tr>
-                                    {props.model.remarks ? <tr>
-                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
-                                            Remarks ملاحظات:
-                                        </th>
-                                        <th
-                                            colSpan="7"
-                                            style={{ padding: "2px" }}
 
-                                        >
-                                            {props.model.remarks ? props.model.remarks : ""}
-                                        </th>
-
-                                    </tr> : ""}
                                     <tr>
 
                                         <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
@@ -402,6 +390,19 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             </ul>
                                         </th>
                                     </tr>
+                                    {props.model.remarks ? <tr>
+                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
+                                            Remarks ملاحظات:
+                                        </th>
+                                        <th
+                                            colSpan="7"
+                                            style={{ padding: "2px" }}
+
+                                        >
+                                            {props.model.remarks ? props.model.remarks : ""}
+                                        </th>
+
+                                    </tr> : ""}
                                 </tfoot>
                             </table>
 
