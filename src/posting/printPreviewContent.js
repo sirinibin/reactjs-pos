@@ -48,6 +48,19 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
         return event.toLocaleDateString('ar-EG', options)
     }
 
+    function toTitleCaseFromUnderscore(str) {
+        let newStr = str
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+        if (newStr === "Customer Deposit") {
+            return "Customer Payable"
+        } else if (newStr === "Customer Withdrawal") {
+            return "Customer Receivable"
+        }
+
+        return newStr;
+    }
 
     let detailsLabelsColumnWidthPercent = "25%";
     let detailsValuesColumnWidthPercent = "75%";
@@ -60,7 +73,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                 id="printableArea"
                 style={{
                     backgroundColor: "white",
-                    border: "solid 2px",
+                    border: "solid 0px",
                     borderColor: "silver",
                     borderRadius: "2mm",
                     padding: "20px",
@@ -361,7 +374,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "auto"
                                                 }}
                                             >
                                                 <li>تاريخ</li>
@@ -372,7 +385,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "auto"
                                                 }}
                                             >
                                                 <li>دَين</li>
@@ -383,7 +396,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "auto"
                                                 }}
                                             >
                                                 <li>ائتمان</li>
@@ -394,7 +407,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "auto"
                                                 }}
                                             >
                                                 <li>كمية</li>
@@ -405,7 +418,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
-                                                    height: "15px"
+                                                    height: "auto"
                                                 }}
                                             >
                                                 <li>بطاقة تعريف</li>
@@ -417,7 +430,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 <tbody style={{ fontSize: "2.7mm" }} >
                                     {pageIndex === 0 && props.model && (props.model.debitBalanceBoughtDown > 0 || props.model.creditBalanceBoughtDown > 0) ? <tr>
                                         <td></td>
-                                        <td colSpan={2} style={{ textAlign: "right", color: "red" }}><b>
+                                        <td colSpan={2} style={{ width: "auto", whiteSpace: "nowrap", textAlign: "right", color: "red" }}><b>
                                             {props.model.debitBalanceBoughtDown > 0 ? "To balance b/d " : ""}
                                             <NumberFormat
                                                 value={props.model.debitBalanceBoughtDown > 0 ? props.model.debitBalanceBoughtDown?.toFixed(2) : ""}
@@ -428,7 +441,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             />
 
                                         </b></td>
-                                        <td colSpan={2} style={{ textAlign: "right", color: "red" }}><b>
+                                        <td colSpan={2} style={{ width: "auto", whiteSpace: "nowrap", textAlign: "right", color: "red" }}><b>
                                             {props.model.creditBalanceBoughtDown > 0 ? "By balance b/d " : ""}
                                             <NumberFormat
                                                 value={props.model.creditBalanceBoughtDown > 0 ? props.model.creditBalanceBoughtDown?.toFixed(2) : ""}
@@ -445,11 +458,11 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
                                     {page.posts && page.posts.filter(post => post.date).map((post, index) => (
                                         <tr key={index} style={{}}>
-                                            <td style={{ width: "15%", fontSize: "1.6mm", height: "10px" }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
-                                            <td className="text-start" style={{ width: "25%", alignContent: "start", borderRightWidth: "0px", fontSize: "2mm" }}>
+                                            <td style={{ width: "auto", whiteSpace: "nowrap", fontSize: "2.2mm", }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
+                                            <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px", fontSize: "2mm" }}>
                                                 {post.debit_account}
                                             </td>
-                                            <td className="text-end" style={{ width: "5%", border: "solid 0px", fontSize: "2mm" }}>
+                                            <td className="text-end" style={{ width: "auto", whiteSpace: "nowrap", border: "solid 0px", fontSize: "2.2mm" }}>
 
                                                 <NumberFormat
                                                     value={parseFloat(post.debit_amount)?.toFixed(2)}
@@ -459,10 +472,10 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td style={{ width: "25%", alignContent: "start", borderRightWidth: "0px", fontSize: "2mm" }}>
+                                            <td style={{ width: "auto", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px", fontSize: "2.2mm" }}>
                                                 {post.credit_account}
                                             </td>
-                                            <td className="text-end" style={{ width: "5%", border: "solid 0px", fontSize: "2mm" }}>
+                                            <td className="text-end" style={{ width: "auto", whiteSpace: "nowrap", border: "solid 0px", fontSize: "2.2mm" }}>
                                                 <NumberFormat
                                                     value={parseFloat(post.credit_amount)?.toFixed(2)}
                                                     displayType={"text"}
@@ -471,8 +484,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td style={{ width: "10%", fontSize: "2mm" }}>{post.reference_model}</td>
-                                            <td style={{ width: "15%", fontSize: "1.6mm" }}>{post.reference_code}</td>
+                                            <td style={{ width: "auto", whiteSpace: "nowrap", fontSize: "2.2mm" }}>{toTitleCaseFromUnderscore(post.reference_model)}</td>
+                                            <td style={{ width: "auto", whiteSpace: "nowrap", fontSize: "2.2mm" }}>{post.reference_code}</td>
                                         </tr>
                                     ))}
                                 </tbody>

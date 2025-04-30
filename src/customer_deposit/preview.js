@@ -2,7 +2,6 @@ import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback }
 import { Modal, Button } from 'react-bootstrap';
 import CustomerDepositPreviewContent from './previewContent.js';
 
-import { useReactToPrint } from 'react-to-print';
 import { Invoice } from '@axenda/zatca';
 import html2pdf from 'html2pdf.js';
 
@@ -280,13 +279,37 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
         return filename;
     }, [model, modelName])
 
+    /*
     const handlePrint = useReactToPrint({
         content: () => printAreaRef.current,
         documentTitle: getFileName(),
         onAfterPrint: () => {
             handleClose();
         }
-    });
+    });*/
+
+    const handlePrint = useCallback(() => {
+        const element = printAreaRef.current;
+        if (!element) return;
+
+        html2pdf().from(element).set({
+            margin: 0,
+            filename: `${getFileName()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).outputPdf('bloburl').then(blobUrl => {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = blobUrl;
+            document.body.appendChild(iframe);
+
+            iframe.onload = () => {
+                iframe.contentWindow?.focus();
+                iframe.contentWindow?.print();
+            };
+        });
+    }, [getFileName]);
 
 
     // Wrap handlePrint in useCallback to avoid unnecessary re-creations

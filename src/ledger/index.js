@@ -338,6 +338,20 @@ function LedgerIndex(props) {
 
     const AccountBalanceSheetRef = useRef();
 
+    function toTitleCaseFromUnderscore(str) {
+        let newStr = str
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+
+        if (newStr === "Customer Deposit") {
+            return "Customer Receivable"
+        } else if (newStr === "Customer Withdrawal") {
+            return "Customer Payable"
+        }
+        return newStr;
+    }
+
 
     return (
         <>
@@ -779,8 +793,8 @@ function LedgerIndex(props) {
                                                         <option value="capital">Capital</option>
                                                         <option value="drawing">Drawing</option>
                                                         <option value="expense">Expense</option>
-                                                        <option value="customer_deposit">Customer deposit</option>
-                                                        <option value="customer_withdrawal">Customer withdrawl</option>
+                                                        <option value="customer_deposit">Customer Receivable</option>
+                                                        <option value="customer_withdrawal">Customer Payable</option>
                                                     </select>
 
                                                 </th>
@@ -897,7 +911,7 @@ function LedgerIndex(props) {
 
 
                                                         </td>
-                                                        <td style={{ minWidth: "155px", maxWidth: "155px" }} >{ledger.reference_model}</td>
+                                                        <td style={{ minWidth: "155px", maxWidth: "155px" }} >{toTitleCaseFromUnderscore(ledger.reference_model)}</td>
                                                         <td style={{ minWidth: "120px", maxWidth: "120px" }}>{ledger.reference_code}</td>
 
 

@@ -1,8 +1,6 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo, useEffect } from "react";
 import { Modal, Button } from 'react-bootstrap';
 import BalanceSheetPrintPreviewContent from './printPreviewContent.js';
-
-import { useReactToPrint } from 'react-to-print';
 import { format } from "date-fns";
 import html2pdf from 'html2pdf.js';
 
@@ -67,7 +65,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 }
                 */
 
-                let pageSize = 15;
+                let pageSize = 17;
                 if (whatsAppShare) {
                     pageSize = 17;
                 }
@@ -127,9 +125,10 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                     }
 
                     if (whatsAppShare) {
-                        top += 15;
+                        top += 10;
                     } else {
-                        top += 1057;
+                        // top += 1057;
+                        top += 10;
                     }
 
 
@@ -320,10 +319,64 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
         return filename;
     }, [model])
 
+    /*
     const handlePrint = useReactToPrint({
         content: () => printAreaRef.current,
         documentTitle: getFileName() + ".pdf",
-    });
+    });*/
+
+
+    const handlePrint = useCallback(() => {
+        const element = printAreaRef.current;
+        if (!element) return;
+
+        html2pdf().from(element).set({
+            margin: 0,
+            filename: `${getFileName()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).outputPdf('bloburl').then(blobUrl => {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = blobUrl;
+            document.body.appendChild(iframe);
+
+            iframe.onload = () => {
+                iframe.contentWindow?.focus();
+                iframe.contentWindow?.print();
+            };
+        });
+    }, [getFileName]);
+    /*
+const handlePrint = useCallback(async () => {
+    const element = printAreaRef.current;
+    if (!element) return;
+
+    const opt = {
+        margin: 0,
+        filename: `${getFileName()}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+
+    // Create a blob URL
+    const blobUrl = URL.createObjectURL(pdfBlob);
+
+    // Open the PDF in a new window or iframe and trigger print
+    const printWindow = window.open(blobUrl);
+    if (printWindow) {
+        printWindow.onload = function () {
+            printWindow.focus();
+            printWindow.print();
+        };
+    } else {
+        alert("Popup blocked! Please allow popups for this website.");
+    }
+}, [getFileName]);*/
 
 
     const formatPhoneForWhatsApp = useCallback((number) => {

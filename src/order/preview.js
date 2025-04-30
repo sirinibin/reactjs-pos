@@ -620,6 +620,30 @@ const Preview = forwardRef((props, ref) => {
         return filename;
     }, [model, modelName])
 
+    const handlePrint = useCallback(() => {
+        const element = printAreaRef.current;
+        if (!element) return;
+
+        html2pdf().from(element).set({
+            margin: 0,
+            filename: `${getFileName()}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        }).outputPdf('bloburl').then(blobUrl => {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = blobUrl;
+            document.body.appendChild(iframe);
+
+            iframe.onload = () => {
+                iframe.contentWindow?.focus();
+                iframe.contentWindow?.print();
+            };
+        });
+    }, [getFileName]);
+
+    /*
     const handlePrint = useCallback(async () => {
         const element = printAreaRef.current;
         if (!element) return;
@@ -647,7 +671,7 @@ const Preview = forwardRef((props, ref) => {
         } else {
             alert("Popup blocked! Please allow popups for this website.");
         }
-    }, [getFileName]);
+    }, [getFileName]);*/
     /*
     const handlePrint = useReactToPrint({
         content: () => printAreaRef.current,
