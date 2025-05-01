@@ -3037,6 +3037,11 @@ function findDiscount() {
                                         </tr>
                                     </tbody>
                                 </table>
+                                {errors["customer_credit_limit"] && (
+                                    <div style={{ color: "red" }}>
+                                        {errors["customer_credit_limit"]}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
