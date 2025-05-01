@@ -130,14 +130,14 @@ const PreviewContent = forwardRef((props, ref) => {
                         props.selectText("invoiceDetails");
                     }}>
                         <div className="col-md-12" style={{ border: detailsBorderThickness, marginLeft: "0px", width: `${(props.model.store?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
-                            {props.model.invoice_count_value && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                            {/*props.model.invoice_count_value && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
                                 <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Invoice Count Value | عد الفاتورة (ICV):</div>
                                 <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >  {props.model.invoice_count_value ? props.model.invoice_count_value : ""}</div>
-                            </div> : ""}
-                            {props.model.uuid && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                            </div> : ""*/}
+                            {/*props.model.uuid && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
                                 <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >UUID | معرف فريد:</div>
                                 <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.uuid ? props.model.uuid : ""}</div>
-                            </div> : ""}
+                            </div> : ""*/}
                             {props.modelName === "quotation" && props.model.type !== "invoice" && <>
                                 <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
                                     <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Quotation No. | رقم الاقتباس: </div>
@@ -199,6 +199,14 @@ const PreviewContent = forwardRef((props, ref) => {
                                 </div>
 
                                 <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Customer ID | معرف العميل:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                        {props.model.customer?.code ? props.model.customer.code : "N/A"}
+
+                                    </div>
+                                </div>
+
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
                                     <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >   Customer VAT  | ضريبة القيمة المضافة للعملاء:</div>
                                     <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                         {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
@@ -255,6 +263,14 @@ const PreviewContent = forwardRef((props, ref) => {
                                         {props.model.vendor ? props.model.vendor.name : ""}
                                         {!props.model.vendor && props.model.vendorName ? props.model.vendorName : ""}
                                         {!props.model.vendorName && !props.model.vendor ? "N/A" : ""}
+                                    </div>
+                                </div>
+
+                                <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                    <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Vendor ID | معرف البائع:</div>
+                                    <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                        {props.model.vendor?.code ? props.model.vendor.code : "N/A"}
+
                                     </div>
                                 </div>
 

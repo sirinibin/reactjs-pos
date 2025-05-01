@@ -44,6 +44,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
 
     let detailsLabelsColumnWidthPercent = "25%";
     let detailsValuesColumnWidthPercent = "75%";
+    let detailsBorderThickness = "solid 0.2px";
 
     return (<><span ref={ref}>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
@@ -120,9 +121,9 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         </div>
 
                         {props.modelName === "customer_deposit" || props.modelName === "customer_withdrawal" ? <>
-                            <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Customer Name | اسم العميل:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Customer Name | اسم العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.customer ? props.model.customer.name : ""}
                                     {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
                                     {!props.model.customerName && !props.model.customer ? "N/A" : ""}
@@ -130,9 +131,17 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </div>
 
-                            <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: detailsLabelsColumnWidthPercent, padding: "3px" }} >   Customer VAT  | ضريبة القيمة المضافة للعملاء:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Customer ID | معرف العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.customer?.code ? props.model.customer.code : "N/A"}
+
+                                </div>
+                            </div>
+
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >   Customer VAT  | ضريبة القيمة المضافة للعملاء:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
                                     {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
                                     {!props.model.customer && !props.model.vat_no ? "N/A" : ""}
@@ -141,16 +150,16 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </div>
 
-                            <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer C.R | رقم تسجيل شركة العميل:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer C.R | رقم تسجيل شركة العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.customer?.registration_number ? props.model.customer.registration_number + " | " + convertToArabicNumber(props.model.customer.registration_number) : "N/A"}
                                 </div>
                             </div>
 
-                            <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer Address | عنوان العميل:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer Address | عنوان العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.address && !props.model.customer ? props.model.address : ""}
 
                                     {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
@@ -180,89 +189,6 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         </> : ""}
                     </div>
                 </div>
-
-
-
-                {/*<div className="row table-active" style={{ fontSize: "3.5mm", border: "solid 0px" }}>
-                    <div className="col-md-5" style={{ border: "solid 0px", width: "79%" }}>
-                        <div className="container" style={{ border: "solid 0px", paddingLeft: "0px", fontSize: "2.2mm" }}>
-                            <div className="row">
-                                <div className="col-7 text-start fw-bold" dir="ltr">Receipt No. | رقم الإيصال:</div>
-                                <div className="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
-                                    {props.model.code ? props.model.code : ""}
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-7 text-start fw-bold" dir="ltr">Receipt Date | تاريخ الاستلام:</div>
-                                <div className="col-6 fw-bold" style={{ marginLeft: "-72px" }} dir="ltr">
-                                    <span dir="ltr"> {props.model.date ? format(
-                                        new Date(props.model.date),
-                                        "yyyy-MM-dd h:mma"
-                                    ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-7 text-start fw-bold" dir="ltr">Customer Name | اسم العميل:</div>
-                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
-                                    {props.model.customer ? props.model.customer.name : ""}
-                                    {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
-                                    {!props.model.customerName && !props.model.customer ? "N/A" : ""}
-                                    {props.model.customer?.name_in_arabic ? " | " + props.model.customer.name_in_arabic : ""}
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-7 text-start fw-bold" dir="ltr">Customer ID | معرف العميل:</div>
-                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
-                                    {props.model.customer?.code ? props.model.customer.code : ""}
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-7 text-start fw-bold" >Customer VAT | ضريبة القيمة المضافة للعملاء:</div>
-                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
-                                    <span dir="ltr">
-                                        {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
-                                        {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
-                                        {!props.model.customer && !props.model.vat_no ? "N/A" : ""}
-                                        {props.model.customer?.vat_no_in_arabic ? " | " + props.model.customer.vat_no_in_arabic : ""}
-                                        {!props.model.customer && props.model.vat_no ? " | " + convertToArabicNumber(props.model.vat_no) : ""}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-7 text-start fw-bold" >Customer C.R | رقم تسجيل شركة العميل</div>
-                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
-                                    <span dir="ltr">
-                                        {props.model.customer?.registration_number ? props.model.customer.registration_number + " | " + convertToArabicNumber(props.model.customer.registration_number) : "N/A"}
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="row">
-                                <div className="col-7 text-start fw-bold" dir="ltr" >Customer Address | عنوان العميل:</div>
-                                <div className="col-6 fw-bold" dir="ltr" style={{ marginLeft: "-72px" }}>
-
-                                    <span dir="ltr">
-                                        {props.model.address && !props.model.customer ? props.model.address : ""}
-                                        {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
-                                        {props.model.customer?.national_address?.building_no ? `${props.model.customer.national_address.building_no}` : ""}
-                                        {props.model.customer?.national_address?.street_name ? ` ${props.model.customer.national_address.street_name}` : ""}
-                                        {props.model.customer?.national_address?.district_name ? ` - ${props.model.customer.national_address.district_name}` : ""}
-                                        {props.model.customer?.national_address?.unit_no ? `, Unit #${props.model.customer.national_address.unit_no}` : ""}
-                                        {props.model.customer?.national_address?.city_name ? `, ${props.model.customer.national_address.city_name}` : ""}
-                                        {props.model.customer?.national_address?.zipcode ? ` - ${props.model.customer.national_address.zipcode}` : ""}
-                                        {props.model.customer?.national_address?.additional_no ? ` - ${props.model.customer.national_address.additional_no}` : ""}
-                                        {props.model.customer?.country_name ? `, ${props.model.customer.country_name}` : ""}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div className="col-md-2 text-center" style={{ border: "solid 0px", width: "21%", padding: "0px" }}>
-
-                    </div>
-                </div>*/}
                 <div className="row" style={{ fontSize: "2.2mm" }}>
                     <div className="col text-start">
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}

@@ -142,12 +142,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 {props.model.number ? props.model.number : ""}
                             </div>
                         </div>
-                        {props.model.phone && <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
-                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Phone | هاتف:</div>
-                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
-                                {props.model.phone}
-                            </div>
-                        </div>}
+
                         {props.model.dateValue && <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
                             <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Date: | تاريخ:</div>
                             <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
@@ -185,6 +180,13 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                     {props.model.customer ? props.model.customer.name : ""}
                                     {!props.model.customer ? "N/A" : ""}
                                     {props.model.customer?.name_in_arabic ? " | " + props.model.customer.name_in_arabic : ""}
+                                </div>
+                            </div>
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Customer ID | معرف العميل:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.customer?.code ? props.model.customer.code : "N/A"}
+
                                 </div>
                             </div>
 
@@ -245,6 +247,13 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.vendor ? props.model.vendor.name : ""}
                                     {!props.model.vendor ? "N/A" : ""}
+                                </div>
+                            </div>
+                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
+                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Vendor ID | معرف البائع:</div>
+                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                                    {props.model.vendor?.code ? props.model.vendor.code : "N/A"}
+
                                 </div>
                             </div>
 
