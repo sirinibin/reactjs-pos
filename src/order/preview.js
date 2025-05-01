@@ -37,6 +37,16 @@ const Preview = forwardRef((props, ref) => {
             }
         }
 
+        var isSimplified = true;
+
+        if (model.modelName === "sales" || model.modelName === "sales_return") {
+            if (model.customer?.vat_no) {
+                isSimplified = false;
+            } else {
+                isSimplified = true;
+            }
+        }
+
         if (model.modelName === "sales") {
             if (model.store?.zatca?.phase === "1") {
                 if (model.payment_status !== "not_paid") {
@@ -48,7 +58,7 @@ const Preview = forwardRef((props, ref) => {
                     model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
                 }
             } else if (model.store?.zatca?.phase === "2") {
-                if (model.zatca?.is_simplified) {
+                if (isSimplified) {
                     if (model.payment_status === "not_paid") {
                         model.invoiceTitle = "SIMPLIFIED CREDIT TAX INVOICE | فاتورة ضريبة الائتمان المبسطة";
                     } else {
@@ -57,8 +67,7 @@ const Preview = forwardRef((props, ref) => {
                             model.invoiceTitle = "SIMPLIFIED CASH TAX INVOICE | فاتورة ضريبية نقدية مبسطة";
                         }
                     }
-
-                } else if (!model.zatca?.is_simplified) {
+                } else {
                     if (model.payment_status === "not_paid") {
                         model.invoiceTitle = "STANDARD CREDIT TAX INVOICE | فاتورة ضريبة الائتمان القياسية";
                     } else {
@@ -76,12 +85,12 @@ const Preview = forwardRef((props, ref) => {
                     model.invoiceTitle = "SALES RETURN CASH TAX INVOICE | إقرار مبيعات فاتورة ضريبية نقدية";
                 }
             } else if (model.store?.zatca?.phase === "2") {
-                if (model.zatca?.is_simplified) {
+                if (isSimplified) {
                     model.invoiceTitle = "SIMPLIFIED CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي مبسط لإقرار إقرار ائتماني";
                     if (IsCashOnly) {
                         model.invoiceTitle = "SIMPLIFIED CREDIT NOTE CASH RETURN TAX INVOICE | مذكرة ائتمان مبسطة، إقرار نقدي، فاتورة ضريبية";
                     }
-                } else if (!model.zatca?.is_simplified) {
+                } else {
                     model.invoiceTitle = "STANDARD CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي قياسي لإرجاع فاتورة الائتمان";
                     if (IsCashOnly) {
                         model.invoiceTitle = "STANDARD CREDIT NOTE CASH RETURN TAX INVOICE | سند ائتمان قياسي، إقرار نقدي، فاتورة ضريبية";
@@ -97,7 +106,6 @@ const Preview = forwardRef((props, ref) => {
                     model.invoiceTitle = "CASH PURCHASE TAX INVOICE | فاتورة ضريبة الشراء النقدي";
                 }
             }
-
         } else if (model.modelName === "purchase_return") {
             if (model.payment_status === "not_paid") {
                 model.invoiceTitle = "CREDIT PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء بالائتمان";
@@ -159,16 +167,15 @@ const Preview = forwardRef((props, ref) => {
                     await getStore(model.store_id);
                 }
 
-                setInvoiceTitle(modelName);
-
-
                 if (model.customer_id) {
-                    getCustomer(model.customer_id);
+                    await getCustomer(model.customer_id);
                 }
 
                 if (model.vendor_id) {
-                    getVendor(model.vendor_id);
+                    await getVendor(model.vendor_id);
                 }
+
+                setInvoiceTitle(modelName);
 
                 if (model.delivered_by) {
                     getUser(model.delivered_by);
@@ -439,7 +446,7 @@ const Preview = forwardRef((props, ref) => {
 
 
 
-    function getCustomer(id) {
+    async function getCustomer(id) {
         console.log("inside get Customer");
         const requestOptions = {
             method: 'GET',
@@ -455,7 +462,7 @@ const Preview = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
-        fetch('/v1/customer/' + id + "?" + queryParams, requestOptions)
+        await fetch('/v1/customer/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -477,7 +484,7 @@ const Preview = forwardRef((props, ref) => {
             });
     }
 
-    function getVendor(id) {
+    async function getVendor(id) {
         console.log("inside get Customer");
         const requestOptions = {
             method: 'GET',
@@ -493,7 +500,7 @@ const Preview = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
-        fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
+        await fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
