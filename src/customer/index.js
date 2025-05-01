@@ -1582,6 +1582,7 @@ function CustomerIndex(props) {
                                                             {customer.account && <Button variant="link" onClick={() => {
                                                                 openBalanceSheetDialogue(customer.account);
                                                             }}>
+                                                                {customer.account?.type && customer.account?.type === "liability" ? "-" : ""}
                                                                 <Amount amount={trimTo2Decimals(customer.credit_balance)} />
 
                                                             </Button>}

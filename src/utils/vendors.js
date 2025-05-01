@@ -1339,6 +1339,7 @@ const Vendors = forwardRef((props, ref) => {
                                                                         {vendor.account && <Button variant="link" onClick={() => {
                                                                             openBalanceSheetDialogue(vendor.account);
                                                                         }}>
+                                                                            {vendor.account?.type && vendor.account?.type === "liability" ? "-" : ""}
                                                                             <Amount amount={trimTo2Decimals(vendor.credit_balance)} />
 
                                                                         </Button>}

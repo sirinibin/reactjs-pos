@@ -1949,6 +1949,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 suffix={" "}
                                                 renderText={(value, props) => value}
                                             />
+                                            {errors["net_total"] && (
+                                                <div style={{ color: "red" }}>
+                                                    {errors["net_total"]}
+                                                </div>
+                                            )}
                                         </th>
                                     </tr>
                                 </tbody>

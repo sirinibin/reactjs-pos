@@ -621,7 +621,7 @@ const VendorCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-2">
                             <label className="form-label">Credit balance</label>
-                            <input type='number' disabled={true} value={formData.credit_balance} className="form-control "
+                            <input type='string' disabled={true} value={formData?.account?.type === "liability" ? "-" + formData.credit_balance : formData.credit_balance ? formData.credit_balance : ""} className="form-control "
                                 onChange={(e) => {
 
                                 }}
