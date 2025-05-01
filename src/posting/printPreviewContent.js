@@ -62,8 +62,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
         return newStr;
     }
 
-    let detailsLabelsColumnWidthPercent = "25%";
-    let detailsValuesColumnWidthPercent = "75%";
+    let detailsLabelsColumnWidthPercent = "30%";
+    let detailsValuesColumnWidthPercent = "70%";
     let detailsBorderThickness = "solid 0.2px";
 
     return (<>
@@ -502,6 +502,17 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                 <tfoot style={{ fontSize: "3mm", }}>
                                     {props.model.pages.length === (pageIndex + 1) && props.model && (props.model.debitBalance > 0 || props.model.creditBalance > 0) ? <tr>
                                         <td></td>
+
+                                        <td colSpan={2} style={{ textAlign: "right", color: "red" }}><b>
+                                            {props.model.creditBalance > 0 ? "By balance c/d " : ""}
+                                            <NumberFormat
+                                                value={props.model.creditBalance > 0 ? props.model.creditBalance?.toFixed(2) : ""}
+                                                displayType={"text"}
+                                                thousandSeparator={true}
+                                                suffix={""}
+                                                renderText={(value, props) => value}
+                                            />
+                                        </b></td>
                                         <td colSpan={2} style={{ textAlign: "right", color: "red" }}><b>
 
                                             {props.model.debitBalance > 0 ? "To balance c/d " : ""}
@@ -513,16 +524,6 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 renderText={(value, props) => value}
                                             />
 
-                                        </b></td>
-                                        <td colSpan={2} style={{ textAlign: "right", color: "red" }}><b>
-                                            {props.model.creditBalance > 0 ? "By balance c/d " : ""}
-                                            <NumberFormat
-                                                value={props.model.creditBalance > 0 ? props.model.creditBalance?.toFixed(2) : ""}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                suffix={""}
-                                                renderText={(value, props) => value}
-                                            />
                                         </b></td>
                                         <td colSpan={2}></td>
                                     </tr> : ""}

@@ -37,8 +37,8 @@ const PreviewContent = forwardRef((props, ref) => {
         return event.toLocaleDateString('ar-EG', options)
     }
 
-    let detailsLabelsColumnWidthPercent = "25%";
-    let detailsValuesColumnWidthPercent = "75%";
+    let detailsLabelsColumnWidthPercent = "30%";
+    let detailsValuesColumnWidthPercent = "70%";
     let detailsBorderThickness = "solid 0.2px";
 
     return (<>
@@ -567,7 +567,14 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 </span>
                                             </td>
                                         </tr>
-
+                                    </tbody>}
+                                </table>
+                                <table className="table no-bold table-bordered no-bold"
+                                    style={{ borderRadius: "6px", marginTop: "-16px" }}
+                                >
+                                    {props.modelName !== "delivery_note" && <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
+                                        props.selectText("tableFooter");
+                                    }} className="fw-bold clickable-text">
                                         <tr>
 
                                             <th colSpan="2" className="text-end" style={{ padding: "2px" }}>

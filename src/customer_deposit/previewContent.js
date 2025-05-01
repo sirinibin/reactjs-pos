@@ -42,8 +42,8 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
         return event.toLocaleDateString('ar-EG', options)
     }
 
-    let detailsLabelsColumnWidthPercent = "25%";
-    let detailsValuesColumnWidthPercent = "75%";
+    let detailsLabelsColumnWidthPercent = "30%";
+    let detailsValuesColumnWidthPercent = "70%";
     let detailsBorderThickness = "solid 0.2px";
 
     return (<><span ref={ref}>

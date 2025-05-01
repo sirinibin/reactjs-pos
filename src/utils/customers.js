@@ -9,6 +9,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "./OverflowTooltip.js";
+import Amount from "../utils/amount.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
+import PostingIndex from "./../posting/index.js";
 
 const Customers = forwardRef((props, ref) => {
     const [show, SetShow] = useState(false);
@@ -195,7 +198,7 @@ const Customers = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,name,email,phone,name_in_arabic,phone_in_arabic,vat_no,created_by_name,created_at,stores";
+            "select=id,code,name,credit_balance,account,email,phone,name_in_arabic,phone_in_arabic,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -336,8 +339,14 @@ const Customers = forwardRef((props, ref) => {
     }
 
 
+    const AccountBalanceSheetRef = useRef();
+    function openBalanceSheetDialogue(account) {
+        AccountBalanceSheetRef.current.open(account);
+    }
+
     return (
         <>
+            <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>Select customer</Modal.Title>
@@ -573,6 +582,25 @@ const Customers = forwardRef((props, ref) => {
                                                                         <i className="bi bi-sort-alpha-up-alt"></i>
                                                                     ) : null}
                                                                     {sortField === "name" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("credit_balance");
+                                                                    }}
+                                                                >
+                                                                    Credit balance
+                                                                    {sortField === "credit_balance" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "credit_balance" && sortCustomer === "" ? (
                                                                         <i className="bi bi-sort-alpha-up"></i>
                                                                     ) : null}
                                                                 </b>
@@ -1161,6 +1189,15 @@ const Customers = forwardRef((props, ref) => {
                                                             <th>
                                                                 <input
                                                                     type="text"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("credit_balance", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
                                                                     id="email"
                                                                     onChange={(e) =>
                                                                         searchByFieldValue("email", e.target.value)
@@ -1483,6 +1520,15 @@ const Customers = forwardRef((props, ref) => {
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.vat_no}</td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                                         <OverflowTooltip value={customer.name} />
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.account && <Button variant="link" onClick={() => {
+                                                                            openBalanceSheetDialogue(customer.account);
+                                                                        }}>
+                                                                            <Amount amount={trimTo2Decimals(customer.credit_balance)} />
+
+                                                                        </Button>}
+                                                                        {!customer.account && <Amount amount={trimTo2Decimals(customer.credit_balance)} />}
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.email}</td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >

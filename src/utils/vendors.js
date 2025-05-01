@@ -8,6 +8,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner, Modal } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import PostingIndex from "./../posting/index.js";
+import Amount from "../utils/amount.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 const Vendors = forwardRef((props, ref) => {
     const [show, SetShow] = useState(false);
@@ -166,6 +169,8 @@ const Vendors = forwardRef((props, ref) => {
     function searchByMultipleValuesField(field, values) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
+        } else if (field === "vendor_id") {
+            setSelectedVendors(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -189,7 +194,7 @@ const Vendors = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,name,name_in_arabic,phone,phone_in_arabic,vat_no,created_by_name,created_at,stores";
+            "select=id,code,name,credit_balance,account,name_in_arabic,phone,phone_in_arabic,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -295,10 +300,48 @@ const Vendors = forwardRef((props, ref) => {
         handleClose();
     };
 
+    const [vendorOptions, setVendorOptions] = useState([]);
+    const [selectedVendors, setSelectedVendors] = useState([]);
+    async function suggestVendors(searchTerm) {
+        console.log("Inside handle suggestVendors");
+
+        var params = {
+            query: searchTerm,
+        };
+
+        if (localStorage.getItem("store_id")) {
+            params.store_id = localStorage.getItem("store_id");
+        }
+
+        var queryString = ObjectToSearchQueryParams(params);
+        if (queryString !== "") {
+            queryString = `&${queryString}`;
+        }
+
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
+        let data = await result.json();
+
+        setVendorOptions(data.result);
+    }
+
+    const AccountBalanceSheetRef = useRef();
+    function openBalanceSheetDialogue(account) {
+        AccountBalanceSheetRef.current.open(account);
+    }
 
 
     return (
         <>
+            <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>Select vendor</Modal.Title>
@@ -536,6 +579,25 @@ const Vendors = forwardRef((props, ref) => {
                                                                         <i className="bi bi-sort-alpha-up-alt"></i>
                                                                     ) : null}
                                                                     {sortField === "name" && sortVendor === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("credit_balance");
+                                                                    }}
+                                                                >
+                                                                    Credit balance
+                                                                    {sortField === "credit_balance" && sortVendor === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "credit_balance" && sortVendor === "" ? (
                                                                         <i className="bi bi-sort-alpha-up"></i>
                                                                     ) : null}
                                                                 </b>
@@ -959,11 +1021,31 @@ const Vendors = forwardRef((props, ref) => {
                                                                 />
                                                             </th>
                                                             <th>
+                                                                <Typeahead
+                                                                    style={{ minWidth: "300px" }}
+                                                                    id="vendor_id"
+                                                                    labelKey="search_label"
+                                                                    onChange={(selectedItems) => {
+                                                                        searchByMultipleValuesField(
+                                                                            "vendor_id",
+                                                                            selectedItems
+                                                                        );
+                                                                    }}
+                                                                    options={vendorOptions}
+                                                                    placeholder="Vendor Name / Mob / VAT # / ID"
+                                                                    selected={selectedVendors}
+                                                                    highlightOnlyResult={true}
+                                                                    onInputChange={(searchTerm, e) => {
+                                                                        suggestVendors(searchTerm);
+                                                                    }}
+                                                                    multiple
+                                                                />
+                                                            </th>
+                                                            <th>
                                                                 <input
                                                                     type="text"
-                                                                    id="name"
                                                                     onChange={(e) =>
-                                                                        searchByFieldValue("name", e.target.value)
+                                                                        searchByFieldValue("credit_balance", e.target.value)
                                                                     }
                                                                     className="form-control"
                                                                 />
@@ -1252,6 +1334,15 @@ const Vendors = forwardRef((props, ref) => {
                                                                     <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
 
                                                                         <OverflowTooltip value={vendor.name} />
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {vendor.account && <Button variant="link" onClick={() => {
+                                                                            openBalanceSheetDialogue(vendor.account);
+                                                                        }}>
+                                                                            <Amount amount={trimTo2Decimals(vendor.credit_balance)} />
+
+                                                                        </Button>}
+                                                                        {!vendor.account && <Amount amount={trimTo2Decimals(vendor.credit_balance)} />}
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         {vendor.stores && Object.keys(vendor.stores).map((key, index) => {

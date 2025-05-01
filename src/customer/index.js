@@ -544,25 +544,6 @@ function CustomerIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("email");
-                                                        }}
-                                                    >
-                                                        Email
-                                                        {sortField === "email" && sortCustomer === "-" ? (
-                                                            <i className="bi bi-sort-alpha-up-alt"></i>
-                                                        ) : null}
-                                                        {sortField === "email" && sortCustomer === "" ? (
-                                                            <i className="bi bi-sort-alpha-up"></i>
-                                                        ) : null}
-                                                    </b>
-                                                </th>
-                                                <th>
-                                                    <b
-                                                        style={{
-                                                            textDecoration: "underline",
-                                                            cursor: "pointer",
-                                                        }}
-                                                        onClick={() => {
                                                             sort("credit_balance");
                                                         }}
                                                     >
@@ -575,6 +556,26 @@ function CustomerIndex(props) {
                                                         ) : null}
                                                     </b>
                                                 </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("email");
+                                                        }}
+                                                    >
+                                                        Email
+                                                        {sortField === "email" && sortCustomer === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "email" && sortCustomer === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+
 
                                                 <th>
                                                     <b
@@ -646,7 +647,7 @@ function CustomerIndex(props) {
                                                             sort("stores.sales_balance_amount");
                                                         }}
                                                     >
-                                                        Sales balance amount
+                                                        Sales Credit balance amount
                                                         {sortField === "stores.sales_balance_amount" && sortCustomer === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -826,7 +827,7 @@ function CustomerIndex(props) {
                                                             sort("stores.sales_return_balance_amount");
                                                         }}
                                                     >
-                                                        Sales return balance amount
+                                                        Sales return Credit balance amount
                                                         {sortField === "stores.sales_return_balance_amount" && sortCustomer === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
@@ -1215,9 +1216,8 @@ function CustomerIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="email"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("email", e.target.value)
+                                                            searchByFieldValue("credit_balance", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
@@ -1225,12 +1225,14 @@ function CustomerIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
+                                                        id="email"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("credit_balance", e.target.value)
+                                                            searchByFieldValue("email", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
+
                                                 <th>
                                                     <input
                                                         type="text"
@@ -1576,7 +1578,6 @@ function CustomerIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} className="text-start" >
                                                             <OverflowTooltip value={customer.name} />
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.email}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.account && <Button variant="link" onClick={() => {
                                                                 openBalanceSheetDialogue(customer.account);
@@ -1586,6 +1587,8 @@ function CustomerIndex(props) {
                                                             </Button>}
                                                             {!customer.account && <Amount amount={trimTo2Decimals(customer.credit_balance)} />}
                                                         </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customer.email}</td>
+
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {customer.stores && Object.keys(customer.stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {

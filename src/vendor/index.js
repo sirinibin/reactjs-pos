@@ -9,6 +9,9 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import PostingIndex from "./../posting/index.js";
+import Amount from "../utils/amount.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 function VendorIndex(props) {
 
@@ -170,7 +173,7 @@ function VendorIndex(props) {
             },
         };
         let Select =
-            "select=id,code,name,phone,vat_no,created_by_name,created_at,stores";
+            "select=id,code,name,credit_balance,account,phone,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -302,8 +305,14 @@ function VendorIndex(props) {
         setVendorOptions(data.result);
     }
 
+    const AccountBalanceSheetRef = useRef();
+    function openBalanceSheetDialogue(account) {
+        AccountBalanceSheetRef.current.open(account);
+    }
+
     return (
         <>
+            <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <VendorView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
 
@@ -524,6 +533,25 @@ function VendorIndex(props) {
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
                                                         {sortField === "name" && sortVendor === "" ? (
+                                                            <i className="bi bi-sort-alpha-up"></i>
+                                                        ) : null}
+                                                    </b>
+                                                </th>
+                                                <th>
+                                                    <b
+                                                        style={{
+                                                            textDecoration: "underline",
+                                                            cursor: "pointer",
+                                                        }}
+                                                        onClick={() => {
+                                                            sort("credit_balance");
+                                                        }}
+                                                    >
+                                                        Credit balance
+                                                        {sortField === "credit_balance" && sortVendor === "-" ? (
+                                                            <i className="bi bi-sort-alpha-up-alt"></i>
+                                                        ) : null}
+                                                        {sortField === "credit_balance" && sortVendor === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -970,6 +998,15 @@ function VendorIndex(props) {
                                                     <input
                                                         type="text"
                                                         onChange={(e) =>
+                                                            searchByFieldValue("credit_balance", e.target.value)
+                                                        }
+                                                        className="form-control"
+                                                    />
+                                                </th>
+                                                <th>
+                                                    <input
+                                                        type="text"
+                                                        onChange={(e) =>
                                                             searchByFieldValue("purchase_count", e.target.value)
                                                         }
                                                         className="form-control"
@@ -1243,6 +1280,15 @@ function VendorIndex(props) {
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
 
                                                             <OverflowTooltip value={vendor.name} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {vendor.account && <Button variant="link" onClick={() => {
+                                                                openBalanceSheetDialogue(vendor.account);
+                                                            }}>
+                                                                <Amount amount={trimTo2Decimals(vendor.credit_balance)} />
+
+                                                            </Button>}
+                                                            {!vendor.account && <Amount amount={trimTo2Decimals(vendor.credit_balance)} />}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {vendor.stores && Object.keys(vendor.stores).map((key, index) => {

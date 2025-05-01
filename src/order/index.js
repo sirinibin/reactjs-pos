@@ -1530,7 +1530,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             sort("balance_amount");
                                                         }}
                                                     >
-                                                        Balance
+                                                        Credit Balance
                                                         {sortField === "balance_amount" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-numeric-down"></i>
                                                         ) : null}
