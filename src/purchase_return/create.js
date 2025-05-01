@@ -1890,6 +1890,11 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {balanceAmount?.toFixed(2)}</b>
+                                                {errors["vendor_credit_limit"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["vendor_credit_limit"]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td colSpan={1}>
                                                 <b>Payment status: </b>
@@ -1909,6 +1914,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                         </tr>
                                     </tbody>
                                 </table>
+
                             </div>
                         </div>
 

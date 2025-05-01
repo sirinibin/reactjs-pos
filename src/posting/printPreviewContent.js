@@ -62,8 +62,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
         return newStr;
     }
 
-    let detailsLabelsColumnWidthPercent = "30%";
-    let detailsValuesColumnWidthPercent = "70%";
+    let detailsLabelsColumnWidthPercent = "24.62%";
+    let detailsValuesColumnWidthPercent = "75.38%";
     let detailsBorderThickness = "solid 0.2px";
 
     return (<>

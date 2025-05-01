@@ -2498,10 +2498,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 <b>Total</b>
                                             </td>
                                             <td><b style={{ marginLeft: "14px" }}>{totalPaymentAmount?.toFixed(2)}</b>
-
+                                                {errors["total_payment"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["total_payment"]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td>
                                                 <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {balanceAmount?.toFixed(2)}</b>
+                                                {errors["vendor_credit_limit"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["vendor_credit_limit"]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td colSpan={1}>
                                                 <b>Payment status: </b>
@@ -2521,6 +2530,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         </tr>
                                     </tbody>
                                 </table>
+
                             </div>
                         </div>
 

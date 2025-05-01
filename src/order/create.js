@@ -3014,10 +3014,19 @@ function findDiscount() {
                                                 <b>Total</b>
                                             </td>
                                             <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
-
+                                                {errors["total_payment"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["total_payment"]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td>
                                                 <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {trimTo2Decimals(balanceAmount)}</b>
+                                                {errors["customer_credit_limit"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["customer_credit_limit"]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td colSpan={1}>
                                                 <b>Payment status: </b>
@@ -3037,11 +3046,7 @@ function findDiscount() {
                                         </tr>
                                     </tbody>
                                 </table>
-                                {errors["customer_credit_limit"] && (
-                                    <div style={{ color: "red" }}>
-                                        {errors["customer_credit_limit"]}
-                                    </div>
-                                )}
+
                             </div>
                         </div>
 

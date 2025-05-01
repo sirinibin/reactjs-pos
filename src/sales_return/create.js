@@ -2130,6 +2130,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {trimTo2Decimals(balanceAmount)}</b>
+                                                {errors["customer_credit_limit"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["customer_credit_limit"]}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td colSpan={1}>
                                                 <b>Payment status: </b>
@@ -2149,11 +2154,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                         </tr>
                                     </tbody>
                                 </table>
-                                {errors["customer_credit_limit"] && (
-                                    <div style={{ color: "red" }}>
-                                        {errors["customer_credit_limit"]}
-                                    </div>
-                                )}
+
                             </div>
                         </div>
 
