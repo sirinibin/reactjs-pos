@@ -451,6 +451,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             return;
         }
 
+        formData.balance_amount = parseFloat(balanceAmount);
+
 
         let endPoint = "/v1/purchase-return";
         let method = "POST";

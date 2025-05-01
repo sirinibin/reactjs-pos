@@ -559,6 +559,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
         if (localStorage.getItem('store_id')) {
             formData.store_id = localStorage.getItem('store_id');
         }
+        formData.balance_amount = parseFloat(balanceAmount);
+
 
         let endPoint = "/v1/purchase";
         let method = "POST";

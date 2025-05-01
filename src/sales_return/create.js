@@ -643,6 +643,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
         formData.net_total = parseFloat(formData.net_total);
         formData.total_payment_paid = parseFloat(totalPaymentAmount);
+        formData.balance_amount = parseFloat(balanceAmount);
 
         if (order.payment_status === "not_paid") {
             formData.payments_input = [];
