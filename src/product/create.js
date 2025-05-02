@@ -14,8 +14,9 @@ import { Typeahead } from "react-bootstrap-typeahead";
 import StoreCreate from "../store/create.js";
 import ProductCategoryCreate from "../product_category/create.js";
 import ProductBrandCreate from "../product_brand/create.js";
-import Resizer from "react-image-file-resizer";
 import countryList from 'react-select-country-list';
+
+import ProductImageGallery from './../utils/ProductImageGallery.js';
 //import Select from 'react-select'
 
 const ProductCreate = forwardRef((props, ref) => {
@@ -83,22 +84,9 @@ const ProductCreate = forwardRef((props, ref) => {
     };
   }, []);
 
-  function resizeFIle(file, w, h, cb) {
-    Resizer.imageFileResizer(
-      file,
-      w,
-      h,
-      "JPEG",
-      100,
-      0,
-      (uri) => {
-        cb(uri);
-      },
-      "base64"
-    );
-  }
 
-  let [selectedImage, setSelectedImage] = useState("");
+
+
   let [productStores, setProductStores] = useState([]);
 
 
@@ -115,6 +103,7 @@ const ProductCreate = forwardRef((props, ref) => {
     images_content: [],
     unit: "",
     item_code: "",
+    images: [],
   });
 
   const [show, SetShow] = useState(false);
@@ -246,6 +235,14 @@ const ProductCreate = forwardRef((props, ref) => {
 
         formData = data.result;
         formData.name = data.result.name;
+        if (data.result.images) {
+          formData.images = data.result.images;
+        } else {
+          formData.images = [];
+        }
+
+
+
         if (!formData.unit) {
           formData.unit = "";
         }
@@ -538,19 +535,7 @@ const ProductCreate = forwardRef((props, ref) => {
   }
 
 
-  function getTargetDimension(
-    originaleWidth,
-    originalHeight,
-    targetWidth,
-    targetHeight
-  ) {
-    let ratio = parseFloat(originaleWidth / originalHeight);
 
-    targetWidth = parseInt(targetHeight * ratio);
-    targetHeight = parseInt(targetWidth * ratio);
-
-    return { targetWidth: targetWidth, targetHeight: targetHeight };
-  }
 
   /*
     const DetailsViewRef = useRef();
@@ -1312,8 +1297,12 @@ const ProductCreate = forwardRef((props, ref) => {
                 multiple
               />
             </div>
+            {formData.id && <div className="col-md-12">
+              <label className="form-label">Product photos</label>
+              <ProductImageGallery productID={formData.id} storeID={formData.store_id} storedImages={formData.images} />
+            </div>}
 
-            <div className="col-md-6">
+            {/*<div className="col-md-6">
               <label className="form-label">Image</label>
 
               <div className="input-group mb-3">
@@ -1368,17 +1357,7 @@ const ProductCreate = forwardRef((props, ref) => {
                     };
                     img.src = url;
 
-                    /*
-                                        resizeFIle(file, (result) => {
-                                            if (!formData.images_content) {
-                                                formData.images_content = [];
-                                            }
-                                            formData.images_content[0] = result;
-                                            setFormData({ ...formData });
-     
-                                            console.log("formData.images_content[0]:", formData.images_content[0]);
-                                        });
-                                        */
+
                   }}
                   className="form-control"
                 />
@@ -1389,7 +1368,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 )}
 
               </div>
-            </div>
+            </div>*/}
 
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>

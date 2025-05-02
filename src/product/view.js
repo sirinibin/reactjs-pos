@@ -18,6 +18,8 @@ import QuotationHistory from "./quotation_history.js";
 import DeliveryNoteHistory from "./delivery_note_history.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 
+import ProductImageGallery from './../utils/ProductImageGallery.js';
+
 const ProductView = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
@@ -511,27 +513,12 @@ const ProductView = forwardRef((props, ref) => {
                     */}
                     </table>
                 </div>
-                <h4>Images</h4>
-                <div className="table-responsive" style={{ overflowX: "auto" }}>
-                    <table className="table table-striped table-sm table-bordered">
-                        <thead>
-                            <tr className="text-center">
-                                <th>SI No.</th>
-                                <th>Image</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {model.images && model.images.map((image, index) => (
-                                <tr key={index} className="text-center">
-                                    <td>{index + 1}</td>
-                                    <td>
-                                        <img alt="Product" src={image + "?" + (Date.now())} key={image} style={{ width: 300, height: 300 }} />
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                {model.id && <div className="col-md-12">
+                    <label className="form-label">Product photos</label>
+                    <ProductImageGallery productID={model.id} storeID={model.store_id} storedImages={model.images} />
+                </div>}
+
+
             </Modal.Body>
             {/*
                 <Modal.Footer>
