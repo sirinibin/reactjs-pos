@@ -9,17 +9,20 @@ const ProductImageGallery = ({ productID, storeID, storedImages }) => {
 
     useEffect(() => {
         console.log("storedImages:", storedImages);
-        const formatted = storedImages.map(url => ({
-            serverUrl: url,       // used to track the saved image
-            preview: url,         // full image URL
-            uploaded: true        // mark as already uploaded
+
+        const formatted = (storedImages || []).map(url => ({
+            serverUrl: url,
+            preview: url,
+            status: 'uploaded'
         }));
         console.log("formatted:", formatted);
         setImages(formatted);
     }, [storedImages]);
 
     const handleImageChange = async (e) => {
-        const files = Array.from(e.target.files);
+        const files = Array.from(e.target.files || []);
+        if (!files.length) return;
+
         const compressedFiles = await Promise.all(files.map(async (file) => {
             const compressedFile = await imageCompression(file, {
                 maxSizeMB: 0.3,
@@ -103,7 +106,7 @@ const ProductImageGallery = ({ productID, storeID, storedImages }) => {
             />
 
             <div className="row">
-                {images.map((img, index) => (
+                {images?.map((img, index) => (
                     <div className="col-6 col-sm-4 col-md-3 mb-3" key={index}>
                         <div className="position-relative border rounded p-1" style={{ cursor: 'pointer' }} onClick={() => setModalIndex(index)}>
                             <img
