@@ -604,14 +604,14 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
         setShowSlider(true);
     };
 
-    const saveToLocalStorage = (key, obj) => {
+    const saveToLocalStorage = useCallback((key, obj) => {
         localStorage.setItem(key, JSON.stringify(obj));
-    };
+    }, []);
 
-    const getFromLocalStorage = (key) => {
+    const getFromLocalStorage = useCallback((key) => {
         const stored = localStorage.getItem(key);
         return stored ? JSON.parse(stored) : null;
-    };
+    }, []);
 
 
     let [fontSizes, setFontSizes] = useState(defaultFontSizes);
@@ -634,9 +634,10 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
         }
 
         setFontSizes({ ...storedFontSizes });
+        saveToLocalStorage("fontSizes", storedFontSizes);
 
 
-    }, [setFontSizes, modelName, defaultFontSizes]);
+    }, [setFontSizes, modelName, defaultFontSizes, saveToLocalStorage, getFromLocalStorage]);
 
 
     const increment = () => {
