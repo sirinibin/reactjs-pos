@@ -1786,6 +1786,8 @@ function findDiscount() {
                                         errors.customer_id = "";
                                         //setErrors(errors);
                                         formData.customer_id = "";
+                                        formData.customer_name = "";
+                                        formData.customerName = "";
                                         setFormData({ ...formData });
                                         setSelectedCustomers([]);
                                         return;
