@@ -674,7 +674,6 @@ const handlePrint = useCallback(async () => {
             if (!fontSizes[element]) {
                 fontSizes[element] = defaultFontSizes[element];
             }
-
             fontSizes[element].value -= fontSizes[element].step;
             fontSizes[element].value = parseFloat(Math.min(fontSizes[element].value).toFixed(2));
             fontSizes[element].size = fontSizes[element].value + fontSizes[element].unit;

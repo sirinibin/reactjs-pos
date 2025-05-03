@@ -28,11 +28,9 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
   useImperativeHandle(ref, () => ({
-    open(id, linkToProductID) {
+    async open(id, linkToProductID) {
       selectedCategories = [];
       setSelectedCategories(selectedCategories);
-
-
 
       formData = {
         images_content: [],
@@ -44,7 +42,8 @@ const ProductCreate = forwardRef((props, ref) => {
         formData["link_to_product_id"] = linkToProductID
       }
       setFormData(formData);
-      getAllStores();
+      // await getAllStores();
+      await getStore(localStorage.getItem("store_id"));
 
       if (id) {
         getProduct(id);
@@ -54,9 +53,61 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
 
+
+
       SetShow(true);
     },
   }));
+
+
+  let [store, setStore] = useState({});
+
+  async function getStore(id) {
+    console.log("inside get Store");
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('access_token'),
+      },
+    };
+
+    await fetch('/v1/store/' + id, requestOptions)
+      .then(async response => {
+        const isJson = response.headers.get('content-type')?.includes('application/json');
+        const data = isJson && await response.json();
+
+        // check for error response
+        if (!response.ok) {
+          const error = (data && data.errors);
+          return Promise.reject(error);
+        }
+
+        console.log("Response:");
+        console.log(data);
+        store = data.result;
+        setStore(store);
+
+        //stores = data.result;
+        //setStores(data.result);
+        productStores = {};
+        productStores[store.id] = {
+          store_id: store.id,
+          store_name: store.name,
+          purchase_unit_price: 0.00,
+          retail_unit_price: 0.00,
+          wholesale_unit_price: 0.00,
+          stock: 0.00,
+          with_vat: store.default_unit_price_is_with_vat,
+        };
+
+        setProductStores({ ...productStores });
+      })
+      .catch(error => {
+
+      });
+  }
+
 
   useEffect(() => {
     const listener = (event) => {
@@ -87,7 +138,7 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
 
-  let [productStores, setProductStores] = useState([]);
+  let [productStores, setProductStores] = useState({});
 
 
   let [selectedCategories, setSelectedCategories] = useState([]);
@@ -188,48 +239,30 @@ const ProductCreate = forwardRef((props, ref) => {
 
         if (data.result.product_stores) {
           console.log("data.result.product_stores-ok:", data.result.product_stores);
+          productStores[localStorage.getItem('store_id')] = data.result.product_stores[localStorage.getItem('store_id')];
+          setProductStores({ ...productStores });
+          console.log("productStores-ok:", productStores);
+
           // productStores.push(data.result.stores);
 
-          let i = 0;
+          //let i = 0;
+          /*
           for (const key in data.result.product_stores) {
             console.log("key: ", key);
             if (productStores[i].store_id === data.result.product_stores[key].store_id) {
+              selectedStoreIndex = i;
+              setSelectedStoreIndex(i);
               productStores[i].purchase_unit_price = data.result.product_stores[key].purchase_unit_price;
               productStores[i].wholesale_unit_price = data.result.product_stores[key].wholesale_unit_price;
               productStores[i].retail_unit_price = data.result.product_stores[key].retail_unit_price;
               productStores[i].stock = data.result.product_stores[key].stock;
               productStores[i].damaged_stock = data.result.product_stores[key].damaged_stock;
+              productStores[i].with_vat = data.result.product_stores[key].with_vat;
               i++;
             }
-          }
-          setProductStores([...productStores]);
-          console.log("productStores-ok:", productStores);
-        }
-        /*
-    if(      localStorage.getItem('store_id')){
-         //let stores1 = data.result.stores.filter((store)=>store.store_id==      localStorage.getItem('store_id'));
-        // let stores1 = data.result.stores;
-        if(data.result.stores.length>0){
-            productStores= data.result.stores;
-            setProductStores([...productStores]);
-        }
-    }else {
-        console.log("data.result.stores:",data.result.stores);
-       // productStores.push(data.result.stores);
+          }*/
 
-        let i=0;
-        for(let store of data.result.stores){
-            if(productStores[i].store_id == store.store_id){
-                productStores[i].purchase_unit_price= store.purchase_unit_price;
-                productStores[i].wholesale_unit_price= store.wholesale_unit_price;
-                productStores[i].retail_unit_price= store.retail_unit_price;
-                productStores[i].stock= store.stock;
-                i++;
-            }
         }
-        setProductStores([...productStores]);
-        console.log("productStores:",productStores);
-        */
 
 
 
@@ -337,41 +370,6 @@ const ProductCreate = forwardRef((props, ref) => {
     setBrandOptions(data.result);
   }
 
-  let [stores, setStores] = useState([]);
-
-  async function getAllStores() {
-    console.log("fetching all stores");
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: localStorage.getItem("access_token"),
-      },
-    };
-
-    let Select = "select=id,name";
-    let result = await fetch("/v1/store?" + Select, requestOptions);
-    let data = await result.json();
-
-    stores = data.result;
-    setStores(data.result);
-    productStores = [];
-    for (let i = 0; i < stores.length; i++) {
-      productStores.push({
-        store_id: stores[i].id,
-        store_name: stores[i].name,
-        purchase_unit_price: "",
-        retail_unit_price: "",
-        wholesale_unit_price: "",
-        stock: "",
-      });
-    }
-
-    setProductStores([...productStores]);
-    console.log("productStores:", productStores);
-  }
-
-
 
   useEffect(() => {
     let at = localStorage.getItem("access_token");
@@ -407,43 +405,57 @@ const ProductCreate = forwardRef((props, ref) => {
     console.log("productStores:", productStores);
 
 
-    let storesData = {};
-    for (let i = 0; i < productStores.length; i++) {
+    // let storesData = {};
+    formData.product_stores = productStores;
+    /*storesData[productStores[selectedStoreIndex].store_id] = {
+      "store_id": productStores[selectedStoreIndex].store_id,
+      "store_name": productStores[selectedStoreIndex].store_name,
+      "retail_unit_price": productStores[selectedStoreIndex].retail_unit_price ? productStores[selectedStoreIndex].retail_unit_price : 0,
+      "wholesale_unit_price": productStores[selectedStoreIndex].wholesale_unit_price ? productStores[selectedStoreIndex].wholesale_unit_price : 0,
+      "purchase_unit_price": productStores[selectedStoreIndex].purchase_unit_price ? productStores[selectedStoreIndex].purchase_unit_price : 0,
+      "stock": productStores[selectedStoreIndex].stock ? productStores[selectedStoreIndex].stock : 0,
+      "damaged_stock": productStores[selectedStoreIndex].damaged_stock ? productStores[selectedStoreIndex].damaged_stock : 0,
+      "with_vat": productStores[selectedStoreIndex].with_vat ? productStores[selectedStoreIndex].with_vat : false,
+    };*/
+    //console.log("saving to store id:" + productStores[selectedStoreIndex].store_id);
 
-      /*
-      if (productStores[i]?.retail_unit_price) {
-        if (/^\d*\.?\d{0,2}$/.test(productStores[i]?.retail_unit_price) === false) {
-          errors["retail_unit_price_" + i] = "Only 2 decimal points are allowed";
-          haveErrors = true;
-          setErrors({ ...errors });
-        }
-      }*/
+
+    //for (let i = 0; i < productStores.length; i++) {
+
+    /*
+    if (productStores[i]?.retail_unit_price) {
+      if (/^\d*\.?\d{0,2}$/.test(productStores[i]?.retail_unit_price) === false) {
+        errors["retail_unit_price_" + i] = "Only 2 decimal points are allowed";
+        haveErrors = true;
+        setErrors({ ...errors });
+      }
+    }*/
 
 
 
 
-      storesData[productStores[i].store_id] = {
-        "store_id": productStores[i].store_id,
-        "store_name": productStores[i].store_name,
-        "retail_unit_price": productStores[i].retail_unit_price ? productStores[i].retail_unit_price : 0,
-        "wholesale_unit_price": productStores[i].wholesale_unit_price ? productStores[i].wholesale_unit_price : 0,
-        "purchase_unit_price": productStores[i].purchase_unit_price ? productStores[i].purchase_unit_price : 0,
-        "stock": productStores[i].stock ? productStores[i].stock : 0,
-        "damaged_stock": productStores[i].damaged_stock ? productStores[i].damaged_stock : 0,
-      };
-      /*
-          storesData.push({
-              "store_id": productStores[i].store_id,
-              "store_name": productStores[i].store_name,
-              "retail_unit_price": productStores[i].retail_unit_price?productStores[i].retail_unit_price:0,
-              "wholesale_unit_price": productStores[i].wholesale_unit_price?productStores[i].wholesale_unit_price:0,
-              "purchase_unit_price": productStores[i].purchase_unit_price?productStores[i].purchase_unit_price:0,
-              "stock": productStores[i].stock?productStores[i].stock:0,
-          });
-          */
-    }
+    /* storesData[productStores[i].store_id] = {
+       "store_id": productStores[i].store_id,
+       "store_name": productStores[i].store_name,
+       "retail_unit_price": productStores[i].retail_unit_price ? productStores[i].retail_unit_price : 0,
+       "wholesale_unit_price": productStores[i].wholesale_unit_price ? productStores[i].wholesale_unit_price : 0,
+       "purchase_unit_price": productStores[i].purchase_unit_price ? productStores[i].purchase_unit_price : 0,
+       "stock": productStores[i].stock ? productStores[i].stock : 0,
+       "damaged_stock": productStores[i].damaged_stock ? productStores[i].damaged_stock : 0,
+     };*/
+    /*
+        storesData.push({
+            "store_id": productStores[i].store_id,
+            "store_name": productStores[i].store_name,
+            "retail_unit_price": productStores[i].retail_unit_price?productStores[i].retail_unit_price:0,
+            "wholesale_unit_price": productStores[i].wholesale_unit_price?productStores[i].wholesale_unit_price:0,
+            "purchase_unit_price": productStores[i].purchase_unit_price?productStores[i].purchase_unit_price:0,
+            "stock": productStores[i].stock?productStores[i].stock:0,
+        });
+        */
+    // }
 
-    formData.product_stores = storesData;
+
 
 
     /*
@@ -1047,229 +1059,258 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
 
-            <h4>Unit Price & Stock</h4>
+            <h4>Unit Prices [<input type="checkbox"
+              value={productStores[localStorage.getItem('store_id')]?.with_vat}
+              checked={productStores[localStorage.getItem('store_id')]?.with_vat}
+              onChange={(e) => {
+
+                errors["with_vat"] = "";
+                // if (productStores[localStorage.getItem('store_id')]) {
+                //console.log("productStores[selectedStoreIndex]?.with_vat:", productStores[selectedStoreIndex]?.with_vat);
+                productStores[localStorage.getItem('store_id')].with_vat = !productStores[localStorage.getItem('store_id')]?.with_vat;
+                //setProductStores(productStores)
+                setProductStores({ ...productStores });
+                // setFormData({ ...formData });
+                //}
+                //  productStores[localStorage.getItem('store_id')].with_vat = !productStores[localStorage.getItem('store_id')]?.with_vat
+
+                console.log(formData);
+              }}
+              className=""
+              id="with_vat"
+            />  with VAT?]</h4>
             <div className="table-responsive" style={{ overflowX: "auto" }}>
               <table className="table table-striped table-sm table-bordered">
                 <thead>
                   <tr className="text-center">
-                    {!localStorage.getItem('store_id') ? <th>Store Name</th> : ""}
                     <th>Purchase Unit Price</th>
                     <th>Wholesale Unit Price</th>
                     <th>Retail Unit Price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="text-center">
+                    {!localStorage.getItem('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
+                    <td style={{ width: "150px" }}>
+                      <input
+                        id={`${"product_purchase_unit_price0"}`}
+                        name={`${"product_purchase_unit_price0"}`}
+                        type="number"
+                        value={
+                          productStores[localStorage.getItem('store_id')]?.purchase_unit_price || productStores[localStorage.getItem('store_id')]?.purchase_unit_price === 0
+                            ? productStores[localStorage.getItem('store_id')]?.purchase_unit_price
+                            : ""
+                        }
+                        className="form-control"
+                        placeholder="Purchase Unit Price"
+                        onChange={(e) => {
+                          errors["purchase_unit_price_0"] = "";
+                          setErrors({ ...errors });
+
+                          if (!e.target.value) {
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price = "";
+                            setProductStores({ ...productStores });
+                            // setErrors({ ...errors });
+                            console.log("errors:", errors);
+                            return;
+                          }
+                          if (parseFloat(e.target.value) < 0) {
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price = "";
+                            setProductStores({ ...productStores });
+
+                            errors["purchase_unit_price_0"] =
+                              "Purchase Unit Price should not be < 0";
+                            setErrors({ ...errors });
+                            return;
+                          }
+
+                          productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(e.target.value);
+                          setProductStores({ ...productStores });
+                        }}
+                      />{" "}
+                      {errors["purchase_unit_price_0"] && (
+                        <div style={{ color: "red" }}>
+                          {errors["purchase_unit_price_0"]}
+                        </div>
+                      )}
+
+                    </td>
+                    <td style={{ width: "150px" }}>
+                      <input
+                        id={`${"product_wholesale_unit_price"}`}
+                        name={`${"product_wholesale_unit_price"}`}
+                        type="number"
+                        value={
+                          productStores[localStorage.getItem('store_id')]?.wholesale_unit_price || productStores[localStorage.getItem('store_id')]?.wholesale_unit_price === 0
+                            ? productStores[localStorage.getItem('store_id')]?.wholesale_unit_price
+                            : ""
+                        }
+                        className="form-control"
+                        placeholder="Wholesale Unit Price"
+                        onChange={(e) => {
+                          errors["wholesale_unit_price"] = "";
+                          setErrors({ ...errors });
+
+                          if (!e.target.value) {
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price = "";
+                            setProductStores({ ...productStores });
+                            return;
+                          }
+
+                          if (parseFloat(e.target.value) < 0) {
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price = "";
+                            setProductStores({ ...productStores });
+
+                            errors["wholesale_unit_price"] =
+                              "Wholesale unit price should not be < 0";
+                            setErrors({ ...errors });
+                            return;
+                          }
+
+                          productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(e.target.value);
+
+                          setProductStores({ ...productStores });
+                        }}
+                      />
+                      {errors["wholesale_unit_price"] && (
+                        <div style={{ color: "red" }}>
+                          {errors["wholesale_unit_price"]}
+                        </div>
+                      )}
+
+                    </td>
+                    <td style={{ width: "150px" }}>
+                      <input
+                        id={`${"product_retail_unit_price"}`}
+                        name={`${"product_retail_unit_price"}`}
+                        type="number"
+                        value={
+                          productStores[localStorage.getItem('store_id')]?.retail_unit_price || productStores[localStorage.getItem('store_id')]?.retail_unit_price === 0
+                            ? productStores[localStorage.getItem('store_id')]?.retail_unit_price
+                            : ""
+                        }
+                        className="form-control"
+                        placeholder="Retail Unit Price"
+                        onChange={(e) => {
+                          errors["retail_unit_price"] = "";
+                          setErrors({ ...errors });
+                          if (!e.target.value) {
+                            productStores[localStorage.getItem('store_id')].retail_unit_price = "";
+                            setProductStores({ ...productStores });
+                            return;
+                          }
+
+                          if (parseFloat(e.target.value) < 0) {
+                            errors["retail_unit_price_0"] =
+                              "Retail Unit Price should not be < 0";
+                            productStores[localStorage.getItem('store_id')].retail_unit_price = "";
+
+                            setProductStores({ ...productStores });
+                            setErrors({ ...errors });
+                            console.log("errors:", errors);
+                            return;
+                          }
+
+                          console.log("e.target.value:", e.target.value);
+
+                          productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(
+                            e.target.value
+                          );
+                          console.log("productStores[localStorage.getItem('store_id')].retail_unit_price:", productStores[localStorage.getItem('store_id')].retail_unit_price);
+                          setProductStores({ ...productStores });
+                        }}
+                      />{" "}
+                      {errors["retail_unit_price"] && (
+                        <div style={{ color: "red" }}>
+
+                          {errors["retail_unit_price"]}
+                        </div>
+                      )}
+
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <h4>Stock</h4>
+            <div className="table-responsive" style={{ overflowX: "auto" }}>
+              <table className="table table-striped table-sm table-bordered">
+                <thead>
+                  <tr className="text-center">
                     <th>Damaged/Missing Stock</th>
                     <th>Stock</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {stores.map((store, index) => (
-                    !localStorage.getItem('store_id') || store.id === localStorage.getItem('store_id') ? <tr key={index} className="text-center">
-                      {!localStorage.getItem('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
-                      <td style={{ width: "150px" }}>
-                        <input
-                          id={`${"product_purchase_unit_price" + index}`}
-                          name={`${"product_purchase_unit_price" + index}`}
-                          type="number"
-                          value={
-                            productStores[index]?.purchase_unit_price || productStores[index]?.purchase_unit_price === 0
-                              ? productStores[index]?.purchase_unit_price
-                              : ""
+                  <tr className="text-center">
+                    <td style={{ width: "150px" }}>
+                      <input
+                        id={`${"product_damaged_stock_0"}`}
+                        name={`${"product_damaged_stock_0"}`}
+                        value={productStores[localStorage.getItem('store_id')]?.damaged_stock || productStores[localStorage.getItem('store_id')]?.damaged_stock === 0
+                          ? productStores[localStorage.getItem('store_id')].damaged_stock
+                          : ""
+                        }
+                        type="number"
+                        onChange={(e) => {
+                          errors["damaged_stock_0"] = "";
+                          setErrors({ ...errors });
+
+                          if (!e.target.value) {
+                            productStores[localStorage.getItem('store_id')].damaged_stock = "";
+                            setProductStores({ ...productStores });
+                            //errors["stock_" + index] = "Invalid Stock value";
+                            //setErrors({ ...errors });
+                            return;
                           }
-                          className="form-control"
-                          placeholder="Purchase Unit Price"
-                          onChange={(e) => {
-                            errors["purchase_unit_price_" + index] = "";
-                            setErrors({ ...errors });
 
-                            if (!e.target.value) {
-                              productStores[index].purchase_unit_price = "";
-                              setProductStores([...productStores]);
-                              // setErrors({ ...errors });
-                              console.log("errors:", errors);
-                              return;
-                            }
-                            if (parseFloat(e.target.value) < 0) {
-                              productStores[index].purchase_unit_price = "";
-                              setProductStores([...productStores]);
+                          productStores[localStorage.getItem('store_id')].damaged_stock = parseFloat(e.target.value);
+                        }}
+                        className="form-control"
+                        placeholder="Damaged stock"
+                      />
+                      {errors["damaged_stock_0"] && (
+                        <div style={{ color: "red" }}>
+                          {errors["damaged_stock_0"]}
+                        </div>
+                      )}
+                    </td>
+                    <td style={{ width: "150px" }}>
+                      <input
+                        id={`${"product_stock0"}`}
+                        name={`${"product_stock0"}`}
+                        value={productStores[localStorage.getItem('store_id')]?.stock || productStores[localStorage.getItem('store_id')]?.stock === 0
+                          ? productStores[localStorage.getItem('store_id')].stock
+                          : ""
+                        }
+                        disabled={true}
+                        type="number"
+                        onChange={(e) => {
+                          errors["stock_0"] = "";
+                          setErrors({ ...errors });
 
-                              errors["purchase_unit_price_" + index] =
-                                "Purchase Unit Price should not be < 0";
-                              setErrors({ ...errors });
-                              return;
-                            }
-
-                            productStores[index].purchase_unit_price = parseFloat(e.target.value);
-                            setProductStores([...productStores]);
-                          }}
-                        />{" "}
-                        {errors["purchase_unit_price_" + index] && (
-                          <div style={{ color: "red" }}>
-                            {errors["purchase_unit_price_" + index]}
-                          </div>
-                        )}
-
-                      </td>
-                      <td style={{ width: "150px" }}>
-                        <input
-                          id={`${"product_wholesale_unit_price" + index}`}
-                          name={`${"product_wholesale_unit_price" + index}`}
-                          type="number"
-                          value={
-                            productStores[index]?.wholesale_unit_price || productStores[index]?.wholesale_unit_price === 0
-                              ? productStores[index]?.wholesale_unit_price
-                              : ""
+                          if (!e.target.value) {
+                            productStores[localStorage.getItem('store_id')].stock = "";
+                            setProductStores({ ...productStores });
+                            //errors["stock_" + index] = "Invalid Stock value";
+                            //setErrors({ ...errors });
+                            return;
                           }
-                          className="form-control"
-                          placeholder="Wholesale Unit Price"
-                          onChange={(e) => {
-                            errors["wholesale_unit_price_" + index] = "";
-                            setErrors({ ...errors });
 
-                            if (!e.target.value) {
-                              productStores[index].wholesale_unit_price = "";
-                              setProductStores([...productStores]);
-                              return;
-                            }
-
-                            if (parseFloat(e.target.value) < 0) {
-                              productStores[index].wholesale_unit_price = "";
-                              setProductStores([...productStores]);
-
-                              errors["wholesale_unit_price_" + index] =
-                                "Wholesale unit price should not be < 0";
-                              setErrors({ ...errors });
-                              return;
-                            }
-
-                            productStores[index].wholesale_unit_price = parseFloat(e.target.value);
-
-                            setProductStores([...productStores]);
-                          }}
-                        />
-                        {errors["wholesale_unit_price_" + index] && (
-                          <div style={{ color: "red" }}>
-                            {errors["wholesale_unit_price_" + index]}
-                          </div>
-                        )}
-
-                      </td>
-                      <td style={{ width: "150px" }}>
-                        <input
-                          id={`${"product_retail_unit_price" + index}`}
-                          name={`${"product_retail_unit_price" + index}`}
-                          type="number"
-                          value={
-                            productStores[index]?.retail_unit_price || productStores[index]?.retail_unit_price === 0
-                              ? productStores[index]?.retail_unit_price
-                              : ""
-                          }
-                          className="form-control"
-                          placeholder="Retail Unit Price"
-                          onChange={(e) => {
-                            errors["retail_unit_price_" + index] = "";
-                            setErrors({ ...errors });
-                            if (!e.target.value) {
-                              productStores[index].retail_unit_price = "";
-                              setProductStores([...productStores]);
-                              return;
-                            }
-
-                            if (parseFloat(e.target.value) < 0) {
-                              errors["retail_unit_price_" + index] =
-                                "Retail Unit Price should not be < 0";
-                              productStores[index].retail_unit_price = "";
-
-                              setProductStores([...productStores]);
-                              setErrors({ ...errors });
-                              console.log("errors:", errors);
-                              return;
-                            }
-
-                            console.log("e.target.value:", e.target.value);
-
-                            productStores[index].retail_unit_price = parseFloat(
-                              e.target.value
-                            );
-                            console.log("productStores[index].retail_unit_price:", productStores[index].retail_unit_price);
-                            setProductStores([...productStores]);
-                          }}
-                        />{" "}
-                        {errors["retail_unit_price_" + index] && (
-                          <div style={{ color: "red" }}>
-
-                            {errors["retail_unit_price_" + index]}
-                          </div>
-                        )}
-
-                      </td>
-
-                      <td style={{ width: "150px" }}>
-                        <input
-                          id={`${"product_damaged_stock" + index}`}
-                          name={`${"product_damaged_stock" + index}`}
-                          value={productStores[index]?.damaged_stock || productStores[index]?.damaged_stock === 0
-                            ? productStores[index].damaged_stock
-                            : ""
-                          }
-                          type="number"
-                          onChange={(e) => {
-                            errors["damaged_stock_" + index] = "";
-                            setErrors({ ...errors });
-
-                            if (!e.target.value) {
-                              productStores[index].damaged_stock = "";
-                              setProductStores([...productStores]);
-                              //errors["stock_" + index] = "Invalid Stock value";
-                              //setErrors({ ...errors });
-                              return;
-                            }
-
-                            productStores[index].damaged_stock = parseFloat(e.target.value);
-                          }}
-                          className="form-control"
-                          placeholder="Damaged stock"
-                        />
-                        {errors["damaged_stock_" + index] && (
-                          <div style={{ color: "red" }}>
-                            {errors["damaged_stock_" + index]}
-                          </div>
-                        )}
-                      </td>
-                      <td style={{ width: "150px" }}>
-                        <input
-                          id={`${"product_stock" + index}`}
-                          name={`${"product_stock" + index}`}
-                          value={productStores[index]?.stock || productStores[index]?.stock === 0
-                            ? productStores[index].stock
-                            : ""
-                          }
-                          disabled={true}
-                          type="number"
-                          onChange={(e) => {
-                            errors["stock_" + index] = "";
-                            setErrors({ ...errors });
-
-                            if (!e.target.value) {
-                              productStores[index].stock = "";
-                              setProductStores([...productStores]);
-                              //errors["stock_" + index] = "Invalid Stock value";
-                              //setErrors({ ...errors });
-                              return;
-                            }
-
-                            productStores[index].stock = parseFloat(e.target.value);
-                          }}
-                          className="form-control"
-                          placeholder="Stock"
-                        />
-                        {errors["stock_" + index] && (
-                          <div style={{ color: "red" }}>
-                            <i className="bi bi-x-lg"> </i>
-                            {errors["stock_" + index]}
-                          </div>
-                        )}
-                      </td>
-                    </tr> : ''
-                  ))}
+                          productStores[localStorage.getItem('store_id')].stock = parseFloat(e.target.value);
+                        }}
+                        className="form-control"
+                        placeholder="Stock"
+                      />
+                      {errors["stock_0"] && (
+                        <div style={{ color: "red" }}>
+                          <i className="bi bi-x-lg"> </i>
+                          {errors["stock_0"]}
+                        </div>
+                      )}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </div>

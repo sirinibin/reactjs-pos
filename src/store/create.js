@@ -3086,6 +3086,30 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.default_unit_price_is_with_vat}
+                                    checked={formData.default_unit_price_is_with_vat}
+                                    onChange={(e) => {
+
+                                        errors["default_unit_price_is_with_vat"] = "";
+                                        formData.default_unit_price_is_with_vat = !formData.default_unit_price_is_with_vat;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="default_unit_price_is_with_vat"
+                                /> &nbsp;Default product unit price is with VAT?
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.default_unit_price_is_with_vat && (
+                                <div style={{ color: "red" }}>
+                                    {errors.default_unit_price_is_with_vat}
+                                </div>
+                            )}
+                        </div>
+
                         <div className="col-md-3">
                             <label className="form-label">Default quotation validity (# of Days)*</label>
                             <div className="input-group mb-3">

@@ -493,7 +493,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
+        let Select = `select=id,item_codeprefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200",
@@ -872,11 +872,20 @@ const OrderCreate = forwardRef((props, ref) => {
 
         // console.log("product:", product);
         if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
-            product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+            if (product.product_stores[formData.store_id].with_vat) {
+                product.unit_price = product.product_stores[formData.store_id].retail_unit_price - (product.product_stores[formData.store_id].retail_unit_price * (formData.vat_percent / 100));
+            } else {
+                product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+            }
+
         }
 
         if (product.product_stores && product.product_stores[formData.store_id]?.purchase_unit_price) {
-            product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+            if (product.product_stores[formData.store_id].with_vat) {
+                product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price - (product.product_stores[formData.store_id].purchase_unit_price * (formData.vat_percent / 100));;
+            } else {
+                product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+            }
         }
 
 
@@ -2120,12 +2129,12 @@ function findDiscount() {
                                         <th style={{ minWidth: "250px" }}>Name
                                         </th>
                                         <th>Info</th>
-                                        <th>Purchase Unit Price</th>
+                                        <th>Purchase Unit Price(without VAT)</th>
                                         <th>Qty</th>
-                                        <th>Unit Price</th>
+                                        <th>Unit Price(without VAT)</th>
                                         <th>Unit Disc.</th>
                                         <th >Unit Disc. %</th>
-                                        <th >Price</th>
+                                        <th >Price(without VAT)</th>
 
                                     </tr>
                                 </thead>
@@ -2542,7 +2551,19 @@ function findDiscount() {
                                     <tr>
 
 
-                                        <th colSpan="8" className="text-end">Total</th>
+                                        <th colSpan="8" className="text-end">Total(without VAT)</th>
+                                        <td className="text-end" style={{ width: "200px" }} >
+                                            <NumberFormat
+                                                value={trimTo2Decimals(formData.total)}
+                                                displayType={"text"}
+                                                thousandSeparator={true}
+                                                suffix={" "}
+                                                renderText={(value, props) => value}
+                                            />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th colSpan="8" className="text-end">Total(without VAT)</th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
                                                 value={trimTo2Decimals(formData.total)}

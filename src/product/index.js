@@ -2396,7 +2396,10 @@ function ProductIndex(props) {
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
                                                                     return (
-                                                                        <b>{product.product_stores[key].purchase_unit_price?.toFixed(2)}</b>
+                                                                        <b>
+                                                                            {product.product_stores[key].purchase_unit_price?.toFixed(2)}
+
+                                                                        </b>
                                                                     );
                                                                 } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].purchase_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
@@ -2407,7 +2410,10 @@ function ProductIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    return (<b>{product.product_stores[key].wholesale_unit_price?.toFixed(2)}</b>);
+                                                                    return (<b>
+                                                                        {product.product_stores[key].wholesale_unit_price?.toFixed(2)}
+
+                                                                    </b>);
                                                                 } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].wholesale_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
                                                                 }
@@ -2417,7 +2423,9 @@ function ProductIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                             {product.product_stores && Object.keys(product.product_stores).map((key, index) => {
                                                                 if (localStorage.getItem("store_id") && product.product_stores[key].store_id === localStorage.getItem("store_id")) {
-                                                                    return (<b>{product.product_stores[key].retail_unit_price?.toFixed(2)}</b>);
+                                                                    return (<b>
+                                                                        {product.product_stores[key].retail_unit_price?.toFixed(2)}
+                                                                    </b>);
 
                                                                 } else if (!localStorage.getItem("store_id")) {
                                                                     return (<li><b>{product.product_stores[key].retail_unit_price?.toFixed(2)}</b> {"@" + product.product_stores[key].store_name}</li>);
