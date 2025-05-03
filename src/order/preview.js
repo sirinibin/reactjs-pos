@@ -627,6 +627,8 @@ const Preview = forwardRef((props, ref) => {
         return filename;
     }, [model, modelName])
 
+
+
     const handlePrint = useCallback(() => {
         const element = printAreaRef.current;
         if (!element) return;
@@ -651,34 +653,37 @@ const Preview = forwardRef((props, ref) => {
     }, [getFileName]);
 
     /*
-    const handlePrint = useCallback(async () => {
-        const element = printAreaRef.current;
-        if (!element) return;
-
-        const opt = {
-            margin: 0,
-            filename: `${getFileName()}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: true },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-
-        // Create a blob URL
-        const blobUrl = URL.createObjectURL(pdfBlob);
-
-        // Open the PDF in a new window or iframe and trigger print
-        const printWindow = window.open(blobUrl);
-        if (printWindow) {
-            printWindow.onload = function () {
-                printWindow.focus();
-                printWindow.print();
-            };
-        } else {
-            alert("Popup blocked! Please allow popups for this website.");
-        }
-    }, [getFileName]);*/
+    
+    
+            const handlePrint = useCallback(async () => {
+                const element = printAreaRef.current;
+                if (!element) return;
+    
+                const opt = {
+                    margin: 0,
+                    filename: `${getFileName()}.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true, logging: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+    
+                const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
+    
+                // Create a blob URL
+                const blobUrl = URL.createObjectURL(pdfBlob);
+    
+                // Open the PDF in a new window or iframe and trigger print
+                const printWindow = window.open(blobUrl);
+                if (printWindow) {
+                    printWindow.onload = function () {
+                        printWindow.focus();
+                        printWindow.print();
+                    };
+                } else {
+                    alert("Popup blocked! Please allow popups for this website.");
+                }
+            }, [getFileName]);
+            */
     /*
     const handlePrint = useReactToPrint({
         content: () => printAreaRef.current,

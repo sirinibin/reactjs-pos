@@ -119,7 +119,7 @@ const PreviewContent = forwardRef((props, ref) => {
 
                     <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                         <div className="col">
-                            <u><h1 className="text-center clickable-text" onClick={() => {
+                            <u><h1 className="text-center clickable-text fw-bold" onClick={() => {
                                 props.selectText("invoiceTitle");
                             }} style={{ fontSize: props.fontSizes[props.modelName + "_invoiceTitle"]?.size }} >
                                 {props.model.invoiceTitle}
@@ -371,7 +371,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>SI No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per8 text-center" style={{ padding: "0px", width: "8%" }}>
+                                            <th className="per13 text-center" style={{ padding: "0px", width: "13%" }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -382,7 +382,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Part No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per39 text-center" style={{ padding: "0px", width: "39%" }}>
+                                            <th className="per34 text-center" style={{ padding: "0px", width: "34%" }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{

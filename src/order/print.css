@@ -35,3 +35,9 @@
       margin: 0 auto;
     }
   }
+
+  td {
+    word-wrap: break-word;
+    word-break: break-all;
+    white-space: normal;
+  }
