@@ -63,7 +63,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                 }}
 
             >
-                <div className="row" style={{ fontSize: "3.5mm" }}>
+                {props.fontSizes[props.modelName + "_storeHeader"]?.visible && <div className="row" style={{ fontSize: "3.5mm" }}>
                     <div className="col">
                         <ul className="list-unstyled text-left">
                             <li><h4 style={{ fontSize: "3.5mm" }}>{props.model.store ? props.model.store.name : "<STORE_NAME>"}</h4></li>
@@ -95,8 +95,8 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                             <li style={{ fontSize: "2.2mm" }} >{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"} / ‫الضريبي‬ ‫الرقم‬</li>
                         </ul>
                     </div>
-                </div>
-                <div className="row">
+                </div>}
+                <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                     <div className="col">
                         <u
                         ><h1 className="text-center" style={{ fontSize: "3mm" }}>

@@ -15,6 +15,7 @@ function Topbar(props) {
         localStorage.removeItem("user_photo");
         localStorage.removeItem("user_name");
         localStorage.removeItem("store_name");
+        localStorage.removeItem("branch_name");
         localStorage.removeItem("store_id");
         localStorage.removeItem("admin");
         window.location = "/";

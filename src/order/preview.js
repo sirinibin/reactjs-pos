@@ -796,25 +796,18 @@ const Preview = forwardRef((props, ref) => {
     }, [autoPrint, whatsAppShare, openWhatsAppShare]);
 
     const [showSlider, setShowSlider] = useState(false);
-
-
-
     let [selectedText, setSelectedText] = useState("");
 
-    /*
-    const handleFontSizeChange = (e) => {
-        console.log("selectedText:", selectedText);
-        console.log("parseFloat(e.target.value):", parseFloat(e.target.value));
-        if (selectedText) {
-            fontSizes[selectedText].value = parseFloat(e.target.value);
-            setFontSizes({ ...fontSizes });
-        }
-    };*/
-
-
-
-
     const defaultFontSizes = useMemo(() => ({
+        "marginTop": {
+            "value": 0,
+            "unit": "px",
+            "size": "0px",
+            "step": 3
+        },
+        "storeHeader": {
+            "visible": true,
+        },
         "storeName": {
             "value": 3.5,
             "unit": "mm",
@@ -951,16 +944,20 @@ const Preview = forwardRef((props, ref) => {
         if (storedFontSizes) {
             setFontSizes({ ...storedFontSizes });
         } else {
-            let initFontSizes = {};
-            let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note"];
-            for (let key1 in modelNames) {
-                for (let key2 in defaultFontSizes) {
-                    initFontSizes[modelNames[key1] + "_" + key2] = defaultFontSizes[key2];
+            storedFontSizes = {};
+        }
+
+        let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note"];
+        for (let key1 in modelNames) {
+            for (let key2 in defaultFontSizes) {
+                if (!storedFontSizes[modelNames[key1] + "_" + key2]) {
+                    storedFontSizes[modelNames[key1] + "_" + key2] = defaultFontSizes[key2];
                 }
             }
-
-            setFontSizes({ ...initFontSizes });
         }
+
+        setFontSizes({ ...storedFontSizes });
+
 
     }, [setFontSizes, modelName, defaultFontSizes]);
 
@@ -979,7 +976,7 @@ const Preview = forwardRef((props, ref) => {
         }
     };
 
-    const decrement = () => {
+    const decrement = (element) => {
         if (selectedText) {
             if (!fontSizes[modelName + "_" + selectedText]) {
                 fontSizes[modelName + "_" + selectedText] = defaultFontSizes[selectedText];
@@ -994,6 +991,34 @@ const Preview = forwardRef((props, ref) => {
     };
 
 
+    const incrementSize = (element) => {
+        if (element) {
+            if (!fontSizes[element]) {
+                fontSizes[element] = defaultFontSizes[element];
+            }
+
+            fontSizes[element].value += fontSizes[element].step;
+            fontSizes[element]["value"] = parseFloat(Math.min(fontSizes[element]?.value).toFixed(2));
+            fontSizes[element]["size"] = fontSizes[element]?.value + fontSizes[element]?.unit;
+            setFontSizes({ ...fontSizes });
+            saveToLocalStorage("fontSizes", fontSizes);
+        }
+    };
+
+    const decrementSize = (element) => {
+        if (element) {
+            if (!fontSizes[element]) {
+                fontSizes[element] = defaultFontSizes[element];
+            }
+
+            fontSizes[element].value -= fontSizes[element].step;
+            fontSizes[element].value = parseFloat(Math.min(fontSizes[element].value).toFixed(2));
+            fontSizes[element].size = fontSizes[element].value + fontSizes[element].unit;
+            setFontSizes({ ...fontSizes });
+            saveToLocalStorage("fontSizes", fontSizes);
+        }
+    };
+
     function formatModelName(str) {
         return str
             .replace(/_/g, ' ')                   // Replace _ with space
@@ -1006,62 +1031,74 @@ const Preview = forwardRef((props, ref) => {
 
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
-            <Modal.Header>
-                <Modal.Title>{formatModelName(modelName)} Preview</Modal.Title>
-                {showSlider && (
-                    <div
-                        className="border rounded bg-light p-2"
-                        style={{ maxWidth: '300px', marginLeft: '200px' }}
-                    >
+            <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
+                {/* Left: Title */}
+                <div className="flex-grow-1">
+                    <Modal.Title>{formatModelName(modelName)} Preview</Modal.Title>
+                </div>
 
-
-                        <div className="d-flex align-items-center">
-                            {/* Range Input */}
+                {/* Right: Fixed control block */}
+                <div className="d-flex flex-wrap align-items-center" style={{ gap: '10px' }}>
+                    {/* Slider */}
+                    {showSlider && (
+                        <div className="d-flex align-items-center border rounded bg-light p-2">
                             <button className="btn btn-outline-secondary" onClick={decrement}>−</button>
-                            &nbsp;Font Size:{fontSizes[modelName + "_" + selectedText]?.size}&nbsp;
-                            {/*<input
-                                type="range"
-                                className="form-range me-2 flex-grow-1"
-                                id="customRange"
-                                min="0"
-                                max="100"
-                                step="0.1"
-                                value={fontSizes[selectedText]?.value}
-                                onChange={handleFontSizeChange}
-                            />*/}
-
+                            <span className="mx-2">Font Size: {fontSizes[modelName + "_" + selectedText]?.size}</span>
                             <button className="btn btn-outline-secondary" onClick={increment}>+</button>
-
-                            {/* Close Button */}
-                            <button
-                                className="btn-close"
-                                onClick={() => {
-                                    setShowSlider(false);
-                                }}
-                            ></button>
+                            <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
                         </div>
+                    )}
+
+                    {/* Show Store Header - Always fixed here */}
+                    <div className="form-check">
+                        <input
+                            type="checkbox"
+                            className="form-check-input"
+                            id="storeHeaderCheck"
+                            checked={fontSizes[modelName + "_storeHeader"]?.visible}
+                            onChange={() => {
+                                fontSizes[modelName + "_storeHeader"].visible = !fontSizes[modelName + "_storeHeader"]?.visible;
+
+                                setFontSizes({ ...fontSizes });
+                                saveToLocalStorage("fontSizes", fontSizes);
+                            }}
+                        />
+                        <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
                     </div>
 
 
-                )}
 
-                <div className="col align-self-end text-end">
-                    <Button variant="primary" className={`btn ${whatsAppShare ? "btn-success" : "btn-primary"}`} onClick={whatsAppShare ? openWhatsAppShare : handlePrint}>
-                        {!whatsAppShare && <><i className="bi bi-printer"></i> Print</>}
-                        {whatsAppShare && <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                            <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                        </svg>}
-                    </Button>
-                    <button
-                        type="button"
-                        className="btn-close"
-                        onClick={handleClose}
-                        aria-label="Close"
-                    ></button>
+                    {/* Margin Control */}
 
+                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
+                        <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
+                        <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
+                        <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
+
+                    </div>
+
+
+                    {/* Print & Close Buttons */}
+                    <div className="d-flex align-items-center">
+                        <Button
+                            variant={whatsAppShare ? "success" : "primary"}
+                            onClick={whatsAppShare ? openWhatsAppShare : handlePrint}
+                            className="me-2"
+                        >
+                            {!whatsAppShare ? (
+                                <>
+                                    <i className="bi bi-printer"></i> Print
+                                </>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">...</svg>
+                            )}
+                        </Button>
+                        <button className="btn-close" onClick={handleClose} aria-label="Close"></button>
+                    </div>
                 </div>
-
             </Modal.Header>
+
+
             <Modal.Body>
                 <div ref={printAreaRef} className="print-area" id="print-area">
                     <PreviewContent model={model} whatsAppShare={whatsAppShare} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />
@@ -1069,7 +1106,7 @@ const Preview = forwardRef((props, ref) => {
             </Modal.Body>
             <Modal.Footer>
             </Modal.Footer>
-        </Modal>
+        </Modal >
     </>);
 
 });

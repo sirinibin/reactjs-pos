@@ -61,6 +61,10 @@ function Login() {
                 if (data.result.role !== "Admin") {
                     localStorage.setItem("store_name", storeNames[0]);
                     localStorage.setItem("store_id", storeIDs[0]);
+                    if (storeIDs[0]) {
+                        await getStore(storeIDs[0]);
+                    }
+
                 }
 
                 localStorage.setItem("user_name", data.result.name);
@@ -87,6 +91,41 @@ function Login() {
             .catch(error => {
                 setProcessing(false);
                 setErrors(error);
+            });
+    }
+
+    async function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        await fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+                let storeData = data.result;
+                if (storeData.branch_name) {
+                    localStorage.setItem("branch_name", storeData.branch_name);
+                }
+
+
+            })
+            .catch(error => {
+
             });
     }
 
