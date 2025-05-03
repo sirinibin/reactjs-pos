@@ -64,7 +64,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
     let detailsLabelsColumnWidthPercent = "28%";
     let detailsValuesColumnWidthPercent = "72%";
-    let detailsBorderThickness = "solid 0.2px";
+    let detailsBorderThickness = "0.2px solid #dee2e6";
 
     return (<>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
@@ -119,15 +119,15 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                 <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? "10px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                     <div className="col">
                         <u
-                        ><h1 className="text-center" style={{ fontSize: "3mm" }}>
+                        ><h1 className="text-center fw-bold" style={{ fontSize: "3mm" }}>
                                 BALANCE SHEET / ورقة التوازن
                             </h1>
                         </u>
                     </div>
                 </div>
 
-                <div className="row col-md-14 fw-bold" style={{ border: "solid 0px", fontSize: props.fontSizes[props.modelName + "_accountDetails"]?.size, padding: "10px" }} onClick={() => {
-                    props.selectText("accountDetails");
+                <div className="row col-md-14 fw-bold" style={{ border: "solid 0px", fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
+                    props.selectText("invoiceDetails");
                 }}>
                     <div className="col-md-12" style={{ border: detailsBorderThickness, marginLeft: "0px", width: `${(props.model.store?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
                         <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >

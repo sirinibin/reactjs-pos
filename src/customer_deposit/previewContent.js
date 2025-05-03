@@ -44,7 +44,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
 
     let detailsLabelsColumnWidthPercent = "28%";
     let detailsValuesColumnWidthPercent = "72%";
-    let detailsBorderThickness = "solid 0.2px";
+    let detailsBorderThickness = "0.2px solid #dee2e6";
 
     return (<><span ref={ref}>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
@@ -99,7 +99,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                 <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                     <div className="col">
                         <u
-                        ><h1 className="text-center" style={{ fontSize: "3mm" }}>
+                        ><h1 className="text-center fw-bold" style={{ fontSize: "3mm" }}>
                                 {props.model.ReceiptTitle}
                             </h1>
                         </u>
@@ -107,14 +107,14 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                 </div>
 
                 <div className="row col-md-14 fw-bold" style={{ border: "solid 0px", fontSize: "2.6mm", padding: "10px" }} >
-                    <div className="col-md-12" style={{ border: "solid px", marginLeft: "0px", width: "100%" }}>
+                    <div className="col-md-12" style={{ border: detailsBorderThickness, marginLeft: "0px", width: "100%" }}>
                         <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                            <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Receipt No. | رقم الإيصال:</div>
-                            <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: detailsValuesColumnWidthPercent, padding: "3px" }} >    {props.model.code ? props.model.code : ""}</div>
+                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Receipt No. | رقم الإيصال:</div>
+                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >    {props.model.code ? props.model.code : ""}</div>
                         </div>
                         <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                            <div className="col-md-4" dir="ltr" style={{ border: "solid 1px", width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Receipt Date | تاريخ الاستلام: </div>
-                            <div className="col-md-8" dir="ltr" style={{ border: "solid 1px", width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.date ? format(
+                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Receipt Date | تاريخ الاستلام: </div>
+                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.date ? format(
                                 new Date(props.model.date),
                                 "yyyy-MM-dd h:mma"
                             ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
@@ -380,39 +380,41 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         </div>
                     </div>
                 </div>
-                {props.model.store?.show_address_in_invoice_footer && <div className="row fw-bold" style={{ fontSize: "2.2mm", height: "55px", }}>
-                    <div className="col-md-2 text-start">
-                        {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
-                    </div>
-                    <div className="col-md-8 text-center">
-                        <ul className="list-unstyled mb0 text-center">
-                            <li>
-                                <b
-                                > {props.model.store ? props.model.store.address_in_arabic : "<STORE_ADDRESS_ARABIC>"}
-                                </b>
-                            </li>
-                            <li>
-                                <strong
-                                >{props.model.store ? props.model.store.address : "<STORE_ADDRESS>"}
-                                </strong>
-                            </li>
+                {
+                    props.model.store?.show_address_in_invoice_footer && <div className="row fw-bold" style={{ fontSize: "2.2mm", height: "55px", }}>
+                        <div className="col-md-2 text-start">
+                            {/*props.model.QRImageData && <img src={props.model.QRImageData} style={{ width: "122px", height: "114px" }} alt="Invoice QR Code" />*/}
+                        </div>
+                        <div className="col-md-8 text-center">
+                            <ul className="list-unstyled mb0 text-center">
+                                <li>
+                                    <b
+                                    > {props.model.store ? props.model.store.address_in_arabic : "<STORE_ADDRESS_ARABIC>"}
+                                    </b>
+                                </li>
+                                <li>
+                                    <strong
+                                    >{props.model.store ? props.model.store.address : "<STORE_ADDRESS>"}
+                                    </strong>
+                                </li>
 
-                            <li>
-                                هاتف:<b
-                                > {props.model.store ? props.model.store.phone_in_arabic : "<STORE_PHONE_ARABIC>"}
-                                </b>,
-                                Phone:<strong
-                                >{props.model.store ? props.model.store.phone : "<STORE_PHONE>"}
-                                </strong>
-                            </li>
-                            <li>
-                                <strong>الرمز البريدي:</strong>{props.model.store ? props.model.store.zipcode_in_arabic : "<STORE_ZIPCODE_ARABIC>"},
-                                <strong>Email:{props.model.store ? props.model.store.email : "<STORE_EMAIL>"} </strong>
+                                <li>
+                                    هاتف:<b
+                                    > {props.model.store ? props.model.store.phone_in_arabic : "<STORE_PHONE_ARABIC>"}
+                                    </b>,
+                                    Phone:<strong
+                                    >{props.model.store ? props.model.store.phone : "<STORE_PHONE>"}
+                                    </strong>
+                                </li>
+                                <li>
+                                    <strong>الرمز البريدي:</strong>{props.model.store ? props.model.store.zipcode_in_arabic : "<STORE_ZIPCODE_ARABIC>"},
+                                    <strong>Email:{props.model.store ? props.model.store.email : "<STORE_EMAIL>"} </strong>
 
-                            </li>
-                        </ul>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                </div>}
+                }
             </div>
         ))}
     </span >
