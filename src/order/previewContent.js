@@ -62,7 +62,7 @@ const PreviewContent = forwardRef((props, ref) => {
                     }}
 
                 >
-                    {props.fontSizes[props.modelName + "_storeHeader"]?.visible && <div className="row">
+                    {props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? < div className="row">
                         <div className="col">
                             <ul className="list-unstyled text-left">
                                 <li>
@@ -114,10 +114,10 @@ const PreviewContent = forwardRef((props, ref) => {
                                 }} style={{ fontSize: props.fontSizes[props.modelName + "_storeVATArabic"]?.size }} >{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"}</li>
                             </ul>
                         </div>
-                    </div>}
+                    </div> : ""}
 
 
-                    <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
+                    <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                         <div className="col">
                             <u><h1 className="text-center clickable-text" onClick={() => {
                                 props.selectText("invoiceTitle");

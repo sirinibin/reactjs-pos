@@ -674,7 +674,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                     )}
 
                     {/* Show Store Header - Always fixed here */}
-                    <div className="form-check">
+                    {!whatsAppShare && <div className="form-check">
                         <input
                             type="checkbox"
                             className="form-check-input"
@@ -688,16 +688,15 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                             }}
                         />
                         <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
-                    </div>
+                    </div>}
 
                     {/* Margin Control */}
 
-                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }} >
+                    {!whatsAppShare && <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }} >
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
                         <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
-
-                    </div>
+                    </div>}
 
 
                     <div className="col align-self-end text-end">
@@ -722,7 +721,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <CustomerDepositPreviewContent model={model} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />
+                    <CustomerDepositPreviewContent model={model} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} />
                 </div>
             </Modal.Body>
             <Modal.Footer>
