@@ -2300,7 +2300,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
                                                         {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
 
-                                                            {!order.zatca?.compliance_passed && order.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
+                                                            {!order.zatca?.compliance_passed && !order.zatca?.reporting_passed && order.zatca?.compliance_check_failed_count > 0 ? <span className="badge bg-danger">
                                                                 Compliance check failed
                                                                 {!order.zatca.compliance_passed && order.zatca.compliance_check_last_failed_at ? <span>&nbsp;<TimeAgo date={order.zatca.compliance_check_last_failed_at} />&nbsp;</span> : ""}
                                                                 &nbsp;</span> : ""}
