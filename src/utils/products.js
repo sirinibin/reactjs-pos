@@ -227,17 +227,20 @@ const Products = forwardRef((props, ref) => {
     }
 
 
-    function searchByMultipleValuesField(field, values) {
-        if (field === "created_by") {
-            // setSelectedCreatedByProducts(values);
-        } else if (field === "category_id") {
+    function searchByMultipleValuesField(field, values, searchBy) {
+        if (field === "category_id") {
             setSelectedProductCategories(values);
         } else if (field === "brand_id") {
             setSelectedProductBrands(values);
         } else if (field === "country_code") {
             setSelectedCountries(values);
         } else if (field === "product_id") {
-            setSelectedProducts(values);
+            if (searchBy === "name") {
+                setSelectedProducts(values);
+            } else if (searchBy === "part_number") {
+                setSelectedProductsByPartNo(values);
+            }
+
         }
 
         searchParams[field] = Object.values(values)
@@ -420,7 +423,12 @@ const Products = forwardRef((props, ref) => {
 
 
 
-    const suggestProducts = useCallback(async (searchTerm) => {
+    const [productOptionsByPartNo, setProductOptionsByPartNo] = useState([]);
+    let [selectedProductsByPartNo, setSelectedProductsByPartNo] = useState([]);
+    const [isProductsLoadingByPartNo, setIsProductsLoadingByPartNo] = useState(false);
+    let [openProductSearchResultByPartNo, setOpenProductSearchResultByPartNo] = useState(false);
+
+    const suggestProducts = useCallback(async (searchTerm, searchBy) => {
         //async function suggestProducts(searchTerm) {
         console.log("Inside handle suggestProducts");
         setProductOptions([]);
@@ -431,7 +439,12 @@ const Products = forwardRef((props, ref) => {
             console.log("no input");
 
             setTimeout(() => {
-                setOpenProductSearchResult(false);
+                if (searchBy === "name") {
+                    setOpenProductSearchResult(false);
+                } else if (searchBy === "part_number") {
+                    setOpenProductSearchResultByPartNo(false);
+                }
+
             }, 300);
 
             return;
@@ -462,7 +475,14 @@ const Products = forwardRef((props, ref) => {
         };
 
         let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
-        setIsProductsLoading(true);
+
+        if (searchBy === "name") {
+            setIsProductsLoading(true);
+        } else if (searchBy === "part_number") {
+            setIsProductsLoadingByPartNo(true);
+        }
+
+
 
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200",
@@ -473,15 +493,31 @@ const Products = forwardRef((props, ref) => {
         let products = data.result;
         if (!products || products.length === 0) {
             //openProductSearchResult = false;
-            setOpenProductSearchResult(false);
-            setIsProductsLoading(false);
+
+            if (searchBy === "name") {
+                setOpenProductSearchResult(false);
+                setIsProductsLoading(false);
+            } else if (searchBy === "part_number") {
+                setOpenProductSearchResultByPartNo(false);
+                setIsProductsLoadingByPartNo(false);
+            }
+
+
             return;
         }
 
         //openProductSearchResult = true;
-        setOpenProductSearchResult(true);
-        setProductOptions(products);
-        setIsProductsLoading(false);
+
+
+        if (searchBy === "name") {
+            setOpenProductSearchResult(true);
+            setProductOptions(products);
+            setIsProductsLoading(false);
+        } else if (searchBy === "part_number") {
+            setOpenProductSearchResultByPartNo(true);
+            setProductOptionsByPartNo(products);
+            setIsProductsLoadingByPartNo(false);
+        }
 
     }, []);
 
@@ -1574,17 +1610,51 @@ const Products = forwardRef((props, ref) => {
                                                                 /> All
                                                             </th>}
                                                             <th>
-                                                                <input
+                                                                <Typeahead
+                                                                    id="product_id_by_part_no"
+                                                                    size="lg"
+                                                                    labelKey="search_label"
+                                                                    emptyLabel="No products found"
+                                                                    open={openProductSearchResultByPartNo}
+                                                                    isLoading={isProductsLoadingByPartNo}
+                                                                    onChange={(selectedItems) => {
+
+                                                                        /*
+                                                                        if (selectedItems.length === 0) {
+                                                                            return;
+                                                                        }*/
+
+                                                                        searchByMultipleValuesField(
+                                                                            "product_id",
+                                                                            selectedItems,
+                                                                            "part_number"
+                                                                        );
+
+                                                                        // addProduct(selectedItems[0]);
+
+                                                                        setOpenProductSearchResultByPartNo(false);
+                                                                    }}
+                                                                    options={productOptionsByPartNo}
+                                                                    selected={selectedProductsByPartNo}
+                                                                    placeholder="Search By Part #"
+                                                                    highlightOnlyResult={true}
+                                                                    onInputChange={(searchTerm, e) => {
+                                                                        suggestProducts(searchTerm, "part_number")
+                                                                    }}
+                                                                    ignoreDiacritics={true}
+                                                                    multiple
+                                                                />
+                                                                {/*<input
                                                                     type="text"
                                                                     id="part_number"
                                                                     onChange={(e) =>
                                                                         searchByFieldValue("part_number", e.target.value)
                                                                     }
                                                                     className="form-control"
-                                                                />
+                                                                />*/}
                                                             </th>
 
-                                                            <th>
+                                                            <th style={{ minWidth: "250px" }}>
                                                                 {/*<input
                                                         style={{ minWidth: "275px" }}
                                                         type="text"
@@ -1617,8 +1687,8 @@ const Products = forwardRef((props, ref) => {
                                                                     id="product_id"
                                                                     size="lg"
                                                                     labelKey="search_label"
-                                                                    emptyLabel=""
-                                                                    clearButton={false}
+                                                                    emptyLabel="No products found"
+                                                                    clearButton={true}
                                                                     open={openProductSearchResult}
                                                                     isLoading={isProductsLoading}
                                                                     onChange={(selectedItems) => {
@@ -1630,7 +1700,8 @@ const Products = forwardRef((props, ref) => {
 
                                                                         searchByMultipleValuesField(
                                                                             "product_id",
-                                                                            selectedItems
+                                                                            selectedItems,
+                                                                            "name"
                                                                         );
 
                                                                         // addProduct(selectedItems[0]);
@@ -1642,8 +1713,9 @@ const Products = forwardRef((props, ref) => {
                                                                     placeholder="Search By Name | Name in Arabic"
                                                                     highlightOnlyResult={true}
                                                                     onInputChange={(searchTerm, e) => {
-                                                                        suggestProducts(searchTerm)
+                                                                        suggestProducts(searchTerm, "name")
                                                                     }}
+                                                                    ignoreDiacritics={true}
                                                                     multiple
                                                                 />
                                                             </th>
