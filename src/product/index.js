@@ -1784,6 +1784,7 @@ function ProductIndex(props) {
                                                         selected={selectedProductsByPartNo}
                                                         placeholder="Search By Part #"
                                                         highlightOnlyResult={true}
+                                                        filterBy={() => true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestProducts(searchTerm, "part_number")
                                                         }}
@@ -1860,6 +1861,7 @@ function ProductIndex(props) {
                                                         selected={selectedProducts}
                                                         placeholder="Search By Name | Name in Arabic"
                                                         highlightOnlyResult={true}
+                                                        filterBy={() => true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestProducts(searchTerm, "name")
                                                         }}

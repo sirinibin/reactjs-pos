@@ -1573,6 +1573,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 }}
                 options={productOptions}
                 selected={selectedProduct}
+                filterBy={() => true}
                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                 highlightOnlyResult={true}
                 onInputChange={(searchTerm, e) => {

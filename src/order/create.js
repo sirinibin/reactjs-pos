@@ -2106,6 +2106,7 @@ function findDiscount() {
                                 emptyLabel=""
                                 clearButton={true}
                                 open={openProductSearchResult}
+                                filterBy={() => true}
                                 isLoading={isProductsLoading}
                                 isInvalid={errors.product_id ? true : false}
                                 onChange={(selectedItems) => {

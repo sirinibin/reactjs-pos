@@ -1688,6 +1688,7 @@ const Products = forwardRef((props, ref) => {
                                                                     size="lg"
                                                                     labelKey="search_label"
                                                                     emptyLabel="No products found"
+                                                                    filterBy={() => true}
                                                                     clearButton={true}
                                                                     open={openProductSearchResult}
                                                                     isLoading={isProductsLoading}

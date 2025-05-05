@@ -1631,6 +1631,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 selected={selectedProduct}
                                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                 highlightOnlyResult={true}
+                                filterBy={() => true}
                                 onInputChange={(searchTerm, e) => {
                                     suggestProducts(searchTerm);
                                 }}
