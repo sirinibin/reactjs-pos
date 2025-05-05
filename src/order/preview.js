@@ -187,7 +187,7 @@ const Preview = forwardRef((props, ref) => {
 
 
 
-                let pageSize = 20;
+                let pageSize = 15;
                 model.pageSize = pageSize;
                 let totalProducts = model.products.length;
                 let top = 0;
@@ -218,19 +218,19 @@ const Preview = forwardRef((props, ref) => {
 
                     for (let j = offset; j < totalProducts; j++) {
                         model.pages[i].products.push(model.products[j]);
-
                         if (model.pages[i].products.length === pageSize) {
                             break;
                         }
                     }
-
+                    /*
                     if (model.pages[i].products.length < pageSize) {
                         for (let s = model.pages[i].products.length; s < pageSize; s++) {
                             model.pages[i].products.push({});
                         }
-                    }
+                    }*/
 
-                    top += 1057; //1057
+                    //top += 1057; //1057
+                    top += 5; //1057
                     offset += pageSize;
 
                     if (i === 0) {
@@ -804,6 +804,7 @@ const Preview = forwardRef((props, ref) => {
     let [selectedText, setSelectedText] = useState("");
 
     const defaultFontSizes = useMemo(() => ({
+        "font": "Cairo",
         "marginTop": {
             "value": 0,
             "unit": "px",
@@ -1035,6 +1036,34 @@ const Preview = forwardRef((props, ref) => {
             .join(' ');                            // Join words back with space
     }
 
+
+    const fonts = [
+        { label: 'Cairo', value: 'Cairo' },
+        { label: 'Amiri', value: 'Amiri' },
+        { label: 'Noto Naskh Arabic', value: '"Noto Naskh Arabic"' },
+        { label: 'Noto Kufi Arabic', value: '"Noto Kufi Arabic"' },
+        { label: 'Changa', value: 'Changa' },
+        { label: 'Lateef', value: 'Lateef' },
+        { label: 'Harmattan', value: 'Harmattan' },
+        { label: 'Scheherazade New', value: '"Scheherazade New"' },
+        { label: 'Reem Kufi', value: '"Reem Kufi"' },
+        { label: 'El Messiri', value: '"El Messiri"' },
+        { label: 'Tajawal', value: 'Tajawal' },
+        { label: 'Almarai', value: 'Almarai' },
+        { label: 'Markazi Text', value: '"Markazi Text"' },
+        { label: 'Aref Ruqaa', value: '"Aref Ruqaa"' },
+        { label: 'Baloo Bhaijaan 2', value: '"Baloo Bhaijaan 2"' }
+    ];
+
+    //const [selectedFont, setSelectedFont] = useState(fontSizes[modelName + "_font"]);
+
+    const handleFontChange = (e) => {
+        // setSelectedFont(e.target.value);
+        fontSizes[modelName + "_font"] = e.target.value;
+        setFontSizes({ ...fontSizes })
+        saveToLocalStorage("fontSizes", fontSizes);
+    };
+
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
@@ -1054,6 +1083,15 @@ const Preview = forwardRef((props, ref) => {
                             <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
                         </div>
                     )}
+
+                    <label htmlFor="font-select">Select Font: </label>
+                    <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
+                        {fonts.map((font) => (
+                            <option key={font.value} value={font.value}>
+                                {font.label}
+                            </option>
+                        ))}
+                    </select>
 
                     {/* Show Store Header - Always fixed here */}
                     {!whatsAppShare && <div className="form-check">
