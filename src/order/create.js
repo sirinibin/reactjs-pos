@@ -1732,7 +1732,7 @@ function findDiscount() {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" fullscreen
+            <Modal show={show} size="xl" keyboard={false} fullscreen
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
@@ -2152,6 +2152,12 @@ function findDiscount() {
                                 selected={selectedProduct}
                                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                 highlightOnlyResult={true}
+                                onKeyDown={(e) => {
+                                    if (e.code === "Escape") {
+                                        setProductOptions([]);
+                                        setOpenProductSearchResult(false);
+                                    }
+                                }}
                                 onInputChange={(searchTerm, e) => {
                                     //handleSuggestProducts(searchTerm);
                                     suggestProducts(searchTerm);

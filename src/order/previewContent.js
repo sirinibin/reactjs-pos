@@ -365,7 +365,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                         props.selectText("tableHead");
                                     }} className="clickable-text print-label">
                                         <tr style={{}}>
-                                            <th className="per5 text-center" style={{ padding: "0px", width: "5%" }}>
+                                            <th className="per5 text-center" style={{ padding: "0px", width: "7%" }}>
 
                                                 <b>
                                                     <ul
@@ -375,8 +375,8 @@ const PreviewContent = forwardRef((props, ref) => {
                                                             marginBottom: "2px"
                                                         }}
                                                     >
-                                                        <li><b>رقم سري</b></li>
-                                                        <li >SI No. </li>
+                                                        <li>رقم سري</li>
+                                                        <li>SI No.</li>
                                                     </ul>
                                                 </b>
                                             </th>
@@ -392,7 +392,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Part No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per34 text-center" style={{ padding: "0px", width: "32%" }}>
+                                            <th className="per34 text-center" style={{ padding: "0px", width: "25%" }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -430,7 +430,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Unit Price</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per5 text-center" style={{ padding: "0px", width: "5%" }}>
+                                                <th className="per5 text-center" style={{ padding: "0px", width: "7%" }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -442,7 +442,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Discount</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per12 text-center" style={{ padding: "0px", width: "12%" }}>
+                                                <th className="per12 text-center" style={{ padding: "0px", width: "14%" }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -454,7 +454,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Price (without VAT)</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per5 text-center" style={{ padding: "0px", width: "7%" }}>
+                                                <th className="per5 text-center" style={{ padding: "0px", width: "8%" }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
