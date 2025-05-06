@@ -49,6 +49,24 @@ const OrderCreate = forwardRef((props, ref) => {
     }
         */
 
+    function ResetForm() {
+        shipping = 0.00;
+        setShipping(shipping);
+
+        discount = 0.00;
+        setDiscount(discount);
+
+        discountPercent = 0.00;
+        setDiscountPercent(discountPercent);
+
+        discountWithVAT = 0.00;
+        setDiscountWithVAT(discountWithVAT);
+
+        discountPercentWithVAT = 0.00;
+        setDiscountPercentWithVAT(discountPercentWithVAT);
+
+    }
+
     useImperativeHandle(ref, () => ({
         open(id) {
             //ResetFormData();
@@ -84,12 +102,16 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log("formData.store_id:", formData.store_id);
             }
 
+
+
             formData.id = undefined;
             formData.enable_report_to_zatca = false;
             formData.discount = 0.00;
             formData.phone = "";
             formData.code = "";
             formData.discount_percent = 0.00;
+            formData.discount_percent_with_vat = 0.00;
+            formData.discount_with_vat = 0.00;
             formData.shipping_handling_fees = 0.00;
             formData.partial_payment_amount = 0.00;
             formData.cash_discount = 0.00;
@@ -107,6 +129,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
             ];
             formData.cash_discount = 0.00;
+            ResetForm();
 
             if (id) {
                 getOrder(id);
@@ -189,7 +212,28 @@ const OrderCreate = forwardRef((props, ref) => {
                 formData = data.result;
                 formData.enable_report_to_zatca = false;
                 formData.date_str = data.result.date;
-                if (data.result.payments) {
+                if (data.result?.discount) {
+                    discount = formData.discount;
+                    setDiscount(discount);
+                }
+
+                if (data.result?.discount_with_vat) {
+                    discountWithVAT = formData.discount_with_vat;
+                    setDiscountWithVAT(discountWithVAT);
+                }
+
+                if (data.result?.discount_percent) {
+                    discountPercent = formData.discount_percent;
+                    setDiscountPercent(discountPercent);
+                }
+
+                if (data.result?.shipping_handling_fees) {
+                    shipping = formData.shipping_handling_fees;
+                    setShipping(shipping);
+                }
+
+
+                if (data.result?.payments) {
                     console.log("data.result.payments:", data.result.payments);
                     formData.payments_input = data.result.payments;
                     for (var i = 0; i < formData.payments_input?.length; i++) {
@@ -603,6 +647,31 @@ const OrderCreate = forwardRef((props, ref) => {
             formData.cash_discount = 0.00;
         }
 
+        if (discount) {
+            formData.discount = discount;
+        } else {
+            formData.discount = 0;
+        }
+
+        if (discountWithVAT) {
+            formData.discountWithVAT = discountWithVAT;
+        } else {
+            formData.discountWithVAT = 0;
+        }
+
+        if (discountPercent) {
+            formData.discount_percent = discountPercent;
+        } else {
+            formData.discount_percent = 0;
+        }
+
+        if (discountPercentWithVAT) {
+            formData.discount_percent_with_vat = discountPercentWithVAT;
+        } else {
+            formData.discount_percent_with_vat = 0;
+        }
+
+
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
 
@@ -662,8 +731,8 @@ const OrderCreate = forwardRef((props, ref) => {
                 product_id: selectedProducts[i].product_id,
                 name: selectedProducts[i].name,
                 quantity: parseFloat(selectedProducts[i].quantity),
-                unit_price: unitPrice,
-                unit_price_with_vat: selectedProducts[i].unit_price_with_vat,
+                unit_price: unitPrice ? unitPrice : 0.00,
+                unit_price_with_vat: selectedProducts[i].unit_price_with_vat ? selectedProducts[i].unit_price_with_vat : 0.00,
                 base_price: selectedProducts[i].base_price,
                 purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price) : 0,
                 purchase_unit_price_with_vat: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price_with_vat) : 0,
@@ -724,11 +793,12 @@ const OrderCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
+        /*
         if (!formData.discount && formData.discount !== 0) {
             errors["discount"] = "Invalid discount";
             setErrors({ ...errors });
             haveErrors = true;
-        }
+        }*/
 
         /*
         if (formData.payment_status === "paid_partially" && !formData.partial_payment_amount && formData.partial_payment_amount !== 0) {
@@ -916,7 +986,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 product.unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price;
             } else {
                 product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
-                // product.unit_price_with_vat = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price * (1 + (formData.vat_percent / 100))));
+                //product.unit_price_with_vat = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price * (1 + (formData.vat_percent / 100))));
             }
         }
 
@@ -1195,26 +1265,59 @@ function findDiscount() {
 }
     */
 
+    let [shipping, setShipping] = useState(0.00);
+    let [discount, setDiscount] = useState(0.00);
+    let [discountPercent, setDiscountPercent] = useState(0.00);
+
+    let [discountWithVAT, setDiscountWithVAT] = useState(0.00);
+    let [discountPercentWithVAT, setDiscountPercentWithVAT] = useState(0.00);
+
+
+
 
     async function reCalculate(productIndex) {
         console.log("inside reCalculate");
 
-        /*
-        if (selectedProducts[productIndex]) {
-            if (selectedProducts[productIndex].is_discount_percent) {
-                findProductUnitDiscount(productIndex);
-            } else {
-                findProductUnitDiscountPercent(productIndex);
-            }
-        }*/
+        if (!discountWithVAT) {
+            formData.discount_with_vat = 0
+        } else {
+            formData.discount_with_vat = discountWithVAT;
+        }
+
+        if (!discount) {
+            formData.discount = 0;
+        } else {
+            formData.discount = discount;
+        }
+
+        if (!discountPercent) {
+            formData.discount_percent = 0;
+        } else {
+            formData.discount_percent = discountPercent;
+        }
+
+        if (!discountPercentWithVAT) {
+            formData.discount_percent_with_vat = 0;
+        } else {
+            formData.discount_percent_with_vat = discountPercentWithVAT;
+        }
+
+
+        if (!shipping) {
+            formData.shipping_handling_fees = 0;
+        } else {
+            formData.shipping_handling_fees = shipping;
+        }
+
 
 
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
 
             let unitPrice = parseFloat(selectedProducts[i].unit_price);
-            console.log("selectedProducts[i].unit_price:", selectedProducts[i].unit_price);
             console.log("unitPrice:", unitPrice);
+            console.log("selectedProducts[i].unit_price_with_vat:", selectedProducts[i].unit_price_with_vat);
+
 
             let unitPriceWithVAT = parseFloat(selectedProducts[i].unit_price_with_vat);
             /*
@@ -1222,17 +1325,17 @@ function findDiscount() {
                 errors["unit_price_" + i] = "Max decimal points allowed is 2 - WIITHOUT VAT";
                 setErrors({ ...errors });
                 return;
-
+    
             }
-
+    
           
-
-
+    
+    
             if (unitPriceWithVAT && /^\d*\.?\d{0,2}$/.test(unitPriceWithVAT) === false) {
                 errors["unit_price_with_vat" + i] = "Max decimal points allowed is 2 - WITH VAT";
                 setErrors({ ...errors });
                 return;
-
+    
             }*/
 
 
@@ -1262,13 +1365,11 @@ function findDiscount() {
             }
 
 
-
-
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
                 quantity: parseFloat(selectedProducts[i].quantity),
-                unit_price: unitPrice,
-                unit_price_with_vat: unitPriceWithVAT,
+                unit_price: unitPrice ? unitPrice : 0.00,
+                unit_price_with_vat: unitPriceWithVAT ? unitPriceWithVAT : 0.00,
                 purchase_unit_price: selectedProducts[i].purchase_unit_price ? parseFloat(selectedProducts[i].purchase_unit_price) : 0,
                 purchase_unit_price_with_vat: selectedProducts[i].purchase_unit_price_with_vat ? parseFloat(selectedProducts[i].purchase_unit_price_with_vat) : 0,
                 unit_discount: unitDiscount,
@@ -1289,85 +1390,129 @@ function findDiscount() {
             body: JSON.stringify(formData),
         };
 
-        let result = await fetch(
-            "/v1/order/calculate-net-total",
-            requestOptions
-        );
-        console.log("Done")
-        if (!result.ok) {
-            return;
-        }
-        let res = await result.json();
-
-        if (res.result) {
-            formData.total = res.result.total;
-            formData.total_with_vat = res.result.total_with_vat;
-            formData.net_total = res.result.net_total;
-            formData.vat_price = res.result.vat_price;
-            formData.discount_percent = res.result.discount_percent;
-            formData.discount = res.result.discount;
-            if (res.result.shipping_handling_fees) {
-                formData.shipping_handling_fees = res.result.shipping_handling_fees;
+        let result;
+        try {
+            result = await fetch(
+                "/v1/order/calculate-net-total",
+                requestOptions
+            );
+            console.log("Done")
+            if (!result.ok) {
+                return;
             }
 
 
-            for (let i = 0; i < selectedProducts?.length; i++) {
-                for (let j = 0; j < res.result?.products?.length; j++) {
-                    if (res.result?.products[j].product_id === selectedProducts[i].product_id) {
-                        if (res.result?.products[j].unit_discount_percent) {
-                            selectedProducts[i].unit_discount_percent = res.result?.products[j].unit_discount_percent;
-                        }
+            let res = await result.json();
+            if (res.result) {
+                formData.total = res.result.total;
+                formData.total_with_vat = res.result.total_with_vat;
+                formData.net_total = res.result.net_total;
+                formData.vat_price = res.result.vat_price;
 
-                        if (res.result?.products[j].unit_discount) {
-                            selectedProducts[i].unit_discount = res.result?.products[j].unit_discount;
-                        }
+                if (res.result.discount_percent) {
+                    discountPercent = res.result.discount_percent;
+                    setDiscountPercent(discountPercent);
+                }
 
-                        if (res.result?.products[j].unit_price) {
-                            selectedProducts[i].unit_price = res.result?.products[j].unit_price;
-                        }
 
-                        if (res.result?.products[j].unit_price_with_vat) {
-                            selectedProducts[i].unit_price_with_vat = res.result?.products[j].unit_price_with_vat;
-                        }
+                if (res.result.discount_percent_with_vat) {
+                    discountPercentWithVAT = res.result.discount_percent_with_vat;
+                    setDiscountPercentWithVAT(discountPercentWithVAT);
+                }
 
-                        console.log("Discounts updated from server")
+                if (res.result.discount) {
+                    discount = res.result.discount;
+                    setDiscount(discount);
+                }
+
+                if (res.result.discount_with_vat) {
+                    discountWithVAT = res.result.discount_with_vat;
+                    setDiscountWithVAT(discountWithVAT);
+                }
+
+
+
+
+
+                if (res.result.shipping_handling_fees) {
+                    formData.shipping_handling_fees = res.result.shipping_handling_fees;
+                }
+
+
+                for (let i = 0; i < selectedProducts?.length; i++) {
+                    for (let j = 0; j < res.result?.products?.length; j++) {
+                        if (res.result?.products[j].product_id === selectedProducts[i].product_id) {
+                            if (res.result?.products[j].unit_discount_percent) {
+                                selectedProducts[i].unit_discount_percent = res.result?.products[j].unit_discount_percent;
+                            }
+
+                            if (res.result?.products[j].unit_discount) {
+                                selectedProducts[i].unit_discount = res.result?.products[j].unit_discount;
+                            }
+
+
+                            if (res.result?.products[j].unit_price) {
+                                selectedProducts[i].unit_price = res.result?.products[j].unit_price;
+                            }
+
+                            if (res.result?.products[j].unit_price_with_vat) {
+                                selectedProducts[i].unit_price_with_vat = res.result?.products[j].unit_price_with_vat;
+                            }
+
+                            /*
+                            if (res.result?.products[j].unit_price) {
+                                selectedProducts[i].unit_price = res.result?.products[j].unit_price;
+                            } else if (res.result?.products[j].unit_price === 0 || !res.result?.products[j].unit_price) {
+                                selectedProducts[i].unit_price = "";
+                            }
+    
+                            if (res.result?.products[j].unit_price_with_vat) {
+                                selectedProducts[i].unit_price_with_vat = res.result?.products[j].unit_price_with_vat;
+                            } else if (res.result?.products[j].unit_price_with_vat === 0 || !res.result?.products[j].unit_price_with_vat) {
+                                selectedProducts[i].unit_price_with_vat = "";
+                            }
+                                */
+                            console.log("Discounts updated from server")
+                        }
                     }
                 }
-            }
-            setSelectedProducts([...selectedProducts]);
-            /*
-                selectedProducts[index].unit_discount_percent
-                selectedProducts = formData.products;
                 setSelectedProducts([...selectedProducts]);
-            */
-            setFormData({ ...formData });
-        }
-
-
-        if (!formData.id) {
-            let method = "";
-            if (formData.payments_input && formData.payments_input[0]) {
-                method = formData.payments_input[0].method;
+                /*
+                    selectedProducts[index].unit_discount_percent
+                    selectedProducts = formData.products;
+                    setSelectedProducts([...selectedProducts]);
+                */
+                setFormData({ ...formData });
             }
 
-            formData.payments_input = [{
-                "date_str": formData.date_str,
-                "amount": 0.00,
-                "method": method,
-                "deleted": false,
-            }];
 
-            if (formData.net_total > 0) {
-                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
-                if (formData.cash_discount) {
-                    formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
+            if (!formData.id) {
+                let method = "";
+                if (formData.payments_input && formData.payments_input[0]) {
+                    method = formData.payments_input[0].method;
                 }
-                formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
+
+                formData.payments_input = [{
+                    "date_str": formData.date_str,
+                    "amount": 0.00,
+                    "method": method,
+                    "deleted": false,
+                }];
+
+                if (formData.net_total > 0) {
+                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
+                    if (formData.cash_discount) {
+                        formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
+                    }
+                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
+                }
             }
+            findTotalPayments();
+            setFormData({ ...formData });
+            validatePaymentAmounts();
+        } catch (err) {
+            console.error("Failed to parse response:", err);
         }
-        findTotalPayments();
-        setFormData({ ...formData });
-        validatePaymentAmounts();
     }
 
 
@@ -1727,6 +1872,7 @@ function findDiscount() {
 
     const productSearchRef = useRef();
 
+    const timerRef = useRef(null);
 
     return (
         <>
@@ -2592,18 +2738,22 @@ function findDiscount() {
                                             </td>*/}
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_product_unit_price_with_vat" + index}`} name={`${"sales_product_unit_price_with_vat" + index}`} onWheel={(e) => e.target.blur()} value={product.unit_price_with_vat} className="form-control text-end"
+                                                    <input type="number" id={`${"sales_product_unit_price_with_vat" + index}`} name={`${"sales_product_unit_price_with_vat" + index}`} onWheel={(e) => e.target.blur()} value={selectedProducts[index].unit_price_with_vat} className="form-control text-end"
 
                                                         placeholder="Unit Price(with VAT)" onChange={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+
                                                             errors["unit_price_with_vat_" + index] = "";
                                                             setErrors({ ...errors });
                                                             if (!e.target.value) {
-                                                                errors["unit_price_with_vat_" + index] = "Invalid Unit Price";
-                                                                selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
+                                                                // errors["unit_price_with_vat_" + index] = "";
+                                                                selectedProducts[index].unit_price_with_vat = "";
+                                                                selectedProducts[index].unit_price = "";
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 setErrors({ ...errors });
                                                                 console.log("errors:", errors);
-                                                                setTimeout(() => {
+                                                                // Set new debounce timer
+                                                                timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
                                                                 }, 300);
                                                                 return;
@@ -2611,11 +2761,13 @@ function findDiscount() {
 
                                                             if (e.target.value === 0) {
                                                                 errors["unit_price_with_vat_" + index] = "Unit Price should be > 0";
-                                                                selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
+                                                                selectedProducts[index].unit_price_with_vat = 0;
+                                                                selectedProducts[index].unit_price = 0;
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 setErrors({ ...errors });
                                                                 console.log("errors:", errors);
-                                                                setTimeout(() => {
+                                                                // Set new debounce timer
+                                                                timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
                                                                 }, 300);
                                                                 return;
@@ -2630,9 +2782,18 @@ function findDiscount() {
                                                             selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
                                                             // selectedProducts[index].unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))));  //selectedProducts[index].unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))));
                                                             setSelectedProducts([...selectedProducts]);
-                                                            setTimeout(() => {
+
+
+
+                                                            // Set new debounce timer
+                                                            timerRef.current = setTimeout(() => {
                                                                 reCalculate(index);
                                                             }, 300);
+
+                                                            /*
+                                                            setTimeout(() => {
+                                                                reCalculate(index);
+                                                            }, 300);*/
 
 
                                                         }} />
@@ -2703,32 +2864,40 @@ function findDiscount() {
                                             <td>
                                                 <div className="input-group mb-3">
                                                     <input type="number" id={`${"sales_unit_discount_with_vat" + index}`} name={`${"sales_unit_discount_with_vat_" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end sales_unit_discount" value={selectedProducts[index].unit_discount_with_vat} onChange={(e) => {
-                                                        selectedProducts[index].is_discount_percent = false;
+                                                        if (timerRef.current) clearTimeout(timerRef.current);
                                                         if (parseFloat(e.target.value) === 0) {
-                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value);
+                                                            selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                            selectedProducts[index].unit_discount = 0.00;
+                                                            selectedProducts[index].unit_discount_percent = 0.00;
                                                             setFormData({ ...formData });
                                                             errors["unit_discount_with_vat" + index] = "";
                                                             setErrors({ ...errors });
-                                                            //reCalculate(index);
+                                                            timerRef.current = setTimeout(() => {
+                                                                reCalculate(index);
+                                                            }, 300);
                                                             return;
                                                         }
 
                                                         if (parseFloat(e.target.value) < 0) {
-                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value);
+                                                            selectedProducts[index].unit_discount_with_vat = 0.00;
                                                             selectedProducts[index].unit_discount_percent = 0.00;
+                                                            selectedProducts[index].unit_discount = 0.00;
                                                             setFormData({ ...formData });
                                                             errors["unit_discount_" + index] = "Unit discount should be >= 0";
                                                             setErrors({ ...errors });
-                                                            // reCalculate(index);
+                                                            timerRef.current = setTimeout(() => {
+                                                                reCalculate(index);
+                                                            }, 300);
                                                             return;
                                                         }
 
                                                         if (!e.target.value) {
                                                             selectedProducts[index].unit_discount_with_vat = "";
+                                                            selectedProducts[index].unit_discount = "";
                                                             selectedProducts[index].unit_discount_percent = "";
                                                             // errors["discount_" + index] = "Invalid Discount";
                                                             setFormData({ ...formData });
-                                                            setTimeout(() => {
+                                                            timerRef.current = setTimeout(() => {
                                                                 reCalculate(index);
                                                             }, 300);
                                                             //setErrors({ ...errors });
@@ -2748,7 +2917,7 @@ function findDiscount() {
                                                         selectedProducts[index].unit_discount_with_vat = parseFloat(e.target.value);
                                                         // selectedProducts[index].unit_discount = parseFloat(selectedProducts[index].unit_discount_with_vat / (1 + (formData.vat_percent / 100)));
                                                         setFormData({ ...formData });
-                                                        setTimeout(() => {
+                                                        timerRef.current = setTimeout(() => {
                                                             reCalculate(index);
                                                         }, 300);
                                                     }} />
@@ -2763,26 +2932,29 @@ function findDiscount() {
                                             <td>
                                                 <div className="input-group mb-3">
                                                     <input type="number" id={`${"sales_unit_discount_percent" + index}`} name={`${"sales_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
-                                                        selectedProducts[index].is_discount_percent = true;
+                                                        if (timerRef.current) clearTimeout(timerRef.current);
+
                                                         if (parseFloat(e.target.value) === 0) {
-                                                            selectedProducts[index].unit_discount_percent = parseFloat(e.target.value);
+                                                            selectedProducts[index].unit_discount_percent = 0.00;
                                                             selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                            selectedProducts[index].unit_discount = 0.00;
                                                             setFormData({ ...formData });
                                                             errors["unit_discount_percent_" + index] = "";
                                                             setErrors({ ...errors });
-                                                            setTimeout(() => {
+                                                            timerRef.current = setTimeout(() => {
                                                                 reCalculate(index);
                                                             }, 300);
                                                             return;
                                                         }
 
                                                         if (parseFloat(e.target.value) < 0) {
-                                                            selectedProducts[index].unit_discount_percent = parseFloat(e.target.value);
+                                                            selectedProducts[index].unit_discount_percent = 0.00;
                                                             selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                            selectedProducts[index].unit_discount = 0.00;
                                                             setFormData({ ...formData });
                                                             errors["unit_discount_percent_" + index] = "Unit discount % should be >= 0";
                                                             setErrors({ ...errors });
-                                                            setTimeout(() => {
+                                                            timerRef.current = setTimeout(() => {
                                                                 reCalculate(index);
                                                             }, 300);
                                                             return;
@@ -2791,9 +2963,10 @@ function findDiscount() {
                                                         if (!e.target.value) {
                                                             selectedProducts[index].unit_discount_percent = "";
                                                             selectedProducts[index].unit_discount_with_vat = "";
+                                                            selectedProducts[index].unit_discount = "";
                                                             //errors["discount_percent_" + index] = "Invalid Discount Percent";
                                                             setFormData({ ...formData });
-                                                            setTimeout(() => {
+                                                            timerRef.current = setTimeout(() => {
                                                                 reCalculate(index);
                                                             }, 300);
                                                             //setErrors({ ...errors });
@@ -2814,7 +2987,7 @@ function findDiscount() {
                                                         selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat * (selectedProducts[index].unit_discount_percent / 100)));
                                                         setFormData({ ...formData });
 
-                                                        setTimeout(() => {
+                                                        timerRef.current = setTimeout(() => {
                                                             reCalculate(index);
                                                         }, 300);
                                                     }} />{""}
@@ -2870,33 +3043,44 @@ function findDiscount() {
                                             Shipping & Handling Fees
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={formData.shipping_handling_fees} onChange={(e) => {
+                                            <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={shipping} onChange={(e) => {
+                                                if (timerRef.current) clearTimeout(timerRef.current);
                                                 errors["shipping_handling_fees"] = "";
                                                 setErrors({ ...errors });
 
                                                 if (parseFloat(e.target.value) === 0) {
-                                                    formData.shipping_handling_fees = parseFloat(e.target.value);
-                                                    setFormData({ ...formData });
+                                                    shipping = 0;
+                                                    setShipping(shipping);
                                                     errors["shipping_handling_fees"] = "";
                                                     setErrors({ ...errors });
-                                                    reCalculate();
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
+
                                                     return;
                                                 }
 
                                                 if (parseFloat(e.target.value) < 0) {
-                                                    formData.shipping_handling_fees = parseFloat(e.target.value);
-                                                    setFormData({ ...formData });
-                                                    errors["shipping_handling_fees"] = "Shipping / Handling Fees should be > 0";
+                                                    shipping = 0;
+                                                    setShipping(shipping);
+
+                                                    // errors["shipping_handling_fees"] = "Shipping / Handling Fees should be > 0";
                                                     setErrors({ ...errors });
-                                                    reCalculate();
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
                                                     return;
                                                 }
 
                                                 if (!e.target.value) {
-                                                    formData.shipping_handling_fees = "";
-                                                    errors["shipping_handling_fees"] = "Invalid Shipping / Handling Fees";
-                                                    setFormData({ ...formData });
+                                                    shipping = "";
+                                                    setShipping(shipping);
+                                                    //errors["shipping_handling_fees"] = "Invalid Shipping / Handling Fees";
+
                                                     setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
                                                     return;
                                                 }
 
@@ -2906,9 +3090,12 @@ function findDiscount() {
                                                     setErrors({ ...errors });
                                                 }
 
-                                                formData.shipping_handling_fees = parseFloat(e.target.value);
-                                                setFormData({ ...formData });
-                                                reCalculate();
+
+                                                shipping = parseFloat(e.target.value);
+                                                setShipping(shipping);
+                                                timerRef.current = setTimeout(() => {
+                                                    reCalculate();
+                                                }, 300);
                                             }} />
                                             {" "}
                                             {errors.shipping_handling_fees && (
@@ -2920,33 +3107,68 @@ function findDiscount() {
                                     </tr>
                                     <tr>
                                         <th colSpan="8" className="text-end">
-                                            Discount  <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={formData.discount_percent} onChange={(e) => {
-                                                formData.is_discount_percent = true;
+                                            Discount(without VAT) <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={discountPercent} onChange={(e) => {
+                                                if (timerRef.current) clearTimeout(timerRef.current);
                                                 if (parseFloat(e.target.value) === 0) {
-                                                    formData.discount_percent = parseFloat(e.target.value);
-                                                    setFormData({ ...formData });
+
+                                                    discount = 0;
+                                                    setDiscount(discount);
+
+                                                    discountPercentWithVAT = 0;
+                                                    setDiscountPercentWithVAT(discountPercentWithVAT);
+
+                                                    discount = 0;
+                                                    setDiscount(discount);
+
+                                                    discountPercent = 0;
+                                                    setDiscountPercent(discountPercent);
+
                                                     errors["discount_percent"] = "";
                                                     setErrors({ ...errors });
-                                                    reCalculate();
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
                                                     return;
                                                 }
 
                                                 if (parseFloat(e.target.value) < 0) {
-                                                    formData.discount_percent = parseFloat(e.target.value);
-                                                    formData.discount = 0.00;
-                                                    setFormData({ ...formData });
-                                                    errors["discount_percent"] = "Discount percent should be >= 0";
+                                                    discountWithVAT = 0;
+                                                    setDiscountWithVAT(discountWithVAT);
+
+                                                    discountPercentWithVAT = 0;
+                                                    setDiscountPercentWithVAT(discountPercentWithVAT);
+
+                                                    discount = 0;
+                                                    setDiscount(discount);
+
+                                                    discountPercent = 0;
+                                                    setDiscountPercent(discountPercent);
+
+                                                    // errors["discount_percent"] = "Discount percent should be >= 0";
                                                     setErrors({ ...errors });
-                                                    reCalculate();
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
                                                     return;
                                                 }
 
                                                 if (!e.target.value) {
-                                                    formData.discount_percent = "";
-                                                    formData.discount = 0.00;
-                                                    errors["discount_percent"] = "Invalid Discount Percent";
-                                                    setFormData({ ...formData });
+                                                    discountWithVAT = "";
+                                                    setDiscountWithVAT(discountWithVAT);
+
+                                                    discountPercentWithVAT = "";
+                                                    setDiscountPercentWithVAT(discountPercentWithVAT);
+
+                                                    discount = "";
+                                                    setDiscount(discount);
+
+                                                    discountPercent = "";
+                                                    setDiscountPercent(discountPercent);
+
                                                     setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
                                                     return;
                                                 }
 
@@ -2954,9 +3176,11 @@ function findDiscount() {
                                                 errors["discount"] = "";
                                                 setErrors({ ...errors });
 
-                                                formData.discount_percent = parseFloat(e.target.value);
-                                                setFormData({ ...formData });
-                                                reCalculate();
+                                                discountPercent = parseFloat(e.target.value);
+                                                setDiscountPercent(discountPercent);
+                                                timerRef.current = setTimeout(() => {
+                                                    reCalculate();
+                                                }, 300);
                                             }} />{"%"}
                                             {errors.discount_percent && (
                                                 <div style={{ color: "red" }}>
@@ -2965,34 +3189,58 @@ function findDiscount() {
                                             )}
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" id="sales_discount" name="sales_discount" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={formData.discount} onChange={(e) => {
-                                                formData.is_discount_percent = false;
+                                            <input type="number" id="sales_discount" disabled={true} name="sales_discount" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={discount} onChange={(e) => {
+                                                if (timerRef.current) clearTimeout(timerRef.current);
                                                 if (parseFloat(e.target.value) === 0) {
-                                                    formData.discount = parseFloat(e.target.value);
-                                                    setFormData({ ...formData });
+                                                    discount = 0;
+                                                    setDiscount(discount);
+                                                    discountWithVAT = 0;
+                                                    setDiscountWithVAT(discountWithVAT);
+                                                    discountPercent = 0
+                                                    setDiscountPercent(discountPercent);
+                                                    discountPercentWithVAT = 0
+                                                    setDiscountPercent(discountPercentWithVAT);
+
                                                     errors["discount"] = "";
                                                     setErrors({ ...errors });
-                                                    reCalculate();
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
                                                     return;
                                                 }
 
                                                 if (parseFloat(e.target.value) < 0) {
-                                                    formData.discount = parseFloat(e.target.value);
-                                                    formData.discount_percent = 0.00;
-                                                    setFormData({ ...formData });
-                                                    errors["discount"] = "Discount should be >= 0";
+                                                    discount = 0;
+                                                    setDiscount(discount);
+                                                    discountWithVAT = 0;
+                                                    setDiscountWithVAT(discountWithVAT);
+                                                    discountPercent = 0
+                                                    setDiscountPercent(discountPercent);
+                                                    discountPercentWithVAT = 0
+                                                    setDiscountPercent(discountPercentWithVAT);
+                                                    // errors["discount"] = "Discount should be >= 0";
                                                     setErrors({ ...errors });
-                                                    reCalculate();
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
                                                     return;
                                                 }
 
                                                 if (!e.target.value) {
-                                                    formData.discount = "";
-                                                    formData.discount_percent = 0.00;
-                                                    errors["discount"] = "Invalid Discount";
-                                                    setFormData({ ...formData });
-                                                    reCalculate();
+                                                    discount = "";
+                                                    setDiscount(discount);
+                                                    discountWithVAT = "";
+                                                    setDiscountWithVAT(discountWithVAT);
+                                                    discountPercent = "";
+                                                    setDiscountPercent(discountPercent);
+                                                    discountPercentWithVAT = "";
+                                                    setDiscountPercent(discountPercentWithVAT);
+
                                                     setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
+
                                                     return;
                                                 }
 
@@ -3006,9 +3254,14 @@ function findDiscount() {
                                                     setErrors({ ...errors });
                                                 }
 
-                                                formData.discount = parseFloat(e.target.value);
-                                                setFormData({ ...formData });
-                                                reCalculate();
+                                                discount = parseFloat(e.target.value);
+                                                setDiscount(discount);
+                                                //discountPercent = parseFloat(trimTo2Decimals((discount / formData.net_total) * 100))
+                                                //setDiscountPercent(discountPercent);
+
+                                                timerRef.current = setTimeout(() => {
+                                                    reCalculate();
+                                                }, 300);
                                             }} />
                                             {" "}
                                             {errors.discount && (
@@ -3016,6 +3269,177 @@ function findDiscount() {
                                                     {errors.discount}
                                                 </div>
                                             )}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th colSpan="8" className="text-end">
+                                            Discount(with VAT) <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={discountPercentWithVAT} onChange={(e) => {
+                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                if (parseFloat(e.target.value) === 0) {
+
+                                                    discountWithVAT = 0;
+                                                    setDiscountWithVAT(discountWithVAT);
+
+                                                    discountPercentWithVAT = 0;
+                                                    setDiscountPercentWithVAT(discountPercentWithVAT);
+
+                                                    discount = 0;
+                                                    setDiscount(discount);
+
+                                                    discountPercent = 0;
+                                                    setDiscountPercent(discountPercent);
+
+                                                    errors["discount_percent_with_vat"] = "";
+                                                    setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
+                                                    return;
+                                                }
+
+                                                if (parseFloat(e.target.value) < 0) {
+                                                    discountWithVAT = 0;
+                                                    setDiscountWithVAT(discountWithVAT);
+
+                                                    discountPercentWithVAT = 0;
+                                                    setDiscountPercentWithVAT(discountPercentWithVAT);
+
+                                                    discount = 0;
+                                                    setDiscount(discount);
+
+                                                    discountPercent = 0;
+                                                    setDiscountPercent(discountPercent);
+
+                                                    errors["discount_percent"] = "Discount percent should be >= 0";
+                                                    setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
+                                                    return;
+                                                }
+
+                                                if (!e.target.value) {
+                                                    discountWithVAT = "";
+                                                    setDiscountWithVAT(discountWithVAT);
+
+                                                    discountPercentWithVAT = "";
+                                                    setDiscountPercentWithVAT(discountPercentWithVAT);
+
+                                                    discount = "";
+                                                    setDiscount(discount);
+
+                                                    discountPercent = "";
+                                                    setDiscountPercent(discountPercent);
+
+                                                    setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
+                                                    return;
+                                                }
+
+                                                errors["discount_percent"] = "";
+                                                errors["discount"] = "";
+                                                setErrors({ ...errors });
+
+                                                discountPercentWithVAT = parseFloat(e.target.value);
+                                                setDiscountPercentWithVAT(discountPercentWithVAT);
+                                                timerRef.current = setTimeout(() => {
+                                                    reCalculate();
+                                                }, 300);
+                                            }} />{"%"}
+                                            {errors.discount_percent_with_vat && (
+                                                <div style={{ color: "red" }}>
+                                                    {errors.discount_percent_with_vat}
+                                                </div>
+                                            )}
+                                        </th>
+                                        <td className="text-end">
+                                            <input type="number" id="sales_discount" name="sales_discount_with_vat" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={discountWithVAT} onChange={(e) => {
+                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                if (parseFloat(e.target.value) === 0) {
+                                                    discount = 0;
+                                                    discountWithVAT = 0;
+                                                    discountPercent = 0
+                                                    setDiscount(discount);
+                                                    setDiscountWithVAT(discount);
+                                                    setDiscountPercent(discount);
+                                                    errors["discount"] = "";
+                                                    setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
+                                                    return;
+                                                }
+
+                                                if (parseFloat(e.target.value) < 0) {
+                                                    discount = 0.00;
+                                                    discountWithVAT = 0.00;
+                                                    discountPercent = 0.00;
+                                                    setDiscount(discount);
+                                                    setDiscountWithVAT(discount);
+                                                    setDiscountPercent(discountPercent);
+                                                    // errors["discount"] = "Discount should be >= 0";
+                                                    setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
+                                                    return;
+                                                }
+
+                                                if (!e.target.value) {
+                                                    discount = "";
+                                                    discountWithVAT = "";
+                                                    discountPercent = "";
+                                                    // errors["discount"] = "Invalid Discount";
+                                                    setDiscount(discount);
+                                                    setDiscountWithVAT(discount);
+                                                    setDiscountPercent(discountPercent);
+                                                    setErrors({ ...errors });
+                                                    timerRef.current = setTimeout(() => {
+                                                        reCalculate();
+                                                    }, 300);
+
+                                                    return;
+                                                }
+
+                                                errors["discount"] = "";
+                                                errors["discount_percent"] = "";
+                                                setErrors({ ...errors });
+
+
+                                                if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
+                                                    errors["discount"] = "Max. decimal points allowed is 2";
+                                                    setErrors({ ...errors });
+                                                }
+
+                                                discountWithVAT = parseFloat(e.target.value);
+                                                setDiscountWithVAT(discountWithVAT);
+                                                //discountPercent = parseFloat(trimTo2Decimals((discount / formData.net_total) * 100))
+                                                //setDiscountPercent(discountPercent);
+
+                                                timerRef.current = setTimeout(() => {
+                                                    reCalculate();
+                                                }, 300);
+                                            }} />
+                                            {" "}
+                                            {errors.discount && (
+                                                <div style={{ color: "red" }}>
+                                                    {errors.discount}
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th colSpan="8" className="text-end">[Total(without VAT) + Shipping & Handling Fees - Discount(without VAT)] Total Taxable Amount</th>
+                                        <td className="text-end" style={{ width: "200px" }} >
+                                            <NumberFormat
+                                                value={trimTo2Decimals(formData.total + shipping - discount)}
+                                                displayType={"text"}
+                                                thousandSeparator={true}
+                                                suffix={" "}
+                                                renderText={(value, props) => value}
+                                            />
                                         </td>
                                     </tr>
                                     <tr>
