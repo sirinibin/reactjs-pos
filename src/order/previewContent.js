@@ -549,7 +549,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 Shipping / Handling Fees   رسوم الشحن / المناولة :
                                             </th>
                                             <td className="text-end print-table-value" colSpan="1" style={{}}>
-                                                <Amount amount={trimTo2Decimals(props.model.shipping_handling_fee)} />
+                                                <Amount amount={trimTo2Decimals(props.model.shipping_handling_fees)} />
                                             </td>
                                         </tr>
                                         <tr>

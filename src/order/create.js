@@ -35,6 +35,7 @@ import DeliveryNote from "./../delivery_note/create.js";
 import DeliveryNotes from "./../utils/delivery_notes.js";
 import Customers from "./../utils/customers.js";
 import Amount from "../utils/amount.js";
+import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 
 const OrderCreate = forwardRef((props, ref) => {
@@ -1874,6 +1875,21 @@ function findDiscount() {
 
     const timerRef = useRef(null);
 
+
+    const renderTooltip = (props) => (
+        <Tooltip id="label-tooltip" {...props}>
+            Total(without VAT) + Shipping & Handling Fees - Discount(without VAT)
+            {"(" + trimTo2Decimals(formData.total) + " + " + trimTo2Decimals(shipping) + " - " + trimTo2Decimals(discount) + ") = " + trimTo2Decimals(formData.total + shipping - discount)}
+        </Tooltip>
+    );
+
+    const renderNetTotalTooltip = (props) => (
+        <Tooltip id="label-tooltip" {...props}>
+            Total Taxable Amount(without VAT) + VAT Price ( 15% of Taxable Amount)
+            {"(" + trimTo2Decimals(formData.total + shipping - discount) + " + " + trimTo2Decimals(formData.vat_price) + ") = " + trimTo2Decimals(formData.net_total)}
+        </Tooltip>
+    );
+
     return (
         <>
 
@@ -3431,7 +3447,13 @@ function findDiscount() {
                                         </td>
                                     </tr>
                                     <tr>
-                                        <th colSpan="8" className="text-end">[Total(without VAT) + Shipping & Handling Fees - Discount(without VAT)] Total Taxable Amount</th>
+                                        <th colSpan="8" className="text-end">
+                                            Total Taxable Amount(without VAT)
+                                            <OverlayTrigger placement="right" overlay={renderTooltip}>
+                                                <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
+                                            </OverlayTrigger>
+
+                                        </th>
                                         <td className="text-end" style={{ width: "200px" }} >
                                             <NumberFormat
                                                 value={trimTo2Decimals(formData.total + shipping - discount)}
@@ -3501,7 +3523,12 @@ function findDiscount() {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end">Net Total(with VAT)</th>
+                                        <th colSpan="8" className="text-end">
+                                            Net Total(with VAT)
+                                            <OverlayTrigger placement="right" overlay={renderNetTotalTooltip}>
+                                                <span style={{ textDecoration: 'underline dotted', cursor: 'pointer' }}>ℹ️</span>
+                                            </OverlayTrigger>
+                                        </th>
                                         <th className="text-end">
                                             <NumberFormat
                                                 value={trimTo2Decimals(formData.net_total)}
