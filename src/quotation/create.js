@@ -154,6 +154,9 @@ const QuotationCreate = forwardRef((props, ref) => {
           if (form && form.elements[index + 1]) {
             if (event.target.getAttribute("class").includes("barcode")) {
               form.elements[index].focus();
+            } else if (event.target.getAttribute("class").includes("quotation_unit_discount")) {
+              //console.log("OKKK");
+              moveToProductSearch();
             } else {
               form.elements[index + 1].focus();
             }
@@ -1051,6 +1054,24 @@ const QuotationCreate = forwardRef((props, ref) => {
     PreviewRef.current.open(model, "whatsapp", "quotation");
   }
 
+
+  function moveToProductQuantityInputBox() {
+    setTimeout(() => {
+      let index = (selectedProducts.length - 1);
+      const input = document.getElementById('quotation_product_quantity_' + index);
+      input?.focus();
+
+    }, 500);
+  }
+
+  function moveToProductSearch() {
+    setTimeout(() => {
+      productSearchRef.current?.focus();
+    }, 500);
+  }
+
+  const productSearchRef = useRef();
+
   return (
     <>
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
@@ -1550,6 +1571,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               <label className="form-label">Product*</label>
               <Typeahead
                 id="product_id"
+                ref={productSearchRef}
                 size="lg"
                 labelKey="search_label"
                 emptyLabel=""
@@ -1570,6 +1592,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                     addProduct(selectedItems[0]);
                   }
                   setOpenProductSearchResult(false);
+                  moveToProductQuantityInputBox();
                 }}
                 options={productOptions}
                 selected={selectedProduct}
@@ -1845,7 +1868,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                         <td style={{ width: "155px" }}>
                           <div className="input-group mb-3">
                             <input
-                              id={`${"quotation_product_quantity" + index}`} name={`${"quotation_product_quantity" + index}`}
+                              id={`${"quotation_product_quantity_" + index}`} name={`${"quotation_product_quantity_" + index}`}
                               type="number"
                               value={product.quantity}
                               className="form-control"
@@ -1964,7 +1987,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="input-group mb-3">
                             <input
                               id={`${"quotation_product_unit_discount" + index}`} name={`${"quotation_product_unit_discount" + index}`}
-                              type="number" className="form-control text-end" value={selectedProducts[index].unit_discount} onChange={(e) => {
+                              type="number" className="form-control text-end quotation_unit_discount" value={selectedProducts[index].unit_discount} onChange={(e) => {
                                 selectedProducts[index].is_discount_percent = false;
                                 if (parseFloat(e.target.value) === 0) {
                                   selectedProducts[index].unit_discount = parseFloat(e.target.value);
