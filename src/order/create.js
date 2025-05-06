@@ -1014,15 +1014,18 @@ const OrderCreate = forwardRef((props, ref) => {
         errors.unit_price = "";
         if (!product.unit_price) {
             product["unit_price"] = 0.00;
-            product["base_price"] = 0.00;
-            product["unit_price_with_vat"] = 0.00;
+        }
+
+        if (!product.purchase_unit_price) {
             product["purchase_unit_price"] = 0.00;
-            product["purchase_base_price"] = 0.00;
+        }
+
+        if (!product.purchase_unit_price_with_vat) {
             product["purchase_unit_price_with_vat"] = 0.00;
-            // errors.unit_price = "Invalid Unit Price";
-            // setErrors({ ...errors });
-            //console.log("Invalid unit price:", product);
-            //  return false;
+        }
+
+        if (!product.unit_price_with_vat) {
+            product["unit_price_with_vat"] = 0.00;
         }
 
         let alreadyAdded = false;
@@ -1112,7 +1115,11 @@ const OrderCreate = forwardRef((props, ref) => {
             console.log("Product added")
         }
         setSelectedProducts([...selectedProducts]);
-        reCalculate();
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            reCalculate(index);
+        }, 300);
         return true;
     }
 
