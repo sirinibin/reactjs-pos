@@ -144,6 +144,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     if (form && form.elements[index + 1]) {
                         if (event.target.getAttribute("class").includes("barcode")) {
                             form.elements[index].focus();
+                        } else if (event.target.getAttribute("class").includes("purchase_unit_discount")) {
+                            //console.log("OKKK");
+                            moveToProductSearch();
                         } else {
                             form.elements[index + 1].focus();
                         }
@@ -1213,6 +1216,24 @@ const PurchaseCreate = forwardRef((props, ref) => {
         PreviewRef.current.open(model, "whatsapp", "purchase");
     }
 
+    function moveToProductQuantityInputBox() {
+        setTimeout(() => {
+            let index = (selectedProducts.length - 1);
+            const input = document.getElementById('purchase_product_quantity_' + index);
+            console.log("Moving to qty field");
+            input?.focus();
+
+        }, 500);
+    }
+
+    function moveToProductSearch() {
+        setTimeout(() => {
+            productSearchRef.current?.focus();
+        }, 500);
+    }
+
+    const productSearchRef = useRef();
+
     return (
         <>
             <div
@@ -1606,6 +1627,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <Typeahead
                                 id="product_id"
                                 size="lg"
+                                ref={productSearchRef}
                                 labelKey="search_label"
                                 emptyLabel=""
                                 clearButton={true}
@@ -1626,6 +1648,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                                     }
                                     setOpenProductSearchResult(false);
+                                    moveToProductQuantityInputBox();
                                 }}
                                 options={productOptions}
                                 selected={selectedProduct}
@@ -1803,7 +1826,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             <td style={{ width: "155px" }}>
 
                                                 <div className="input-group mb-3">
-                                                    <input id={`${"purchase_product_quantity" + index}`} name={`${"purchase_product_quantity" + index}`}
+                                                    <input id={`${"purchase_product_quantity_" + index}`} name={`${"purchase_product_quantity_" + index}`}
                                                         type="number" value={product.quantity} className="form-control"
                                                         placeholder="Quantity" onChange={(e) => {
                                                             errors["quantity_" + index] = "";
@@ -1893,7 +1916,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 <div className="input-group mb-3">
                                                     <input
                                                         id={`${"purchase_product_unit_discount" + index}`} name={`${"purchase_product_unit_discount" + index}`}
-                                                        type="number" className="form-control text-end" value={selectedProducts[index].unit_discount} onChange={(e) => {
+                                                        type="number" className="form-control text-end purchase_unit_discount" value={selectedProducts[index].unit_discount} onChange={(e) => {
                                                             selectedProducts[index].is_discount_percent = false;
                                                             if (parseFloat(e.target.value) === 0) {
                                                                 selectedProducts[index].unit_discount = parseFloat(e.target.value);

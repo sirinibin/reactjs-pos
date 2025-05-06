@@ -488,8 +488,8 @@ const PreviewContent = forwardRef((props, ref) => {
                                             <tr key={product.item_code} className="text-center"  >
                                                 <td style={{ padding: "7px", }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                                 <td style={{}} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
-                                                <th style={{}}>
-                                                    {product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}
+                                                <th dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                                                    <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}</span>
                                                 </th>
                                                 <td style={{}}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
                                                 {props.modelName !== "delivery_note" && <>

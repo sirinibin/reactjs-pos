@@ -287,9 +287,14 @@ const OrderCreate = forwardRef((props, ref) => {
                 var form = event.target.form;
                 if (form && event.target) {
                     var index = Array.prototype.indexOf.call(form, event.target);
+                    console.log("form.elements:", form.elements);
                     if (form && form.elements[index + 1]) {
+                        //
                         if (event.target.getAttribute("class").includes("barcode")) {
                             form.elements[index].focus();
+                        } else if (event.target.getAttribute("class").includes("sales_unit_discount")) {
+                            //console.log("OKKK");
+                            moveToProductSearch();
                         } else {
                             form.elements[index + 1].focus();
                         }
@@ -1660,6 +1665,24 @@ function findDiscount() {
         }
     }
 
+    function moveToProductQuantityInputBox() {
+        setTimeout(() => {
+            let index = (selectedProducts.length - 1);
+            const input = document.getElementById('sales_product_quantity_' + index);
+            console.log("Moving to qty field");
+            input?.focus();
+
+        }, 500);
+    }
+
+    function moveToProductSearch() {
+        setTimeout(() => {
+            productSearchRef.current?.focus();
+        }, 500);
+    }
+
+    const productSearchRef = useRef();
+
 
     return (
         <>
@@ -2102,6 +2125,7 @@ function findDiscount() {
                             <Typeahead
                                 id="product_id"
                                 size="lg"
+                                ref={productSearchRef}
                                 labelKey="search_label"
                                 emptyLabel=""
                                 clearButton={true}
@@ -2122,6 +2146,7 @@ function findDiscount() {
                                     addProduct(selectedItems[0]);
 
                                     setOpenProductSearchResult(false);
+                                    moveToProductQuantityInputBox();
                                 }}
                                 options={productOptions}
                                 selected={selectedProduct}
@@ -2413,7 +2438,7 @@ function findDiscount() {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_product_quantity" + index}`} name={`${"sales_product_quantity" + index}`} onWheel={(e) => e.target.blur()} value={product.quantity} className="form-control text-end"
+                                                    <input type="number" id={`${"sales_product_quantity_" + index}`} name={`${"sales_product_quantity" + index}`} onWheel={(e) => e.target.blur()} value={product.quantity} className="form-control text-end"
 
                                                         placeholder="Quantity" onChange={(e) => {
                                                             errors["quantity_" + index] = "";
@@ -2563,7 +2588,7 @@ function findDiscount() {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_unit_discount" + index}`} name={`${"sales_unit_discount" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount} onChange={(e) => {
+                                                    <input type="number" id={`${"sales_unit_discount" + index}`} name={`${"sales_unit_discount" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end sales_unit_discount" value={selectedProducts[index].unit_discount} onChange={(e) => {
                                                         selectedProducts[index].is_discount_percent = false;
                                                         if (parseFloat(e.target.value) === 0) {
                                                             selectedProducts[index].unit_discount = parseFloat(e.target.value);
