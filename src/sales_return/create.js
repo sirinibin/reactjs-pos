@@ -1106,6 +1106,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         PreviewRef.current.open(model, "whatsapp", "sales_return");
     }
 
+    const timerRef = useRef(null);
 
 
     return (
@@ -1580,7 +1581,20 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     <input id={`${"sales_return_product_unit_price" + index}`} name={`${"sales_return_product_unit_price" + index}`}
                                                         type="number" onWheel={(e) => e.target.blur()} value={product.unit_price} className="form-control"
 
-                                                        placeholder="Unit Price" onChange={(e) => {
+                                                        placeholder="Unit Price"
+
+                                                        onKeyDown={(e) => {
+                                                            if (e.code === "Backspace") {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                selectedProducts[index].unit_price = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                            }
+                                                        }}
+
+                                                        onChange={(e) => {
                                                             errors["unit_price_" + index] = "";
                                                             setErrors({ ...errors });
                                                             if (!e.target.value) {

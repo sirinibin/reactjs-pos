@@ -2369,6 +2369,8 @@ function findDiscount() {
                                     if (e.code === "Escape") {
                                         setProductOptions([]);
                                         setOpenProductSearchResult(false);
+                                        productSearchRef.current?.clear();
+                                        //productSearchRef.current?.blur();
                                     }
                                 }}
                                 onInputChange={(searchTerm, e) => {
@@ -2763,7 +2765,20 @@ function findDiscount() {
                                                 <div className="input-group mb-3">
                                                     <input type="number" id={`${"sales_product_unit_price_with_vat" + index}`} name={`${"sales_product_unit_price_with_vat" + index}`} onWheel={(e) => e.target.blur()} value={selectedProducts[index].unit_price_with_vat} className="form-control text-end"
 
-                                                        placeholder="Unit Price(with VAT)" onChange={(e) => {
+                                                        placeholder="Unit Price(with VAT)"
+
+                                                        onKeyDown={(e) => {
+                                                            if (e.code === "Backspace") {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                selectedProducts[index].unit_price_with_vat = "";
+                                                                selectedProducts[index].unit_price = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                            }
+                                                        }}
+                                                        onChange={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
                                                             errors["unit_price_with_vat_" + index] = "";

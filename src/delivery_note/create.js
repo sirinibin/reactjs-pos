@@ -940,6 +940,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
+  const productSearchRef = useRef();
+
   return (
     <>
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
@@ -981,7 +983,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} size="xl" fullscreen={!enableProductSelection} onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+      <Modal show={show} size="xl" keyboard={false} fullscreen={!enableProductSelection} onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
         <Modal.Header>
           <Modal.Title>
             {!enableProductSelection && formData.id ? "Update Delivery Note #" + formData.code : !enableProductSelection ? "Create New DeliveryNote" : ""}
@@ -1217,6 +1219,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="product_id"
                 size="lg"
+                ref={productSearchRef}
                 labelKey="search_label"
                 emptyLabel=""
                 clearButton={true}
@@ -1245,6 +1248,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 filterBy={() => true}
                 onInputChange={(searchTerm, e) => {
                   suggestProducts(searchTerm);
+                }}
+                onKeyDown={(e) => {
+                  if (e.code === "Escape") {
+                    setProductOptions([]);
+                    setOpenProductSearchResult(false);
+                    productSearchRef.current?.clear();
+                  }
                 }}
               />
               <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>

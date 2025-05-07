@@ -919,6 +919,8 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         PreviewRef.current.open(model, "whatsapp", "purchase_return");
     }
 
+    const timerRef = useRef(null);
+
     return (
         <>
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
@@ -1358,7 +1360,19 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                         id={`${"purchase_return_product_unit_price" + index}`} name={`${"purchase_return_product_unit_price" + index}`}
                                                         type="number" value={product.purchase_unit_price} className="form-control"
 
-                                                        placeholder="Purchase Return Unit Price" onChange={(e) => {
+                                                        placeholder="Purchase Return Unit Price"
+                                                        onKeyDown={(e) => {
+                                                            if (e.code === "Backspace") {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                selectedProducts[index].purchase_unit_price = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                            }
+                                                        }}
+
+                                                        onChange={(e) => {
                                                             errors["purchasereturned_unit_price_" + index] = "";
                                                             setErrors({ ...errors });
 

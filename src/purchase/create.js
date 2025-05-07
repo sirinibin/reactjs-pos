@@ -1234,6 +1234,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     const productSearchRef = useRef();
 
+    const timerRef = useRef(null);
+
     return (
         <>
             <div
@@ -1275,7 +1277,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
             <VendorCreate ref={VendorCreateFormRef} showToastMessage={props.showToastMessage} />
-            <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} size="xl" keyboard={false} fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Purchase #" + formData.code : "Create New Purchase"}
@@ -1622,8 +1624,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                         <div className="col-md-8">
                             <label className="form-label">Product*</label>
-
-
                             <Typeahead
                                 id="product_id"
                                 size="lg"
@@ -1652,6 +1652,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 }}
                                 options={productOptions}
                                 selected={selectedProduct}
+                                onKeyDown={(e) => {
+                                    if (e.code === "Escape") {
+                                        setProductOptions([]);
+                                        setOpenProductSearchResult(false);
+                                        productSearchRef.current?.clear();
+                                    }
+                                }}
                                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                 highlightOnlyResult={true}
                                 filterBy={() => true}
@@ -1872,6 +1879,17 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 <div className="input-group mb-3">
                                                     <input id={`${"purchase_product_unit_price" + index}`} name={`${"purchase_product_unit_price" + index}`}
                                                         type="number" value={product.purchase_unit_price} className="form-control"
+
+                                                        onKeyDown={(e) => {
+                                                            if (e.code === "Backspace") {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                selectedProducts[index].purchase_unit_price = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                            }
+                                                        }}
 
                                                         placeholder="Purchase Unit Price" onChange={(e) => {
                                                             errors["purchase_unit_price_" + index] = "";

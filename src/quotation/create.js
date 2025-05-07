@@ -1070,6 +1070,8 @@ const QuotationCreate = forwardRef((props, ref) => {
     }, 500);
   }
 
+  const timerRef = useRef(null);
+
   const productSearchRef = useRef();
 
   return (
@@ -1134,6 +1136,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       />
       <Modal
         show={show}
+        keyboard={false}
         size="xl"
         fullscreen={!enableProductSelection}
         onHide={handleClose}
@@ -1602,6 +1605,13 @@ const QuotationCreate = forwardRef((props, ref) => {
                 onInputChange={(searchTerm, e) => {
                   suggestProducts(searchTerm);
                 }}
+                onKeyDown={(e) => {
+                  if (e.code === "Escape") {
+                    setProductOptions([]);
+                    setOpenProductSearchResult(false);
+                    productSearchRef.current?.clear();
+                  }
+                }}
               />
               <Button
                 hide={true.toString()}
@@ -1938,6 +1948,17 @@ const QuotationCreate = forwardRef((props, ref) => {
                               value={product.unit_price}
                               className="form-control"
                               placeholder="Unit Price"
+                              onKeyDown={(e) => {
+                                if (e.code === "Backspace") {
+                                  if (timerRef.current) clearTimeout(timerRef.current);
+                                  product.unit_price = "";
+                                  selectedProducts[index].unit_price = "";
+                                  setSelectedProducts([...selectedProducts]);
+                                  timerRef.current = setTimeout(() => {
+                                    reCalculate(index);
+                                  }, 300);
+                                }
+                              }}
                               onChange={(e) => {
                                 errors["unit_price_" + index] = "";
                                 setErrors({ ...errors });
