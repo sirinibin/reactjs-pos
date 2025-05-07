@@ -39,7 +39,7 @@ const PreviewContent = forwardRef((props, ref) => {
 
     let detailsLabelsColumnWidthPercent = "32%";
     let detailsValuesColumnWidthPercent = "68%";
-    let detailsBorderThickness = "1px solid black";
+    let detailsBorderThickness = "0.5px solid black";
     let detailsBorderColor = "black";//#dee2e6
     //let tableBorderThickness = "1px solid black";
 
@@ -358,14 +358,15 @@ const PreviewContent = forwardRef((props, ref) => {
 
 
                                 <table
+                                    border={0.5}
                                     className="invoice-table"
-                                    style={{ border: "0.5px solid black" }}
+                                    style={{}}
                                 >
                                     <thead style={{ fontSize: props.fontSizes[props.modelName + "_tableHead"]?.size, height: "auto" }} onClick={() => {
                                         props.selectText("tableHead");
                                     }} className="clickable-text print-label">
                                         <tr style={{}}>
-                                            <th className="per5 text-center" style={{ padding: "0px", width: "7%" }}>
+                                            <th className="per5 text-center" style={{ padding: "0px", width: "3%" }}>
 
                                                 <b>
                                                     <ul
@@ -375,8 +376,8 @@ const PreviewContent = forwardRef((props, ref) => {
                                                             marginBottom: "2px"
                                                         }}
                                                     >
-                                                        <li>رقم سري</li>
-                                                        <li>SI No.</li>
+                                                        <li>رقم</li>
+                                                        <li>Sn.</li>
                                                     </ul>
                                                 </b>
                                             </th>
@@ -392,7 +393,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Part No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per34 text-center" style={{ padding: "0px", width: "25%" }}>
+                                            <th className="per34 text-center" style={{ padding: "0px", width: "36%" }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -442,7 +443,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Discount</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per12 text-center" style={{ padding: "0px", width: "14%" }}>
+                                                <th className="per12 text-center" style={{ padding: "0px", width: "9%" }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -466,7 +467,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>VAT({trimTo2Decimals(props.model.vat_percent)}%)</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per12 text-center" style={{ padding: "0px", width: "12%", }}>
+                                                <th className="per12 text-center" style={{ padding: "0px", width: "10%", }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -579,10 +580,10 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "68%" : "88%"}` }}>
+                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "70%" : "90%"}` }}>
                                                 Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة) :
                                             </th>
-                                            <td className="text-end" colSpan="1" style={{ width: "12%" }}>
+                                            <td className="text-end" colSpan="1" style={{ width: "10%" }}>
                                                 <span className="icon-saudi_riyal print-table-value">
                                                     <Amount amount={trimTo2Decimals(props.model.net_total)} />
                                                 </span>

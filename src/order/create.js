@@ -2969,7 +2969,7 @@ function findDiscount() {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_unit_discount_percent" + index}`} name={`${"sales_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                                                    <input type="number" id={`${"sales_unit_discount_percent" + index}`} disabled={true} name={`${"sales_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                                         if (timerRef.current) clearTimeout(timerRef.current);
 
                                                         if (parseFloat(e.target.value) === 0) {
@@ -3143,7 +3143,7 @@ function findDiscount() {
                                             )}
                                         </td>
                                     </tr>
-                                    <tr>
+                                    {/*<tr>
                                         <th colSpan="8" className="text-end">
                                             Discount(without VAT) <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={discountPercent} onChange={(e) => {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
@@ -3308,7 +3308,7 @@ function findDiscount() {
                                                 </div>
                                             )}
                                         </td>
-                                    </tr>
+                                    </tr>*/}
                                     <tr>
                                         <th colSpan="8" className="text-end">
                                             Discount(with VAT) <input type="number" id="discount_percent" name="discount_percent" onWheel={(e) => e.target.blur()} disabled={true} style={{ width: "50px" }} className="text-start" value={discountPercentWithVAT} onChange={(e) => {
