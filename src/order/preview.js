@@ -1038,6 +1038,7 @@ const Preview = forwardRef((props, ref) => {
 
 
     const fonts = [
+        { label: 'Calibri Light', value: "Calibri Light" },
         { label: 'Cairo', value: 'Cairo' },
         { label: 'Amiri', value: 'Amiri' },
         { label: 'Noto Naskh Arabic', value: '"Noto Naskh Arabic"' },

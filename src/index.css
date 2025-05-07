@@ -2,10 +2,17 @@
 @import url('https://fonts.googleapis.com/css2?family=Aref+Ruqaa&family=Baloo+Bhaijaan+2&family=Cairo&family=Changa&family=El+Messiri&family=Harmattan&family=Lateef&family=Markazi+Text&family=Noto+Kufi+Arabic&family=Noto+Naskh+Arabic&family=Reem+Kufi&family=Scheherazade+New&family=Tajawal&family=Almarai&family=Amiri&display=swap');
 
 
-/* Use the font globally or with a class */
-body {
-  font-family: 'Cairo', sans-serif;
+@font-face {
+  font-family: 'Calibri Light';
+  src: url('./fonts/calibril.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
 }
+
+/* Use the font globally or with a class */
+/*body {
+  font-family: 'Cairo', sans-serif;
+}*/
 
 .arabic-text {
   font-family: 'Cairo', sans-serif;
