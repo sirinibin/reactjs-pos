@@ -41,7 +41,7 @@ const PreviewContent = forwardRef((props, ref) => {
     let detailsValuesColumnWidthPercent = "68%";
     let detailsBorderThickness = "0.5px solid black";
     let detailsBorderColor = "black";//#dee2e6
-    //let tableBorderThickness = "1px solid black";
+    let tableBorderThickness = "0.5px solid black";
 
     return (<>
         <span ref={ref}>
@@ -358,15 +358,15 @@ const PreviewContent = forwardRef((props, ref) => {
 
 
                                 <table
-                                    border={0.5}
-                                    className="invoice-table"
-                                    style={{}}
+                                    className="table-responsive"
+                                    style={{ border: tableBorderThickness }}
                                 >
-                                    <thead style={{ fontSize: props.fontSizes[props.modelName + "_tableHead"]?.size, height: "auto" }} onClick={() => {
-                                        props.selectText("tableHead");
-                                    }} className="clickable-text print-label">
-                                        <tr style={{}}>
-                                            <th className="per5 text-center" style={{ padding: "0px", width: "3%" }}>
+                                    <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableBody"]?.size }} className="clickable-text print-value" onClick={() => {
+                                        props.selectText("tableBody");
+                                    }} >
+
+                                        <tr style={{ borderBottom: tableBorderThickness, fontSize: props.fontSizes[props.modelName + "_tableHead"]?.size, height: "auto" }}>
+                                            <th className="per5 text-center" style={{ padding: "0px", width: "3%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
 
                                                 <b>
                                                     <ul
@@ -381,7 +381,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     </ul>
                                                 </b>
                                             </th>
-                                            <th className="per13 text-center" style={{ padding: "0px", width: "14%" }}>
+                                            <th className="per13 text-center" style={{ padding: "0px", width: "14%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -393,7 +393,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Part No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per34 text-center" style={{ padding: "0px", width: "36%" }}>
+                                            <th className="per34 text-center" style={{ padding: "0px", width: "36%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -406,7 +406,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Description</li>
                                                 </ul>
                                             </th>
-                                            <th className="per5 text-center" style={{ padding: "0px", width: "5%" }}>
+                                            <th className="per5 text-center" style={{ padding: "0px", width: "5%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -419,7 +419,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 </ul>
                                             </th>
                                             {props.modelName !== "delivery_note" && <>
-                                                <th className="per8 text-center" style={{ padding: "0px", width: "8%" }}>
+                                                <th className="per8 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -431,7 +431,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Unit Price</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per5 text-center" style={{ padding: "0px", width: "7%" }}>
+                                                <th className="per5 text-center" style={{ padding: "0px", width: "7%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -443,7 +443,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Discount</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per12 text-center" style={{ padding: "0px", width: "9%" }}>
+                                                <th className="per12 text-center" style={{ padding: "0px", width: "9%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -455,7 +455,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Price (without VAT)</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per5 text-center" style={{ padding: "0px", width: "8%" }}>
+                                                <th className="per5 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -467,7 +467,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>VAT({trimTo2Decimals(props.model.vat_percent)}%)</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per12 text-center" style={{ padding: "0px", width: "10%", }}>
+                                                <th className="per12 text-center" style={{ padding: "0px", width: "10%", borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -481,35 +481,31 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 </th>
                                             </>}
                                         </tr>
-                                    </thead>
-                                    <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableBody"]?.size }} className="clickable-text print-value" onClick={() => {
-                                        props.selectText("tableBody");
-                                    }} >
                                         {page.products && page.products.map((product, index) => (
-                                            <tr key={product.item_code} className="text-center"  >
-                                                <td style={{ padding: "7px", }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
-                                                <td style={{}} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
-                                                <th dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+                                            <tr style={{ borderBottom: tableBorderThickness }} key={product.item_code} className="text-center"  >
+                                                <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
+                                                <td style={{ borderRight: tableBorderThickness }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
+                                                <th dir="ltr" style={{ unicodeBidi: 'isolate', borderRight: tableBorderThickness }}>
                                                     <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}</span>
                                                 </th>
-                                                <td style={{}}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
+                                                <td style={{ borderRight: tableBorderThickness }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
                                                 {props.modelName !== "delivery_note" && <>
-                                                    <td className="text-end" style={{}} >
+                                                    <td className="text-end" style={{ borderRight: tableBorderThickness }} >
                                                         {product.unit_price ? <Amount amount={trimTo2Decimals(product.unit_price)} /> : ""}
                                                         {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals(product.purchase_unit_price)} /> : ""}
                                                         {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals(product.purchasereturn_unit_price)} /> : ""}
                                                     </td>
-                                                    <td style={{}} className="text-end">
+                                                    <td style={{ borderRight: tableBorderThickness }} className="text-end">
                                                         {/*product.unit_discount_percent ? "(" + trimTo2Decimals(product.unit_discount_percent) + "%)" : ""}{product.unit_discount ? " " + trimTo2Decimals(product.unit_discount * product.quantity) : ""*/}
                                                         {product.unit_discount ? " " + trimTo2Decimals(product.unit_discount * product.quantity) : ""}
                                                     </td>
-                                                    <td style={{}} className="text-end">
+                                                    <td style={{ borderRight: tableBorderThickness }} className="text-end">
 
                                                         {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity)} /> : ""}
                                                         {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity)} /> : ""}
                                                         {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity)} /> : ""}
                                                     </td>
-                                                    <td style={{}} className="text-end">
+                                                    <td style={{ borderRight: tableBorderThickness }} className="text-end">
                                                         {product.unit_price ? <Amount amount={trimTo2Decimals((product.unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
                                                         {product.purchase_unit_price && props.modelName === "purchase" ? <Amount amount={trimTo2Decimals((product.purchase_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
                                                         {product.purchasereturn_unit_price && props.modelName === "purchase_return" ? <Amount amount={trimTo2Decimals((product.purchasereturn_unit_price - product.unit_discount) * product.quantity) * (props.model.vat_percent / 100)} /> : ""}
@@ -524,28 +520,28 @@ const PreviewContent = forwardRef((props, ref) => {
                                         ))}
                                     </tbody>
                                 </table>
-                                <table className="no-bold invoice-table"
-                                    style={{}}>
+                                <table className="table-responsive"
+                                    style={{ border: tableBorderThickness, width: "100%" }}>
                                     {props.modelName !== "delivery_note" && <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
                                         props.selectText("tableFooter");
                                     }} className="clickable-text">
-                                        <tr >
-                                            {props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <th colSpan={2} rowSpan={6} style={{ width: "20%", padding: "3px" }}>
+                                        <tr style={{ borderBottom: tableBorderThickness }}>
+                                            {props.model.store?.zatca_qr_on_left_bottom && props.modelName !== "quotation" && props.modelName !== "delivery_note" && <th rowSpan={6} style={{ width: "20%", padding: "3px", borderRight: tableBorderThickness }}>
                                                 <div className="col-md-1 text-center" style={{ width: "100%", height: "100%" }}>
                                                     {props.model.store?.zatca?.phase === "1" && props.model.QRImageData ? <img className="text-start" src={props.model.QRImageData} style={{ width: "138px" }} alt="Invoice QR Code" /> : ""}
                                                     {props.model.store?.zatca?.phase === "2" && props.model.zatca?.qr_code && props.model.zatca?.reporting_passed ? <QRCodeCanvas value={props.model.zatca?.qr_code} style={{ width: "138px", height: "138px", border: "solid 0px", }} size={138} /> : ""}
                                                     {props.model.store?.zatca?.phase === "2" && !props.model.zatca?.qr_code ? <img src={props.model.QRImageData} style={{ width: "138px", height: "138px", border: "solid 0px" }} alt="Invoice QR Code" /> : ""}
                                                 </div>
                                             </th>}
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} className="text-end print-label" style={{ padding: "2px", }}>
+                                            <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 <b> Total (without VAT) الإجمالي (بدون ضريبة القيمة المضافة) :</b>
                                             </th>
                                             <td className="text-end print-table-value" colSpan="1" style={{}} >
                                                 <Amount amount={trimTo2Decimals(props.model.total)} />
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <th className="text-end print-label" colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} style={{ padding: "2px", }}>
+                                        <tr style={{ borderBottom: tableBorderThickness }}>
+                                            <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
 
                                                 Shipping / Handling Fees   رسوم الشحن / المناولة :
                                             </th>
@@ -553,24 +549,24 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 <Amount amount={trimTo2Decimals(props.model.shipping_handling_fees)} />
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <th className="text-end print-label" colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} style={{ padding: "2px", }}>
+                                        <tr style={{ borderBottom: tableBorderThickness }}>
+                                            <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 Total Discount الخصم الإجمالي :
                                             </th>
                                             <td className="text-end print-table-value" colSpan="1" style={{}}>
                                                 <Amount amount={trimTo2Decimals(props.model.discount)} />
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} className="text-end print-label" style={{ padding: "2px", }}>
+                                        <tr style={{ borderBottom: tableBorderThickness }}>
+                                            <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 Total Taxable Amount (without VAT)  إجمالي المبلغ الخاضع للضريبة (بدون ضريبة القيمة المضافة) :
                                             </th>
                                             <td className="text-end print-table-value" colSpan="1" style={{}}>
                                                 <Amount amount={trimTo2Decimals((props.model.net_total - props.model.vat_price))} />
                                             </td>
                                         </tr>
-                                        <tr>
-                                            <th className="text-end print-label" colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} style={{ padding: "2px", }}>
+                                        <tr style={{ borderBottom: tableBorderThickness }}>
+                                            <th className="text-end print-label" style={{ padding: "2px", borderRight: tableBorderThickness }}>
                                                 Total VAT {trimTo2Decimals(props.model.vat_percent)}% إجمالي ضريبة القيمة المضافة :
                                             </th>
 
@@ -580,7 +576,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </td>
                                         </tr>
                                         <tr>
-                                            <th colSpan={props.model.store?.zatca_qr_on_left_bottom && props.model.type !== "quotation" ? 6 : 8} className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "70%" : "90%"}` }}>
+                                            <th className="text-end print-label" style={{ padding: "2px", width: `${props.modelName !== "quotation" ? "70%" : "90%"}`, borderRight: tableBorderThickness }}>
                                                 Net Total (with VAT)  الإجمالي الصافي (مع ضريبة القيمة المضافة) :
                                             </th>
                                             <td className="text-end" colSpan="1" style={{ width: "10%" }}>
@@ -591,15 +587,15 @@ const PreviewContent = forwardRef((props, ref) => {
                                         </tr>
                                     </tbody>}
                                 </table>
-                                <table className="no-bold  invoice-table"
-                                    style={{}}
+                                <table className="table-responsive"
+                                    style={{ border: tableBorderThickness, width: "100%" }}
                                 >
                                     {props.modelName !== "delivery_note" && <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
                                         props.selectText("tableFooter");
                                     }} className="clickable-text">
-                                        <tr>
+                                        <tr style={{ borderBottom: tableBorderThickness }}>
 
-                                            <th colSpan="2" className="text-end print-label" style={{ padding: "5px", width: "14.6%" }}>
+                                            <th colSpan="2" className="text-end print-label" style={{ padding: "5px", width: "14.6%", borderRight: tableBorderThickness }}>
                                                 In Words بكلمات:
                                             </th>
                                             <th
@@ -626,7 +622,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                             </th>
                                         </tr>
                                         <tr>
-                                            <th colSpan="2" className="text-end print-label" style={{ padding: "5px" }}>
+                                            <th colSpan="2" className="text-end print-label" style={{ padding: "5px", borderRight: tableBorderThickness }}>
                                                 Remarks ملاحظات:
                                             </th>
                                             <td

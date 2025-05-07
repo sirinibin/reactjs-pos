@@ -6,6 +6,8 @@ import PreviewContent from './previewContent.js';
 import { Invoice } from '@axenda/zatca';
 import html2pdf from 'html2pdf.js';
 import "./print.css";
+//import jsPDF from "jspdf";
+//import html2canvas from "html2canvas";
 
 
 const Preview = forwardRef((props, ref) => {
@@ -651,6 +653,29 @@ const Preview = forwardRef((props, ref) => {
             };
         });
     }, [getFileName]);
+
+
+
+    /*
+  const handlePrint = async () => {
+      const element = printAreaRef.current;
+      if (!element) return;
+
+      const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 1.0);
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+
+      pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`${getFileName()}.pdf`);
+  };*/
 
     /*
     
