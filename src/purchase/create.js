@@ -477,7 +477,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.with_vat`;
         setIsProductsLoading(true);
         let result = await fetch(
-            "/v1/product?" + Select + queryString + "&limit=200&sort=country_name",
+            "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
             requestOptions
         );
         let data = await result.json();
@@ -494,12 +494,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         openProductSearchResult = true;
         setOpenProductSearchResult(true);
+        /*
         const sortedProducts = products
             .filter(item => item.country_name)                        // Keep only items with name
             .sort((a, b) => a.country_name.localeCompare(b.country_name))     // Sort alphabetically
-            .concat(products.filter(item => !item.country_name));
+            .concat(products.filter(item => !item.country_name));*/
 
-        setProductOptions(sortedProducts);
+        setProductOptions(products);
         setIsProductsLoading(false);
     }
 

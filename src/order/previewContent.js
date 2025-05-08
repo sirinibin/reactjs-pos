@@ -366,7 +366,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                     }} >
 
                                         <tr style={{ borderBottom: tableBorderThickness, fontSize: props.fontSizes[props.modelName + "_tableHead"]?.size, height: "auto" }}>
-                                            <th className="per5 text-center" style={{ padding: "0px", width: "3%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                            <th className="per5 text-center" style={{ padding: "0px", width: "6%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
 
                                                 <b>
                                                     <ul
@@ -393,7 +393,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Part No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per34 text-center" style={{ padding: "0px", width: "36%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                            <th className="per34 text-center" style={{ padding: "0px", width: "33%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{

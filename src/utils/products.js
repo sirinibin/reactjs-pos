@@ -485,7 +485,7 @@ const Products = forwardRef((props, ref) => {
 
 
         let result = await fetch(
-            "/v1/product?" + Select + queryString + "&limit=200&sort=country_name",
+            "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
             requestOptions
         )
         let data = await result.json();
@@ -511,11 +511,12 @@ const Products = forwardRef((props, ref) => {
 
         if (searchBy === "name") {
             setOpenProductSearchResult(true);
+            /*
             const sortedProducts = products
                 .filter(item => item.country_name)                        // Keep only items with name
                 .sort((a, b) => a.country_name.localeCompare(b.country_name))     // Sort alphabetically
-                .concat(products.filter(item => !item.country_name));
-            setProductOptions(sortedProducts);
+                .concat(products.filter(item => !item.country_name));*/
+            setProductOptions(products);
             setIsProductsLoading(false);
         } else if (searchBy === "part_number") {
             setOpenProductSearchResultByPartNo(true);
