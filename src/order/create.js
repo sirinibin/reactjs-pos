@@ -1804,6 +1804,8 @@ function findDiscount() {
         setToastMessage(`${addedCount} product${addedCount !== 1 ? "s" : ""} added ✅`);
         setShowToast(true);
         if (selectedCustomers && !formData.id) {
+            formData.customer_id = selectedCustomers[0]?.id;
+            setFormData({ ...formData });
             setSelectedCustomers(selectedCustomers);
         }
         setTimeout(() => setShowToast(false), 3000);
