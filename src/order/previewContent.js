@@ -756,23 +756,22 @@ const PreviewContent = forwardRef((props, ref) => {
 
                                                             </tr>
                                                             <tr >
-                                                                <td style={{ width: "5%", borderRight: tableBorderThickness, padding: "10px" }}>
+                                                                <td style={{ width: "25%", borderRight: tableBorderThickness, padding: "10px" }}>
 
                                                                     {props.model.store?.bank_account?.bank_name}
                                                                 </td>
-                                                                <td style={{ width: "5%", borderRight: tableBorderThickness, padding: "10px" }}>
+                                                                <td style={{ width: "15%", borderRight: tableBorderThickness, padding: "10px" }}>
 
                                                                     {props.model.store?.bank_account?.customer_no}
                                                                 </td>
-                                                                <td style={{ maxWidth: "100px", borderRight: tableBorderThickness, padding: "10px" }}>
-
+                                                                <td style={{ maxWidth: "25%", borderRight: tableBorderThickness, padding: "10px" }}>
                                                                     {props.model.store?.bank_account?.iban}
                                                                 </td>
-                                                                <td style={{ width: "10%", borderRight: tableBorderThickness, padding: "10px" }}>
+                                                                <td style={{ width: "20%", borderRight: tableBorderThickness, padding: "10px" }}>
 
                                                                     {props.model.store?.bank_account?.account_name}
                                                                 </td>
-                                                                <td style={{ width: "5%", padding: "10px" }}>
+                                                                <td style={{ width: "15%", padding: "10px" }}>
 
                                                                     {props.model.store?.bank_account?.account_no}
                                                                 </td>
