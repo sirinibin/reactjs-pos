@@ -664,18 +664,27 @@ const PreviewContent = forwardRef((props, ref) => {
 
 
                                             {props.model.pages.length === (pageIndex + 1) && props.model.store?.bank_account && props.model.store?.bank_account?.bank_name ? <tr >
-                                                <td colSpan="9" style={{ padding: "0px" }} onClick={(e) => e.stopPropagation()}>
+                                                <th colSpan="9" style={{ padding: "0px" }} onClick={(e) => e.stopPropagation()}>
 
                                                     <table
-                                                        className="invoice-table"
-                                                        style={{ width: "100%" }}
+                                                        className="table-responsive"
+                                                        style={{ width: "100%", border: tableBorderThickness }}
 
                                                     >
                                                         <thead className="clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_bankAccountHeader"]?.size }}
                                                             onClick={() => {
                                                                 props.selectText("bankAccountHeader");
                                                             }}>
-                                                            <tr >
+
+
+                                                        </thead>
+                                                        <tbody style={{ fontSize: props.fontSizes[props.modelName + "_bankAccountBody"]?.size }}
+                                                            onClick={() => {
+                                                                props.selectText("bankAccountBody");
+                                                            }} className="clickable-text print-value">
+                                                            <tr style={{ borderBottom: tableBorderThickness, fontSize: props.fontSizes[props.modelName + "_bankAccountHeader"]?.size }} onClick={() => {
+                                                                props.selectText("bankAccountHeader");
+                                                            }}>
                                                                 <th colSpan="5" className="per1 text-center print-label" style={{ padding: "0px" }}>
                                                                     <ul
                                                                         className="list-unstyled"
@@ -688,8 +697,8 @@ const PreviewContent = forwardRef((props, ref) => {
                                                                     </ul>
                                                                 </th>
                                                             </tr>
-                                                            <tr >
-                                                                <th className="per1 text-center print-label" style={{ padding: "0px", width: "5%" }}>
+                                                            <tr style={{ borderBottom: tableBorderThickness }}>
+                                                                <th className="per1 text-center print-label" style={{ padding: "0px", width: "5%", borderRight: tableBorderThickness }}>
                                                                     <ul
                                                                         className="list-unstyled"
                                                                         style={{
@@ -700,7 +709,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                                         <li>Bank Name</li>
                                                                     </ul>
                                                                 </th>
-                                                                <th className="per1 text-center print-label" style={{ padding: "0px", width: "5%" }}>
+                                                                <th className="per1 text-center print-label" style={{ padding: "0px", width: "5%", borderRight: tableBorderThickness }}>
                                                                     <ul
                                                                         className="list-unstyled"
                                                                         style={{
@@ -711,7 +720,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                                         <li>Customer No.</li>
                                                                     </ul>
                                                                 </th>
-                                                                <th className="per1 text-center print-label" style={{ padding: "0px", maxWidth: "100px" }}>
+                                                                <th className="per1 text-center print-label" style={{ padding: "0px", maxWidth: "100px", borderRight: tableBorderThickness }}>
                                                                     <ul
                                                                         className="list-unstyled"
                                                                         style={{
@@ -722,7 +731,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                                         <li>IBAN</li>
                                                                     </ul>
                                                                 </th>
-                                                                <th className="per1 text-center print-label" style={{ padding: "0px", width: "10%" }}>
+                                                                <th className="per1 text-center print-label" style={{ padding: "0px", width: "10%", borderRight: tableBorderThickness }}>
                                                                     <ul
                                                                         className="list-unstyled"
                                                                         style={{
@@ -733,7 +742,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                                         <li>Account name</li>
                                                                     </ul>
                                                                 </th>
-                                                                <th className="per1 text-center print-label" style={{ padding: "0px", width: "5%" }}>
+                                                                <th className="per1 text-center print-label" style={{ padding: "0px", width: "5%", borderRight: tableBorderThickness }}>
                                                                     <ul
                                                                         className="list-unstyled"
                                                                         style={{
@@ -746,29 +755,24 @@ const PreviewContent = forwardRef((props, ref) => {
                                                                 </th>
 
                                                             </tr>
-                                                        </thead>
-                                                        <tbody style={{ fontSize: props.fontSizes[props.modelName + "_bankAccountBody"]?.size }}
-                                                            onClick={() => {
-                                                                props.selectText("bankAccountBody");
-                                                            }} className="clickable-text print-value">
-                                                            <tr>
-                                                                <td style={{ width: "5%" }}>
+                                                            <tr >
+                                                                <td style={{ width: "5%", borderRight: tableBorderThickness, padding: "10px" }}>
 
                                                                     {props.model.store?.bank_account?.bank_name}
                                                                 </td>
-                                                                <td style={{ width: "5%" }}>
+                                                                <td style={{ width: "5%", borderRight: tableBorderThickness, padding: "10px" }}>
 
                                                                     {props.model.store?.bank_account?.customer_no}
                                                                 </td>
-                                                                <td style={{ maxWidth: "100px" }}>
+                                                                <td style={{ maxWidth: "100px", borderRight: tableBorderThickness, padding: "10px" }}>
 
                                                                     {props.model.store?.bank_account?.iban}
                                                                 </td>
-                                                                <td style={{ width: "10%" }}>
+                                                                <td style={{ width: "10%", borderRight: tableBorderThickness, padding: "10px" }}>
 
                                                                     {props.model.store?.bank_account?.account_name}
                                                                 </td>
-                                                                <td style={{ width: "5%" }}>
+                                                                <td style={{ width: "5%", padding: "10px" }}>
 
                                                                     {props.model.store?.bank_account?.account_no}
                                                                 </td>
@@ -777,7 +781,7 @@ const PreviewContent = forwardRef((props, ref) => {
 
                                                     </table>
 
-                                                </td>
+                                                </th>
                                             </tr> : ""}
                                         </>}
                                     </tbody>}
