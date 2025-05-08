@@ -32,6 +32,7 @@ import QuotationHistory from "./../product/quotation_history.js";
 import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
 import Customers from "./../utils/customers.js";
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 const QuotationCreate = forwardRef((props, ref) => {
   //const [operationType, setoperationType] = useState("")
@@ -465,7 +466,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
+    let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.with_vat`;
     setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=50",
@@ -676,12 +677,29 @@ const QuotationCreate = forwardRef((props, ref) => {
     product.unit_price = 0.00;
     product.purchase_unit_price = 0.00;
 
-    product.unit_price = product.product_stores[formData.store_id]?.retail_unit_price;
-    product.purchase_unit_price = product.product_stores[formData.store_id]?.purchase_unit_price;
+
+    if (product.product_stores[formData.store_id]?.retail_unit_price) {
+      if (product.product_stores[formData.store_id]?.with_vat) {
+        product.unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price / (1 + (formData.vat_percent / 100))));
+      } else {
+        product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+      }
+
+    }
+
+    if (product.product_stores[formData.store_id]?.purchase_unit_price) {
+      if (product.product_stores[formData.store_id]?.with_vat) {
+        product.purchase_unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].purchase_unit_price / (1 + (formData.vat_percent / 100))));
+      } else {
+        product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+      }
+    }
+
+
 
     if (product.product_stores[formData.store_id]) {
-      product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
-      product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+      // product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+      // product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
       product.unit_discount = 0.00;
       product.unit_discount_percent = 0.00;
     }
@@ -1674,9 +1692,9 @@ const QuotationCreate = forwardRef((props, ref) => {
                       Name
                     </th>
                     <th >Info</th>
-                    <th >Purchase Unit Price</th>
+                    <th >Purchase Unit Price(without VAT)</th>
                     <th  >Qty</th>
-                    <th >Unit Price</th>
+                    <th >Unit Price(without VAT)</th>
                     <th >Discount</th>
                     <th >Discount%</th>
                     <th >Price</th>

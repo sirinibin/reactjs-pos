@@ -474,7 +474,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         };
 
         // let Select = "select=id,item_code,bar_code,name,product_stores,unit,part_number,name_in_arabic";
-        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
+        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.with_vat`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200",
@@ -666,15 +666,28 @@ const PurchaseCreate = forwardRef((props, ref) => {
             */
 
             if (product.product_stores[formData.store_id]?.retail_unit_price) {
-                product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
+                if (product.product_stores[formData.store_id]?.with_vat) {
+                    product.retail_unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price / (1 + (formData.vat_percent / 100))));
+                } else {
+                    product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
+                }
+
             }
 
             if (product.product_stores[formData.store_id]?.purchase_unit_price) {
-                product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+                if (product.product_stores[formData.store_id]?.with_vat) {
+                    product.purchase_unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].purchase_unit_price / (1 + (formData.vat_percent / 100))));
+                } else {
+                    product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+                }
             }
 
             if (product.product_stores[formData.store_id]?.wholesale_unit_price) {
-                product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
+                if (product.product_stores[formData.store_id]?.with_vat) {
+                    product.wholesale_unit_price = parseFloat(product.product_stores[formData.store_id].wholesale_unit_price / (1 + (formData.vat_percent / 100)));
+                } else {
+                    product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
+                }
             }
 
             if (product.product_stores[formData.store_id]) {
@@ -741,7 +754,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             if (product.retail_unit_price) {
                 item.retail_unit_price = parseFloat(product.retail_unit_price).toFixed(2);
             }
-
+         
             if (product.wholesale_unit_price) {
                 item.wholesale_unit_price = parseFloat(product.wholesale_unit_price).toFixed(2);
             }*/
@@ -1694,8 +1707,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         </th>
                                         <th >Info</th>
                                         <th >Qty</th>
-                                        <th >Unit Price</th>
-                                        <th >Unit Disc.</th>
+                                        <th >Unit Price(without VAT)</th>
+                                        <th >Unit Disc.(without VAT)</th>
                                         <th >Disc. %</th>
                                         <th >Set latest wholesale unit price</th>
                                         <th >Set latest retail unit price</th>
