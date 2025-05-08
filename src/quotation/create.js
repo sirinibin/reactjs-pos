@@ -469,7 +469,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.with_vat`;
     setIsProductsLoading(true);
     let result = await fetch(
-      "/v1/product?" + Select + queryString + "&limit=50",
+      "/v1/product?" + Select + queryString + "&limit=50&sort=country_name",
       requestOptions
     );
     let data = await result.json();
