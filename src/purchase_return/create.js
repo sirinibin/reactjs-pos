@@ -1493,7 +1493,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                                                     <input
                                                         id={`${"purchase_return_product_unit_discount_percent" + index}`} name={`${"purchase_return_product_unit_discount_percent" + index}`}
 
-                                                        type="number" className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                                                        type="number" className="form-control text-end" disabled={true} value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                                             selectedProducts[index].is_discount_percent = true;
                                                             if (parseFloat(e.target.value) === 0) {
                                                                 selectedProducts[index].unit_discount_percent = parseFloat(e.target.value);

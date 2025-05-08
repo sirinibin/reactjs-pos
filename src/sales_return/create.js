@@ -1717,7 +1717,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input id={`${"sales_return_product_unit_discount_percent" + index}`} name={`${"sales_return_product_unit_discount_percent" + index}`}
+                                                    <input id={`${"sales_return_product_unit_discount_percent" + index}`} disabled={true} name={`${"sales_return_product_unit_discount_percent" + index}`}
                                                         type="number" onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                                             selectedProducts[index].is_discount_percent = true;
                                                             if (parseFloat(e.target.value) === 0) {
