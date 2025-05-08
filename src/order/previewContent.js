@@ -171,7 +171,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </>}
                             {props.model && props.model.order_code && props.modelName === "sales_return" && <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
-                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > <b>Original Invoice No. | رقم الفاتورة الأصلية:</b></div>
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Original Invoice No. | رقم الفاتورة الأصلية:</b></div>
                                 <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.order_code ? props.model.order_code : ""}</div>
                             </div>}
                             {props.model && props.model.order_code && props.model.order?.date && props.modelName === "sales_return" && <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
@@ -365,8 +365,11 @@ const PreviewContent = forwardRef((props, ref) => {
                                         props.selectText("tableBody");
                                     }} >
 
-                                        <tr style={{ borderBottom: tableBorderThickness, fontSize: props.fontSizes[props.modelName + "_tableHead"]?.size, height: "auto" }}>
-                                            <th className="per5 text-center" style={{ padding: "0px", width: "6%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                        <tr style={{ borderBottom: tableBorderThickness, fontSize: props.fontSizes[props.modelName + "_tableHead"]?.size, height: "auto" }} onClick={(e) => {
+                                            e.stopPropagation();
+                                            props.selectText("tableHead");
+                                        }}>
+                                            <th className="per6 text-center" style={{ padding: "0px", width: "6%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
 
                                                 <b>
                                                     <ul
@@ -381,7 +384,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     </ul>
                                                 </b>
                                             </th>
-                                            <th className="per13 text-center" style={{ padding: "0px", width: "14%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                            <th className="per14 text-center" style={{ padding: "0px", width: "14%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -393,7 +396,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Part No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per34 text-center" style={{ padding: "0px", width: "33%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                            <th className="per33 text-center" style={{ padding: "0px", width: "30%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -431,7 +434,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Unit Price</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per5 text-center" style={{ padding: "0px", width: "7%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                                <th className="per7 text-center" style={{ padding: "0px", width: "7%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -443,7 +446,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Discount</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per12 text-center" style={{ padding: "0px", width: "9%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                                <th className="per12 text-center" style={{ padding: "0px", width: "12%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -455,7 +458,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Price (without VAT)</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per5 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                                <th className="per8 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -467,7 +470,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>VAT({trimTo2Decimals(props.model.vat_percent)}%)</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per12 text-center" style={{ padding: "0px", width: "10%", borderBottom: tableBorderThickness }}>
+                                                <th className="per10 text-center" style={{ padding: "0px", width: "10%", borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
