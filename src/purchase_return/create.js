@@ -393,14 +393,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
         console.log("selectedProducts:", selectedProducts);
         let haveErrors = false;
 
-
+        let selectedProductsCount = 0;
         formData.products = [];
         for (var i = 0; i < selectedProducts.length; i++) {
-            /*
-            if (!selectedProducts[i].selected) {
-                continue;
-                // selectedProducts[i].quantity = 0;
-            }*/
+
+            if (selectedProducts[i].selected) {
+                selectedProductsCount++;
+            }
 
             formData.products.push({
                 product_id: selectedProducts[i].product_id,
@@ -416,6 +415,13 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
         if (!formData.cash_discount) {
             formData.cash_discount = 0.00;
+        }
+
+
+        if (selectedProductsCount === 0) {
+            errors["products"] = "No products selected";
+            setErrors({ ...errors });
+            haveErrors = true;
         }
 
 
@@ -921,6 +927,22 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
     const timerRef = useRef(null);
 
+    const isAllSelected = selectedProducts?.every((product) => product.selected);
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            for (let i = 0; i < selectedProducts?.length; i++) {
+                selectedProducts[i].selected = true;
+            }
+        } else {
+            for (let i = 0; i < selectedProducts?.length; i++) {
+                selectedProducts[i].selected = false;
+            }
+        }
+        setSelectedProducts([...selectedProducts]);
+        reCalculate();
+    };
+
     return (
         <>
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
@@ -1200,7 +1222,14 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
-                                        <th>Select</th>
+                                        <th style={{ width: "5%" }}>
+                                            Select All
+                                            <input
+                                                type="checkbox"
+                                                checked={isAllSelected}
+                                                onChange={handleSelectAll}
+                                            />
+                                        </th>
                                         <th>SI No.</th>
                                         <th>Part No.</th>
                                         <th>Name</th>

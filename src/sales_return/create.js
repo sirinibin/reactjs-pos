@@ -1108,6 +1108,22 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     const timerRef = useRef(null);
 
+    const isAllSelected = selectedProducts?.every((product) => product.selected);
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            for (let i = 0; i < selectedProducts?.length; i++) {
+                selectedProducts[i].selected = true;
+            }
+        } else {
+            for (let i = 0; i < selectedProducts?.length; i++) {
+                selectedProducts[i].selected = false;
+            }
+        }
+        setSelectedProducts([...selectedProducts]);
+        reCalculate();
+    };
+
 
     return (
         <>
@@ -1340,7 +1356,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
-                                        <th>Select</th>
+                                        <th>
+                                            Select All
+                                            <input
+                                                type="checkbox"
+                                                checked={isAllSelected}
+                                                onChange={handleSelectAll}
+                                            />
+                                        </th>
                                         <th>SI No.</th>
                                         <th>Part No.</th>
                                         <th className="text-start" style={{ minWidth: "250px" }}>Name</th>

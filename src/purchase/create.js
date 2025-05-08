@@ -1715,8 +1715,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         <th >Unit Price(without VAT)</th>
                                         <th >Unit Disc.(without VAT)</th>
                                         <th >Disc. %</th>
-                                        <th >Set latest wholesale unit price</th>
-                                        <th >Set latest retail unit price</th>
+                                        <th >Set latest wholesale unit price(without VAT)</th>
+                                        <th >Set latest retail unit price(without VAT)</th>
                                         <th >Price</th>
 
                                     </tr>
