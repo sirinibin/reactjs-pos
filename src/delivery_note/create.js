@@ -948,6 +948,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   const productSearchRef = useRef();
 
+  function moveToProductSearch() {
+    setTimeout(() => {
+      productSearchRef.current?.focus();
+    }, 500);
+  }
+
   return (
     <>
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
@@ -1261,6 +1267,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     setOpenProductSearchResult(false);
                     productSearchRef.current?.clear();
                   }
+
+                  moveToProductSearch();
                 }}
               />
               <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>

@@ -337,6 +337,9 @@ const OrderCreate = forwardRef((props, ref) => {
                         //
                         if (event.target.getAttribute("class").includes("barcode")) {
                             form.elements[index].focus();
+                        } else if (event.target.getAttribute("class").includes("productSearch")) {
+                            //  moveToProductSearch();
+                            //productSearchRef.current?.focus();
                         } else if (event.target.getAttribute("class").includes("sales_unit_discount")) {
                             //console.log("OKKK");
                             moveToProductSearch();
@@ -2348,6 +2351,7 @@ function findDiscount() {
                                 size="lg"
                                 ref={productSearchRef}
                                 labelKey="search_label"
+                                inputProps={{ className: 'productSearch' }}
                                 emptyLabel=""
                                 clearButton={true}
                                 open={openProductSearchResult}
@@ -2380,6 +2384,10 @@ function findDiscount() {
                                         productSearchRef.current?.clear();
                                         //productSearchRef.current?.blur();
                                     }
+
+                                    moveToProductSearch();
+
+
                                 }}
                                 onInputChange={(searchTerm, e) => {
                                     //handleSuggestProducts(searchTerm);

@@ -1677,6 +1677,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         setOpenProductSearchResult(false);
                                         productSearchRef.current?.clear();
                                     }
+
+                                    moveToProductSearch();
                                 }}
                                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                 highlightOnlyResult={true}

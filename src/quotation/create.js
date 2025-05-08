@@ -1635,6 +1635,9 @@ const QuotationCreate = forwardRef((props, ref) => {
                     setOpenProductSearchResult(false);
                     productSearchRef.current?.clear();
                   }
+
+                  moveToProductSearch();
+
                 }}
               />
               <Button

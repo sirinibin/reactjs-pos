@@ -1340,6 +1340,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 highlightOnlyResult={true}
                 onInputChange={(searchTerm, e) => {
                   suggestProducts(searchTerm);
+
                 }}
                 multiple
               />
