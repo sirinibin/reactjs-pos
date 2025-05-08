@@ -799,15 +799,19 @@ const Preview = forwardRef((props, ref) => {
 
 
         whatsAppNo = formatPhoneForWhatsApp(whatsAppNo);
+        let message = "";
+        if (modelName === "quotation" && model?.type !== "invoice") {
+            message = `Hello, here is your Quotation:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
+        } else {
+            message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
+        }
 
-        console.log(" whatsAppNo:", whatsAppNo);
-        const message = `Hello, here is your invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
         const whatsappUrl = `https://wa.me/${whatsAppNo}?text=${encodeURIComponent(message)}`;
 
         window.open(whatsappUrl, "_blank");
         handleClose();
 
-    }, [getFileName, model, formatPhoneForWhatsApp, phone]);
+    }, [getFileName, model, formatPhoneForWhatsApp, phone, modelName]);
 
 
     useEffect(() => {

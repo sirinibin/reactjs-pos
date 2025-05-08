@@ -359,7 +359,7 @@ const PreviewContent = forwardRef((props, ref) => {
 
                                 <table
                                     className="table-responsive"
-                                    style={{ border: tableBorderThickness }}
+                                    style={{ border: tableBorderThickness, width: "100%" }}
                                 >
                                     <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableBody"]?.size }} className="clickable-text print-value" onClick={() => {
                                         props.selectText("tableBody");
@@ -621,14 +621,14 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 </ul>
                                             </th>
                                         </tr>
-                                        <tr>
+                                        <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th colSpan="2" className="text-end print-label" style={{ padding: "5px", borderRight: tableBorderThickness }}>
                                                 Remarks ملاحظات:
                                             </th>
                                             <td
                                                 className="text-start print-value"
                                                 colSpan="7"
-                                                style={{ padding: "5px" }}
+                                                style={{ padding: "5px", borderRight: tableBorderThickness }}
 
                                             >
                                                 {props.model.remarks ? props.model.remarks : ""}
@@ -638,18 +638,18 @@ const PreviewContent = forwardRef((props, ref) => {
                                         {props.modelName === "quotation" && props.model.type === "quotation" && <>
                                             <tr>
 
-                                                <th colSpan="2" className="text-end print-label" style={{ padding: "5px" }}>
+                                                <th colSpan="2" className="text-end print-label" style={{ padding: "5px", borderRight: tableBorderThickness }}>
                                                     Validity صحة:
                                                 </th>
                                                 <th
                                                     colSpan="2"
                                                     className="print-value"
-                                                    style={{ padding: "5px" }}
+                                                    style={{ padding: "5px", borderRight: tableBorderThickness }}
 
                                                 >
                                                     <span style={{ color: "red" }}> {props.model.validity_days + " days أيام"} </span>
                                                 </th>
-                                                <th colSpan="2" className="text-end print-label" style={{ padding: "5px" }}>
+                                                <th colSpan="2" className="text-end print-label" style={{ padding: "5px", borderRight: tableBorderThickness }}>
                                                     Delivery توصيل:
                                                 </th>
                                                 <th
@@ -668,7 +668,7 @@ const PreviewContent = forwardRef((props, ref) => {
 
                                                     <table
                                                         className="invoice-table"
-                                                        style={{}}
+                                                        style={{ width: "100%" }}
 
                                                     >
                                                         <thead className="clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_bankAccountHeader"]?.size }}
@@ -783,7 +783,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                     </tbody>}
                                 </table>
 
-                                <table className="invoice-table clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_signature"]?.size }} onClick={() => {
+                                <table className="invoice-table clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_signature"]?.size, width: "100%" }} onClick={() => {
                                     props.selectText("signature");
                                 }} >
                                     <thead>
