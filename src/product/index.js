@@ -609,7 +609,12 @@ function ProductIndex(props) {
 
         if (searchBy === "name") {
             setOpenProductSearchResult(true);
-            setProductOptions(products);
+            const sortedProducts = products
+                .filter(item => item.country_name)                        // Keep only items with name
+                .sort((a, b) => a.country_name.localeCompare(b.country_name))     // Sort alphabetically
+                .concat(products.filter(item => !item.country_name));
+
+            setProductOptions(sortedProducts);
             setIsProductsLoading(false);
         } else if (searchBy === "part_number") {
             setOpenProductSearchResultByPartNo(true);
