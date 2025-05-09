@@ -381,7 +381,7 @@ const VendorCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        {/*<div className="col-md-3">
+                        <div className="col-md-3">
                             <label className="form-label">ID</label>
 
                             <div className="input-group mb-3">
@@ -407,7 +407,7 @@ const VendorCreate = forwardRef((props, ref) => {
                                     {errors.code}
                                 </div>
                             )}
-                        </div>*/}
+                        </div>
 
                         <div className="col-md-3">
                             <label className="form-label">Phone</label>
