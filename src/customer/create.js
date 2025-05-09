@@ -532,7 +532,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
-                        {/*<div className="col-md-6">
+                        <div className="col-md-6">
                             <label className="form-label">ID</label>
 
                             <div className="input-group mb-3">
@@ -558,7 +558,7 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     {errors.code}
                                 </div>
                             )}
-                        </div>*/}
+                        </div>
 
 
                         <div className="col-md-2">
