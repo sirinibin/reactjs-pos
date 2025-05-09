@@ -1348,6 +1348,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="store_id"
+                                    filterBy={() => true}
                                     labelKey="name"
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
@@ -1392,6 +1393,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <label className="form-label">Vendor</label>
                             <Typeahead
                                 id="vendor_id"
+                                filterBy={() => true}
                                 labelKey="search_label"
                                 isLoading={isVendorsLoading}
                                 onChange={(selectedItems) => {
@@ -1645,6 +1647,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <label className="form-label">Product*</label>
                             <Typeahead
                                 id="product_id"
+                                filterBy={() => true}
                                 size="lg"
                                 ref={productSearchRef}
                                 labelKey="search_label"
@@ -1682,7 +1685,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 }}
                                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                 highlightOnlyResult={true}
-                                filterBy={() => true}
                                 onInputChange={(searchTerm, e) => {
                                     suggestProducts(searchTerm);
                                 }}

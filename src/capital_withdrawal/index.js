@@ -806,6 +806,7 @@ function CapitalWithdrawalIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="withdrawn_by_user_id"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -827,6 +828,7 @@ function CapitalWithdrawalIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
+                                                        filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",

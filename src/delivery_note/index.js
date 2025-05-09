@@ -717,6 +717,7 @@ function DeliveryNoteIndex(props) {
                         <th>
                           <Typeahead
                             id="customer_id"
+                            filterBy={() => true}
                             labelKey="search_label"
                             style={{ minWidth: "300px" }}
                             onChange={(selectedItems) => {
@@ -738,6 +739,7 @@ function DeliveryNoteIndex(props) {
                         <th>
                           <Typeahead
                             id="created_by"
+                            filterBy={() => true}
                             labelKey="name"
                             onChange={(selectedItems) => {
                               searchByMultipleValuesField(

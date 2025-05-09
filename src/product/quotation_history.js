@@ -933,6 +933,7 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <Typeahead
                                                                 id="customer_id"
+                                                                filterBy={() => true}
                                                                 labelKey="search_label"
                                                                 onChange={(selectedItems) => {
                                                                     searchByMultipleValuesField(

@@ -744,6 +744,7 @@ function LedgerIndex(props) {
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="account_id"
+                                                        filterBy={() => true}
                                                         labelKey="search_label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

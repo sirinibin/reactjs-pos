@@ -1417,6 +1417,7 @@ function PurchaseIndex(props) {
                                                     <Typeahead
                                                         style={{ minWidth: "300px" }}
                                                         id="vendor_id"
+                                                        filterBy={() => true}
                                                         labelKey="search_label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -1568,6 +1569,7 @@ function PurchaseIndex(props) {
                                                     <Typeahead
                                                         id="payment_status"
                                                         labelKey="name"
+                                                        filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "payment_status",
@@ -1585,6 +1587,7 @@ function PurchaseIndex(props) {
                                                     <Typeahead
                                                         id="payment_methods"
                                                         labelKey="name"
+                                                        filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "payment_methods",
@@ -1671,6 +1674,7 @@ function PurchaseIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
+                                                        filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",

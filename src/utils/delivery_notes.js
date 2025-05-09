@@ -767,6 +767,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     id="customer_id"
+                                                                    filterBy={() => true}
                                                                     labelKey="search_label"
                                                                     style={{ minWidth: "300px" }}
                                                                     onChange={(selectedItems) => {
@@ -788,6 +789,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     id="created_by"
+                                                                    filterBy={() => true}
                                                                     labelKey="name"
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(

@@ -800,6 +800,7 @@ function SalesPaymentIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

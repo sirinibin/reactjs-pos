@@ -1222,6 +1222,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   <Typeahead
                     id="store_id"
                     labelKey="name"
+                    filterBy={() => true}
                     isLoading={isStoresLoading}
                     isInvalid={errors.store_id ? true : false}
                     onChange={(selectedItems) => {
@@ -1356,6 +1357,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="customer_id"
                 labelKey="search_label"
+                filterBy={() => true}
                 isLoading={isCustomersLoading}
                 onChange={(selectedItems) => {
                   errors.customer_id = "";
@@ -1599,6 +1601,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="product_id"
                 ref={productSearchRef}
+                filterBy={() => true}
                 size="lg"
                 labelKey="search_label"
                 emptyLabel=""
@@ -1623,7 +1626,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                 }}
                 options={productOptions}
                 selected={selectedProduct}
-                filterBy={() => true}
                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                 highlightOnlyResult={true}
                 onInputChange={(searchTerm, e) => {

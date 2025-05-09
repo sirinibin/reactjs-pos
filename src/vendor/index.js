@@ -977,6 +977,7 @@ function VendorIndex(props) {
                                                     <Typeahead
                                                         style={{ minWidth: "300px" }}
                                                         id="vendor_id"
+                                                        filterBy={() => true}
                                                         labelKey="search_label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -1169,6 +1170,7 @@ function VendorIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
+                                                        filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",

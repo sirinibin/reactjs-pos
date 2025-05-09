@@ -496,6 +496,7 @@ const UserCreate = forwardRef((props, ref) => {
                                 <Typeahead
                                     id="store_ids"
                                     labelKey="name"
+                                    filterBy={() => true}
                                     isInvalid={errors.store_ids ? true : false}
                                     onChange={(selectedItems) => {
                                         errors.store_ids = "";

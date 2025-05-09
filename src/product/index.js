@@ -1765,6 +1765,7 @@ function ProductIndex(props) {
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="product_id_by_part_no"
+                                                        filterBy={() => true}
                                                         size="lg"
                                                         labelKey="search_label"
                                                         emptyLabel="No products found"
@@ -1791,7 +1792,6 @@ function ProductIndex(props) {
                                                         selected={selectedProductsByPartNo}
                                                         placeholder="Search By Part #"
                                                         highlightOnlyResult={true}
-                                                        filterBy={() => true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestProducts(searchTerm, "part_number")
                                                         }}
@@ -1823,6 +1823,7 @@ function ProductIndex(props) {
                                                     <Typeahead
                                                         id="product_id"
                                                         labelKey="name"
+                                                          filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "category_id",
@@ -1841,6 +1842,7 @@ function ProductIndex(props) {
 
                                                     <Typeahead
                                                         id="product_id"
+                                                        filterBy={() => true}
                                                         size="lg"
                                                         labelKey="search_label"
                                                         emptyLabel="No products found"
@@ -1868,7 +1870,6 @@ function ProductIndex(props) {
                                                         selected={selectedProducts}
                                                         placeholder="Search By Name | Name in Arabic"
                                                         highlightOnlyResult={true}
-                                                        filterBy={() => true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestProducts(searchTerm, "name")
                                                         }}
@@ -1993,6 +1994,7 @@ function ProductIndex(props) {
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="category_id"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2014,6 +2016,7 @@ function ProductIndex(props) {
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="brand_id"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2035,6 +2038,7 @@ function ProductIndex(props) {
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="country_code"
+                                                        filterBy={() => true}
                                                         labelKey="label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2288,6 +2292,7 @@ function ProductIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

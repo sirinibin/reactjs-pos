@@ -458,6 +458,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="store_id"
+                                    filterBy={() => true}
                                     labelKey="name"
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
@@ -598,7 +599,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                 <Typeahead
                                     id="category_id"
                                     labelKey="name"
-
+                                    filterBy={() => true}
                                     isInvalid={errors.category_id ? true : false}
                                     onChange={(selectedItems) => {
                                         errors.category_id = "";

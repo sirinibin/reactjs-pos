@@ -900,6 +900,7 @@ function QuotationIndex(props) {
                         <th>
                           <Typeahead
                             id="customer_id"
+                            filterBy={() => true}
                             labelKey="search_label"
                             style={{ minWidth: "300px" }}
                             onChange={(selectedItems) => {
@@ -977,6 +978,7 @@ function QuotationIndex(props) {
                         <th>
                           <Typeahead
                             id="created_by"
+                            filterBy={() => true}
                             labelKey="name"
                             onChange={(selectedItems) => {
                               searchByMultipleValuesField(
@@ -999,6 +1001,7 @@ function QuotationIndex(props) {
                           <Typeahead
                             id="status"
                             labelKey="name"
+                            filterBy={() => true}
                             onChange={(selectedItems) => {
                               searchByMultipleValuesField(
                                 "status",

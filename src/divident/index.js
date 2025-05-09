@@ -805,6 +805,7 @@ function DividentIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="withdrawn_by_user_id"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -825,6 +826,7 @@ function DividentIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

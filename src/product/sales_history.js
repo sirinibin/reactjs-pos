@@ -902,6 +902,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                             <Typeahead
                                                                 id="customer_id"
                                                                 labelKey="search_label"
+                                                                filterBy={() => true}
                                                                 onChange={(selectedItems) => {
                                                                     searchByMultipleValuesField(
                                                                         "customer_id",

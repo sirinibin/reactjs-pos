@@ -1023,6 +1023,7 @@ const Vendors = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     style={{ minWidth: "300px" }}
+                                                                    filterBy={() => true}
                                                                     id="vendor_id"
                                                                     labelKey="search_label"
                                                                     onChange={(selectedItems) => {
@@ -1216,6 +1217,7 @@ const Vendors = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="created_by"
                                                                     labelKey="name"
+                                                                    filterBy={() => true}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "created_by",

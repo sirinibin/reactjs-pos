@@ -821,6 +821,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 <Typeahead
                   id="brand_id"
                   labelKey="name"
+                  filterBy={() => true}
                   isLoading={isBrandsLoading}
                   onChange={(selectedItems) => {
                     errors.brand_id = "";
@@ -870,6 +871,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 <Typeahead
                   id="country_code"
                   labelKey="label"
+                  filterBy={() => true}
                   onChange={(selectedItems) => {
                     errors.country_code = "";
                     setErrors(errors);
@@ -992,6 +994,7 @@ const ProductCreate = forwardRef((props, ref) => {
                 <Typeahead
                   id="category_id"
                   labelKey="name"
+                  filterBy={() => true}
                   isInvalid={errors.category_id ? true : false}
                   onChange={(selectedItems) => {
                     errors.category_id = "";
@@ -1326,6 +1329,7 @@ const ProductCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="product_id"
                 labelKey="search_label"
+                filterBy={() => true}
                 onChange={(selectedItems) => {
                   setSelectedLinkedProducts(selectedItems);
                   /*

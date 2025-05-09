@@ -1049,6 +1049,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="use_products_from_store_id"
+                                      filterBy={() => true}
                                     labelKey="name"
                                     isInvalid={errors.use_products_from_store_id ? true : false}
                                     onChange={(selectedItems) => {
@@ -1332,6 +1333,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                 <Typeahead
                                     id="country_code"
                                     labelKey="label"
+                                    filterBy={() => true}
                                     onChange={(selectedItems) => {
                                         errors.country_code = "";
                                         setErrors(errors);

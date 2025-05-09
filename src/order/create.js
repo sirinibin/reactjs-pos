@@ -2022,6 +2022,7 @@ function findDiscount() {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="store_id"
+                                    filterBy={() => true}
                                     labelKey="name"
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
@@ -2118,6 +2119,7 @@ function findDiscount() {
                             <label className="form-label">Customer</label>
                             <Typeahead
                                 id="customer_id"
+                                filterBy={() => true}
                                 labelKey="search_label"
                                 isLoading={isCustomersLoading}
                                 onChange={(selectedItems) => {
@@ -2348,6 +2350,7 @@ function findDiscount() {
                             <label className="form-label">Product Search*</label>
                             <Typeahead
                                 id="product_id"
+                                filterBy={() => true}
                                 size="lg"
                                 ref={productSearchRef}
                                 labelKey="search_label"
@@ -2355,7 +2358,6 @@ function findDiscount() {
                                 emptyLabel=""
                                 clearButton={true}
                                 open={openProductSearchResult}
-                                filterBy={() => true}
                                 isLoading={isProductsLoading}
                                 isInvalid={errors.product_id ? true : false}
                                 onChange={(selectedItems) => {
@@ -3589,6 +3591,7 @@ function findDiscount() {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="delivered_by_signature_id"
+                                    filterBy={() => true}
                                     labelKey="name"
                                     isLoading={isDeliveredBySignaturesLoading}
                                     isInvalid={errors.delivered_by_signature_id ? true : false}

@@ -871,6 +871,7 @@ const PurchaseReturnHistory = forwardRef((props, ref) => {
                                                         <th>
                                                             <Typeahead
                                                                 id="vendor_id"
+                                                                filterBy={() => true}
                                                                 labelKey="search_label"
                                                                 onChange={(selectedItems) => {
                                                                     searchByMultipleValuesField(

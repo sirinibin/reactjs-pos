@@ -1936,6 +1936,7 @@ const Sales = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="customer_id"
                                                                     labelKey="search_label"
+                                                                    filterBy={() => true}
                                                                     style={{ minWidth: "300px" }}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
@@ -1981,6 +1982,7 @@ const Sales = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="payment_status"
                                                                     labelKey="name"
+                                                                    filterBy={() => true}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "payment_status",
@@ -1998,6 +2000,7 @@ const Sales = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="payment_methods"
                                                                     labelKey="name"
+                                                                    filterBy={() => true}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "payment_methods",
@@ -2078,6 +2081,7 @@ const Sales = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="created_by"
                                                                     labelKey="name"
+                                                                    filterBy={() => true}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "created_by",
@@ -2177,6 +2181,7 @@ const Sales = forwardRef((props, ref) => {
                                                     <Typeahead
                                                         id="status"
                                                         labelKey="name"
+                                                        filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "status",

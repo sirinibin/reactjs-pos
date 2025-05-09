@@ -470,6 +470,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                 <Typeahead
                                     id="store_id"
                                     labelKey="name"
+                                    filterBy={() => true}
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
                                     onChange={(selectedItems) => {
@@ -514,6 +515,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                 <Typeahead
                                     id="store_id"
                                     labelKey="name"
+                                    filterBy={() => true}
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
                                     onChange={(selectedItems) => {
@@ -556,6 +558,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                             <Typeahead
                                 id="customer_id"
                                 labelKey="search_label"
+                                filterBy={() => true}
                                 isLoading={isCustomersLoading}
                                 isInvalid={errors.customer_id ? true : false}
                                 onChange={(selectedItems) => {

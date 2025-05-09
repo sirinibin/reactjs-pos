@@ -799,6 +799,7 @@ function SalesReturnPaymentIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
+                                                        filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",

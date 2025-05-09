@@ -1195,6 +1195,7 @@ function CustomerIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="customer_id"
+                                                        filterBy={() => true}
                                                         labelKey="search_label"
                                                         style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
@@ -1483,6 +1484,7 @@ function CustomerIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
+                                                        filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",

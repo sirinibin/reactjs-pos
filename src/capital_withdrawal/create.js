@@ -401,6 +401,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="store_id"
+                                    filterBy={() => true}
                                     labelKey="name"
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
@@ -444,6 +445,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="withdrawn_by_user_id"
+                                    filterBy={() => true}
                                     labelKey="name"
                                     isLoading={isWithdrawnByUsersLoading}
                                     isInvalid={errors.withdrawn_by_user_id ? true : false}

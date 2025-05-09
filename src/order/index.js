@@ -1913,6 +1913,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="customer_id"
+                                                        filterBy={() => true}
                                                         labelKey="search_label"
                                                         style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
@@ -1994,6 +1995,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="payment_status"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2011,6 +2013,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="payment_methods"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2108,6 +2111,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
+                                                        filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2207,6 +2211,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="status"
+                                                          filterBy={() => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

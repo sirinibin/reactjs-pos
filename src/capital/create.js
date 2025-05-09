@@ -403,6 +403,7 @@ const CapitalCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="store_id"
+                                    filterBy={() => true}
                                     labelKey="name"
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
@@ -446,6 +447,7 @@ const CapitalCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="invested_by_user_id"
+                                    filterBy={() => true}
                                     labelKey="name"
                                     isLoading={isInvestedByUsersLoading}
                                     isInvalid={errors.invested_by_user_id ? true : false}

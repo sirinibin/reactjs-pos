@@ -349,6 +349,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="parent_id"
+                                    filterBy={() => true}
                                     labelKey="name"
                                     isLoading={isExpenseCategoriesLoading}
                                     isInvalid={errors.parent_id ? true : false}

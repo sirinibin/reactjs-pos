@@ -471,6 +471,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                     id="store_id"
                                     labelKey="name"
                                     isLoading={isStoresLoading}
+                                    filterBy={() => true}
                                     isInvalid={errors.store_id ? true : false}
                                     onChange={(selectedItems) => {
                                         errors.store_id = "";
@@ -515,6 +516,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                     id="store_id"
                                     labelKey="name"
                                     isLoading={isStoresLoading}
+                                    filterBy={() => true}
                                     isInvalid={errors.store_id ? true : false}
                                     onChange={(selectedItems) => {
                                         errors.store_id = "";
@@ -557,6 +559,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 id="customer_id"
                                 labelKey="search_label"
                                 isLoading={isCustomersLoading}
+                                filterBy={() => true}
                                 isInvalid={errors.customer_id ? true : false}
                                 onChange={(selectedItems) => {
                                     errors.customer_id = "";

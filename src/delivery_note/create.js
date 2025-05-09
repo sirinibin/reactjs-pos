@@ -1056,6 +1056,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 <Typeahead
                   id="store_id"
                   labelKey="name"
+                  filterBy={() => true}
                   isLoading={isStoresLoading}
                   isInvalid={errors.store_id ? true : false}
                   onChange={(selectedItems) => {
@@ -1095,6 +1096,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="customer_id"
                 labelKey="search_label"
+                filterBy={() => true}
                 isLoading={isCustomersLoading}
                 onChange={(selectedItems) => {
                   errors.customer_id = "";
@@ -1231,6 +1233,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="product_id"
                 size="lg"
+                filterBy={() => true}
                 ref={productSearchRef}
                 labelKey="search_label"
                 emptyLabel=""
@@ -1257,7 +1260,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 selected={selectedProduct}
                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                 highlightOnlyResult={true}
-                filterBy={() => true}
                 onInputChange={(searchTerm, e) => {
                   suggestProducts(searchTerm);
                 }}
