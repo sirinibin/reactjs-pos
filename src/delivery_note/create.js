@@ -100,6 +100,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           if (form && form.elements[index + 1]) {
             if (event.target.getAttribute("class").includes("barcode")) {
               form.elements[index].focus();
+            } else if (event.target.getAttribute("class").includes("productSearch")) {
+              //  moveToProductSearch();
+              //productSearchRef.current?.focus();
+            } else if (event.target.getAttribute("class").includes("delivery_note_quantity")) {
+              //console.log("OKKK");
+              moveToProductSearch();
             } else {
               form.elements[index + 1].focus();
             }
@@ -948,10 +954,33 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
   const productSearchRef = useRef();
 
+
+
+  const inputRefs = useRef({});
+  const handleFocus = (rowIdx, field) => {
+    const ref = inputRefs.current?.[rowIdx]?.[field];
+    if (ref && ref.select) {
+      ref.select();
+    }
+  };
+
   function moveToProductSearch() {
     setTimeout(() => {
       productSearchRef.current?.focus();
-    }, 500);
+    }, 300);
+  }
+
+
+
+  function moveToProductQuantityInputBox() {
+    setTimeout(() => {
+      let index = (selectedProducts.length - 1);
+      const input = document.getElementById('delivery_note_quantity_' + index);
+      console.log("Moving to qty field");
+      input?.focus();
+      //  input
+
+    }, 300);
   }
 
   return (
@@ -1236,6 +1265,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 filterBy={() => true}
                 ref={productSearchRef}
                 labelKey="search_label"
+                inputProps={{ className: 'productSearch' }}
                 emptyLabel=""
                 clearButton={true}
                 open={openProductSearchResult}
@@ -1255,6 +1285,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
                   }
                   setOpenProductSearchResult(false);
+                  moveToProductQuantityInputBox();
                 }}
                 options={productOptions}
                 selected={selectedProduct}
@@ -1271,6 +1302,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   }
 
                   moveToProductSearch();
+
+                  /* if (e.code === "Enter") {
+                     moveToProductSearch();
+                   }*/
+
+
                 }}
               />
               <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
@@ -1449,9 +1486,22 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       <td style={{ width: "155px" }}>
 
                         <div className="input-group mb-3">
-                          <input type="number" value={product.quantity} className="form-control"
+                          <input type="number" id={`${"delivery_note_quantity_" + index}`} name={`${"delivery_note_quantity_" + index}`} value={product.quantity} className="form-control delivery_note_quantity"
 
-                            placeholder="Quantity" onChange={(e) => {
+                            placeholder="Quantity"
+
+                            ref={(el) => {
+                              if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                              inputRefs.current[index][`${"delivery_note_quantity_" + index}`] = el;
+                            }}
+                            onFocus={() => handleFocus(index, `${"delivery_note_quantity_" + index}`)}
+                            onKeyDown={(e) => {
+                              if (e.code === "Enter") {
+                                moveToProductSearch();
+                              }
+                            }}
+
+                            onChange={(e) => {
                               errors["quantity_" + index] = "";
                               setErrors({ ...errors });
                               if (!e.target.value) {
