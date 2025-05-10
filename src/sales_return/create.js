@@ -177,6 +177,32 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 let salesReturn = data.result;
                 // formData = purchaseReturn;
 
+                if (data.result?.discount) {
+                    discount = (data.result?.discount);
+                    setDiscount(discount);
+                }
+
+                if (data.result?.discount_with_vat) {
+                    discountWithVAT = (data.result?.discount_with_vat);
+                    setDiscountWithVAT(discountWithVAT);
+                }
+
+                if (data.result?.discount_percent) {
+                    discountPercent = data.result?.discount_percent;
+                    setDiscountPercent(discountPercent);
+                }
+
+                if (data.result?.discount_percent_with_vat) {
+                    discountPercentWithVAT = data.result.discount_percent_with_vat;
+                    setDiscountPercentWithVAT(discountPercentWithVAT);
+                }
+
+                if (data.result?.shipping_handling_fees) {
+                    shipping = data.result?.shipping_handling_fees;
+                    setShipping(shipping);
+                }
+
+
                 formData = {
                     id: salesReturn.id,
                     uuid: salesReturn.uuid,
@@ -246,6 +272,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                     //selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
                 }
+                console.log("selectedProducts:", selectedProducts);
 
                 console.log("selectedProducts: ", selectedProducts.length);
 
@@ -375,12 +402,22 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     // setShipping(shipping);
 
                     if (data.result?.discount) {
-                        discount = (data.result?.discount - data.result?.return_discount);
+                        if (data.result?.return_discount) {
+                            discount = (data.result?.discount - data.result?.return_discount);
+                        } else {
+                            discount = (data.result?.discount);
+                        }
+
                         setDiscount(discount);
                     }
 
                     if (data.result?.discount_with_vat) {
-                        discountWithVAT = (data.result?.discount_with_vat - data.result?.return_discount_with_vat);
+                        if (data.result?.return_discount_with_vat) {
+                            discountWithVAT = (data.result?.discount_with_vat - data.result?.return_discount_with_vat);
+                        } else {
+                            discountWithVAT = (data.result?.discount_with_vat);
+                        }
+
                         setDiscountWithVAT(discountWithVAT);
                     }
 
@@ -1999,15 +2036,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                                                             selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
 
-                                                            selectedProducts[index].unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
-
-                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
-
-                                                            selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
-                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                             setSelectedProducts([...selectedProducts]);
                                                             // Set new debounce timer
                                                             timerRef.current = setTimeout(() => {
+                                                                selectedProducts[index].unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                 reCalculate(index);
                                                             }, 300);
                                                         }} />

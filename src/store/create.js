@@ -1333,7 +1333,6 @@ const StoreCreate = forwardRef((props, ref) => {
                                 <Typeahead
                                     id="country_code"
                                     labelKey="label"
-                                    filterBy={() => true}
                                     onChange={(selectedItems) => {
                                         errors.country_code = "";
                                         setErrors(errors);

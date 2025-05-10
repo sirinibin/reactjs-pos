@@ -1056,7 +1056,6 @@ const OrderCreate = forwardRef((props, ref) => {
             quantity = parseFloat(selectedProducts[index].quantity + product.quantity);
             if (product.unit_price) {
                 selectedProducts[index].unit_price = product.unit_price;
-                selectedProducts[index].base_price = product.base_price;
                 selectedProducts[index].unit_price_with_vat = product.unit_price_with_vat;
             }
 
@@ -1108,11 +1107,9 @@ const OrderCreate = forwardRef((props, ref) => {
                 name: product.name,
                 quantity: product.quantity,
                 product_stores: product.product_stores,
-                base_price: product.base_price,
                 unit_price: product.unit_price,
                 unit_price_with_vat: product.unit_price_with_vat,
                 unit: product.unit ? product.unit : "",
-                purchase_base_price: product.purchase_base_price,
                 purchase_unit_price: product.purchase_unit_price,
                 purchase_unit_price_with_vat: product.purchase_unit_price_with_vat,
                 unit_discount: product.unit_discount,
@@ -2754,7 +2751,7 @@ function findDiscount() {
                                             </td>
                                             {/*<td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_product_unit_price" + index}`} name={`${"sales_product_unit_price" + index}`} onWheel={(e) => e.target.blur()} value={product.unit_price} className="form-control text-end"
+                                                    <input type="number" id={`${"sales_product_unit_price" + index}`} name={`${"sales_product_unit_price" + index}`} onWheel={(e) => e.target.blur()} value={selectedProducts[index].unit_price} className="form-control text-end"
 
                                                         placeholder="Unit Price" onChange={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
