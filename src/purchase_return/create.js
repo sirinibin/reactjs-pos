@@ -30,6 +30,26 @@ import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
+
+    function ResetForm() {
+        shipping = 0.00;
+        setShipping(shipping);
+
+        discount = 0.00;
+        setDiscount(discount);
+
+        discountPercent = 0.00;
+        setDiscountPercent(discountPercent);
+
+        discountWithVAT = 0.00;
+        setDiscountWithVAT(discountWithVAT);
+
+        discountPercentWithVAT = 0.00;
+        setDiscountPercentWithVAT(discountPercentWithVAT);
+
+    }
+
+
     useImperativeHandle(ref, () => ({
         open(id, purchaseId) {
             errors = {};
@@ -42,18 +62,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             purchase = {};
             setPurchase({ ...purchase });
 
-            discount = 0;
-            setDiscount(discount);
-            discountPercent = 0;
-            setDiscountPercent(discountPercent);
-
-            discountWithVAT = 0;
-            setDiscountWithVAT(discountWithVAT);
-            discountPercentWithVAT = 0;
-            setDiscountPercentWithVAT(discountPercentWithVAT);
-
-
-
+            ResetForm();
 
             formData = {
                 vat_percent: 15.0,

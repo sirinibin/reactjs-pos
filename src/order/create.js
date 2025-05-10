@@ -1287,8 +1287,6 @@ function findDiscount() {
     let [discountPercentWithVAT, setDiscountPercentWithVAT] = useState(0.00);
 
 
-
-
     async function reCalculate(productIndex) {
         console.log("inside reCalculate");
 

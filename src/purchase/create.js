@@ -31,6 +31,24 @@ import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 const PurchaseCreate = forwardRef((props, ref) => {
 
+    function ResetForm() {
+        shipping = 0.00;
+        setShipping(shipping);
+
+        discount = 0.00;
+        setDiscount(discount);
+
+        discountPercent = 0.00;
+        setDiscountPercent(discountPercent);
+
+        discountWithVAT = 0.00;
+        setDiscountWithVAT(discountWithVAT);
+
+        discountPercentWithVAT = 0.00;
+        setDiscountPercentWithVAT(discountPercentWithVAT);
+
+    }
+
     useImperativeHandle(ref, () => ({
         open(id) {
 
@@ -46,15 +64,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
             selectedOrderPlacedByUsers = [];
             setSelectedOrderPlacedByUsers([]);
 
-            discount = 0;
-            setDiscount(discount);
-            discountPercent = 0;
-            setDiscountPercent(discountPercent);
-
-            discountWithVAT = 0;
-            setDiscountWithVAT(discountWithVAT);
-            discountPercentWithVAT = 0;
-            setDiscountPercentWithVAT(discountPercentWithVAT);
 
 
             formData = {
@@ -72,6 +81,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 payment_status: "paid",
 
             };
+
+            ResetForm();
 
             formData.payments_input = [
                 {
@@ -528,9 +539,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             formData.cash_discount = 0.00;
         }
 
-        if (!formData.cash_discount) {
-            formData.cash_discount = 0.00;
-        }
+
 
         if (discount) {
             formData.discount = discount;

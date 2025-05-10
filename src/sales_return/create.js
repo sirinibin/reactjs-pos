@@ -28,6 +28,25 @@ import Amount from "../utils/amount.js";
 
 const SalesReturnCreate = forwardRef((props, ref) => {
 
+
+    function ResetForm() {
+        shipping = 0.00;
+        setShipping(shipping);
+
+        discount = 0.00;
+        setDiscount(discount);
+
+        discountPercent = 0.00;
+        setDiscountPercent(discountPercent);
+
+        discountWithVAT = 0.00;
+        setDiscountWithVAT(discountWithVAT);
+
+        discountPercentWithVAT = 0.00;
+        setDiscountPercentWithVAT(discountPercentWithVAT);
+
+    }
+
     let [saleReturnID, setSaleReturnID] = useState();
     useImperativeHandle(ref, () => ({
         open(id, orderId) {
@@ -62,6 +81,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     "deleted": false,
                 }
             ];
+
+            ResetForm();
+
             formData.cash_discount = 0.00;
             if (localStorage.getItem("user_id")) {
                 selectedReceivedByUsers = [{
