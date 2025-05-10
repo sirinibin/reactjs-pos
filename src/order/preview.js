@@ -187,7 +187,9 @@ const Preview = forwardRef((props, ref) => {
                     getSignature(model.delivered_by_signature_id);
                 }
 
+                preparePages();
 
+                /*
 
                 let pageSize = 15;
                 model.pageSize = pageSize;
@@ -231,25 +233,27 @@ const Preview = forwardRef((props, ref) => {
                         }
                     }*/
 
-                    //top += 1057; //1057
-                    top += 5; //1057
-                    offset += pageSize;
+                //top += 1057; //1057
+                /*   top += 5; //1057
+                   offset += pageSize;
 
-                    if (i === 0) {
-                        model.pages[i].firstPage = true;
-                    }
+                   if (i === 0) {
+                       model.pages[i].firstPage = true;
+                   }
 
-                    if ((i + 1) === totalPages) {
-                        model.pages[i].lastPage = true;
-                    }
-                }
+                   if ((i + 1) === totalPages) {
+                       model.pages[i].lastPage = true;
+                   }
+               }
 
-                console.log("model.pages:", model.pages);
-                console.log("model.products:", model.products);
+               console.log("model.pages:", model.pages);
+               console.log("model.products:", model.products);
 
 
 
-                getQRCodeContents();
+
+               getQRCodeContents();
+               */
                 //model.qr_content = getQRCodeContents();
                 //setModel({ ...model });
 
@@ -260,6 +264,78 @@ const Preview = forwardRef((props, ref) => {
         },
 
     }));
+
+    function changePageSize(size) {
+        fontSizes[modelName + "_pageSize"] = parseInt(size);
+        setFontSizes({ ...fontSizes });
+        saveToLocalStorage("fontSizes", fontSizes);
+        preparePages();
+    }
+
+    function preparePages() {
+        if (fontSizes[modelName + "_pageSize"]) {
+            model.pageSize = fontSizes[modelName + "_pageSize"];
+        } else {
+            model.pageSize = 15
+        }
+
+        let totalProducts = model.products.length;
+        let top = 0;
+        let totalPagesInt = parseInt(totalProducts / model.pageSize);
+        let totalPagesFloat = parseFloat(totalProducts / model.pageSize);
+
+        let totalPages = totalPagesInt;
+        if ((totalPagesFloat - totalPagesInt) > 0) {
+            totalPages++;
+        }
+
+        model.total_pages = totalPages;
+
+
+        model.pages = [];
+        model.qrOnLeftBottom = true;
+
+
+        let offset = 0;
+
+        for (let i = 0; i < totalPages; i++) {
+            model.pages.push({
+                top: top,
+                products: [],
+                lastPage: false,
+                firstPage: false,
+            });
+
+            for (let j = offset; j < totalProducts; j++) {
+                model.pages[i].products.push(model.products[j]);
+                if (model.pages[i].products.length === model.pageSize) {
+                    break;
+                }
+            }
+            /*
+            if (model.pages[i].products.length < pageSize) {
+                for (let s = model.pages[i].products.length; s < pageSize; s++) {
+                    model.pages[i].products.push({});
+                }
+            }*/
+
+            //top += 1057; //1057
+            top += 5; //1057
+            offset += model.pageSize;
+
+            if (i === 0) {
+                model.pages[i].firstPage = true;
+            }
+
+            if ((i + 1) === totalPages) {
+                model.pages[i].lastPage = true;
+            }
+        }
+
+        console.log("model.pages:", model.pages);
+        console.log("model.products:", model.products);
+        getQRCodeContents();
+    }
 
 
     async function getModel(id, modelName) {
@@ -833,6 +909,7 @@ const Preview = forwardRef((props, ref) => {
     let [selectedText, setSelectedText] = useState("");
 
     const defaultFontSizes = useMemo(() => ({
+        "pageSize": 15,
         "font": "Cairo",
         "marginTop": {
             "value": 0,
@@ -1109,6 +1186,10 @@ const Preview = forwardRef((props, ref) => {
         saveToLocalStorage("fontSizes", fontSizes);
     };
 
+
+
+
+
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
@@ -1166,6 +1247,39 @@ const Preview = forwardRef((props, ref) => {
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
 
                     </div>}
+
+                    <div className="col ">
+                        <>
+                            <label className="form-label">Page Size:&nbsp;</label>
+                            <select
+                                value={fontSizes[modelName + "_pageSize"]}
+                                onChange={(e) => {
+                                    changePageSize(e.target.value);
+                                }}
+                                className="form-control pull-right"
+                                style={{
+                                    border: "solid 1px",
+                                    borderColor: "silver",
+                                    width: "55px",
+                                }}
+                            >
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                            </select>
+                        </>
+                    </div>
+
+
 
 
                     {/* Print & Close Buttons */}
