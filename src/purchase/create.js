@@ -2190,7 +2190,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_unit_discount_" + index}`} name={`${"sales_unit_discount_" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end sales_unit_discount" value={selectedProducts[index].unit_discount} onChange={(e) => {
+                                                    <input type="number" id={`${"purchase_unit_discount_" + index}`} name={`${"purchase_unit_discount_" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end purchase_unit_discount" value={selectedProducts[index].unit_discount} onChange={(e) => {
                                                         if (timerRef.current) clearTimeout(timerRef.current);
 
                                                         if (parseFloat(e.target.value) === 0) {
@@ -2263,7 +2263,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_unit_discount_percent" + index}`} disabled={true} name={`${"sales_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                                                    <input type="number" id={`${"purchase_unit_discount_percent" + index}`} disabled={true} name={`${"purchase_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                                         if (timerRef.current) clearTimeout(timerRef.current);
 
                                                         if (parseFloat(e.target.value) === 0) {
@@ -2467,7 +2467,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             Shipping & Handling Fees
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" id="sales_shipping_fees" name="sales_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={shipping} onChange={(e) => {
+                                            <input type="number" id="purchase_shipping_fees" name="purchase_shipping_fees" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={shipping} onChange={(e) => {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                 errors["shipping_handling_fees"] = "";
                                                 setErrors({ ...errors });
@@ -2613,7 +2613,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                                )}
                                                                            </th>
                                                                            <td className="text-end">
-                                                                               <input type="number" id="sales_discount" disabled={true} name="sales_discount" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={discount} onChange={(e) => {
+                                                                               <input type="number" id="purchase_discount" disabled={true} name="purchase_discount" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={discount} onChange={(e) => {
                                                                                    if (timerRef.current) clearTimeout(timerRef.current);
                                                                                    if (parseFloat(e.target.value) === 0) {
                                                                                        discount = 0;
@@ -2784,7 +2784,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             )}
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" id="sales_discount" name="sales_discount_with_vat" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={discountWithVAT} onChange={(e) => {
+                                            <input type="number" id="purchase_discount" name="purchase_discount_with_vat" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={discountWithVAT} onChange={(e) => {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                 if (parseFloat(e.target.value) === 0) {
                                                     discount = 0;
@@ -2879,7 +2879,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     </tr>
                                     <tr>
 
-                                        <th colSpan="8" className="text-end"> VAT  <input type="number" id="sales_vat_percent" name="sales_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
+                                        <th colSpan="8" className="text-end"> VAT  <input type="number" id="purchase_vat_percent" name="purchase_vat_percent" onWheel={(e) => e.target.blur()} disabled={true} className="text-center" style={{ width: "50px" }} value={formData.vat_percent} onChange={(e) => {
                                             console.log("Inside onchange vat percent");
                                             if (parseFloat(e.target.value) === 0) {
                                                 formData.vat_percent = parseFloat(e.target.value);
