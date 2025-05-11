@@ -256,20 +256,27 @@ const VendorCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
 
                 await ImageGalleryRef.current.uploadAllImages();
-                setProcessing(false);
 
-                if (formData.id) {
-                    props.showToastMessage("Vendor updated successfully!", "success");
-                } else {
-                    props.showToastMessage("Vendor created successfully!", "success");
-                }
+                if (timerRef.current) clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => {
+                    setProcessing(false);
 
-                if (props.refreshList) {
-                    props.refreshList();
-                }
+                    if (formData.id) {
+                        props.showToastMessage("Vendor updated successfully!", "success");
+                    } else {
+                        props.showToastMessage("Vendor created successfully!", "success");
+                    }
 
-                handleClose();
-                props.openDetailsView(data.result.id);
+                    if (props.refreshList) {
+                        props.refreshList();
+                    }
+
+                    handleClose();
+                    props.openDetailsView(data.result.id);
+
+                }, 300);
+
+
             })
             .catch((error) => {
                 setProcessing(false);

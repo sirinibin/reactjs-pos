@@ -378,19 +378,25 @@ const CustomerCreate = forwardRef((props, ref) => {
                 setFormData({ ...formData });
 
                 await ImageGalleryRef.current.uploadAllImages();
-                setProcessing(false);
 
-                if (formData.id) {
-                    props.showToastMessage("Customer updated successfully!", "success");
-                } else {
-                    props.showToastMessage("Customer created successfully!", "success");
-                }
+                if (timerRef.current) clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => {
+                    setProcessing(false);
+                    if (formData.id) {
+                        props.showToastMessage("Customer updated successfully!", "success");
+                    } else {
+                        props.showToastMessage("Customer created successfully!", "success");
+                    }
 
-                if (props.refreshList) {
-                    props.refreshList();
-                }
-                handleClose();
-                props.openDetailsView(data.result.id);
+                    if (props.refreshList) {
+                        props.refreshList();
+                    }
+                    handleClose();
+                    props.openDetailsView(data.result.id);
+
+                }, 300);
+
+
             })
             .catch((error) => {
                 setProcessing(false);

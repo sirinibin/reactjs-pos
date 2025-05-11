@@ -526,24 +526,33 @@ const ProductCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
 
         await ImageGalleryRef.current.uploadAllImages();
-        setProcessing(false);
 
-        console.log("Response after creating  product:");
-        console.log(data);
-        if (formData.id) {
-          props.showToastMessage("Product updated successfully!", "success");
-        } else {
-          props.showToastMessage("Product created successfully!", "success");
-        }
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+          setProcessing(false);
+
+          console.log("Response after creating  product:");
+          console.log(data);
+          if (formData.id) {
+            props.showToastMessage("Product updated successfully!", "success");
+          } else {
+            props.showToastMessage("Product created successfully!", "success");
+          }
+
+          if (props.refreshList) {
+            props.refreshList();
+          }
+
+          handleClose();
+          props.openDetailsView(data.result.id);
 
 
-        if (props.refreshList) {
-          props.refreshList();
-        }
+        }, 300);
 
 
-        handleClose();
-        props.openDetailsView(data.result.id);
+
+
+
       })
       .catch((error) => {
         setProcessing(false);
