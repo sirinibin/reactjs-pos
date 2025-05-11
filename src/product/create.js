@@ -16,7 +16,7 @@ import ProductCategoryCreate from "../product_category/create.js";
 import ProductBrandCreate from "../product_brand/create.js";
 import countryList from 'react-select-country-list';
 
-import ProductImageGallery from './../utils/ProductImageGallery.js';
+import ImageGallery from '../utils/ImageGallery.js';
 //import Select from 'react-select'
 
 const ProductCreate = forwardRef((props, ref) => {
@@ -25,6 +25,7 @@ const ProductCreate = forwardRef((props, ref) => {
   const countryOptions = useMemo(() => countryList().getData(), [])
   //const [selectedCountry, setSelectedCountry] = useState('')
   let [selectedCountries, setSelectedCountries] = useState([]);
+
   const timerRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
@@ -1366,7 +1367,7 @@ const ProductCreate = forwardRef((props, ref) => {
             </div>
             <div className="col-md-12">
               <label className="form-label">Product photos</label>
-              <ProductImageGallery ref={ImageGalleryRef} productID={formData.id} storeID={formData.store_id} storedImages={formData.images} />
+              <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName={"product"} />
             </div>
 
             {/*<div className="col-md-6">

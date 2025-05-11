@@ -1,15 +1,18 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
 
 import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
+import ImageGallery from '../utils/ImageGallery.js';
 
 const VendorCreate = forwardRef((props, ref) => {
+    const timerRef = useRef(null);
+    const ImageGalleryRef = useRef();
 
     useImperativeHandle(ref, () => ({
-        open(id) {
+        async open(id) {
 
             formData = {
                 national_address: {},
@@ -18,7 +21,12 @@ const VendorCreate = forwardRef((props, ref) => {
             setFormData({ ...formData });
 
             if (id) {
-                getVendor(id);
+                await getVendor(id);
+
+                if (timerRef.current) clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => {
+                    ImageGalleryRef.current.open();
+                }, 300);
             }
             setShow(true);
         },
@@ -76,7 +84,7 @@ const VendorCreate = forwardRef((props, ref) => {
     });
 
 
-    function getVendor(id) {
+    async function getVendor(id) {
         console.log("inside get Order");
         const requestOptions = {
             method: 'GET',
@@ -92,7 +100,7 @@ const VendorCreate = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
-        fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
+        await fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -239,10 +247,16 @@ const VendorCreate = forwardRef((props, ref) => {
                 }
 
                 setErrors({});
-                setProcessing(false);
+
 
                 console.log("Response:");
                 console.log(data);
+
+                formData.id = data.result?.id;
+                setFormData({ ...formData });
+
+                await ImageGalleryRef.current.uploadAllImages();
+                setProcessing(false);
 
                 if (formData.id) {
                     props.showToastMessage("Vendor updated successfully!", "success");
@@ -988,7 +1002,10 @@ const VendorCreate = forwardRef((props, ref) => {
                         </div>
 
 
-
+                        <div className="col-md-12">
+                            <label className="form-label">Vendor photos</label>
+                            <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName={"vendor"} />
+                        </div>
 
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>

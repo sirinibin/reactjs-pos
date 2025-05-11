@@ -1,13 +1,19 @@
-import React, { useState, forwardRef, useImperativeHandle } from "react";
+import React, { useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { Modal, Table, Button } from 'react-bootstrap';
+import ImageGallery from '../utils/ImageGallery.js';
 
 
 const VendorView = forwardRef((props, ref) => {
-
+    const timerRef = useRef(null);
+    const ImageGalleryRef = useRef();
     useImperativeHandle(ref, () => ({
-        open(id) {
+        async open(id) {
             if (id) {
-                getVendor(id);
+                await getVendor(id);
+                if (timerRef.current) clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => {
+                    ImageGalleryRef.current.open();
+                }, 300);
                 SetShow(true);
             }
 
@@ -32,7 +38,7 @@ const VendorView = forwardRef((props, ref) => {
             .join("&");
     }
 
-    function getVendor(id) {
+    async function getVendor(id) {
         console.log("inside get Vendor");
         const requestOptions = {
             method: 'GET',
@@ -48,7 +54,7 @@ const VendorView = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
-        fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
+        await fetch('/v1/vendor/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -73,7 +79,7 @@ const VendorView = forwardRef((props, ref) => {
 
 
     return (<>
-        <Modal show={show} size="lg" onHide={handleClose} animation={false} scrollable={true}>
+        <Modal show={show} fullscreen onHide={handleClose} animation={false} scrollable={true}>
             <Modal.Header>
                 <Modal.Title>Details of Vendor #{model.name} </Modal.Title>
 
@@ -141,6 +147,12 @@ const VendorView = forwardRef((props, ref) => {
                         </tr>
                     </tbody>
                 </Table>
+
+                <div className="col-md-12">
+                    <label className="form-label">Vendor photos</label>
+                    <ImageGallery ref={ImageGalleryRef} id={model.id} storeID={model.store_id} storedImages={model.images} modelName={"vendor"} />
+                </div>
+
                 {model.national_address &&
                     <span>
                         < h2 > National Address</h2>

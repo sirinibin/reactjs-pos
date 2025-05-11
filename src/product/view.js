@@ -18,7 +18,7 @@ import QuotationHistory from "./quotation_history.js";
 import DeliveryNoteHistory from "./delivery_note_history.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 
-import ProductImageGallery from './../utils/ProductImageGallery.js';
+import ImageGallery from '../utils/ImageGallery.js';
 
 const ProductView = forwardRef((props, ref) => {
 
@@ -521,7 +521,7 @@ const ProductView = forwardRef((props, ref) => {
                 </div>
                 <div className="col-md-12">
                     <label className="form-label">Product photos</label>
-                    <ProductImageGallery ref={ImageGalleryRef} productID={model.id} storeID={model.store_id} storedImages={model.images} />
+                    <ImageGallery ref={ImageGalleryRef} id={model.id} storeID={model.store_id} storedImages={model.images} modelName={"product"} />
                 </div>
 
 

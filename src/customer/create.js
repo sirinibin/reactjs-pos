@@ -5,12 +5,15 @@ import { Spinner } from "react-bootstrap";
 import countryList from 'react-select-country-list';
 import { Typeahead } from "react-bootstrap-typeahead";
 import Quotations from "./../utils/quotations.js";
-
+import ImageGallery from '../utils/ImageGallery.js';
 
 const CustomerCreate = forwardRef((props, ref) => {
 
+    const timerRef = useRef(null);
+    const ImageGalleryRef = useRef();
+
     useImperativeHandle(ref, () => ({
-        open(id) {
+        async open(id) {
             errors = {};
             setErrors({ ...errors });
             formData = {
@@ -18,7 +21,11 @@ const CustomerCreate = forwardRef((props, ref) => {
             };
             setFormData({ ...formData });
             if (id) {
-                getCustomer(id);
+                await getCustomer(id);
+                if (timerRef.current) clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => {
+                    ImageGalleryRef.current.open();
+                }, 300);
             }
             SetShow(true);
 
@@ -120,7 +127,7 @@ const CustomerCreate = forwardRef((props, ref) => {
             .join("&");
     }
 
-    function getCustomer(id) {
+    async function getCustomer(id) {
         console.log("inside get Order");
         const requestOptions = {
             method: 'GET',
@@ -136,7 +143,7 @@ const CustomerCreate = forwardRef((props, ref) => {
         }
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
-        fetch('/v1/customer/' + id + "?" + queryParams, requestOptions)
+        await fetch('/v1/customer/' + id + "?" + queryParams, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -362,10 +369,16 @@ const CustomerCreate = forwardRef((props, ref) => {
                 }
 
                 setErrors({});
-                setProcessing(false);
+
 
                 console.log("Response:");
                 console.log(data);
+
+                formData.id = data.result?.id;
+                setFormData({ ...formData });
+
+                await ImageGalleryRef.current.uploadAllImages();
+                setProcessing(false);
 
                 if (formData.id) {
                     props.showToastMessage("Customer updated successfully!", "success");
@@ -1206,6 +1219,11 @@ const CustomerCreate = forwardRef((props, ref) => {
                                     {errors.national_address_additional_no}
                                 </div>
                             )}
+                        </div>
+
+                        <div className="col-md-12">
+                            <label className="form-label">Customer photos</label>
+                            <ImageGallery ref={ImageGalleryRef} id={formData.id} storeID={formData.store_id} storedImages={formData.images} modelName={"customer"} />
                         </div>
 
 

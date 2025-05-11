@@ -3,7 +3,7 @@ import imageCompression from 'browser-image-compression';
 import { Modal, Badge } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 
-const ProductImageGallery = forwardRef((props, ref) => {
+const ImageGallery = forwardRef((props, ref) => {
     const [images, setImages] = useState([]);
     const [modalIndex, setModalIndex] = useState(null);
 
@@ -24,7 +24,6 @@ const ProductImageGallery = forwardRef((props, ref) => {
                 if (img.file) {
                     await uploadToServer(img, indexOffset);
                 }
-
             });
         }
 
@@ -71,16 +70,18 @@ const ProductImageGallery = forwardRef((props, ref) => {
 
     const uploadToServer = async (img, index) => {
         const formData = new FormData();
-        if (!props.productID) {
+        if (!props.id) {
             return;
         }
 
-        formData.append('productID', props.productID);
+
+
+        formData.append('id', props.id);
         formData.append('storeID', props.storeID);
         formData.append('image', img.file);
 
         try {
-            const response = await fetch('/v1/product/upload-image', {
+            const response = await fetch('/v1/' + props.modelName + '/upload-image', {
                 method: 'POST',
                 body: formData
             });
@@ -112,7 +113,7 @@ const ProductImageGallery = forwardRef((props, ref) => {
 
         const img = images[index];
         if (img.serverUrl) {
-            await fetch(`/v1/product/delete-image?url=${encodeURIComponent(img.serverUrl)}&productID=${encodeURIComponent(props.productID)}&storeID=${encodeURIComponent(props.storeID)}`, {
+            await fetch(`/v1/${props.modelName}/delete-image?url=${encodeURIComponent(img.serverUrl)}&id=${encodeURIComponent(props.id)}&storeID=${encodeURIComponent(props.storeID)}`, {
                 method: 'POST',
             });
         }
@@ -206,4 +207,4 @@ const ProductImageGallery = forwardRef((props, ref) => {
     );
 });
 
-export default ProductImageGallery;
+export default ImageGallery;
