@@ -1,12 +1,36 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, forwardRef, useImperativeHandle } from 'react';
 import imageCompression from 'browser-image-compression';
-import { Modal, Badge, Spinner } from 'react-bootstrap';
+import { Modal, Badge } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 
-const ProductImageGallery = ({ productID, storeID, storedImages }) => {
-    const [images, setImages] = useState([]); // { preview, file?, status: 'uploading'|'uploaded'|'error', serverUrl? }
+const ProductImageGallery = forwardRef((props, ref) => {
+    const [images, setImages] = useState([]);
     const [modalIndex, setModalIndex] = useState(null);
 
+
+    useImperativeHandle(ref, () => ({
+        open() {
+            const formatted = (props.storedImages || []).map(url => ({
+                serverUrl: url,
+                preview: url,
+                status: 'uploaded'
+            }));
+            console.log("formatted:", formatted);
+            setImages(formatted);
+
+        },
+        async uploadAllImages() {
+            images.forEach(async (img, indexOffset) => {
+                if (img.file) {
+                    await uploadToServer(img, indexOffset);
+                }
+
+            });
+        }
+
+    }));
+
+    /*
     useEffect(() => {
         console.log("storedImages:", storedImages);
 
@@ -18,6 +42,7 @@ const ProductImageGallery = ({ productID, storeID, storedImages }) => {
         console.log("formatted:", formatted);
         setImages(formatted);
     }, [storedImages]);
+    */
 
     const handleImageChange = async (e) => {
         const files = Array.from(e.target.files || []);
@@ -46,8 +71,12 @@ const ProductImageGallery = ({ productID, storeID, storedImages }) => {
 
     const uploadToServer = async (img, index) => {
         const formData = new FormData();
-        formData.append('productID', productID);
-        formData.append('storeID', storeID);
+        if (!props.productID) {
+            return;
+        }
+
+        formData.append('productID', props.productID);
+        formData.append('storeID', props.storeID);
         formData.append('image', img.file);
 
         try {
@@ -83,7 +112,7 @@ const ProductImageGallery = ({ productID, storeID, storedImages }) => {
 
         const img = images[index];
         if (img.serverUrl) {
-            await fetch(`/v1/product/delete-image?url=${encodeURIComponent(img.serverUrl)}&productID=${encodeURIComponent(productID)}&storeID=${encodeURIComponent(storeID)}`, {
+            await fetch(`/v1/product/delete-image?url=${encodeURIComponent(img.serverUrl)}&productID=${encodeURIComponent(props.productID)}&storeID=${encodeURIComponent(props.storeID)}`, {
                 method: 'POST',
             });
         }
@@ -127,9 +156,10 @@ const ProductImageGallery = ({ productID, storeID, storedImages }) => {
                                 &times;
                             </button>
 
+                            {/*<Spinner animation="border" size="sm" variant="primary" />*/}
                             <div className="position-absolute bottom-0 start-0 m-1">
                                 {img.status === 'uploading' && (
-                                    <Spinner animation="border" size="sm" variant="primary" />
+                                    <Badge bg="warning">Pending</Badge>
                                 )}
                                 {img.status === 'uploaded' && (
                                     <Badge bg="success">Saved</Badge>
@@ -174,6 +204,6 @@ const ProductImageGallery = ({ productID, storeID, storedImages }) => {
             </Modal>
         </div>
     );
-};
+});
 
 export default ProductImageGallery;

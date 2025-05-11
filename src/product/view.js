@@ -22,10 +22,16 @@ import ProductImageGallery from './../utils/ProductImageGallery.js';
 
 const ProductView = forwardRef((props, ref) => {
 
+    const timerRef = useRef(null);
+    const ImageGalleryRef = useRef();
     useImperativeHandle(ref, () => ({
         open(id) {
             if (id) {
                 getProduct(id);
+                if (timerRef.current) clearTimeout(timerRef.current);
+                timerRef.current = setTimeout(() => {
+                    ImageGalleryRef.current.open();
+                }, 300);
                 SetShow(true);
             }
 
@@ -513,10 +519,10 @@ const ProductView = forwardRef((props, ref) => {
                     */}
                     </table>
                 </div>
-                {model.id && <div className="col-md-12">
+                <div className="col-md-12">
                     <label className="form-label">Product photos</label>
-                    <ProductImageGallery productID={model.id} storeID={model.store_id} storedImages={model.images} />
-                </div>}
+                    <ProductImageGallery ref={ImageGalleryRef} productID={model.id} storeID={model.store_id} storedImages={model.images} />
+                </div>
 
 
             </Modal.Body>

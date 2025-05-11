@@ -25,7 +25,7 @@ const ProductCreate = forwardRef((props, ref) => {
   const countryOptions = useMemo(() => countryList().getData(), [])
   //const [selectedCountry, setSelectedCountry] = useState('')
   let [selectedCountries, setSelectedCountries] = useState([]);
-
+  const timerRef = useRef(null);
 
   useImperativeHandle(ref, () => ({
     async open(id, linkToProductID) {
@@ -46,9 +46,12 @@ const ProductCreate = forwardRef((props, ref) => {
       await getStore(localStorage.getItem("store_id"));
 
       if (id) {
-        getProduct(id);
-      } else {
-        //getAllStores();
+        await getProduct(id);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+          ImageGalleryRef.current.open();
+        }, 300);
+
       }
 
 
@@ -163,7 +166,7 @@ const ProductCreate = forwardRef((props, ref) => {
     SetShow(false);
   }
 
-  function getProduct(id) {
+  async function getProduct(id) {
     console.log("inside get Product");
     const requestOptions = {
       method: "GET",
@@ -179,7 +182,7 @@ const ProductCreate = forwardRef((props, ref) => {
     }
     let queryParams = ObjectToSearchQueryParams(searchParams);
 
-    fetch("/v1/product/" + id + "?" + queryParams, requestOptions)
+    await fetch("/v1/product/" + id + "?" + queryParams, requestOptions)
       .then(async (response) => {
         const isJson = response.headers
           .get("content-type")
@@ -518,6 +521,10 @@ const ProductCreate = forwardRef((props, ref) => {
         }
 
         setErrors({});
+        formData.id = data.result?.id;
+        setFormData({ ...formData });
+
+        await ImageGalleryRef.current.uploadAllImages();
         setProcessing(false);
 
         console.log("Response after creating  product:");
@@ -532,6 +539,7 @@ const ProductCreate = forwardRef((props, ref) => {
         if (props.refreshList) {
           props.refreshList();
         }
+
 
         handleClose();
         props.openDetailsView(data.result.id);
@@ -653,6 +661,13 @@ const ProductCreate = forwardRef((props, ref) => {
     //setIsProductsLoading(false);
 
   }, []);
+
+
+  const ImageGalleryRef = useRef();
+  /*
+  function openImageGallery() {
+    ImageGalleryRef.current.open();
+  }*/
 
   return (
     <>
@@ -1349,10 +1364,10 @@ const ProductCreate = forwardRef((props, ref) => {
                 multiple
               />
             </div>
-            {formData.id && <div className="col-md-12">
+            <div className="col-md-12">
               <label className="form-label">Product photos</label>
-              <ProductImageGallery productID={formData.id} storeID={formData.store_id} storedImages={formData.images} />
-            </div>}
+              <ProductImageGallery ref={ImageGalleryRef} productID={formData.id} storeID={formData.store_id} storedImages={formData.images} />
+            </div>
 
             {/*<div className="col-md-6">
               <label className="form-label">Image</label>
