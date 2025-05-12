@@ -1300,7 +1300,7 @@ const ProductCreate = forwardRef((props, ref) => {
  
                            productStores[localStorage.getItem('store_id')].damaged_stock = parseFloat(e.target.value);
                            */
-                          setDamagedStock(e.target.value);
+                          setDamagedStock(parseFloat(e.target.value));
                           setOperationType(null); // reset choice
 
                         }}
@@ -1352,22 +1352,35 @@ const ProductCreate = forwardRef((props, ref) => {
                     <td colSpan={2}>
                       {damagedStock && !operationType && (
                         <div className="mt-2">
-                          <button className="btn btn-success me-2" onClick={() => {
+                          <button className="btn btn-success me-2" onClick={(e) => {
+                            e.preventDefault();
                             if (!productStores[localStorage.getItem('store_id')].stocks_added) {
                               productStores[localStorage.getItem('store_id')].stocks_added = 0.00;
                             }
+
+                            if (!productStores[localStorage.getItem('store_id')].stock) {
+                              productStores[localStorage.getItem('store_id')].stock = 0.00;
+                            }
+
                             productStores[localStorage.getItem('store_id')].stocks_added += parseFloat(damagedStock);
-                            productStores[localStorage.getItem('store_id')].stock += productStores[localStorage.getItem('store_id')].stocks_added;
+                            productStores[localStorage.getItem('store_id')].stock += parseFloat(damagedStock);
                             setProductStores({ ...productStores });
                             damagedStock = "";
                             setDamagedStock(damagedStock);
                           }}>Add</button>
-                          <button className="btn btn-danger" onClick={() => {
+                          <button className="btn btn-danger" onClick={(e) => {
+                            e.preventDefault();
+
                             if (!productStores[localStorage.getItem('store_id')].stocks_removed) {
                               productStores[localStorage.getItem('store_id')].stocks_removed = 0.00;
                             }
+
+                            if (!productStores[localStorage.getItem('store_id')].stock) {
+                              productStores[localStorage.getItem('store_id')].stock = 0.00;
+                            }
+
                             productStores[localStorage.getItem('store_id')].stocks_removed += parseFloat(damagedStock);
-                            productStores[localStorage.getItem('store_id')].stock -= productStores[localStorage.getItem('store_id')].stocks_removed;
+                            productStores[localStorage.getItem('store_id')].stock -= parseFloat(damagedStock);
                             setProductStores({ ...productStores });
                             damagedStock = "";
                             setDamagedStock(damagedStock);
