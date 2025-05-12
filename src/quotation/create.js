@@ -55,6 +55,18 @@ const QuotationCreate = forwardRef((props, ref) => {
     discountPercentWithVAT = 0.00;
     setDiscountPercentWithVAT(discountPercentWithVAT);
 
+    selectedProducts = [];
+    setSelectedProducts([]);
+
+    selectedStores = [];
+    setSelectedStores([]);
+
+    selectedCustomers = [];
+    setSelectedCustomers([]);
+
+    selectedDeliveredByUsers = [];
+    setSelectedDeliveredByUsers([]);
+
   }
 
   const [enableProductSelection, setEnableProductSelection] = useState(false);
@@ -81,21 +93,18 @@ const QuotationCreate = forwardRef((props, ref) => {
         payment_status: "",
       };
 
+      formData.payments_input = [
+        {
+          "date_str": formData.date_str,
+          // "amount": "",
+          "amount": 0.00,
+          "method": "",
+          "deleted": false,
+        }
+      ];
+      formData.cash_discount = 0.00;
+
       ResetForm();
-
-      selectedProducts = [];
-      setSelectedProducts([]);
-
-      selectedStores = [];
-      setSelectedStores([]);
-
-      selectedCustomers = [];
-      setSelectedCustomers([]);
-
-      selectedDeliveredByUsers = [];
-      setSelectedDeliveredByUsers([]);
-
-
 
       reCalculate();
 
@@ -291,24 +300,25 @@ const QuotationCreate = forwardRef((props, ref) => {
         let quotation = data.result;
 
         if (data.result?.discount) {
-          discount = formData.discount;
+          discount = data.result?.discount;
           setDiscount(discount);
         }
 
         if (data.result?.discount_with_vat) {
-          discountWithVAT = formData.discount_with_vat;
+          discountWithVAT = data.result?.discount_with_vat;
           setDiscountWithVAT(discountWithVAT);
         }
 
         if (data.result?.discount_percent) {
-          discountPercent = formData.discount_percent;
+          discountPercent = data.result?.discount_percent;
           setDiscountPercent(discountPercent);
         }
 
         if (data.result?.shipping_handling_fees) {
-          shipping = formData.shipping_handling_fees;
+          shipping = data.result?.shipping_handling_fees;
           setShipping(shipping);
         }
+
 
         formData = {
           id: quotation.id,
@@ -321,7 +331,10 @@ const QuotationCreate = forwardRef((props, ref) => {
           date: quotation.date,
           vat_percent: quotation.vat_percent,
           discount: quotation.discount,
+          cash_discount: quotation.cash_discount,
+          discount_with_vat: quotation.discount_with_vat,
           discount_percent: quotation.discount_percent,
+          discount_percent_vat: quotation.discount_percent_with_vat,
           status: quotation.status,
           delivered_by: quotation.delivered_by,
           delivered_by_signature_id: quotation.delivered_by_signature_id,
@@ -331,6 +344,15 @@ const QuotationCreate = forwardRef((props, ref) => {
           validity_days: quotation.validity_days ? quotation.validity_days : 2,
         };
         formData.date_str = data.result.date;
+
+        if (data.result?.payments) {
+          console.log("data.result.payments:", data.result.payments);
+          formData.payments_input = data.result?.payments;
+          for (var i = 0; i < formData.payments_input?.length; i++) {
+            formData.payments_input[i].date_str = formData.payments_input[i].date
+          }
+        }
+
 
         if (formData.is_discount_percent) {
           formData.discountValue = formData.discount_percent;
@@ -701,6 +723,8 @@ const QuotationCreate = forwardRef((props, ref) => {
       });
     }
 
+
+
     errors["products"] = "";
     setErrors({ ...errors });
 
@@ -710,6 +734,11 @@ const QuotationCreate = forwardRef((props, ref) => {
       haveErrors = true;
     }
 
+
+    if (!validatePaymentAmounts()) {
+      console.log("Errors on payments")
+      haveErrors = true;
+    }
 
 
 
@@ -773,6 +802,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     formData.discount_percent = parseFloat(formData.discount_percent);
     formData.vat_percent = parseFloat(formData.vat_percent);
     formData.net_total = parseFloat(formData.net_total);
+    formData.balance_amount = parseFloat(balanceAmount);
 
 
     if (localStorage.getItem("store_id")) {
@@ -1258,6 +1288,31 @@ const QuotationCreate = forwardRef((props, ref) => {
 
       setFormData({ ...formData });
 
+      if (!formData.id) {
+        let method = "";
+        if (formData.payments_input && formData.payments_input[0]) {
+          method = formData.payments_input[0].method;
+        }
+
+        formData.payments_input = [{
+          "date_str": formData.date_str,
+          "amount": 0.00,
+          "method": method,
+          "deleted": false,
+        }];
+
+        if (formData.net_total > 0) {
+          formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
+          if (formData.cash_discount) {
+            formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
+          }
+          formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
+        }
+      }
+      findTotalPayments();
+      setFormData({ ...formData });
+      validatePaymentAmounts();
+
     } catch (err) {
       console.error("Failed to parse response:", err);
     }
@@ -1498,6 +1553,151 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
   };
 
+
+  function validatePaymentAmounts() {
+    console.log("validatePaymentAmount: formData.net_total:", formData.net_total)
+    errors["cash_discount"] = "";
+    setErrors({ ...errors });
+
+    let haveErrors = false;
+    if (!formData.net_total) {
+      /*
+      removePayment(0, false);
+      totalPaymentAmount = 0.0;
+      setTotalPaymentAmount(0.00);
+      balanceAmount = 0.00;
+      setBalanceAmount(0.00);
+      paymentStatus = "";
+      setPaymentStatus(paymentStatus);
+      */
+      return true;
+    }
+
+
+    if (formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
+      errors["cash_discount"] = "Cash discount should not be >= " + trimTo2Decimals(formData.net_total).toString();
+      setErrors({ ...errors });
+      haveErrors = true
+      return false;
+    }
+
+
+
+    // errors["payment_date"] = [];
+    //errors["payment_method"] = [];
+    //errors["payment_amount"] = [];
+    for (var key = 0; key < formData.payments_input?.length; key++) {
+      errors["payment_amount_" + key] = "";
+      errors["payment_date_" + key] = "";
+      errors["payment_method_" + key] = "";
+      setErrors({ ...errors });
+
+      if (!formData.payments_input[key].amount) {
+        errors["payment_amount_" + key] = "Payment amount is required";
+        setErrors({ ...errors });
+        haveErrors = true;
+      } else if (formData.payments_input[key].amount === 0) {
+        errors["payment_amount_" + key] = "Amount should be greater than zero";
+        setErrors({ ...errors });
+        haveErrors = true;
+      }
+
+      if (!formData.payments_input[key].date_str) {
+        errors["payment_date_" + key] = "Payment date is required";
+        setErrors({ ...errors });
+        haveErrors = true;
+      } /* else if ((new Date(formData.payments_input[key].date_str)) < (new Date(formData.date_str))) {
+                  errors["payment_date_" + key] = "Payment date time should be greater than or equal to order date time";
+                  setErrors({ ...errors });
+                  haveErrors = true;
+              }*/
+
+      if (!formData.payments_input[key].method) {
+        errors["payment_method_" + key] = "Payment method is required";
+        setErrors({ ...errors });
+        haveErrors = true;
+      }
+    }
+
+    findTotalPayments();
+
+    if (haveErrors) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function findTotalPayments() {
+    console.log("Inisde findTotalPayments")
+    let totalPayment = 0.00;
+    for (var i = 0; i < formData.payments_input?.length; i++) {
+      if (formData.payments_input[i].amount && !formData.payments_input[i].deleted) {
+        totalPayment += formData.payments_input[i].amount;
+      }
+    }
+
+    totalPaymentAmount = totalPayment;
+    console.log("totalPaymentAmount:", totalPaymentAmount);
+    setTotalPaymentAmount(totalPaymentAmount);
+    console.log("totalPayment:", totalPayment)
+    balanceAmount = (parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(parseFloat(trimTo2Decimals(formData.cash_discount)))) - parseFloat(trimTo2Decimals(totalPayment));
+    balanceAmount = parseFloat(trimTo2Decimals(balanceAmount));
+    setBalanceAmount(balanceAmount);
+
+    if (balanceAmount === parseFloat((parseFloat(trimTo2Decimals(formData.net_total)) - parseFloat(trimTo2Decimals(formData.cash_discount))))) {
+      paymentStatus = "not_paid"
+    } else if (balanceAmount <= 0) {
+      paymentStatus = "paid"
+    } else if (balanceAmount > 0) {
+      paymentStatus = "paid_partially"
+    }
+
+    setPaymentStatus(paymentStatus);
+
+    return totalPayment;
+  }
+
+  function addNewPayment() {
+    let date = new Date();
+    if (!formData.id) {
+      date = formData.date_str;
+    }
+
+    if (!formData.payments_input) {
+      formData.payments_input = [];
+    }
+
+    formData.payments_input.push({
+      "date_str": date,
+      // "amount": "",
+      "amount": 0.00,
+      "method": "",
+      "deleted": false,
+    });
+    setFormData({ ...formData });
+    validatePaymentAmounts();
+    //validatePaymentAmounts((formData.payments_input.filter(payment => !payment.deleted).length - 1));
+  }
+
+
+  let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
+  let [balanceAmount, setBalanceAmount] = useState(0.00);
+  let [paymentStatus, setPaymentStatus] = useState("");
+
+
+
+  function removePayment(key, validatePayments = false) {
+    formData.payments_input.splice(key, 1);
+    //formData.payments_input[key]["deleted"] = true;
+    setFormData({ ...formData });
+    if (validatePayments) {
+      validatePaymentAmounts();
+    }
+    findTotalPayments()
+  }
+
+
   return (
     <>
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
@@ -1716,40 +1916,6 @@ const QuotationCreate = forwardRef((props, ref) => {
                   </div>
                 )}
               </div>
-              {formData.type === "invoice" ? <div className="col-md-2">
-                <label className="form-label">Payment status*</label>
-                <div className="input-group mb-3">
-                  <select
-                    value={formData.payment_status}
-                    onChange={(e) => {
-                      console.log("Inside onchange .payment_status");
-                      if (!e.target.value) {
-                        formData.payment_status = "";
-                        errors["payment_status"] = "Invalid payment status";
-                        setErrors({ ...errors });
-                        return;
-                      }
-
-                      errors["payment_status"] = "";
-                      setErrors({ ...errors });
-
-                      formData.payment_status = e.target.value;
-                      setFormData({ ...formData });
-                      console.log(formData);
-                    }}
-                    className="form-control"
-                  >
-                    <option value="" SELECTED></option>
-                    <option value="credit" >Credit</option>
-                    <option value="paid" >Paid</option>
-                  </select>
-                </div>
-                {errors.payment_status && (
-                  <div style={{ color: "red" }}>
-                    {errors.payment_status}
-                  </div>
-                )}
-              </div> : ""}
             </div>
 
             <div className="col-md-6">
@@ -3296,154 +3462,360 @@ const QuotationCreate = forwardRef((props, ref) => {
               </table>
             </div>
 
-            <div className="col-md-6">
-              <label className="form-label">Status*</label>
-
-              <div className="input-group mb-3">
-                <select
-                  value={formData.status}
+            {formData.type === "invoice" && <>
+              <div className="col-md-2">
+                <label className="form-label">Cash discount</label>
+                <input type='number' id="sales_cash_discount" name="sales_cash_discount" value={formData.cash_discount} className="form-control "
                   onChange={(e) => {
-                    console.log("Inside onchange status");
+                    errors["cash_discount"] = "";
+                    setErrors({ ...errors });
                     if (!e.target.value) {
-                      formData.status = "";
+                      formData.cash_discount = e.target.value;
                       setFormData({ ...formData });
-                      errors["status"] = "Invalid Status";
+                      validatePaymentAmounts();
+                      return;
+                    }
+                    formData.cash_discount = parseFloat(e.target.value);
+                    if (formData.cash_discount > 0 && formData.cash_discount >= formData.net_total) {
+                      errors["cash_discount"] = "Cash discount should not be >= " + formData.net_total.toString();
                       setErrors({ ...errors });
                       return;
                     }
 
-                    errors["status"] = "";
-                    setErrors({ ...errors });
-
-                    formData.status = e.target.value;
                     setFormData({ ...formData });
+                    validatePaymentAmounts();
                     console.log(formData);
                   }}
-                  className="form-control"
-                >
-                  <option value="created">Created</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="pending">Pending</option>
-                  <option value="accepted">Accepted</option>
-                  <option value="rejected">Rejected</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                {errors.status && (
+                />
+                {errors.cash_discount && (
                   <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.status}
-                  </div>
-                )}
-                {formData.status && !errors.status && (
-                  <div style={{ color: "green" }}>
-                    <i className="bi bi-check-lg"> </i>
-                    Looks good!
+                    {errors.cash_discount}
                   </div>
                 )}
               </div>
-            </div>
 
-            <div className="col-md-3">
-              <label className="form-label">Validity (# of Days)*</label>
-              <div className="input-group mb-3">
-                <input
-                  id="quotation_validity_days"
-                  name="quotation_validity_days"
-                  type="number"
-                  className="text-center"
-                  style={{ width: "50px" }}
-                  value={formData.validity_days}
-                  onChange={(e) => {
-                    console.log("Inside onchange validity days");
-                    if (!e.target.value) {
-                      formData.validity_days = null;
-                      errors["validity_days"] = "Validity days are required";
-                      setFormData({ ...formData });
+              <div className="col-md-8">
+                <label className="form-label">Payments Received</label>
+
+                <div class="table-responsive" style={{ maxWidth: "900px" }}>
+                  <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
+                    Create new payment
+                  </Button>
+                  <table class="table table-striped table-sm table-bordered">
+                    {formData.payments_input && formData.payments_input.length > 0 &&
+                      <thead>
+                        <th>
+                          Date
+                        </th>
+                        <th>
+                          Amount
+                        </th>
+                        <th>
+                          Payment method
+                        </th>
+                        <th>
+                          Action
+                        </th>
+                      </thead>}
+                    <tbody>
+                      {formData.payments_input &&
+                        formData.payments_input.filter(payment => !payment.deleted).map((payment, key) => (
+                          <tr key={key}>
+                            <td style={{ minWidth: "220px" }}>
+
+                              <DatePicker
+                                id="payment_date_str"
+                                selected={formData.payments_input[key].date_str ? new Date(formData.payments_input[key].date_str) : null}
+                                value={formData.payments_input[key].date_str ? format(
+                                  new Date(formData.payments_input[key].date_str),
+                                  "MMMM d, yyyy h:mm aa"
+                                ) : null}
+                                className="form-control"
+                                dateFormat="MMMM d, yyyy h:mm aa"
+                                showTimeSelect
+                                timeIntervals="1"
+                                onChange={(value) => {
+                                  console.log("Value", value);
+                                  formData.payments_input[key].date_str = value;
+                                  setFormData({ ...formData });
+                                }}
+                              />
+                              {errors["payment_date_" + key] && (
+                                <div style={{ color: "red" }}>
+
+                                  {errors["payment_date_" + key]}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ width: "300px" }}>
+                              <input type='number' id={`${"sales_payment_amount" + key}`} name={`${"sales_payment_amount" + key}`} value={formData.payments_input[key].amount} className="form-control "
+                                onChange={(e) => {
+                                  errors["payment_amount_" + key] = "";
+                                  setErrors({ ...errors });
+
+                                  if (!e.target.value) {
+                                    formData.payments_input[key].amount = e.target.value;
+                                    setFormData({ ...formData });
+                                    validatePaymentAmounts();
+                                    return;
+                                  }
+
+                                  formData.payments_input[key].amount = parseFloat(e.target.value);
+
+                                  validatePaymentAmounts();
+                                  setFormData({ ...formData });
+                                  console.log(formData);
+                                }}
+                              />
+                              {errors["payment_amount_" + key] && (
+                                <div style={{ color: "red" }}>
+
+                                  {errors["payment_amount_" + key]}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ width: "200px" }}>
+                              <select value={formData.payments_input[key].method} className="form-control "
+                                onChange={(e) => {
+                                  // errors["payment_method"] = [];
+                                  errors["payment_method_" + key] = "";
+                                  setErrors({ ...errors });
+
+                                  if (!e.target.value) {
+                                    errors["payment_method_" + key] = "Payment method is required";
+                                    setErrors({ ...errors });
+
+                                    formData.payments_input[key].method = "";
+                                    setFormData({ ...formData });
+                                    return;
+                                  }
+
+                                  // errors["payment_method"] = "";
+                                  //setErrors({ ...errors });
+
+                                  formData.payments_input[key].method = e.target.value;
+                                  setFormData({ ...formData });
+                                  console.log(formData);
+                                }}
+                              >
+                                <option value="">Select</option>
+                                <option value="cash">Cash</option>
+                                <option value="debit_card">Debit Card</option>
+                                <option value="credit_card">Credit Card</option>
+                                <option value="bank_card">Bank Card</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                                <option value="bank_cheque">Bank Cheque</option>
+                                {formData.customer_id && <option value="customer_account">Customer Account</option>}
+                              </select>
+                              {errors["payment_method_" + key] && (
+                                <div style={{ color: "red" }}>
+
+                                  {errors["payment_method_" + key]}
+                                </div>
+                              )}
+                            </td>
+                            <td style={{ width: "200px" }}>
+                              <Button variant="danger" onClick={(event) => {
+                                removePayment(key);
+                              }}>
+                                Remove
+                              </Button>
+
+                            </td>
+                          </tr>
+                        ))}
+                      <tr>
+                        <td class="text-end">
+                          <b>Total</b>
+                        </td>
+                        <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
+                          {errors["total_payment"] && (
+                            <div style={{ color: "red" }}>
+                              {errors["total_payment"]}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <b style={{ marginLeft: "12px", alignSelf: "end" }}>Balance: {trimTo2Decimals(balanceAmount)}</b>
+                          {errors["customer_credit_limit"] && (
+                            <div style={{ color: "red" }}>
+                              {errors["customer_credit_limit"]}
+                            </div>
+                          )}
+                        </td>
+                        <td colSpan={1}>
+                          <b>Payment status: </b>
+                          {paymentStatus === "paid" ?
+                            <span className="badge bg-success">
+                              Paid
+                            </span> : ""}
+                          {paymentStatus === "paid_partially" ?
+                            <span className="badge bg-warning">
+                              Paid Partially
+                            </span> : ""}
+                          {paymentStatus === "not_paid" ?
+                            <span className="badge bg-danger">
+                              Not Paid
+                            </span> : ""}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+
+                </div>
+              </div>
+            </>}
+
+            {formData.type === "quotation" && <>
+              <div className="col-md-6">
+                <label className="form-label">Status*</label>
+
+                <div className="input-group mb-3">
+                  <select
+                    value={formData.status}
+                    onChange={(e) => {
+                      console.log("Inside onchange status");
+                      if (!e.target.value) {
+                        formData.status = "";
+                        setFormData({ ...formData });
+                        errors["status"] = "Invalid Status";
+                        setErrors({ ...errors });
+                        return;
+                      }
+
+                      errors["status"] = "";
                       setErrors({ ...errors });
-                      return;
-                    }
 
-                    if (parseInt(e.target.value) <= 0) {
+                      formData.status = e.target.value;
+                      setFormData({ ...formData });
+                      console.log(formData);
+                    }}
+                    className="form-control"
+                  >
+                    <option value="created">Created</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="pending">Pending</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                  {errors.status && (
+                    <div style={{ color: "red" }}>
+                      <i className="bi bi-x-lg"> </i>
+                      {errors.status}
+                    </div>
+                  )}
+                  {formData.status && !errors.status && (
+                    <div style={{ color: "green" }}>
+                      <i className="bi bi-check-lg"> </i>
+                      Looks good!
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Validity (# of Days)*</label>
+                <div className="input-group mb-3">
+                  <input
+                    id="quotation_validity_days"
+                    name="quotation_validity_days"
+                    type="number"
+                    className="text-center"
+                    style={{ width: "50px" }}
+                    value={formData.validity_days}
+                    onChange={(e) => {
+                      console.log("Inside onchange validity days");
+                      if (!e.target.value) {
+                        formData.validity_days = null;
+                        errors["validity_days"] = "Validity days are required";
+                        setFormData({ ...formData });
+                        setErrors({ ...errors });
+                        return;
+                      }
+
+                      if (parseInt(e.target.value) <= 0) {
+                        formData.validity_days = parseInt(e.target.value);
+                        setValidityDays(validityDays);
+                        setFormData({ ...formData });
+                        errors["validity_days"] =
+                          "Validity days should be > 0";
+                        setErrors({ ...errors });
+                        return;
+                      }
+
+                      errors["validity_days"] = "";
+                      setErrors({ ...errors });
+
                       formData.validity_days = parseInt(e.target.value);
-                      setValidityDays(validityDays);
                       setFormData({ ...formData });
-                      errors["validity_days"] =
-                        "Validity days should be > 0";
-                      setErrors({ ...errors });
-                      return;
-                    }
 
-                    errors["validity_days"] = "";
-                    setErrors({ ...errors });
+                      validityDays = formData.validity_days;
+                      setValidityDays(formData.validity_days);
+                      console.log(formData);
+                    }}
+                  />
 
-                    formData.validity_days = parseInt(e.target.value);
-                    setFormData({ ...formData });
-
-                    validityDays = formData.validity_days;
-                    setValidityDays(formData.validity_days);
-                    console.log(formData);
-                  }}
-                />
-
-                {errors.validity_days && (
-                  <div style={{ color: "red" }}>
-                    <i className="bi bi-x-lg"> </i>
-                    {errors.validity_days}
-                  </div>
-                )}
+                  {errors.validity_days && (
+                    <div style={{ color: "red" }}>
+                      <i className="bi bi-x-lg"> </i>
+                      {errors.validity_days}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="col-md-3">
-              <label className="form-label">Delivery (# of Days)*</label>
+              <div className="col-md-3">
+                <label className="form-label">Delivery (# of Days)*</label>
 
-              <div className="input-group mb-3">
-                <input
-                  id="quotation_delivery_days"
-                  name="quotation_delivery_days"
-                  type="number"
-                  className="text-center"
-                  style={{ width: "50px" }}
-                  value={formData.delivery_days}
-                  onChange={(e) => {
-                    console.log("Inside onchange delivery days");
-                    if (!e.target.value) {
-                      formData.delivery_days = null;
-                      errors["delivery_days"] = "Delivery days are required";
-                      setFormData({ ...formData });
+                <div className="input-group mb-3">
+                  <input
+                    id="quotation_delivery_days"
+                    name="quotation_delivery_days"
+                    type="number"
+                    className="text-center"
+                    style={{ width: "50px" }}
+                    value={formData.delivery_days}
+                    onChange={(e) => {
+                      console.log("Inside onchange delivery days");
+                      if (!e.target.value) {
+                        formData.delivery_days = null;
+                        errors["delivery_days"] = "Delivery days are required";
+                        setFormData({ ...formData });
+                        setErrors({ ...errors });
+                        return;
+                      }
+
+                      if (parseInt(e.target.value) <= 0) {
+                        formData.delivery_days = parseInt(e.target.value);
+                        setDeliveryDays(deliveryDays);
+                        setFormData({ ...formData });
+                        errors["delivery_days"] =
+                          "Delivery days should be > 0";
+                        setErrors({ ...errors });
+                        return;
+                      }
+
+                      errors["delivery_days"] = "";
                       setErrors({ ...errors });
-                      return;
-                    }
 
-                    if (parseInt(e.target.value) <= 0) {
                       formData.delivery_days = parseInt(e.target.value);
-                      setDeliveryDays(deliveryDays);
                       setFormData({ ...formData });
-                      errors["delivery_days"] =
-                        "Delivery days should be > 0";
-                      setErrors({ ...errors });
-                      return;
-                    }
 
-                    errors["delivery_days"] = "";
-                    setErrors({ ...errors });
+                      deliveryDays = formData.delivery_days;
+                      setDeliveryDays(formData.delivery_days);
+                      console.log(formData);
+                    }}
+                  />
 
-                    formData.delivery_days = parseInt(e.target.value);
-                    setFormData({ ...formData });
-
-                    deliveryDays = formData.delivery_days;
-                    setDeliveryDays(formData.delivery_days);
-                    console.log(formData);
-                  }}
-                />
-
-                {errors.delivery_days && (
-                  <div style={{ color: "red" }}>
-                    {errors.delivery_days}
-                  </div>
-                )}
+                  {errors.delivery_days && (
+                    <div style={{ color: "red" }}>
+                      {errors.delivery_days}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            </>}
 
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>

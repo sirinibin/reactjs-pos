@@ -252,6 +252,10 @@ function QuotationIndex(props) {
       setSelectedCustomers(values);
     } else if (field === "status") {
       setSelectedStatusList(values);
+    } else if (field === "payment_status") {
+      setSelectedPaymentStatusList(values);
+    } else if (field === "payment_methods") {
+      setSelectedPaymentMethodList(values);
     }
 
     searchParams[field] = Object.values(values)
@@ -279,7 +283,8 @@ function QuotationIndex(props) {
       },
     };
     let Select =
-      "select=id,type,payment_status,code,date,net_total,created_by_name,customer_name,status,created_at,profit,loss";
+      "select=id,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_name,status,cash_discount,discount_with_vat,created_at,profit,loss";
+
     if (localStorage.getItem("store_id")) {
       searchParams.store_id = localStorage.getItem("store_id");
     }
@@ -435,6 +440,52 @@ function QuotationIndex(props) {
   function sendWhatsAppMessage(model) {
     PreviewRef.current.open(model, "whatsapp", "quotation");
   }
+
+
+  //Payment Status Auto Suggestion
+  const paymentStatusOptions = [
+    {
+      id: "paid",
+      name: "Paid",
+    },
+    {
+      id: "not_paid",
+      name: "Not Paid",
+    },
+    {
+      id: "paid_partially",
+      name: "Paid partially",
+    },
+  ];
+  const [selectedPaymentStatusList, setSelectedPaymentStatusList] = useState([]);
+
+  const paymentMethodOptions = [
+    {
+      id: "cash",
+      name: "Cash",
+    },
+    {
+      id: "debit_card",
+      name: "Debit Card",
+    },
+    {
+      id: "credit_card",
+      name: "Credit Card",
+    },
+    {
+      id: "bank_card",
+      name: "Bank Card",
+    },
+    {
+      id: "bank_transfer",
+      name: "Bank Transfer",
+    },
+    {
+      id: "bank_cheque",
+      name: "Bank Cheque",
+    },
+  ];
+  const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
 
   return (
     <>
@@ -699,6 +750,46 @@ function QuotationIndex(props) {
                             ) : null}
                           </b>
                         </th>
+
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("total_payment_received");
+                            }}
+                          >
+                            Amount Paid
+                            {sortField === "total_payment_received" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "total_payment_received" && sortOrder === "" ? (
+                              <i className="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("balance_amount");
+                            }}
+                          >
+                            Credit Balance
+                            {sortField === "balance_amount" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "balance_amount" && sortOrder === "" ? (
+                              <i className="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
                         <th>
                           <b
                             style={{
@@ -709,11 +800,69 @@ function QuotationIndex(props) {
                               sort("payment_status");
                             }}
                           >
-                            Payment status
+                            Payment Status
                             {sortField === "payment_status" && sortOrder === "-" ? (
-                              <i className="bi bi-sort-numeric-down"></i>
+                              <i className="bi bi-sort-alpha-up-alt"></i>
                             ) : null}
                             {sortField === "payment_status" && sortOrder === "" ? (
+                              <i className="bi bi-sort-alpha-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("payment_methods");
+                            }}
+                          >
+                            Payment Methods
+                            {sortField === "payment_methods" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-alpha-up-alt"></i>
+                            ) : null}
+                            {sortField === "payment_methods" && sortOrder === "" ? (
+                              <i className="bi bi-sort-alpha-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("cash_discount");
+                            }}
+                          >
+                            Cash Discount
+                            {sortField === "cash_discount" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "cash_discount" && sortOrder === "" ? (
+                              <i className="bi bi-sort-numeric-up"></i>
+                            ) : null}
+                          </b>
+                        </th>
+                        <th>
+                          <b
+                            style={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                            }}
+                            onClick={() => {
+                              sort("discount");
+                            }}
+                          >
+                            Discount
+                            {sortField === "discount" && sortOrder === "-" ? (
+                              <i className="bi bi-sort-numeric-down"></i>
+                            ) : null}
+                            {sortField === "discount" && sortOrder === "" ? (
                               <i className="bi bi-sort-numeric-up"></i>
                             ) : null}
                           </b>
@@ -942,16 +1091,85 @@ function QuotationIndex(props) {
                           </select>
                         </th>
                         <th>
-                          <select
-                            onChange={(e) => {
-                              searchByFieldValue("payment_status", e.target.value);
-
+                          <input
+                            type="text"
+                            id="sales_total_payment_received"
+                            name="sales_total_payment_received"
+                            onChange={(e) =>
+                              searchByFieldValue("total_payment_received", e.target.value)
+                            }
+                            className="form-control"
+                          />
+                        </th>
+                        <th>
+                          <input
+                            type="text"
+                            id="sales_balance_amount"
+                            name="sales_balance_amount"
+                            onChange={(e) =>
+                              searchByFieldValue("balance_amount", e.target.value)
+                            }
+                            className="form-control"
+                          />
+                        </th>
+                        <th>
+                          <Typeahead
+                            id="payment_status"
+                            filterBy={() => true}
+                            labelKey="name"
+                            onChange={(selectedItems) => {
+                              searchByMultipleValuesField(
+                                "payment_status",
+                                selectedItems
+                              );
                             }}
-                          >
-                            <option value="" >All</option>
-                            <option value="credit" >Credit</option>
-                            <option value="paid">Paid</option>
-                          </select>
+                            options={paymentStatusOptions}
+                            placeholder="Select Payment Status"
+                            selected={selectedPaymentStatusList}
+                            highlightOnlyResult={true}
+                            multiple
+                          />
+                        </th>
+                        <th>
+                          <Typeahead
+                            id="payment_methods"
+                            filterBy={() => true}
+                            labelKey="name"
+                            onChange={(selectedItems) => {
+                              searchByMultipleValuesField(
+                                "payment_methods",
+                                selectedItems
+                              );
+                            }}
+                            options={paymentMethodOptions}
+                            placeholder="Select payment methods"
+                            selected={selectedPaymentMethodList}
+                            highlightOnlyResult={true}
+                            multiple
+                          />
+                        </th>
+
+                        <th>
+                          <input
+                            type="text"
+                            id="sales_cash_discount"
+                            name="sales_cash_discount"
+                            onChange={(e) =>
+                              searchByFieldValue("cash_discount", e.target.value)
+                            }
+                            className="form-control"
+                          />
+                        </th>
+                        <th>
+                          <input
+                            type="text"
+                            id="sales_discount"
+                            name="sales_discount"
+                            onChange={(e) =>
+                              searchByFieldValue("discount", e.target.value)
+                            }
+                            className="form-control"
+                          />
                         </th>
 
                         <th>
@@ -1130,7 +1348,34 @@ function QuotationIndex(props) {
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
-                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.payment_status}</td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                              <Amount amount={trimTo2Decimals(quotation.total_payment_received)} />
+                            </td>
+                            <td><Amount amount={trimTo2Decimals(quotation.balance_amount)} /></td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                              {quotation.payment_status === "paid" ?
+                                <span className="badge bg-success">
+                                  Paid
+                                </span> : ""}
+                              {quotation.payment_status === "paid_partially" ?
+                                <span className="badge bg-warning">
+                                  Paid Partially
+                                </span> : ""}
+                              {quotation.payment_status === "not_paid" ?
+                                <span className="badge bg-danger">
+                                  Not Paid
+                                </span> : ""}
+                            </td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+
+                              {quotation.payment_methods &&
+                                quotation.payment_methods.map((name) => (
+                                  <span className="badge bg-info">{name}</span>
+                                ))}
+
+                            </td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} ><Amount amount={trimTo2Decimals(quotation.cash_discount)} /> </td>
+                            <td>{trimTo2Decimals(quotation.discount_with_vat)} </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.profit ? <Amount amount={trimTo2Decimals(quotation.profit)} /> : 0.00} </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.loss ? <Amount amount={trimTo2Decimals(quotation.loss)} /> : 0.00} </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} >{quotation.created_by_name}</td>
