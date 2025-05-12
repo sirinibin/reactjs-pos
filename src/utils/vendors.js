@@ -631,7 +631,7 @@ const Vendors = forwardRef((props, ref) => {
                                                                         sort("stores.purchase_amount");
                                                                     }}
                                                                 >
-                                                                    Purchase amount
+                                                                    Total Purchase amount
                                                                     {sortField === "stores.purchase_amount" && sortVendor === "-" ? (
                                                                         <i className="bi bi-sort-alpha-up-alt"></i>
                                                                     ) : null}

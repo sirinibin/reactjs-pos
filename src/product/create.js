@@ -679,6 +679,9 @@ const ProductCreate = forwardRef((props, ref) => {
     ImageGalleryRef.current.open();
   }*/
 
+  let [damagedStock, setDamagedStock] = useState('');
+  const [operationType, setOperationType] = useState(null); // 'add' or 'remove'
+
   return (
     <>
       <StoreCreate
@@ -1281,24 +1284,25 @@ const ProductCreate = forwardRef((props, ref) => {
                       <input
                         id={`${"product_damaged_stock_0"}`}
                         name={`${"product_damaged_stock_0"}`}
-                        value={productStores[localStorage.getItem('store_id')]?.damaged_stock || productStores[localStorage.getItem('store_id')]?.damaged_stock === 0
-                          ? productStores[localStorage.getItem('store_id')].damaged_stock
-                          : ""
-                        }
+                        value={damagedStock}
                         type="number"
                         onChange={(e) => {
                           errors["damaged_stock_0"] = "";
                           setErrors({ ...errors });
 
-                          if (!e.target.value) {
-                            productStores[localStorage.getItem('store_id')].damaged_stock = "";
-                            setProductStores({ ...productStores });
-                            //errors["stock_" + index] = "Invalid Stock value";
-                            //setErrors({ ...errors });
-                            return;
-                          }
+                          /*if (!e.target.value) {
+                             productStores[localStorage.getItem('store_id')].damaged_stock = "";
+                             setProductStores({ ...productStores });
+                             //errors["stock_" + index] = "Invalid Stock value";
+                             //setErrors({ ...errors });
+                             return;
+                           }
+ 
+                           productStores[localStorage.getItem('store_id')].damaged_stock = parseFloat(e.target.value);
+                           */
+                          setDamagedStock(e.target.value);
+                          setOperationType(null); // reset choice
 
-                          productStores[localStorage.getItem('store_id')].damaged_stock = parseFloat(e.target.value);
                         }}
                         className="form-control"
                         placeholder="Damaged stock"
@@ -1342,6 +1346,46 @@ const ProductCreate = forwardRef((props, ref) => {
                           {errors["stock_0"]}
                         </div>
                       )}
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colSpan={2}>
+                      {damagedStock && !operationType && (
+                        <div className="mt-2">
+                          <button className="btn btn-success me-2" onClick={() => {
+                            if (!productStores[localStorage.getItem('store_id')].stocks_added) {
+                              productStores[localStorage.getItem('store_id')].stocks_added = 0.00;
+                            }
+                            productStores[localStorage.getItem('store_id')].stocks_added += parseFloat(damagedStock);
+                            productStores[localStorage.getItem('store_id')].stock += productStores[localStorage.getItem('store_id')].stocks_added;
+                            setProductStores({ ...productStores });
+                            damagedStock = "";
+                            setDamagedStock(damagedStock);
+                          }}>Add</button>
+                          <button className="btn btn-danger" onClick={() => {
+                            if (!productStores[localStorage.getItem('store_id')].stocks_removed) {
+                              productStores[localStorage.getItem('store_id')].stocks_removed = 0.00;
+                            }
+                            productStores[localStorage.getItem('store_id')].stocks_removed += parseFloat(damagedStock);
+                            productStores[localStorage.getItem('store_id')].stock -= productStores[localStorage.getItem('store_id')].stocks_removed;
+                            setProductStores({ ...productStores });
+                            damagedStock = "";
+                            setDamagedStock(damagedStock);
+
+                          }}>Remove</button>
+                        </div>
+                      )}
+                      <div className="mt-4">
+                        <h6>Stock Adjustment Summary:</h6>
+                        <ul className="list-unstyled">
+                          <li>
+                            ✅ Total Added: {productStores[localStorage.getItem('store_id')]?.stocks_added ? productStores[localStorage.getItem('store_id')]?.stocks_added : 0.00}
+                          </li>
+                          <li>
+                            ❌ Total Removed:  {productStores[localStorage.getItem('store_id')]?.stocks_removed ? productStores[localStorage.getItem('store_id')]?.stocks_removed : 0.00}
+                          </li>
+                        </ul>
+                      </div>
                     </td>
                   </tr>
                 </tbody>

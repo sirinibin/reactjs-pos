@@ -607,7 +607,7 @@ function CustomerIndex(props) {
                                                             sort("stores.sales_amount");
                                                         }}
                                                     >
-                                                        Sales amount
+                                                        Total Sales amount
                                                         {sortField === "stores.sales_amount" && sortCustomer === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
