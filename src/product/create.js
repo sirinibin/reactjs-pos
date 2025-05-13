@@ -858,7 +858,9 @@ const ProductCreate = forwardRef((props, ref) => {
                       errors.brand_id = "Invalid brand selected";
                       setErrors(errors);
                       formData.brand_id = "";
+                      formData.brand_code = "";
                       formData.brand_name = "";
+                      makePartNumberPrefix();
                       setFormData({ ...formData });
                       setSelectedBrands([]);
                       return;
@@ -866,9 +868,10 @@ const ProductCreate = forwardRef((props, ref) => {
                     formData.brand_id = selectedItems[0].id;
                     formData.brand_code = selectedItems[0].code;
                     formData.brand_name = selectedItems[0].name;
+                    makePartNumberPrefix();
                     setFormData({ ...formData });
                     setSelectedBrands(selectedItems);
-                    makePartNumberPrefix();
+
                   }}
                   options={brandOptions}
                   placeholder="Brand name"
@@ -907,15 +910,16 @@ const ProductCreate = forwardRef((props, ref) => {
                       setErrors(errors);
                       formData.country_code = "";
                       formData.country_name = "";
+                      makePartNumberPrefix();
                       setFormData({ ...formData });
                       setSelectedCountries([]);
                       return;
                     }
                     formData.country_code = selectedItems[0].value;
                     formData.country_name = selectedItems[0].label;
+                    makePartNumberPrefix();
                     setFormData({ ...formData });
                     setSelectedCountries(selectedItems);
-                    makePartNumberPrefix();
                   }}
                   options={countryOptions}
                   placeholder="Country name"
