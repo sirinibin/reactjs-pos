@@ -120,10 +120,9 @@ const Preview = forwardRef((props, ref) => {
         } else if (model.modelName === "quotation") {
             model.invoiceTitle = "QUOTATION / اقتباس";
 
-            if (model.type === "invoice" && model.payment_status === "credit") {
+            if (model.type === "invoice" && model.payment_status === "not_paid") {
                 model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
-
-            } else if (model.type === "invoice" && model.payment_status === "paid") {
+            } else if (model.type === "invoice") {
                 model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
             }
         } else if (model.modelName === "delivery_note") {
