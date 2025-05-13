@@ -12,6 +12,7 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import PostingIndex from "./../posting/index.js";
+import { confirm } from 'react-bootstrap-confirmation';
 
 function CustomerIndex(props) {
 
@@ -174,7 +175,7 @@ function CustomerIndex(props) {
             },
         };
         let Select =
-            "select=id,code,credit_balance,account,name,email,phone,vat_no,created_by_name,created_at,stores";
+            "select=id,code,deleted,credit_balance,account,name,email,phone,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -310,6 +311,109 @@ function CustomerIndex(props) {
     function openBalanceSheetDialogue(account) {
         AccountBalanceSheetRef.current.open(account);
     }
+
+
+
+    function restoreCustomer(id) {
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/customer/restore/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                props.showToastMessage("Customer restored successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+
+    function deleteCustomer(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/customer/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                props.showToastMessage("Customer deleted successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+    const confirmDelete = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to delete this customer?');
+        console.log(result);
+        if (result) {
+            deleteCustomer(id);
+        }
+    };
+
+    const confirmRestore = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to restore this customer?');
+        console.log(result);
+        if (result) {
+            restoreCustomer(id);
+        }
+    };
+
+    let [deleted, setDeleted] = useState(false);
 
 
     return (
@@ -460,6 +564,7 @@ function CustomerIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
+                                                <th>Deleted</th>
                                                 <th>Actions</th>
                                                 <th>
                                                     <b
@@ -1263,6 +1368,23 @@ function CustomerIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("deleted", e.target.value);
+                                                            if (e.target.value === "1") {
+                                                                deleted = true;
+                                                                setDeleted(deleted);
+                                                            } else {
+                                                                deleted = false;
+                                                                setDeleted(deleted);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="0" >NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
                                                 <th></th>
                                                 <th >
                                                     <input
@@ -1711,7 +1833,18 @@ function CustomerIndex(props) {
                                             {customerList &&
                                                 customerList.map((customer) => (
                                                     <tr key={customer.id}>
+                                                        <td>{customer.deleted ? "YES" : "NO"}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {!customer.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                confirmDelete(customer.id);
+                                                            }}>
+                                                                <i className="bi bi-trash"></i>
+                                                            </Button>&nbsp;</>}
+                                                            {customer.deleted && <><Button className="btn btn-success btn-sm" onClick={() => {
+                                                                confirmRestore(customer.id);
+                                                            }}>
+                                                                <i className="bi bi-arrow-counterclockwise"></i>
+                                                            </Button>&nbsp;</>}
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(customer.id);
                                                             }}>

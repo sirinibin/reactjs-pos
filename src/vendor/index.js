@@ -12,6 +12,7 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import PostingIndex from "./../posting/index.js";
 import Amount from "../utils/amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
+import { confirm } from 'react-bootstrap-confirmation';
 
 function VendorIndex(props) {
 
@@ -173,7 +174,7 @@ function VendorIndex(props) {
             },
         };
         let Select =
-            "select=id,code,name,credit_balance,account,phone,vat_no,created_by_name,created_at,stores";
+            "select=id,code,deleted,name,credit_balance,account,phone,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -309,6 +310,108 @@ function VendorIndex(props) {
     function openBalanceSheetDialogue(account) {
         AccountBalanceSheetRef.current.open(account);
     }
+
+
+    function restoreVendor(id) {
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/vendor/restore/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                props.showToastMessage("Vendor restored successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+
+    function deleteVendor(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/vendor/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                props.showToastMessage("Vendor deleted successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+    const confirmDelete = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to delete this vendor?');
+        console.log(result);
+        if (result) {
+            deleteVendor(id);
+        }
+    };
+
+    const confirmRestore = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to restore this vendor?');
+        console.log(result);
+        if (result) {
+            restoreVendor(id);
+        }
+    };
+
+    let [deleted, setDeleted] = useState(false);
 
     return (
         <>
@@ -460,6 +563,7 @@ function VendorIndex(props) {
                                     <table className="table table-striped table-sm table-bordered">
                                         <thead>
                                             <tr className="text-center">
+                                                <th>Deleted</th>
                                                 <th>Actions</th>
                                                 <th>
                                                     <b
@@ -942,6 +1046,23 @@ function VendorIndex(props) {
 
                                         <thead>
                                             <tr className="text-center">
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("deleted", e.target.value);
+                                                            if (e.target.value === "1") {
+                                                                deleted = true;
+                                                                setDeleted(deleted);
+                                                            } else {
+                                                                deleted = false;
+                                                                setDeleted(deleted);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="0" >NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
                                                 <th></th>
                                                 <th >
                                                     <input
@@ -1262,7 +1383,18 @@ function VendorIndex(props) {
                                             {vendorList &&
                                                 vendorList.map((vendor) => (
                                                     <tr key={vendor.id}>
+                                                        <td>{vendor.deleted ? "YES" : "NO"}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {!vendor.deleted && <><Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                confirmDelete(vendor.id);
+                                                            }}>
+                                                                <i className="bi bi-trash"></i>
+                                                            </Button>&nbsp;</>}
+                                                            {vendor.deleted && <><Button className="btn btn-success btn-sm" onClick={() => {
+                                                                confirmRestore(vendor.id);
+                                                            }}>
+                                                                <i className="bi bi-arrow-counterclockwise"></i>
+                                                            </Button>&nbsp;</>}
 
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(vendor.id);
