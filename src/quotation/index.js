@@ -271,6 +271,19 @@ function QuotationIndex(props) {
   }
 
 
+
+  const [invoiceTotalSales, setInvoiceTotalSales] = useState(0.00);
+  const [invoiceNetProfit, setInvoiceNetProfit] = useState(0.00);
+  const [invoiceVatPrice, setInvoiceVatPrice] = useState(0.00);
+  const [invoiceTotalShippingHandlingFees, setInvoiceTotalShippingHandlingFees] = useState(0.00);
+  const [invoiceTotalDiscount, setInvoiceTotalDiscount] = useState(0.00);
+  const [invoiceTotalCashDiscount, setInvoiceTotalCashDiscount] = useState(0.00);
+  const [invoiceTotalPaidSales, setInvoiceTotalPaidSales] = useState(0.00);
+  const [invoiceTotalUnPaidSales, setInvoiceTotalUnPaidSales] = useState(0.00);
+  const [invoiceTotalCashSales, setInvoiceTotalCashSales] = useState(0.00);
+  const [invoiceTotalBankAccountSales, setInvoiceTotalBankAccountSales] = useState(0.00);
+  const [invoiceLoss, setInvoiceLoss] = useState(0.00);
+
   let [statsOpen, setStatsOpen] = useState(false);
 
 
@@ -342,10 +355,24 @@ function QuotationIndex(props) {
         setTotalItems(data.total_count);
         setOffset((page - 1) * pageSize);
         setCurrentPageItemsCount(data.result.length);
+
         setTotalQuotation(data.meta.total_quotation);
         setProfit(data.meta.profit);
         setLoss(data.meta.loss);
 
+        //invoice meta
+
+        setInvoiceTotalSales(data.meta.invoice_total_sales);
+        setInvoiceNetProfit(data.meta.invoice_net_profit);
+        setInvoiceLoss(data.meta.invoice_net_loss);
+        setInvoiceVatPrice(data.meta.invoice_vat_price);
+        setInvoiceTotalShippingHandlingFees(data.meta.invoice_shipping_handling_fees);
+        setInvoiceTotalDiscount(data.meta.invoice_discount);
+        setInvoiceTotalCashDiscount(data.meta.invoice_cash_discount);
+        setInvoiceTotalPaidSales(data.meta.invoice_paid_sales);
+        setInvoiceTotalUnPaidSales(data.meta.invoice_unpaid_sales);
+        setInvoiceTotalCashSales(data.meta.invoice_cash_sales);
+        setInvoiceTotalBankAccountSales(data.meta.invoice_bank_account_sales);
       })
       .catch((error) => {
         setIsListLoading(false);
@@ -358,6 +385,7 @@ function QuotationIndex(props) {
     statsOpen = isOpen
     setStatsOpen(statsOpen)
   };
+
 
   useEffect(() => {
     if (statsOpen) {
@@ -508,7 +536,32 @@ function QuotationIndex(props) {
                 onToggle={handleSummaryToggle}
               />
             </span>
+            <span className="text-end">
+              <StatsSummary
+                title="Sales"
+                stats={{
+                  "Sales": invoiceTotalSales,
+                  "Paid Sales": invoiceTotalPaidSales,
+                  "Cash Sales": invoiceTotalCashSales,
+                  "Bank Account Sales": invoiceTotalBankAccountSales,
+                  "Credit Sales": invoiceTotalUnPaidSales,
+                  "Sales Discount": invoiceTotalDiscount,
+                  "Cash Discount": invoiceTotalCashDiscount,
+                  "Shipping/Handling fees": invoiceTotalShippingHandlingFees,
+                  "VAT Collected": invoiceVatPrice,
+                  "Net Profit": invoiceNetProfit,
+                  "Net Profit %": invoiceNetProfit && invoiceTotalSales ? ((invoiceNetProfit / invoiceTotalSales) * 100) : "",
+                  "Net Loss": invoiceLoss,
+                }}
+                onToggle={handleSummaryToggle}
+              />
+            </span>
+
           </div>
+
+          {/*<div className="col">
+
+          </div>*/}
 
         </div>
 
