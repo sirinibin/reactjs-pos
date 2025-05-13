@@ -695,7 +695,7 @@ const Customers = forwardRef((props, ref) => {
                                                                         sort("stores.sales_balance_amount");
                                                                     }}
                                                                 >
-                                                                    Sales balance amount
+                                                                    Sales Credit Balance
                                                                     {sortField === "stores.sales_balance_amount" && sortCustomer === "-" ? (
                                                                         <i className="bi bi-sort-alpha-up-alt"></i>
                                                                     ) : null}
@@ -984,7 +984,185 @@ const Customers = forwardRef((props, ref) => {
                                                                     ) : null}
                                                                 </b>
                                                             </th>
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("stores.quotation_invoice_count");
+                                                                    }}
+                                                                >
+                                                                    Qtn. Invoice count
+                                                                    {sortField === "stores.quotation_invoice_count" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "stores.quotation_invoice_count" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
 
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("stores.quotation_invoice_amount");
+                                                                    }}
+                                                                >
+                                                                    Total Qtn. Invoice amount
+                                                                    {sortField === "stores.quotation_invoice_amount" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "stores.quotation_invoice_amount" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("stores.quotation_invoice_paid_amount");
+                                                                    }}
+                                                                >
+                                                                    Qtn. Invoice paid amount
+                                                                    {sortField === "stores.quotation_invoice_paid_amount" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "stores.quotation_invoice_paid_amount" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("stores.quotation_invoice_balance_amount");
+                                                                    }}
+                                                                >
+                                                                    Qtn. Invoice Credit balance amount
+                                                                    {sortField === "stores.quotation_invoice_balance_amount" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "stores.quotation_invoice_balance_amount" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("stores.quotation_invoice_profit");
+                                                                    }}
+                                                                >
+                                                                    Qtn. Invoice profit
+                                                                    {sortField === "stores.quotation_invoice_profit" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "stores.quotation_invoice_profit" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("stores.quotation_invoice_loss");
+                                                                    }}
+                                                                >
+                                                                    Qtn. Invoice loss
+                                                                    {sortField === "stores.quotation_invoice_loss" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "stores.quotation_invoice_loss" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("stores.quotation_invoice_paid_count");
+                                                                    }}
+                                                                >
+                                                                    Qtn. Invoice paid count
+                                                                    {sortField === "stores.quotation_invoice_paid_count" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "stores.quotation_invoice_paid_count" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("stores.quotation_invoice_not_paid_count");
+                                                                    }}
+                                                                >
+                                                                    Qtn. Invoice unpaid count
+                                                                    {sortField === "stores.quotation_invoice_not_paid_count" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "stores.quotation_invoice_not_paid_count" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("stores.quotation_invoice_paid_partially_count");
+                                                                    }}
+                                                                >
+                                                                    Qtn. Invoice paid partially count
+                                                                    {sortField === "stores.quotation_invoice_paid_partially_count" && sortCustomer === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "stores.quotation_invoice_paid_partially_count" && sortCustomer === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
                                                             <th>
                                                                 <b
                                                                     style={{
@@ -1375,6 +1553,90 @@ const Customers = forwardRef((props, ref) => {
                                                                 <input
                                                                     type="text"
                                                                     onChange={(e) =>
+                                                                        searchByFieldValue("quotation_invoice_count", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("quotation_invoice_amount", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("quotation_invoice_paid_amount", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("quotation_invoice_balance_amount", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("quotation_invoice_profit", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("quotation_invoice_loss", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("quotation_invoice_paid_count", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("quotation_invoice_not_paid_count", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("quotation_invoice_paid_partially_count", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+
+                                                            <th>
+                                                                <input
+                                                                    type="text"
+                                                                    onChange={(e) =>
                                                                         searchByFieldValue("quotation_count", e.target.value)
                                                                     }
                                                                     className="form-control"
@@ -1746,6 +2008,114 @@ const Customers = forwardRef((props, ref) => {
                                                                                 );
                                                                             } else if (!localStorage.getItem("store_id")) {
                                                                                 return (<li><b>{customer.stores[key].sales_return_paid_partially_count}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                            }
+                                                                            return "";
+                                                                        })}
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                                return (
+                                                                                    <b>{customer.stores[key].quotation_invoice_count}</b>
+                                                                                );
+                                                                            } else if (!localStorage.getItem("store_id")) {
+                                                                                return (<li><b>{customer.stores[key].quotation_invoice_count}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                            }
+                                                                            return "";
+                                                                        })}
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                                return (
+                                                                                    <b>{customer.stores[key].quotation_invoice_amount?.toFixed(2)}</b>
+                                                                                );
+                                                                            } else if (!localStorage.getItem("store_id")) {
+                                                                                return (<li><b>{customer.stores[key].quotation_invoice_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                            }
+                                                                            return "";
+                                                                        })}
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                                return (
+                                                                                    <b>{customer.stores[key].quotation_invoice_paid_amount?.toFixed(2)}</b>
+                                                                                );
+                                                                            } else if (!localStorage.getItem("store_id")) {
+                                                                                return (<li><b>{customer.stores[key].quotation_invoice_paid_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                            }
+                                                                            return "";
+                                                                        })}
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                                return (
+                                                                                    <b>{customer.stores[key].quotation_invoice_balance_amount?.toFixed(2)}</b>
+                                                                                );
+                                                                            } else if (!localStorage.getItem("store_id")) {
+                                                                                return (<li><b>{customer.stores[key].quotation_invoice_balance_amount?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                            }
+                                                                            return "";
+                                                                        })}
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                                return (
+                                                                                    <b>{customer.stores[key].quotation_invoice_profit?.toFixed(2)}</b>
+                                                                                );
+                                                                            } else if (!localStorage.getItem("store_id")) {
+                                                                                return (<li><b>{customer.stores[key].quotation_invoice_profit?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                            }
+                                                                            return "";
+                                                                        })}
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                                return (
+                                                                                    <b>{customer.stores[key].quotation_invoice_loss?.toFixed(2)}</b>
+                                                                                );
+                                                                            } else if (!localStorage.getItem("store_id")) {
+                                                                                return (<li><b>{customer.stores[key].quotation_invoice_loss?.toFixed(2)}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                            }
+                                                                            return "";
+                                                                        })}
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                                return (
+                                                                                    <b>{customer.stores[key].quotation_invoice_paid_count}</b>
+                                                                                );
+                                                                            } else if (!localStorage.getItem("store_id")) {
+                                                                                return (<li><b>{customer.stores[key].quotation_invoice_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                            }
+                                                                            return "";
+                                                                        })}
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                                return (
+                                                                                    <b>{customer.stores[key].quotation_invoice_not_paid_count}</b>
+                                                                                );
+                                                                            } else if (!localStorage.getItem("store_id")) {
+                                                                                return (<li><b>{customer.stores[key].quotation_invoice_not_paid_count}</b> {"@" + customer.stores[key].store_name}</li>);
+                                                                            }
+                                                                            return "";
+                                                                        })}
+                                                                    </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {customer.stores && Object.keys(customer.stores).map((key, index) => {
+                                                                            if (localStorage.getItem("store_id") && customer.stores[key].store_id === localStorage.getItem("store_id")) {
+                                                                                return (
+                                                                                    <b>{customer.stores[key].quotation_invoice_paid_partially_count}</b>
+                                                                                );
+                                                                            } else if (!localStorage.getItem("store_id")) {
+                                                                                return (<li><b>{customer.stores[key].quotation_invoice_paid_partially_count}</b> {"@" + customer.stores[key].store_name}</li>);
                                                                             }
                                                                             return "";
                                                                         })}
