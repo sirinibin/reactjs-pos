@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useRef } from 'react';
 import imageCompression from 'browser-image-compression';
 import { Modal, Badge } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -7,6 +7,11 @@ const ImageGallery = forwardRef((props, ref) => {
     const [images, setImages] = useState([]);
     const [modalIndex, setModalIndex] = useState(null);
 
+    const zoomImgRef = useRef(null);
+    const [zoomLevel, setZoomLevel] = useState(1);
+    const [dragging, setDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [translate, setTranslate] = useState({ x: 0, y: 0 });
 
     useImperativeHandle(ref, () => ({
         open() {
@@ -15,9 +20,7 @@ const ImageGallery = forwardRef((props, ref) => {
                 preview: url,
                 status: 'uploaded'
             }));
-            console.log("formatted:", formatted);
             setImages(formatted);
-
         },
         async uploadAllImages() {
             images.forEach(async (img, indexOffset) => {
@@ -26,22 +29,7 @@ const ImageGallery = forwardRef((props, ref) => {
                 }
             });
         }
-
     }));
-
-    /*
-    useEffect(() => {
-        console.log("storedImages:", storedImages);
-
-        const formatted = (storedImages || []).map(url => ({
-            serverUrl: url,
-            preview: url,
-            status: 'uploaded'
-        }));
-        console.log("formatted:", formatted);
-        setImages(formatted);
-    }, [storedImages]);
-    */
 
     const handleImageChange = async (e) => {
         const files = Array.from(e.target.files || []);
@@ -51,18 +39,16 @@ const ImageGallery = forwardRef((props, ref) => {
             const compressedFile = await imageCompression(file, {
                 maxSizeMB: 0.3,
                 maxWidthOrHeight: 1024,
-                useWebWorker: true,
+                useWebWorker: true
             });
 
             const preview = URL.createObjectURL(compressedFile);
             return { file: compressedFile, preview, status: 'uploading' };
         }));
 
-        // Optimistically add to UI
         const newImages = [...images, ...compressedFiles];
         setImages(newImages);
 
-        // Upload each compressed image
         compressedFiles.forEach((img, indexOffset) => {
             uploadToServer(img, newImages.length - compressedFiles.length + indexOffset);
         });
@@ -70,18 +56,14 @@ const ImageGallery = forwardRef((props, ref) => {
 
     const uploadToServer = async (img, index) => {
         const formData = new FormData();
-        if (!props.id) {
-            return;
-        }
-
-
+        if (!props.id) return;
 
         formData.append('id', props.id);
         formData.append('storeID', props.storeID);
         formData.append('image', img.file);
 
         try {
-            const response = await fetch('/v1/' + props.modelName + '/upload-image', {
+            const response = await fetch(`/v1/${props.modelName}/upload-image`, {
                 method: 'POST',
                 body: formData
             });
@@ -89,7 +71,6 @@ const ImageGallery = forwardRef((props, ref) => {
             if (!response.ok) throw new Error("Upload failed");
             const result = await response.json();
 
-            // Update image status in UI
             setImages(prev =>
                 prev.map((img, i) =>
                     i === index ? { ...img, status: 'uploaded', serverUrl: result.url } : img
@@ -106,24 +87,43 @@ const ImageGallery = forwardRef((props, ref) => {
 
     const deleteImage = async (index) => {
         const result = await confirm('Are you sure, you want to delete this image?');
-        if (!result) {
-            return
-        }
-
+        if (!result) return;
 
         const img = images[index];
         if (img.serverUrl) {
             await fetch(`/v1/${props.modelName}/delete-image?url=${encodeURIComponent(img.serverUrl)}&id=${encodeURIComponent(props.id)}&storeID=${encodeURIComponent(props.storeID)}`, {
-                method: 'POST',
+                method: 'POST'
             });
         }
         setImages(images.filter((_, i) => i !== index));
     };
 
-    const showPrev = () =>
-        setModalIndex(modalIndex === 0 ? images.length - 1 : modalIndex - 1);
-    const showNext = () =>
-        setModalIndex(modalIndex === images.length - 1 ? 0 : modalIndex + 1);
+    const showPrev = () => setModalIndex(modalIndex === 0 ? images.length - 1 : modalIndex - 1);
+    const showNext = () => setModalIndex(modalIndex === images.length - 1 ? 0 : modalIndex + 1);
+
+    const zoomIn = () => setZoomLevel((z) => Math.min(z + 0.25, 3));
+    const zoomOut = () => setZoomLevel((z) => Math.max(z - 0.25, 1));
+    const resetZoom = () => {
+        setZoomLevel(1);
+        setTranslate({ x: 0, y: 0 });
+    };
+
+    const handleMouseDown = (e) => {
+        e.preventDefault();
+        setDragging(true);
+        setDragStart({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseMove = (e) => {
+        if (!dragging) return;
+        setTranslate((prev) => ({
+            x: prev.x + (e.clientX - dragStart.x),
+            y: prev.y + (e.clientY - dragStart.y)
+        }));
+        setDragStart({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseUp = () => setDragging(false);
 
     return (
         <div className="container mt-3">
@@ -142,8 +142,7 @@ const ImageGallery = forwardRef((props, ref) => {
                             <img
                                 src={img.preview}
                                 className="img-fluid rounded"
-                                style={{ height: '150px', objectFit: 'cover', }}
-
+                                style={{ height: '150px', objectFit: 'cover' }}
                                 alt=""
                             />
                             <button
@@ -151,40 +150,56 @@ const ImageGallery = forwardRef((props, ref) => {
                                 className="btn btn-sm btn-danger position-absolute top-0 end-0 m-1"
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    deleteImage(index)
+                                    deleteImage(index);
                                 }}
                             >
                                 &times;
                             </button>
-
-                            {/*<Spinner animation="border" size="sm" variant="primary" />*/}
                             <div className="position-absolute bottom-0 start-0 m-1">
-                                {img.status === 'uploading' && (
-                                    <Badge bg="warning">Pending</Badge>
-                                )}
-                                {img.status === 'uploaded' && (
-                                    <Badge bg="success">Saved</Badge>
-                                )}
-                                {img.status === 'error' && (
-                                    <Badge bg="danger">Not Saved</Badge>
-                                )}
+                                {img.status === 'uploading' && <Badge bg="warning">Pending</Badge>}
+                                {img.status === 'uploaded' && <Badge bg="success">Saved</Badge>}
+                                {img.status === 'error' && <Badge bg="danger">Not Saved</Badge>}
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <Modal show={modalIndex !== null} onHide={() => setModalIndex(null)} size="lg" centered>
+            <Modal show={modalIndex !== null} onHide={() => setModalIndex(null)} size="lg" fullscreen centered>
                 <Modal.Header closeButton />
-                <Modal.Body className="p-0 text-center position-relative">
+                <Modal.Body className="p-0 text-center position-relative overflow-hidden" style={{ backgroundColor: '#000' }}>
                     {modalIndex !== null && (
                         <>
-                            <img
-                                src={images[modalIndex].preview}
-                                alt="Zoom"
-                                className="img-fluid"
-                                style={{ maxHeight: '80vh', maxWidth: '100%' }}
-                            />
+                            <div
+                                className="position-relative"
+                                style={{ cursor: zoomLevel > 1 ? 'grab' : 'default', overflow: 'hidden', height: '80vh' }}
+                                onMouseDown={(e) => zoomLevel > 1 && handleMouseDown(e)}
+                                onMouseMove={(e) => zoomLevel > 1 && handleMouseMove(e)}
+                                onMouseUp={handleMouseUp}
+                                onMouseLeave={handleMouseUp}
+                            >
+                                <img
+                                    ref={zoomImgRef}
+                                    src={images[modalIndex].preview}
+                                    alt="Zoom"
+                                    style={{
+                                        transform: `scale(${zoomLevel}) translate(${translate.x}px, ${translate.y}px)`,
+                                        transformOrigin: 'center',
+                                        transition: dragging ? 'none' : 'transform 0.3s ease',
+                                        maxWidth: '100%',
+                                        maxHeight: '100%',
+                                        userSelect: 'none',
+                                        pointerEvents: 'none'
+                                    }}
+                                />
+                            </div>
+
+                            <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 d-flex gap-2">
+                                <button className="btn btn-sm btn-light" onClick={zoomIn}>+</button>
+                                <button className="btn btn-sm btn-light" onClick={zoomOut}>−</button>
+                                <button className="btn btn-sm btn-secondary" onClick={resetZoom}>Reset</button>
+                            </div>
+
                             <button
                                 type="button"
                                 className="btn btn-secondary position-absolute top-50 start-0 translate-middle-y"
