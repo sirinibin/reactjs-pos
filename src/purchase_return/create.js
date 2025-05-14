@@ -1323,13 +1323,6 @@ async function reCalculate(productIndex) {
 
 
     const inputRefs = useRef({});
-    const handleFocus = (rowIdx, field) => {
-        const ref = inputRefs.current?.[rowIdx]?.[field];
-        if (ref && ref.select) {
-            ref.select();
-        }
-    };
-
     const discountRef = useRef(null);
 
     return (
@@ -1736,7 +1729,21 @@ async function reCalculate(productIndex) {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"purchase_return_product_quantity_" + index}`] = el;
                                                         }}
-                                                        onFocus={() => handleFocus(index, `${"purchase_return_product_quantity_" + index}`)}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"purchase_return_product_quantity_" + index}`].select();
+                                                            }, 100);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.code === "ArrowLeft") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    if ((index + 1) < selectedProducts.length) {
+                                                                        inputRefs.current[index + 1][`${"purchase_return_unit_discount_" + (index + 1)}`]?.focus();
+                                                                    }
+                                                                }, 100);
+                                                            }
+                                                        }}
 
                                                         placeholder="Quantity" onChange={(e) => {
                                                             errors["quantity_" + index] = "";
@@ -1787,7 +1794,27 @@ async function reCalculate(productIndex) {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`] = el;
                                                         }}
-                                                        onFocus={() => handleFocus(index, `${"purchase_return_product_unit_price_" + index}`)}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`].select();
+                                                            }, 100);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.code === "Backspace") {
+                                                                selectedProducts[index].purchase_unit_price_with_vat = "";
+                                                                selectedProducts[index].purchase_unit_price = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                            } else if (e.code === "ArrowLeft") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[index][`${"purchase_return_product_quantity_" + index}`].focus();
+                                                                }, 100);
+                                                            }
+                                                        }}
 
                                                         onChange={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
@@ -1851,18 +1878,30 @@ async function reCalculate(productIndex) {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"purchase_return_unit_discount_" + index}`] = el;
                                                         }}
-                                                        onFocus={() => handleFocus(index, `${"purchase_return_unit_discount_" + index}`)}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"purchase_return_unit_discount_" + index}`].select();
+                                                            }, 100);
+                                                        }}
                                                         onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+
                                                             if (e.code === "Enter") {
-                                                                console.log("selectedProducts.length:", selectedProducts.length)
-                                                                console.log("index:", index);
                                                                 if (selectedProducts.length > (index - 1) && index > 0) {
                                                                     console.log("Moving to next line");
-                                                                    inputRefs.current[index - 1][`${"purchase_return_product_quantity_" + (index - 1)}`]?.focus();
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[index - 1][`${"purchase_return_product_quantity_" + (index - 1)}`]?.focus();
+                                                                    }, 100);
                                                                 } else {
-                                                                    discountRef.current.focus();
-                                                                    discountRef.current.select();
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[selectedProducts.length - 1][`${"purchase_return_product_quantity_" + (selectedProducts.length - 1)}`]?.focus();
+                                                                    }, 100);
                                                                 }
+                                                            } else if (e.code === "ArrowLeft") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`].focus();
+                                                                }, 100);
                                                             }
                                                         }}
                                                         onChange={(e) => {

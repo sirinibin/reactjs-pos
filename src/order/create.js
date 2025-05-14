@@ -338,12 +338,6 @@ const OrderCreate = forwardRef((props, ref) => {
                         //
                         if (event.target.getAttribute("class").includes("barcode")) {
                             form.elements[index].focus();
-                        } else if (event.target.getAttribute("class").includes("productSearch")) {
-                            //  moveToProductSearch();
-                            //productSearchRef.current?.focus();
-                        } else if (event.target.getAttribute("class").includes("sales_unit_discount")) {
-                            //console.log("OKKK");
-                            moveToProductSearch();
                         } else {
                             form.elements[index + 1].focus();
                         }
@@ -2705,11 +2699,20 @@ function findDiscount() {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+
                                                             if (e.code === "ArrowLeft") {
-                                                                productSearchRef.current?.focus();
+                                                                if ((index + 1) === selectedProducts.length) {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        productSearchRef.current?.focus();
+                                                                    }, 100);
+                                                                } else {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[(index + 1)][`${"sales_unit_discount_with_vat_" + (index + 1)}`].focus();
+                                                                    }, 100);
+                                                                }
                                                             }
                                                         }}
-
                                                         onChange={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -2847,6 +2850,8 @@ function findDiscount() {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`] = el;
                                                         }}
+                                                        placeholder="Unit Price(with VAT)"
+
                                                         onFocus={() => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
@@ -2854,11 +2859,8 @@ function findDiscount() {
                                                             }, 100);
                                                         }}
 
-                                                        placeholder="Unit Price(with VAT)"
-
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
-
                                                             if (e.code === "Backspace") {
                                                                 selectedProducts[index].unit_price_with_vat = "";
                                                                 selectedProducts[index].unit_price = "";
@@ -3021,10 +3023,32 @@ function findDiscount() {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
-                                                            if (e.code === "ArrowLeft") {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                            if (e.code === "Enter") {
+                                                                if ((index + 1) === selectedProducts.length) {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        productSearchRef.current?.focus();
+                                                                    }, 100);
+                                                                } else {
+                                                                    if (index === 0) {
+                                                                        console.log("moviing to discount")
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            // discountRef.current?.focus();
+                                                                            productSearchRef.current?.focus();
+                                                                        }, 100);
+                                                                    } else {
+                                                                        console.log("moviing to next line")
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[index - 1][`${"sales_product_quantity_" + (index - 1)}`]?.focus();
+                                                                        }, 100);
+                                                                    }
+
+                                                                }
+                                                            } else if (e.code === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].focus();
-                                                                }, 200);
+                                                                }, 100);
                                                             }
                                                         }}
                                                         onChange={(e) => {

@@ -167,9 +167,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                     if (form && form.elements[index + 1]) {
                         if (event.target.getAttribute("class").includes("barcode")) {
                             form.elements[index].focus();
-                        } else if (event.target.getAttribute("class").includes("purchase_unit_discount")) {
-                            //console.log("OKKK");
-                            moveToProductSearch();
                         } else {
                             form.elements[index + 1].focus();
                         }
@@ -1461,11 +1458,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
         }, 500);
     }
 
-    function moveToProductSearch() {
-        setTimeout(() => {
-            productSearchRef.current?.focus();
-        }, 500);
-    }
 
     const productSearchRef = useRef();
 
@@ -1485,13 +1477,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
         </Tooltip>
     );
 
+    const discountRef = useRef();
+
     const inputRefs = useRef({});
-    const handleFocus = (rowIdx, field) => {
-        const ref = inputRefs.current?.[rowIdx]?.[field];
-        if (ref && ref.select) {
-            ref.select();
-        }
-    };
 
     return (
         <>
@@ -1913,13 +1901,20 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 options={productOptions}
                                 selected={selectedProduct}
                                 onKeyDown={(e) => {
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+
                                     if (e.code === "Escape") {
                                         setProductOptions([]);
                                         setOpenProductSearchResult(false);
-                                        productSearchRef.current?.clear();
+                                        timerRef.current = setTimeout(() => {
+                                            productSearchRef.current?.clear();
+                                        }, 100);
                                     }
 
-                                    moveToProductSearch();
+
+                                    timerRef.current = setTimeout(() => {
+                                        productSearchRef.current?.focus();
+                                    }, 100);
                                 }}
                                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                 highlightOnlyResult={true}
@@ -2102,7 +2097,27 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"purchase_product_quantity_" + index}`] = el;
                                                         }}
-                                                        onFocus={() => handleFocus(index, `${"purchase_product_quantity_" + index}`)}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"purchase_product_quantity_" + index}`].select();
+                                                            }, 100);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.code === "ArrowLeft") {
+                                                                if ((index + 1) === selectedProducts.length) {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        productSearchRef.current?.focus();
+                                                                    }, 100);
+                                                                } else {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[(index + 1)][`${"purchase_unit_discount_" + (index + 1)}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }
+                                                        }}
+
 
                                                         onChange={(e) => {
                                                             errors["quantity_" + index] = "";
@@ -2147,13 +2162,32 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             <td>
                                                 <div className="input-group mb-3">
                                                     <input type="number" id={`${"purchase_product_unit_price_" + index}`} name={`${"purchase_product_unit_price_" + index}`} onWheel={(e) => e.target.blur()} value={selectedProducts[index].purchase_unit_price} className="form-control text-end"
-
                                                         placeholder="Unit Price"
                                                         ref={(el) => {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"purchase_product_unit_price_" + index}`] = el;
                                                         }}
-                                                        onFocus={() => handleFocus(index, `${"purchase_product_unit_price_" + index}`)}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"purchase_product_unit_price_" + index}`].select();
+                                                            }, 100);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.code === "Backspace") {
+                                                                selectedProducts[index].purchase_unit_price_with_vat = "";
+                                                                selectedProducts[index].purchase_unit_price = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                            } else if (e.code === "ArrowLeft") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[index][`${"purchase_product_quantity_" + index}`].focus();
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                         onChange={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -2166,6 +2200,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 setErrors({ ...errors });
                                                                 console.log("errors:", errors);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
                                                                 return;
                                                             }
 
@@ -2176,6 +2213,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 setErrors({ ...errors });
                                                                 console.log("errors:", errors);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
                                                                 return;
                                                             }
 
@@ -2208,16 +2248,48 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"purchase_unit_discount_" + index}`} name={`${"purchase_unit_discount_" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end purchase_unit_discount" value={selectedProducts[index].unit_discount}
-
+                                                    <input type="number" id={`${"purchase_unit_discount_" + index}`} name={`${"purchase_unit_discount_" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount}
                                                         ref={(el) => {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"purchase_unit_discount_" + index}`] = el;
                                                         }}
-                                                        onFocus={() => handleFocus(index, `${"purchase_unit_discount_" + index}`)}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"purchase_unit_discount_" + index}`]?.select();
+                                                            }, 100);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                            if (e.code === "Enter") {
+                                                                if ((index + 1) === selectedProducts.length) {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        productSearchRef.current?.focus();
+                                                                    }, 100);
+                                                                } else {
+                                                                    if (index === 0) {
+                                                                        console.log("moviing to discount")
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            // discountRef.current?.focus();
+                                                                            productSearchRef.current?.focus();
+                                                                        }, 100);
+                                                                    } else {
+                                                                        console.log("moviing to next line")
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[index - 1][`${"purchase_product_quantity_" + (index - 1)}`]?.focus();
+                                                                        }, 100);
+                                                                    }
+
+                                                                }
+                                                            } else if (e.code === "ArrowLeft") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[index][`${"purchase_product_unit_price_" + index}`].focus();
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                         onChange={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -2812,7 +2884,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             )}
                                         </th>
                                         <td className="text-end">
-                                            <input type="number" id="purchase_discount" name="purchase_discount_with_vat" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={discountWithVAT} onChange={(e) => {
+                                            <input type="number" id="purchase_discount" ref={discountRef} name="purchase_discount_with_vat" onWheel={(e) => e.target.blur()} style={{ width: "150px" }} className="text-start" value={discountWithVAT} onChange={(e) => {
                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                 if (parseFloat(e.target.value) === 0) {
                                                     discount = 0;

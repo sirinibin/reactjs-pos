@@ -2209,8 +2209,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        discountRef.current.focus();
-                                                                        discountRef.current.select();
+                                                                        inputRefs.current[selectedProducts.length - 1][`${"sales_return_product_quantity_" + (selectedProducts.length - 1)}`]?.focus();
                                                                     }, 100);
                                                                 }
                                                             } else if (e.code === "ArrowLeft") {
