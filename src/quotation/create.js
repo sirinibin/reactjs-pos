@@ -731,12 +731,12 @@ const QuotationCreate = forwardRef((props, ref) => {
       haveErrors = true;
     }
 
-
-    if (!validatePaymentAmounts()) {
-      console.log("Errors on payments")
-      haveErrors = true;
+    if (formData.type === "invoice") {
+      if (!validatePaymentAmounts()) {
+        console.log("Errors on payments")
+        haveErrors = true;
+      }
     }
-
 
 
     if (!formData.shipping_handling_fees && formData.shipping_handling_fees !== 0) {
@@ -1285,7 +1285,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
       setFormData({ ...formData });
 
-      if (!formData.id) {
+      if (!formData.id && formData.type === "invoice") {
         let method = "";
         if (formData.payments_input && formData.payments_input[0]) {
           method = formData.payments_input[0].method;
@@ -1546,6 +1546,9 @@ const QuotationCreate = forwardRef((props, ref) => {
 
 
   function validatePaymentAmounts() {
+    if (formData.type !== "invoice") {
+      return true;
+    }
     console.log("validatePaymentAmount: formData.net_total:", formData.net_total)
     errors["cash_discount"] = "";
     setErrors({ ...errors });
@@ -1602,6 +1605,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   setErrors({ ...errors });
                   haveErrors = true;
               }*/
+
 
       if (!formData.payments_input[key].method) {
         errors["payment_method_" + key] = "Payment method is required";
