@@ -1913,12 +1913,13 @@ function findDiscount() {
     );
 
     const inputRefs = useRef({});
+    /*
     const handleFocus = (rowIdx, field) => {
         const ref = inputRefs.current?.[rowIdx]?.[field];
         if (ref && ref.select) {
             ref.select();
         }
-    };
+    };*/
 
 
     return (
@@ -2688,17 +2689,26 @@ function findDiscount() {
                                                         {errors["purchase_unit_price_" + index]}
                                                     </div>
                                                 )}
-
                                             </td>
                                             <td>
-                                                <div className="input-group mb-3">
+                                                <div className={`input-group mb-3 ${errors["quantity_" + index] ? "mt-3" : ""}`}>
                                                     <input type="number" id={`${"sales_product_quantity_" + index}`} name={`${"sales_product_quantity" + index}`} onWheel={(e) => e.target.blur()} value={product.quantity} className="form-control text-end"
                                                         placeholder="Quantity"
                                                         ref={(el) => {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"sales_product_quantity_" + index}`] = el;
                                                         }}
-                                                        onFocus={() => handleFocus(index, `${"sales_product_quantity_" + index}`)}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"sales_product_quantity_" + index}`].select();
+                                                            }, 100);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.code === "ArrowLeft") {
+                                                                productSearchRef.current?.focus();
+                                                            }
+                                                        }}
 
                                                         onChange={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
@@ -2757,12 +2767,13 @@ function findDiscount() {
 
                                                         }} />
                                                     <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
+                                                    {errors["quantity_" + index] && (
+                                                        <div style={{ color: "red", fontSize: "12px" }}>
+                                                            {errors["quantity_" + index]}
+                                                        </div>
+                                                    )}
+
                                                 </div>
-                                                {errors["quantity_" + index] && (
-                                                    <div style={{ color: "red" }}>
-                                                        {errors["quantity_" + index]}
-                                                    </div>
-                                                )}
 
                                             </td>
                                             {/*<td>
@@ -2836,19 +2847,29 @@ function findDiscount() {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`] = el;
                                                         }}
-                                                        onFocus={() => handleFocus(index, `${"sales_product_unit_price_with_vat_" + index}`)}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].select();
+                                                            }, 100);
+                                                        }}
 
                                                         placeholder="Unit Price(with VAT)"
 
                                                         onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+
                                                             if (e.code === "Backspace") {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
                                                                 selectedProducts[index].unit_price_with_vat = "";
                                                                 selectedProducts[index].unit_price = "";
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
                                                                 }, 300);
+                                                            } else if (e.code === "ArrowLeft") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[index][`${"sales_product_quantity_" + index}`].focus();
+                                                                }, 200);
                                                             }
                                                         }}
                                                         onChange={(e) => {
@@ -2993,7 +3014,19 @@ function findDiscount() {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
                                                             inputRefs.current[index][`${"sales_unit_discount_with_vat_" + index}`] = el;
                                                         }}
-                                                        onFocus={() => handleFocus(index, `${"sales_unit_discount_with_vat_" + index}`)}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"sales_unit_discount_with_vat_" + index}`]?.select();
+                                                            }, 100);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (e.code === "ArrowLeft") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].focus();
+                                                                }, 200);
+                                                            }
+                                                        }}
                                                         onChange={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             if (parseFloat(e.target.value) === 0) {
