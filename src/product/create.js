@@ -682,6 +682,8 @@ const ProductCreate = forwardRef((props, ref) => {
   let [damagedStock, setDamagedStock] = useState('');
   const [operationType, setOperationType] = useState(null); // 'add' or 'remove'
 
+  const inputRefs = useRef({});
+
   return (
     <>
       <StoreCreate
@@ -1133,14 +1135,37 @@ const ProductCreate = forwardRef((props, ref) => {
                     {!localStorage.getItem('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
                     <td style={{ width: "150px" }}>
                       <input
-                        id={`${"product_purchase_unit_price0"}`}
-                        name={`${"product_purchase_unit_price0"}`}
+                        id={`${"product_purchase_unit_price_0"}`}
+                        name={`${"product_purchase_unit_price_0"}`}
                         type="number"
                         value={
                           productStores[localStorage.getItem('store_id')]?.purchase_unit_price || productStores[localStorage.getItem('store_id')]?.purchase_unit_price === 0
                             ? productStores[localStorage.getItem('store_id')]?.purchase_unit_price
                             : ""
                         }
+                        ref={(el) => {
+                          if (!inputRefs.current[0]) inputRefs.current[0] = {};
+                          inputRefs.current[0][`${"product_purchase_unit_price_0"}`] = el;
+                        }}
+                        onFocus={() => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          timerRef.current = setTimeout(() => {
+                            inputRefs.current[0][`${"product_purchase_unit_price_0"}`]?.select();
+                          }, 100);
+                        }}
+                        onKeyDown={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          if (e.code === "Enter") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[0][`${"product_wholesale_unit_price_0"}`]?.select();
+                            }, 100);
+
+                          } /*else if (e.code === "ArrowLeft") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].focus();
+                            }, 100);
+                          }*/
+                        }}
                         className="form-control"
                         placeholder="Purchase Unit Price"
                         onChange={(e) => {
@@ -1185,6 +1210,29 @@ const ProductCreate = forwardRef((props, ref) => {
                             ? productStores[localStorage.getItem('store_id')]?.wholesale_unit_price
                             : ""
                         }
+                        ref={(el) => {
+                          if (!inputRefs.current[0]) inputRefs.current[0] = {};
+                          inputRefs.current[0][`${"product_wholesale_unit_price_0"}`] = el;
+                        }}
+                        onFocus={() => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          timerRef.current = setTimeout(() => {
+                            inputRefs.current[0][`${"product_wholesale_unit_price_0"}`]?.select();
+                          }, 100);
+                        }}
+                        onKeyDown={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          if (e.code === "Enter") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[0][`${"product_retail_unit_price_0"}`]?.select();
+                            }, 100);
+
+                          } else if (e.code === "ArrowLeft") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[0][`${"product_purchase_unit_price_0"}`].focus();
+                            }, 100);
+                          }
+                        }}
                         className="form-control"
                         placeholder="Wholesale Unit Price"
                         onChange={(e) => {
@@ -1229,6 +1277,24 @@ const ProductCreate = forwardRef((props, ref) => {
                             ? productStores[localStorage.getItem('store_id')]?.retail_unit_price
                             : ""
                         }
+                        ref={(el) => {
+                          if (!inputRefs.current[0]) inputRefs.current[0] = {};
+                          inputRefs.current[0][`${"product_retail_unit_price_0"}`] = el;
+                        }}
+                        onFocus={() => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          timerRef.current = setTimeout(() => {
+                            inputRefs.current[0][`${"product_retail_unit_price_0"}`]?.select();
+                          }, 100);
+                        }}
+                        onKeyDown={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          if (e.code === "ArrowLeft") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[0][`${"product_wholesale_unit_price_0"}`].focus();
+                            }, 100);
+                          }
+                        }}
                         className="form-control"
                         placeholder="Retail Unit Price"
                         onChange={(e) => {
