@@ -823,7 +823,7 @@ function PurchaseIndex(props) {
 
     return (
         <>
-            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
+            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
             <Preview ref={PreviewRef} />
             <PurchaseCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
             <PurchaseView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />

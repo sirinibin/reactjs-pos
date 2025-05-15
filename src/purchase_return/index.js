@@ -797,7 +797,7 @@ function PurchaseReturnIndex(props) {
 
     return (
         <>
-            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
+            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
             <Preview ref={PreviewRef} />
             <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />
             <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} />

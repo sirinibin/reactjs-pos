@@ -523,7 +523,7 @@ function QuotationIndex(props) {
 
   return (
     <>
-      <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
+      <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
       <Preview ref={PreviewRef} />
       <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />

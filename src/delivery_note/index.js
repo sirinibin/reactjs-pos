@@ -374,7 +374,7 @@ function DeliveryNoteIndex(props) {
 
   return (
     <>
-      <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
+      <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
       <Preview ref={PreviewRef} />
       <DeliveryNoteCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       <DeliveryNoteView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />

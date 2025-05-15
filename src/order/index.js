@@ -1195,7 +1195,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
     return (
         <>
-            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
+            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
             <OrderPreview ref={PreviewRef} />
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
             <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />

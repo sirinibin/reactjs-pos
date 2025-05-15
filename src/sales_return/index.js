@@ -1159,7 +1159,7 @@ function SalesReturnIndex(props) {
 
     return (
         <>
-            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
+            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
             <Preview ref={PreviewRef} />
             <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
             <SalesReturnCreate ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />
