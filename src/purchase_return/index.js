@@ -19,6 +19,7 @@ import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import Purchases from "./../utils/purchases.js";
 import Preview from "./../order/preview.js"
+import ReportPreview from "./../order/report.js";
 
 import ReactExport from 'react-data-export';
 const ExcelFile = ReactExport.ExcelFile;
@@ -26,6 +27,11 @@ const ExcelSheet = ReactExport.ExcelFile.ExcelSheet;
 
 
 function PurchaseReturnIndex(props) {
+    const ReportPreviewRef = useRef();
+    function openReportPreview() {
+        ReportPreviewRef.current.open("purchase_return_report");
+    }
+
     const { lastMessage } = useContext(WebSocketContext);
 
 
@@ -791,6 +797,7 @@ function PurchaseReturnIndex(props) {
 
     return (
         <>
+            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
             <Preview ref={PreviewRef} />
             <Purchases ref={PurchasesRef} onSelectPurchase={handleSelectedPurchase} showToastMessage={props.showToastMessage} />
             <PurchaseReturnCreate ref={CreateFormRef} refreshList={list} refreshPurchaseList={props.refreshPurchaseList} showToastMessage={props.showToastMessage} />
@@ -833,6 +840,12 @@ function PurchaseReturnIndex(props) {
                     </div>
 
                     <div className="col text-end">
+                        <Button variant="primary" onClick={() => {
+                            openReportPreview();
+                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+                            <i className="bi bi-printer"></i>&nbsp;
+                            Print Report
+                        </Button>
                         <ExcelFile filename={purchaseReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Purchase Return Report</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={purchaseReturnReportFileName} />
                         </ExcelFile>

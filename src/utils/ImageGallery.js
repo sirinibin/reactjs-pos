@@ -167,12 +167,20 @@ const ImageGallery = forwardRef((props, ref) => {
 
             <Modal show={modalIndex !== null} onHide={() => setModalIndex(null)} size="lg" fullscreen centered>
                 <Modal.Header closeButton />
-                <Modal.Body className="p-0 text-center position-relative overflow-hidden" style={{ backgroundColor: '#000' }}>
+                <Modal.Body
+                    className="p-0 d-flex justify-content-center align-items-center position-relative overflow-hidden"
+                    style={{ backgroundColor: '#000', height: '100vh' }}
+                >
                     {modalIndex !== null && (
                         <>
                             <div
-                                className="position-relative"
-                                style={{ cursor: zoomLevel > 1 ? 'grab' : 'default', overflow: 'hidden', height: '80vh' }}
+                                className="position-relative d-flex justify-content-center align-items-center"
+                                style={{
+                                    cursor: zoomLevel > 1 ? 'grab' : 'default',
+                                    overflow: 'hidden',
+                                    width: '100%',
+                                    height: '100%'
+                                }}
                                 onMouseDown={(e) => zoomLevel > 1 && handleMouseDown(e)}
                                 onMouseMove={(e) => zoomLevel > 1 && handleMouseMove(e)}
                                 onMouseUp={handleMouseUp}
@@ -189,7 +197,8 @@ const ImageGallery = forwardRef((props, ref) => {
                                         maxWidth: '100%',
                                         maxHeight: '100%',
                                         userSelect: 'none',
-                                        pointerEvents: 'none'
+                                        pointerEvents: 'none',
+                                        display: 'block'
                                     }}
                                 />
                             </div>

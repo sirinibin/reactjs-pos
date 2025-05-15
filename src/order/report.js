@@ -1,16 +1,316 @@
 import { React, useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback, useMemo } from "react";
-import { Modal, Button } from 'react-bootstrap';
-import PreviewContent from './previewContent.js';
+import { Modal, Button, Spinner } from 'react-bootstrap';
+import ReportContent from './reportContent.js';
 
 //import { useReactToPrint } from 'react-to-print';
-import { Invoice } from '@axenda/zatca';
 import html2pdf from 'html2pdf.js';
 import "./print.css";
 //import jsPDF from "jspdf";
 //import html2canvas from "html2canvas";
 
 
-const Preview = forwardRef((props, ref) => {
+const ReportPreview = forwardRef((props, ref) => {
+    let [modelName, setModelName] = useState("sales_report");
+    let [model, setModel] = useState({});
+    const [show, setShow] = useState(props.show);
+
+    useImperativeHandle(ref, () => ({
+        async open(modelNameStr) {
+            modelName = modelNameStr;
+            setModelName(modelName);
+            model.store_id = localStorage.getItem("store_id");
+            if (model.store_id) {
+                await getStore(model.store_id);
+            }
+
+            model.models = [];
+            model.customer = null;
+            model.vendor = null;
+            model.dateStr = getDateString();
+
+            if (props.searchParams["customer_id"]) {
+                await getCustomer(props.searchParams["customer_id"]);
+            }
+
+            if (props.searchParams["vendor_id"]) {
+                await getVendor(props.searchParams["vendor_id"]);
+            }
+
+            getAllModels();
+
+            setInvoiceTitle(modelName);
+            preparePages();
+            setShow(true);
+            console.log("model:", model);
+            /*
+                if (model.customer_id) {
+                    await getCustomer(model.customer_id);
+                }
+
+                if (model.vendor_id) {
+                    await getVendor(model.vendor_id);
+                }*/
+
+        },
+
+    }));
+
+    function getDateString() {
+        let dateStr = "";
+        if (props.searchParams) {
+            if (props.searchParams["from_date"] && props.searchParams["to_date"]) {
+                dateStr = props.searchParams["from_date"] + " - " + props.searchParams["to_date"] + " | " + getArabicDate(props.searchParams["from_date"]) + " - " + getArabicDate(props.searchParams["to_date"])
+            } else if (props.searchParams["from_date"]) {
+                dateStr = "Since " + props.searchParams["from_date"] + " | " + getArabicDate(props.searchParams["from_date"]) + " منذ"
+            } else if (props.searchParams["to_date"]) {
+                dateStr = "Upto " + props.searchParams["to_date"] + " | " + getArabicDate(props.searchParams["to_date"]) + " تصل "
+            } else if (props.searchParams["date_str"]) {
+                dateStr = props.searchParams["date_str"] + " | " + getArabicDate(props.searchParams["date_str"])
+            }
+        }
+
+        return dateStr;
+    }
+
+    function getArabicDate(engishDate) {
+        let event = new Date(engishDate);
+        let options = {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            // hour: "numeric",
+            //minute: "numeric",
+            //second: "numeric",
+            //  timeZoneName: "short",
+        };
+        return event.toLocaleDateString('ar-EG', options)
+    }
+
+    /*
+    const [totalSales, setTotalSales] = useState(0.00);
+    const [netProfit, setNetProfit] = useState(0.00);
+    const [vatPrice, setVatPrice] = useState(0.00);
+    const [totalPaidSales, setTotalPaidSales] = useState(0.00);
+    const [totalUnPaidSales, setTotalUnPaidSales] = useState(0.00);
+    const [totalCashSales, setTotalCashSales] = useState(0.00);
+    const [totalBankAccountSales, setTotalBankAccountSales] = useState(0.00);
+    const [loss, setLoss] = useState(0.00);
+    const [returnCount, setReturnCount] = useState(0.00);
+    const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
+    */
+
+
+    //const [isListLoading, setIsListLoading] = useState(false);
+    // let [statsOpen, setStatsOpen] = useState(false);
+    let [fettingAllRecordsInProgress, setFettingAllRecordsInProgress] = useState(false);
+
+    //const timerRef = useRef(null);
+
+    async function getAllModels() {
+        // setStatsOpen(false);
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+        let Select = "";
+        if (modelName === "sales_report") {
+            Select =
+                "select=id,code,date,net_total,total_payment_received,balance_amount,customer_name,payment_status";
+        } else if (modelName === "sales_return_report") {
+            Select =
+                "select=id,code,date,net_total,total_payment_received,balance_amount,customer_name,payment_status";
+        } else if (modelName === "purchase_report") {
+            Select =
+                "select=id,code,date,net_total,total_payment_received,balance_amount,vendor_name,payment_status";
+        } else if (modelName === "purchase_return_report") {
+            Select =
+                "select=id,code,date,net_total,total_payment_received,balance_amount,vendor_name,payment_status";
+        } else if (modelName === "quotation_report") {
+            props.searchParams["type"] = "quotation"
+            Select =
+                "select=id,code,date,net_total,customer_name";
+        } else if (modelName === "quotation_invoice_report") {
+            props.searchParams["type"] = "invoice"
+            Select =
+                "select=id,code,date,net_total,total_payment_received,balance_amount,customer_name,payment_status";
+        } else if (modelName === "delivery_note_report") {
+            Select =
+                "select=id,code,date,customer_id,customer_name";
+        }
+
+
+        if (localStorage.getItem("store_id")) {
+            props.searchParams.store_id = localStorage.getItem("store_id");
+        }
+
+        const d = new Date();
+        let diff = d.getTimezoneOffset();
+        console.log("Timezone:", parseFloat(diff / 60));
+        props.searchParams["timezone_offset"] = parseFloat(diff / 60);
+
+        props.searchParams["stats"] = "1";
+
+
+        // setSearchParams(propsearchParams);
+        let queryParams = ObjectToSearchQueryParams(props.searchParams);
+        if (queryParams !== "") {
+            queryParams = "&" + queryParams;
+        }
+
+        let size = 1000;
+
+        let models = [];
+        var pageNo = 1;
+
+        console.log("modelName:", modelName);
+        let apiNameSpace = "";
+        if (modelName === "sales_report") {
+            apiNameSpace = "order"
+        } else if (modelName === "sales_return_report") {
+            apiNameSpace = "sales-return"
+        } else if (modelName === "purchase_report") {
+            apiNameSpace = "purchase"
+        } else if (modelName === "purchase_return_report") {
+            apiNameSpace = "purchase-return"
+        } else if (modelName === "quotation_report") {
+            apiNameSpace = "quotation"
+        } else if (modelName === "quotation_invoice_report") {
+            apiNameSpace = "quotation"
+        } else if (modelName === "delivery_note_report") {
+            apiNameSpace = "delivery-note"
+        }
+
+        for (; true;) {
+            if (pageNo > 1 && props.searchParams["stats"] === "1") {
+                props.searchParams["stats"] = "0";
+                queryParams = ObjectToSearchQueryParams(props.searchParams);
+                if (queryParams !== "") {
+                    queryParams = "&" + queryParams;
+                }
+            }
+
+            fettingAllRecordsInProgress = true;
+            setFettingAllRecordsInProgress(true);
+            let res = await fetch(
+                "/v1/" + apiNameSpace + "?" +
+                Select +
+                queryParams +
+                "&sort=" +
+                props.sortOrder +
+                props.sortField +
+                "&page=" +
+                pageNo +
+                "&limit=" +
+                size,
+                requestOptions
+            )
+                .then(async (response) => {
+                    const isJson = response.headers
+                        .get("content-type")
+                        ?.includes("application/json");
+                    const data = isJson && (await response.json());
+
+                    // check for error response
+                    if (!response.ok) {
+                        const error = data && data.errors;
+                        return Promise.reject(error);
+                    }
+
+                    if (!data.result || data.result.length === 0) {
+                        return [];
+                    }
+
+                    if (data.meta) {
+                        model["meta"] = data.meta;
+                        /*
+                        setTotalSales(data.meta.total_sales);
+                        setNetProfit(data.meta.net_profit);
+                        setLoss(data.meta.net_loss);
+                        setVatPrice(data.meta.vat_price);
+                        setTotalPaidSales(data.meta.paid_sales);
+                        setTotalUnPaidSales(data.meta.unpaid_sales);
+                        setTotalCashSales(data.meta.cash_sales);
+                        setTotalBankAccountSales(data.meta.bank_account_sales);
+                        setReturnCount(data.meta.return_count);
+                        setReturnPaidAmount(data.meta.return_amount);
+                        */
+
+
+                    }
+
+
+                    // console.log("Orders:", orders);
+
+                    return data.result;
+
+
+                })
+                .catch((error) => {
+                    console.log(error);
+                    return [];
+                    //break;
+
+                });
+            if (res.length === 0) {
+                break;
+            }
+            models = models.concat(res);
+            pageNo++;
+        }//end for loop
+
+        model.models = models;
+        setModel({ ...model });
+        preparePages();
+        fettingAllRecordsInProgress = false;
+        setFettingAllRecordsInProgress(false);
+
+        /*
+        if (timerRef.current) clearTimeout(timerRef.current);
+
+        timerRef.current = setTimeout(() => {
+            model.models = models;
+            setModel({ ...model });
+            preparePages();
+            fettingAllRecordsInProgress = false;
+            setFettingAllRecordsInProgress(false);
+        }, 200);
+        */
+
+
+
+        // console.log("model:",model);
+
+
+    }
+
+
+
+
+
+    function setInvoiceTitle(modelName) {
+        model.modelName = modelName;
+        if (model.modelName === "sales_report") {
+            model.reportTitle = "SALES REPORT | تقرير المبيعات"
+        } else if (model.modelName === "sales_return_report") {
+            model.reportTitle = "SALES RETURN REPORT | تقرير مرتجعات المبيعات"
+        } else if (model.modelName === "purchase_report") {
+            model.reportTitle = "PURCHASE REPORT | تقرير الشراء"
+        } else if (model.modelName === "purchase_return_report") {
+            model.reportTitle = "PURCHASE RETURN REPORT | تقرير إرجاع المشتريات"
+        } else if (model.modelName === "quotation_report") {
+            model.reportTitle = "QUOTATION REPORT | تقرير الاقتباس"
+        } else if (model.modelName === "quotation_invoice_report") {
+            model.reportTitle = "SALES REPORT | تقرير المبيعات"
+        } else if (model.modelName === "delivery_note_report") {
+            model.reportTitle = "DELIVERY NOTE REPORT | تقرير مذكرة التسليم"
+        }
+        setModel({ ...model });
+    }
+
+
 
     function ObjectToSearchQueryParams(object) {
         return Object.keys(object)
@@ -19,269 +319,27 @@ const Preview = forwardRef((props, ref) => {
             })
             .join("&");
     }
-    let [whatsAppShare, setWhatsAppShare] = useState(false);
-    let [phone, setPhone] = useState("");
-
-    function setInvoiceTitle(modelName) {
-        model.modelName = modelName;
-
-        console.log("model.modelName", model.modelName);
-        console.log("model:", model);
-        var IsCashOnly = true;
-        if (model.payment_methods?.length === 0 || model.payment_status === "not_paid") {
-            IsCashOnly = false;
-        }
-
-        for (let i = 0; i < model.payment_methods?.length; i++) {
-            if (model.payment_methods[i] !== "cash") {
-                IsCashOnly = false;
-                break;
-            }
-        }
-
-        var isSimplified = true;
-
-        if (model.modelName === "sales" || model.modelName === "sales_return") {
-            if (model.customer?.vat_no) {
-                isSimplified = false;
-            } else {
-                isSimplified = true;
-            }
-        }
-
-        if (model.modelName === "sales") {
-            if (model.store?.zatca?.phase === "1") {
-                if (model.payment_status !== "not_paid") {
-                    model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
-                    if (IsCashOnly) {
-                        model.invoiceTitle = "CASH TAX INVOICE | فاتورة ضريبية نقدية";
-                    }
-                } else if (model.payment_status === "not_paid") {
-                    model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
-                }
-            } else if (model.store?.zatca?.phase === "2") {
-                if (isSimplified) {
-                    if (model.payment_status === "not_paid") {
-                        model.invoiceTitle = "SIMPLIFIED CREDIT TAX INVOICE | فاتورة ضريبة الائتمان المبسطة";
-                    } else {
-                        model.invoiceTitle = "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة";
-                        if (IsCashOnly) {
-                            model.invoiceTitle = "SIMPLIFIED CASH TAX INVOICE | فاتورة ضريبية نقدية مبسطة";
-                        }
-                    }
-                } else {
-                    if (model.payment_status === "not_paid") {
-                        model.invoiceTitle = "STANDARD CREDIT TAX INVOICE | فاتورة ضريبة الائتمان القياسية";
-                    } else {
-                        model.invoiceTitle = "STANDARD TAX INVOICE | فاتورة ضريبية قياسية";
-                        if (IsCashOnly) {
-                            model.invoiceTitle = "STANDARD CASH TAX INVOICE | فاتورة ضريبية نقدية قياسية";
-                        }
-                    }
-                }
-            }
-        } else if (model.modelName === "sales_return") {
-            if (model.store?.zatca?.phase === "1") {
-                model.invoiceTitle = "SALES RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
-                if (IsCashOnly) {
-                    model.invoiceTitle = "SALES RETURN CASH TAX INVOICE | إقرار مبيعات فاتورة ضريبية نقدية";
-                }
-            } else if (model.store?.zatca?.phase === "2") {
-                if (isSimplified) {
-                    model.invoiceTitle = "SIMPLIFIED CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي مبسط لإقرار إقرار ائتماني";
-                    if (IsCashOnly) {
-                        model.invoiceTitle = "SIMPLIFIED CREDIT NOTE CASH RETURN TAX INVOICE | مذكرة ائتمان مبسطة، إقرار نقدي، فاتورة ضريبية";
-                    }
-                } else {
-                    model.invoiceTitle = "STANDARD CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي قياسي لإرجاع فاتورة الائتمان";
-                    if (IsCashOnly) {
-                        model.invoiceTitle = "STANDARD CREDIT NOTE CASH RETURN TAX INVOICE | سند ائتمان قياسي، إقرار نقدي، فاتورة ضريبية";
-                    }
-                }
-            }
-        } else if (model.modelName === "purchase") {
-            if (model.payment_status === "not_paid") {
-                model.invoiceTitle = "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الشراء بالائتمان";
-            } else {
-                model.invoiceTitle = "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء";
-                if (IsCashOnly) {
-                    model.invoiceTitle = "CASH PURCHASE TAX INVOICE | فاتورة ضريبة الشراء النقدي";
-                }
-            }
-        } else if (model.modelName === "purchase_return") {
-            if (model.payment_status === "not_paid") {
-                model.invoiceTitle = "CREDIT PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء بالائتمان";
-            } else {
-                model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع المشتريات";
-                if (IsCashOnly) {
-                    model.invoiceTitle = "CASH PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء النقدي";
-                }
-            }
-        } else if (model.modelName === "quotation") {
-            model.invoiceTitle = "QUOTATION / اقتباس";
-
-            if (model.type === "invoice" && model.payment_status === "not_paid") {
-                model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
-            } else if (model.type === "invoice") {
-                model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
-            }
-        } else if (model.modelName === "delivery_note") {
-            model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";
-        }
-
-        setModel({ ...model });
-    }
-
-    let [modelName, setModelName] = useState("sales");
-
-    useImperativeHandle(ref, () => ({
-        async open(modelObj, whatsapp, modelNameStr) {
-            modelName = modelNameStr;
-            setModelName(modelName);
-
-            if (whatsapp) {
-                whatsAppShare = true;
-                setWhatsAppShare(whatsAppShare)
-            } else {
-                whatsAppShare = false;
-                setWhatsAppShare(whatsAppShare)
-            }
-
-            if (modelObj) {
-                model = modelObj;
-
-                if (model.phone) {
-                    phone = model.phone;
-                }
-                setPhone(phone);
-
-                setModel({ ...model })
-                if (model.id) {
-                    await getModel(model.id, modelName);
-                }
-
-                if (model.order_id) {
-                    await getOrder(model.order_id);
-                }
-
-                if (model.store_id) {
-                    await getStore(model.store_id);
-                }
-
-                if (model.customer_id) {
-                    await getCustomer(model.customer_id);
-                }
-
-                if (model.vendor_id) {
-                    await getVendor(model.vendor_id);
-                }
-
-                setInvoiceTitle(modelName);
-
-                if (model.delivered_by) {
-                    getUser(model.delivered_by);
-                }
-
-                if (model.delivered_by_signature_id) {
-                    getSignature(model.delivered_by_signature_id);
-                }
-
-                preparePages();
-
-                /*
-
-                let pageSize = 15;
-                model.pageSize = pageSize;
-                let totalProducts = model.products.length;
-                let top = 0;
-                let totalPagesInt = parseInt(totalProducts / pageSize);
-                let totalPagesFloat = parseFloat(totalProducts / pageSize);
-
-                let totalPages = totalPagesInt;
-                if ((totalPagesFloat - totalPagesInt) > 0) {
-                    totalPages++;
-                }
-
-                model.total_pages = totalPages;
-
-
-                model.pages = [];
-                model.qrOnLeftBottom = true;
-
-
-                let offset = 0;
-
-                for (let i = 0; i < totalPages; i++) {
-                    model.pages.push({
-                        top: top,
-                        products: [],
-                        lastPage: false,
-                        firstPage: false,
-                    });
-
-                    for (let j = offset; j < totalProducts; j++) {
-                        model.pages[i].products.push(model.products[j]);
-                        if (model.pages[i].products.length === pageSize) {
-                            break;
-                        }
-                    }
-                    /*
-                    if (model.pages[i].products.length < pageSize) {
-                        for (let s = model.pages[i].products.length; s < pageSize; s++) {
-                            model.pages[i].products.push({});
-                        }
-                    }*/
-
-                //top += 1057; //1057
-                /*   top += 5; //1057
-                   offset += pageSize;
-
-                   if (i === 0) {
-                       model.pages[i].firstPage = true;
-                   }
-
-                   if ((i + 1) === totalPages) {
-                       model.pages[i].lastPage = true;
-                   }
-               }
-
-               console.log("model.pages:", model.pages);
-               console.log("model.products:", model.products);
-
-
-
-
-               getQRCodeContents();
-               */
-                //model.qr_content = getQRCodeContents();
-                //setModel({ ...model });
-
-                setShow(true);
-                console.log("model:", model);
-            }
-
-        },
-
-    }));
 
     function changePageSize(size) {
-        fontSizes[modelName + "_pageSize"] = parseInt(size);
+        fontSizes[modelName + "_reportPageSize"] = parseInt(size);
         setFontSizes({ ...fontSizes });
         saveToLocalStorage("fontSizes", fontSizes);
         preparePages();
     }
 
     function preparePages() {
-        if (fontSizes[modelName + "_pageSize"]) {
-            model.pageSize = fontSizes[modelName + "_pageSize"];
+        if (fontSizes[modelName + "_reportPageSize"]) {
+            model.pageSize = fontSizes[modelName + "_reportPageSize"];
         } else {
-            model.pageSize = 15
+            model.pageSize = 20
         }
 
-        let totalProducts = model.products.length;
+
+
+        let totalRecords = model.models.length;
         // let top = 0;
-        let totalPagesInt = parseInt(totalProducts / model.pageSize);
-        let totalPagesFloat = parseFloat(totalProducts / model.pageSize);
+        let totalPagesInt = parseInt(totalRecords / model.pageSize);
+        let totalPagesFloat = parseFloat(totalRecords / model.pageSize);
 
         let totalPages = totalPagesInt;
         if ((totalPagesFloat - totalPagesInt) > 0) {
@@ -292,34 +350,25 @@ const Preview = forwardRef((props, ref) => {
 
 
         model.pages = [];
-        model.qrOnLeftBottom = true;
 
 
         let offset = 0;
 
         for (let i = 0; i < totalPages; i++) {
             model.pages.push({
-                top: 0,
-                products: [],
+                top: 5,
+                models: [],
                 lastPage: false,
                 firstPage: false,
             });
-
-            for (let j = offset; j < totalProducts; j++) {
-                model.pages[i].products.push(model.products[j]);
-                if (model.pages[i].products.length === model.pageSize) {
+            for (let j = offset; j < totalRecords; j++) {
+                model.pages[i].models.push(model.models[j]);
+                if (model.pages[i].models.length === model.pageSize) {
                     break;
                 }
             }
-            /*
-            if (model.pages[i].products.length < pageSize) {
-                for (let s = model.pages[i].products.length; s < pageSize; s++) {
-                    model.pages[i].products.push({});
-                }
-            }*/
 
-            //top += 1057; //1057
-            //top += 5; //1057
+            // top += 5;
             offset += model.pageSize;
 
             if (i === 0) {
@@ -330,149 +379,110 @@ const Preview = forwardRef((props, ref) => {
                 model.pages[i].lastPage = true;
             }
         }
-
-        console.log("model.pages:", model.pages);
-        console.log("model.products:", model.products);
-        getQRCodeContents();
+        setModel({ ...model });
     }
 
-
-    async function getModel(id, modelName) {
-        console.log("inside get Order");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        let searchParams = {};
-        if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
+    /*
+        async function getModel(id, modelName) {
+            console.log("inside get Order");
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('access_token'),
+                },
+            };
+    
+            let searchParams = {};
+            if (localStorage.getItem("store_id")) {
+                searchParams.store_id = localStorage.getItem("store_id");
+            }
+            let queryParams = ObjectToSearchQueryParams(searchParams);
+    
+            let apiPath = "";
+            if (modelName && modelName === "sales") {
+                apiPath = "order"
+            } else if (modelName && modelName === "sales_return") {
+                apiPath = "sales-return"
+            } else if (modelName && modelName === "purchase") {
+                apiPath = "purchase"
+            } else if (modelName && modelName === "purchase_return") {
+                apiPath = "purchase-return"
+            } else if (modelName && modelName === "quotation") {
+                apiPath = "quotation"
+            } else if (modelName && modelName === "delivery_note") {
+                apiPath = "delivery-note"
+            }
+    
+            await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
+                .then(async response => {
+                    const isJson = response.headers.get('content-type')?.includes('application/json');
+                    const data = isJson && await response.json();
+    
+                    // check for error response
+                    if (!response.ok) {
+                        const error = (data && data.errors);
+                        return Promise.reject(error);
+                    }
+    
+                    console.log("Response:");
+                    console.log(data);
+    
+                    model = data.result;
+                    setModel({ ...model });
+                    return model;
+                })
+                .catch(error => {
+    
+                });
         }
-        let queryParams = ObjectToSearchQueryParams(searchParams);
-
-        let apiPath = "";
-        if (modelName && modelName === "sales") {
-            apiPath = "order"
-        } else if (modelName && modelName === "sales_return") {
-            apiPath = "sales-return"
-        } else if (modelName && modelName === "purchase") {
-            apiPath = "purchase"
-        } else if (modelName && modelName === "purchase_return") {
-            apiPath = "purchase-return"
-        } else if (modelName && modelName === "quotation") {
-            apiPath = "quotation"
-        } else if (modelName && modelName === "delivery_note") {
-            apiPath = "delivery-note"
+    
+        async function getOrder(id) {
+            console.log("inside get Order");
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('access_token'),
+                },
+            };
+    
+            let searchParams = {};
+            if (localStorage.getItem("store_id")) {
+                searchParams.store_id = localStorage.getItem("store_id");
+            }
+            let queryParams = ObjectToSearchQueryParams(searchParams);
+    
+    
+    
+            await fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
+                .then(async response => {
+                    const isJson = response.headers.get('content-type')?.includes('application/json');
+                    const data = isJson && await response.json();
+    
+                    // check for error response
+                    if (!response.ok) {
+                        const error = (data && data.errors);
+                        return Promise.reject(error);
+                    }
+    
+                    console.log("Response:");
+                    console.log(data);
+    
+                    model.order = data.result;
+                    setModel({ ...model });
+    
+                    return model;
+                })
+                .catch(error => {
+    
+                });
         }
+                */
 
-        await fetch('/v1/' + apiPath + '/' + id + "?" + queryParams, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                model = data.result;
-                setModel({ ...model });
-                return model;
-            })
-            .catch(error => {
-
-            });
-    }
-
-    async function getOrder(id) {
-        console.log("inside get Order");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        let searchParams = {};
-        if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
-        }
-        let queryParams = ObjectToSearchQueryParams(searchParams);
-
-
-
-        await fetch('/v1/order/' + id + "?" + queryParams, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-
-                model.order = data.result;
-                setModel({ ...model });
-
-                return model;
-            })
-            .catch(error => {
-
-            });
-    }
-
-
-
-    let [model, setModel] = useState({});
-
-    const [show, setShow] = useState(props.show);
 
     function handleClose() {
         setShow(false);
-    }
-
-
-    let [qrContent, setQrContent] = useState("");
-
-    function getQRCodeContents() {
-        qrContent = "";
-
-        if (model.code) {
-            qrContent += "Invoice #: " + model.code + "<br />";
-        }
-
-        if (model.store) {
-            qrContent += "Store: " + model.store.name + "<br />";
-        }
-
-        if (model.customer) {
-            qrContent += "Customer: " + model.customer.name + "<br />";
-        }
-
-
-        if (model.net_total) {
-            qrContent += "Net Total: " + model.net_total + "<br />";
-        }
-        qrContent += "Store: Test <br />";
-
-        setQrContent(qrContent);
-        model.qr_content = qrContent;
-        setModel({ ...model });
-        console.log("QR content:", model.qr_content);
-
-        return model.qr_content;
     }
 
     async function getStore(id) {
@@ -500,20 +510,6 @@ const Preview = forwardRef((props, ref) => {
                 console.log(data);
                 let storeData = data.result;
                 model.store = storeData;
-
-                const invoice = new Invoice({
-                    sellerName: model.store_name,
-                    vatRegistrationNumber: model.store.vat_no,
-                    invoiceTimestamp: model.date,
-                    invoiceTotal: model.net_total,
-                    invoiceVatTotal: model.vat_price,
-                    // uuid: model.uuid,
-                    invoiceHash: model.hash ? model.hash : "",
-                });
-
-                model.QRImageData = await invoice.render();
-                console.log("model.QRImageData:", model.QRImageData);
-
                 setModel({ ...model });
             })
             .catch(error => {
@@ -598,111 +594,66 @@ const Preview = forwardRef((props, ref) => {
 
             });
     }
-
-    function getUser(id) {
-        console.log("inside get User(Delivered by)");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-        fetch('/v1/user/' + id, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-
-                console.log("Response:");
-                console.log(data);
-                let userData = data.result;
-                model.delivered_by_user = userData;
-                setModel({ ...model });
-            })
-            .catch(error => {
-
-            });
-    }
-
-    function getSignature(id) {
-        console.log("inside get Signature");
-        const requestOptions = {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': localStorage.getItem('access_token'),
-            },
-        };
-
-
-        let searchParams = {};
-        if (localStorage.getItem("store_id")) {
-            searchParams.store_id = localStorage.getItem("store_id");
-        }
-        let queryParams = ObjectToSearchQueryParams(searchParams);
-
-        fetch('/v1/signature/' + id + "?" + queryParams, requestOptions)
-            .then(async response => {
-                const isJson = response.headers.get('content-type')?.includes('application/json');
-                const data = isJson && await response.json();
-
-                // check for error response
-                if (!response.ok) {
-                    const error = (data && data.errors);
-                    return Promise.reject(error);
-                }
-
-                console.log("Response:");
-                console.log(data);
-                let signatureData = data.result;
-                model.delivered_by_signature = signatureData;
-                setModel({ ...model });
-            })
-            .catch(error => {
-            });
-    }
-
-
-
     /*
-    function print() {
-        console.log("Print");
-    }
-    */
+        function getUser(id) {
+            console.log("inside get User(Delivered by)");
+            const requestOptions = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': localStorage.getItem('access_token'),
+                },
+            };
+    
+            fetch('/v1/user/' + id, requestOptions)
+                .then(async response => {
+                    const isJson = response.headers.get('content-type')?.includes('application/json');
+                    const data = isJson && await response.json();
+    
+                    // check for error response
+                    if (!response.ok) {
+                        const error = (data && data.errors);
+                        return Promise.reject(error);
+                    }
+    
+    
+                    console.log("Response:");
+                    console.log(data);
+                    let userData = data.result;
+                    model.delivered_by_user = userData;
+                    setModel({ ...model });
+                })
+                .catch(error => {
+    
+                });
+        }
+                */
+
+
 
     const printAreaRef = useRef();
 
     const getFileName = useCallback(() => {
         let filename = "";
 
-        if (modelName === "sales") {
-            filename = "Sales";
-        } else if (modelName === "sales_return") {
-            filename = "Sales_Return";
-        } else if (modelName === "purchase") {
-            filename = "Purchase";
-        } else if (modelName === "purchase_return") {
-            filename = "Purchase_Return";
-        } else if (modelName === "quotation") {
-            filename = "Quotation";
-        } else if (modelName === "delivery_note") {
-            filename = "Delivery_Note";
-        }
-
-        if (model.code) {
-            filename += "-" + model.code;
+        if (modelName === "sales_report") {
+            filename = "Sales_Report";
+        } else if (modelName === "sales_return_report") {
+            filename = "Sales_Return_Report";
+        } else if (modelName === "purchase_report") {
+            filename = "Purchase_Report";
+        } else if (modelName === "purchase_return_report") {
+            filename = "Purchase_Return_Report";
+        } else if (modelName === "quotation_report") {
+            filename = "Quotation_Report";
+        } else if (modelName === "quotation_invoice_report") {
+            filename = "Sales_Report";
+        } else if (modelName === "delivery_note_report") {
+            filename = "Delivery_Note_Report";
         }
 
         return filename;
-    }, [model, modelName])
+    }, [modelName])
 
 
 
@@ -732,33 +683,33 @@ const Preview = forwardRef((props, ref) => {
 
 
     /*
-  const handlePrint = async () => {
+    const handlePrint = async () => {
       const element = printAreaRef.current;
       if (!element) return;
-
+    
       const canvas = await html2canvas(element, {
           scale: 2,
           useCORS: true,
       });
-
+    
       const imgData = canvas.toDataURL("image/jpeg", 1.0);
       const pdf = new jsPDF("p", "mm", "a4");
-
+    
       const imgProps = pdf.getImageProperties(imgData);
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
+    
       pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
       pdf.save(`${getFileName()}.pdf`);
-  };*/
+    };*/
 
     /*
-    
-    
+     
+     
             const handlePrint = useCallback(async () => {
                 const element = printAreaRef.current;
                 if (!element) return;
-    
+     
                 const opt = {
                     margin: 0,
                     filename: `${getFileName()}.pdf`,
@@ -766,12 +717,12 @@ const Preview = forwardRef((props, ref) => {
                     html2canvas: { scale: 2, useCORS: true, logging: true },
                     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
                 };
-    
+     
                 const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-    
+     
                 // Create a blob URL
                 const blobUrl = URL.createObjectURL(pdfBlob);
-    
+     
                 // Open the PDF in a new window or iframe and trigger print
                 const printWindow = window.open(blobUrl);
                 if (printWindow) {
@@ -802,29 +753,30 @@ const Preview = forwardRef((props, ref) => {
         }
     });*/
 
-
     // Wrap handlePrint in useCallback to avoid unnecessary re-creations
-    const autoPrint = useCallback(() => {
-        handlePrint();
-    }, [handlePrint]);
+    /* const autoPrint = useCallback(() => {
+         handlePrint();
+     }, [handlePrint]);*/
 
+    /*
     const formatPhoneForWhatsApp = useCallback((number) => {
-        // Step 1: Remove all non-digit characters
-        number = number.replace(/\D/g, '');
+       // Step 1: Remove all non-digit characters
+       number = number.replace(/\D/g, '');
+    
+       // Step 2: Replace starting 05 with 9665
+       if (number.startsWith('05')) {
+           number = '966' + number.slice(1);
+       }
+    
+       return number;
+    }, [])*/
 
-        // Step 2: Replace starting 05 with 9665
-        if (number.startsWith('05')) {
-            number = '966' + number.slice(1);
-        }
-
-        return number;
-    }, [])
-
-    const openWhatsAppShare = useCallback(async () => {
+    /*
+    const openWhatsAppShare = useCallback(async (phone) => {
         console.log("Inside openWhatsAppShare")
         const element = printAreaRef.current;
         if (!element) return;
-
+    
         const opt = {
             margin: 0,
             filename: `${getFileName()}.pdf`,
@@ -832,25 +784,19 @@ const Preview = forwardRef((props, ref) => {
             html2canvas: { scale: 2, useCORS: true, logging: true },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
-
+    
         const pdfBlob = await html2pdf().from(element).set(opt).outputPdf('blob');
-
+    
         // Upload to your server
         const formData = new FormData();
         formData.append("file", pdfBlob, `${getFileName()}.pdf`);
-
+    
         await fetch("/v1/upload-pdf", { method: "POST", body: formData });
         // const { fileUrl } = await res.json();
-
-
-        // Share via WhatsApp
-        console.log(" model.phone:", model.phone);
-
-
-
-
+    
+    
         let whatsAppNo = "";
-
+    
         if (phone) {
             whatsAppNo = phone;
         } else if (model.customer?.phone) {
@@ -858,11 +804,11 @@ const Preview = forwardRef((props, ref) => {
         } else if (model.vendor?.phone) {
             whatsAppNo = model.vendor?.phone
         }
-
-
+    
+    
         if (!whatsAppNo) {
             whatsAppNo = prompt("Enter the WhatsApp number (with country code, e.g., 9665xxxxxxxx):");
-
+    
             if (!whatsAppNo) {
                 // User cancelled or entered nothing
                 alert("No number entered. Cannot send message.");
@@ -870,9 +816,9 @@ const Preview = forwardRef((props, ref) => {
                 return;
             }
         }
-
-
-
+    
+    
+    
         whatsAppNo = formatPhoneForWhatsApp(whatsAppNo);
         let message = "";
         if (modelName === "quotation" && model?.type !== "invoice") {
@@ -880,35 +826,37 @@ const Preview = forwardRef((props, ref) => {
         } else {
             message = `Hello, here is your Invoice:\n${window.location.origin}/pdfs/${getFileName()}.pdf`;
         }
-
+    
         const whatsappUrl = `https://wa.me/${whatsAppNo}?text=${encodeURIComponent(message)}`;
-
+    
         window.open(whatsappUrl, "_blank");
         handleClose();
+    
+    }, [getFileName, model, formatPhoneForWhatsApp, modelName]);
+    */
 
-    }, [getFileName, model, formatPhoneForWhatsApp, phone, modelName]);
 
-
-    useEffect(() => {
-        // Automatically trigger print when component is mounted
-        console.log("whatsAppShare:", whatsAppShare);
-        const timeout = setTimeout(() => {
-            if (whatsAppShare) {
-                // openWhatsAppShare();
-            } else {
-                // autoPrint();
-            }
-        }, 800); // give some buffer for content to render
-
-        return () => clearTimeout(timeout); // clean up
-
-    }, [autoPrint, whatsAppShare, openWhatsAppShare]);
+    /*  useEffect(() => {
+           // Automatically trigger print when component is mounted
+           console.log("whatsAppShare:", whatsAppShare);
+           const timeout = setTimeout(() => {
+               if (whatsAppShare) {
+                   // openWhatsAppShare();
+               } else {
+                   // autoPrint();
+               }
+           }, 800); // give some buffer for content to render
+     
+           return () => clearTimeout(timeout); // clean up
+     
+       }, [autoPrint, whatsAppShare, openWhatsAppShare]);*/
 
     const [showSlider, setShowSlider] = useState(false);
     let [selectedText, setSelectedText] = useState("");
 
     const defaultFontSizes = useMemo(() => ({
         "pageSize": 15,
+        "reportPageSize": 20,
         "font": "Cairo",
         "marginTop": {
             "value": 0,
@@ -1058,7 +1006,7 @@ const Preview = forwardRef((props, ref) => {
             storedFontSizes = {};
         }
 
-        let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note"];
+        let modelNames = ["sales", "sales_report", "sales_return", "sales_return_report", "purchase", "purchase_report", "purchase_return", "purchase_return_report", "quotation", "quotation_report", "quotation_invoice_report", "delivery_note", "delivery_note_report"];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {
                 if (!storedFontSizes[modelNames[key1] + "_" + key2]) {
@@ -1219,13 +1167,16 @@ const Preview = forwardRef((props, ref) => {
                     </select>
 
                     {/* Show Store Header - Always fixed here */}
-                    {!whatsAppShare && <div className="form-check">
+                    {<div className="form-check">
                         <input
                             type="checkbox"
                             className="form-check-input"
                             id="storeHeaderCheck"
                             checked={fontSizes[modelName + "_storeHeader"]?.visible}
                             onChange={() => {
+                                if (!fontSizes[modelName + "_storeHeader"]) {
+                                    fontSizes[modelName + "_storeHeader"] = defaultFontSizes["storeHeader"];
+                                }
                                 fontSizes[modelName + "_storeHeader"].visible = !fontSizes[modelName + "_storeHeader"]?.visible;
 
                                 setFontSizes({ ...fontSizes });
@@ -1240,7 +1191,7 @@ const Preview = forwardRef((props, ref) => {
 
                     {/* Margin Control */}
 
-                    {!whatsAppShare && <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
+                    {<div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
                         <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
@@ -1251,7 +1202,7 @@ const Preview = forwardRef((props, ref) => {
                         <>
                             <label className="form-label">Page Size:&nbsp;</label>
                             <select
-                                value={fontSizes[modelName + "_pageSize"]}
+                                value={fontSizes[modelName + "_reportPageSize"]}
                                 onChange={(e) => {
                                     changePageSize(e.target.value);
                                 }}
@@ -1274,6 +1225,20 @@ const Preview = forwardRef((props, ref) => {
                                 <option value="14">14</option>
                                 <option value="15">15</option>
                                 <option value="16">16</option>
+                                <option value="17">16</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                                <option value="23">23</option>
+                                <option value="24">24</option>
+                                <option value="25">25</option>
+                                <option value="26">26</option>
+                                <option value="27">27</option>
+                                <option value="28">28</option>
+                                <option value="29">29</option>
+                                <option value="30">30</option>
                             </select>
                         </>
                     </div>
@@ -1284,19 +1249,13 @@ const Preview = forwardRef((props, ref) => {
                     {/* Print & Close Buttons */}
                     <div className="d-flex align-items-center">
                         <Button
-                            variant={whatsAppShare ? "success" : "primary"}
-                            onClick={whatsAppShare ? openWhatsAppShare : handlePrint}
+                            variant={"primary"}
+                            onClick={handlePrint}
                             className="me-2"
                         >
-                            {!whatsAppShare ? (
-                                <>
-                                    <i className="bi bi-printer"></i> Print
-                                </>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
-                                    <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
-                                </svg>
-                            )}
+                            <>
+                                <i className="bi bi-printer"></i> Print
+                            </>
                         </Button>
                         <button className="btn-close" onClick={handleClose} aria-label="Close"></button>
                     </div>
@@ -1306,7 +1265,22 @@ const Preview = forwardRef((props, ref) => {
 
             <Modal.Body>
                 <div ref={printAreaRef} className="print-area" id="print-area">
-                    <PreviewContent model={model} whatsAppShare={whatsAppShare} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />
+                    {fettingAllRecordsInProgress && (
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                height: "300px", // or use "100vh" for full page height
+                                width: "100%"
+                            }}
+                        >
+                            <Spinner animation="grow" variant="primary" />
+                        </div>
+                    )}
+
+                    <ReportContent model={model} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />
+
                 </div>
             </Modal.Body>
             <Modal.Footer>
@@ -1316,4 +1290,4 @@ const Preview = forwardRef((props, ref) => {
 
 });
 
-export default Preview;
+export default ReportPreview;

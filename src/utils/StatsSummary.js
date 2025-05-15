@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Amount from "./amount.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
-const StatsSummary = ({ title, stats, onToggle }) => {
+const StatsSummary = ({ title, stats, onToggle, defaultOpen }) => {
     const [isOpen, setIsOpen] = useState(false);
 
     const handleToggle = () => {
@@ -13,14 +13,14 @@ const StatsSummary = ({ title, stats, onToggle }) => {
 
     return (
         <div className="mb-3">
-            <button
+            {!defaultOpen && <button
                 className="btn btn-outline-primary mb-2"
                 onClick={handleToggle}
             >
                 {isOpen ? `Hide ${title} Summary` : `Show ${title} Summary`}
-            </button>
+            </button>}
 
-            {isOpen && (
+            {(isOpen || defaultOpen) && (
                 <div className="border p-3 rounded bg-light">
                     <div className="row">
                         {Object.keys(stats).map((key, index) => (

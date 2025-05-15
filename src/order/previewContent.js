@@ -61,7 +61,7 @@ const PreviewContent = forwardRef((props, ref) => {
                         paddingBottom: "4px",
                         marginTop: page.top + "px",
                         /* height: "auto",*/
-                        height: "1120px",
+                        height: "1118px",
                         width: `${props.whatsAppShare ? "750px" : "750px"}`
                     }}
 

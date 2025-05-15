@@ -15,9 +15,15 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import Preview from "./../order/preview.js"
+import ReportPreview from "./../order/report.js";
 
 function QuotationIndex(props) {
   const { lastMessage } = useContext(WebSocketContext);
+
+  const ReportPreviewRef = useRef();
+  function openReportPreview(modelName) {
+    ReportPreviewRef.current.open(modelName);
+  }
 
 
   let [totalQuotation, setTotalQuotation] = useState(0.00);
@@ -517,6 +523,7 @@ function QuotationIndex(props) {
 
   return (
     <>
+      <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
       <Preview ref={PreviewRef} />
       <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       <QuotationView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
@@ -571,6 +578,20 @@ function QuotationIndex(props) {
           </div>
 
           <div className="col text-end">
+            <Button variant="primary" onClick={() => {
+              openReportPreview("quotation_invoice_report");
+            }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+              <i className="bi bi-printer"></i>&nbsp;
+              Print Sales Report
+            </Button>
+
+            <Button variant="primary" onClick={() => {
+              openReportPreview("quotation_report");
+            }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+              <i className="bi bi-printer"></i>&nbsp;
+              Print Quotation Report
+            </Button>
+
             <Button
               hide={true.toString()}
               variant="primary"

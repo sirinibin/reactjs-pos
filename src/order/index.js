@@ -23,6 +23,7 @@ import StatsSummary from "../utils/StatsSummary.js";
 import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import OrderPreview from "./preview.js";
+import ReportPreview from "./report.js";
 
 import "./../utils/stickyHeader.css";
 
@@ -941,6 +942,7 @@ const OrderIndex = forwardRef((props, ref) => {
                 setTotalItems(data.total_count);
                 setOffset((page - 1) * pageSize);
                 setCurrentPageItemsCount(data.result.length);
+
                 setTotalSales(data.meta.total_sales);
                 setNetProfit(data.meta.net_profit);
                 setLoss(data.meta.net_loss);
@@ -1180,6 +1182,11 @@ const OrderIndex = forwardRef((props, ref) => {
         PreviewRef.current.open(model, undefined, "sales");
     }
 
+    const ReportPreviewRef = useRef();
+    function openReportPreview() {
+        ReportPreviewRef.current.open("sales_report");
+    }
+
     function sendWhatsAppMessage(model) {
         PreviewRef.current.open(model, "whatsapp", "sales");
     }
@@ -1188,6 +1195,7 @@ const OrderIndex = forwardRef((props, ref) => {
 
     return (
         <>
+            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
             <OrderPreview ref={PreviewRef} />
             <OrderCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openCreateForm={openCreateForm} />
             <OrderView ref={DetailsViewRef} openCreateForm={openCreateForm} />
@@ -1276,11 +1284,18 @@ const OrderIndex = forwardRef((props, ref) => {
 
                     <div className="col text-end">
 
-                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Report</Button> : ""}>
+                        <Button variant="primary" onClick={() => {
+                            openReportPreview();
+                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+                            <i className="bi bi-printer"></i>&nbsp;
+                            Print Report
+                        </Button>
+
+                        <ExcelFile filename={salesReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Report(XLS)</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={salesReportFileName} />
                         </ExcelFile>
 
-                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Report"}</Button> : ""}
+                        {excelData.length === 0 ? <Button variant="primary" className="btn btn-primary mb-3" onClick={getAllOrders} >{fettingAllRecordsInProgress ? "Preparing.." : "Sales Report(XLS)"}</Button> : ""}
                         &nbsp;&nbsp;
 
                         <Button
@@ -2288,8 +2303,9 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         <td className="text-start" >
                                                             <OverflowTooltip value={order.customer_name} />
                                                         </td>
-                                                        <td> <Amount amount={trimTo2Decimals(order.net_total)} /> </td>
-
+                                                        <td>
+                                                            <Amount amount={trimTo2Decimals(order.net_total)} />
+                                                        </td>
                                                         <td>
 
 

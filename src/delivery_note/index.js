@@ -10,9 +10,13 @@ import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Preview from "./../order/preview.js"
+import ReportPreview from "./../order/report.js";
 
 function DeliveryNoteIndex(props) {
-
+  const ReportPreviewRef = useRef();
+  function openReportPreview() {
+    ReportPreviewRef.current.open("delivery_note_report");
+  }
 
   //Date filter
   const [showDateRange, setShowDateRange] = useState(false);
@@ -370,6 +374,7 @@ function DeliveryNoteIndex(props) {
 
   return (
     <>
+      <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
       <Preview ref={PreviewRef} />
       <DeliveryNoteCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
       <DeliveryNoteView ref={DetailsViewRef} openUpdateForm={openUpdateForm} openCreateForm={openCreateForm} />
@@ -385,6 +390,14 @@ function DeliveryNoteIndex(props) {
           </div>
 
           <div className="col text-end">
+
+            <Button variant="primary" onClick={() => {
+              openReportPreview();
+            }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+              <i className="bi bi-printer"></i>&nbsp;
+              Print Report
+            </Button>
+
             <Button
               hide={true.toString()}
               variant="primary"

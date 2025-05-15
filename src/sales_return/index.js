@@ -23,6 +23,7 @@ import { WebSocketContext } from "./../utils/WebSocketContext.js";
 import eventEmitter from "./../utils/eventEmitter";
 import Sales from "./../utils/sales.js";
 import Preview from "./../order/preview.js";
+import ReportPreview from "./../order/report.js";
 
 
 const ExcelFile = ReactExport.ExcelFile;
@@ -48,6 +49,11 @@ const TimeAgo = ({ date }) => {
 };
 
 function SalesReturnIndex(props) {
+    const ReportPreviewRef = useRef();
+    function openReportPreview() {
+        ReportPreviewRef.current.open("sales_return_report");
+    }
+
     const { lastMessage } = useContext(WebSocketContext);
     let [statsOpen, setStatsOpen] = useState(false);
 
@@ -1153,6 +1159,7 @@ function SalesReturnIndex(props) {
 
     return (
         <>
+            <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrde={sortOrder} sortField={sortField} />
             <Preview ref={PreviewRef} />
             <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
             <SalesReturnCreate ref={CreateFormRef} refreshList={list} refreshSalesList={props.refreshSalesList} showToastMessage={props.showToastMessage} />
@@ -1244,6 +1251,13 @@ function SalesReturnIndex(props) {
                     </div>
 
                     <div className="col text-end">
+                        <Button variant="primary" onClick={() => {
+                            openReportPreview();
+                        }} style={{ marginRight: "8px" }} className="btn btn-primary mb-3">
+                            <i className="bi bi-printer"></i>&nbsp;
+                            Print Report
+                        </Button>
+
                         <ExcelFile filename={salesReturnReportFileName} element={excelData.length > 0 ? <Button variant="success" className="btn btn-primary mb-3 success" >Download Sales Return Report</Button> : ""}>
                             <ExcelSheet dataSet={excelData} name={salesReturnReportFileName} />
                         </ExcelFile>
