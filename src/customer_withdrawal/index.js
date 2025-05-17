@@ -11,6 +11,8 @@ import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import CustomerDepositPreview from './../customer_deposit/preview.js';
+import { trimTo2Decimals } from "../utils/numberUtils";
+import Amount from "../utils/amount.js";
 
 function CustomerWithdrawalIndex(props) {
 
@@ -177,6 +179,8 @@ function CustomerWithdrawalIndex(props) {
             setSelectedCreatedByCustomerWithdrawals(values);
         } else if (field === "customer_id") {
             setSelectedCustomers(values);
+        } else if (field === "payment_methods") {
+            setSelectedPaymentMethodList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -239,7 +243,7 @@ function CustomerWithdrawalIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,amount,payment_method,bank_reference_no,description,remarks,customer_id,customer_name,created_by_name,created_at";
+            "select=id,code,date,net_total,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,created_by_name,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -326,6 +330,35 @@ function CustomerWithdrawalIndex(props) {
         list();
     }
 
+    const paymentMethodOptions = [
+        {
+            id: "cash",
+            name: "Cash",
+        },
+        {
+            id: "debit_card",
+            name: "Debit Card",
+        },
+        {
+            id: "credit_card",
+            name: "Credit Card",
+        },
+        {
+            id: "bank_card",
+            name: "Bank Card",
+        },
+        {
+            id: "bank_transfer",
+            name: "Bank Transfer",
+        },
+        {
+            id: "bank_cheque",
+            name: "Bank Cheque",
+        },
+    ];
+
+    const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
+
     const CreateFormRef = useRef();
     function openUpdateForm(id) {
         CreateFormRef.current.open(id);
@@ -345,7 +378,6 @@ function CustomerWithdrawalIndex(props) {
     function openPreview(model) {
         PreviewRef.current.open(model, undefined, "customer_withdrawal");
     }
-
 
     function sendWhatsAppMessage(model) {
         PreviewRef.current.open(model, "whatsapp", "customer_withdrawal");
@@ -598,14 +630,14 @@ function CustomerWithdrawalIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("amount");
+                                                            sort("net_total");
                                                         }}
                                                     >
-                                                        Amount
-                                                        {sortField === "amount" && sortCustomerWithdrawal === "-" ? (
+                                                        Net Total
+                                                        {sortField === "net_total" && sortCustomerWithdrawal === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "amount" && sortCustomerWithdrawal === "" ? (
+                                                        {sortField === "net_total" && sortCustomerWithdrawal === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -617,14 +649,14 @@ function CustomerWithdrawalIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("payment_method");
+                                                            sort("payment_methods");
                                                         }}
                                                     >
-                                                        Payment Method
-                                                        {sortField === "payment_method" && sortOrder === "-" ? (
+                                                        Payment Methods
+                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "payment_method" && sortOrder === "" ? (
+                                                        {sortField === "payment_methods" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -773,8 +805,8 @@ function CustomerWithdrawalIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="customer_id"
-                                                        filterBy={() => true}
                                                         labelKey="search_label"
+                                                        filterBy={() => true}
                                                         style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -795,22 +827,32 @@ function CustomerWithdrawalIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="amount"
+                                                        id="net_amount"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("amount", e.target.value)
+                                                            searchByFieldValue("net_total", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
                                                 <th>
-                                                    <input
-                                                        type="text"
-                                                        id="method"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("payment_method", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
+                                                    <th>
+                                                        <Typeahead
+                                                            id="payment_methods"
+                                                            filterBy={() => true}
+                                                            labelKey="name"
+                                                            onChange={(selectedItems) => {
+                                                                searchByMultipleValuesField(
+                                                                    "payment_methods",
+                                                                    selectedItems
+                                                                );
+                                                            }}
+                                                            options={paymentMethodOptions}
+                                                            placeholder="Select payment methods"
+                                                            selected={selectedPaymentMethodList}
+                                                            highlightOnlyResult={true}
+                                                            multiple
+                                                        />
+                                                    </th>
                                                 </th>
                                                 <th>
                                                     <input
@@ -826,8 +868,8 @@ function CustomerWithdrawalIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
-                                                        filterBy={() => true}
                                                         labelKey="name"
+                                                        filterBy={() => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",
@@ -946,7 +988,7 @@ function CustomerWithdrawalIndex(props) {
                                                                     <path d="M13.601 2.326A7.875 7.875 0 0 0 8.036 0C3.596 0 0 3.597 0 8.036c0 1.417.37 2.805 1.07 4.03L0 16l3.993-1.05a7.968 7.968 0 0 0 4.043 1.085h.003c4.44 0 8.036-3.596 8.036-8.036 0-2.147-.836-4.166-2.37-5.673ZM8.036 14.6a6.584 6.584 0 0 1-3.35-.92l-.24-.142-2.37.622.63-2.31-.155-.238a6.587 6.587 0 0 1-1.018-3.513c0-3.637 2.96-6.6 6.6-6.6 1.764 0 3.42.69 4.67 1.94a6.56 6.56 0 0 1 1.93 4.668c0 3.637-2.96 6.6-6.6 6.6Zm3.61-4.885c-.198-.1-1.17-.578-1.352-.644-.18-.066-.312-.1-.444.1-.13.197-.51.644-.626.775-.115.13-.23.15-.428.05-.198-.1-.837-.308-1.594-.983-.59-.525-.99-1.174-1.11-1.372-.116-.198-.012-.305.088-.403.09-.09.198-.23.298-.345.1-.115.132-.197.2-.33.065-.13.032-.247-.017-.345-.05-.1-.444-1.07-.61-1.46-.16-.384-.323-.332-.444-.338l-.378-.007c-.13 0-.344.048-.525.23s-.688.672-.688 1.64c0 .967.704 1.9.802 2.03.1.13 1.386 2.116 3.365 2.963.47.203.837.324 1.122.414.472.15.902.13 1.24.08.378-.057 1.17-.48 1.336-.942.165-.462.165-.858.116-.943-.048-.084-.18-.132-.378-.23Z" />
                                                                 </svg>
                                                             </Button>
-
+                                                            &nbsp;
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.code}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
@@ -955,8 +997,16 @@ function CustomerWithdrawalIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={customerwithdrawal.customer_name} maxWidth={300} />
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.amount.toFixed(2)} SAR</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerwithdrawal.payment_method}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Amount amount={trimTo2Decimals(customerwithdrawal.net_total)} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customerwithdrawal.payment_methods &&
+                                                                customerwithdrawal.payment_methods.map((name) => (
+                                                                    <><span className="badge bg-info">{name}</span>&nbsp;</>
+                                                                ))}
+
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={customerwithdrawal.description} maxWidth={300} />
                                                         </td>

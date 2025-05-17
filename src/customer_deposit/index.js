@@ -11,6 +11,8 @@ import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
 import CustomerDepositPreview from './preview.js';
+import { trimTo2Decimals } from "../utils/numberUtils";
+import Amount from "../utils/amount.js";
 
 function CustomerDepositIndex(props) {
 
@@ -177,6 +179,8 @@ function CustomerDepositIndex(props) {
             setSelectedCreatedByCustomerDeposits(values);
         } else if (field === "customer_id") {
             setSelectedCustomers(values);
+        } else if (field === "payment_methods") {
+            setSelectedPaymentMethodList(values);
         }
 
         searchParams[field] = Object.values(values)
@@ -239,7 +243,7 @@ function CustomerDepositIndex(props) {
             },
         };
         let Select =
-            "select=id,code,date,amount,payment_method,bank_reference_no,description,remarks,customer_id,customer_name,created_by_name,created_at";
+            "select=id,code,date,net_total,payment_methods,payments,bank_reference_no,description,remarks,customer_id,customer_name,created_by_name,created_at";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -325,6 +329,35 @@ function CustomerDepositIndex(props) {
         setPage(page);
         list();
     }
+
+    const paymentMethodOptions = [
+        {
+            id: "cash",
+            name: "Cash",
+        },
+        {
+            id: "debit_card",
+            name: "Debit Card",
+        },
+        {
+            id: "credit_card",
+            name: "Credit Card",
+        },
+        {
+            id: "bank_card",
+            name: "Bank Card",
+        },
+        {
+            id: "bank_transfer",
+            name: "Bank Transfer",
+        },
+        {
+            id: "bank_cheque",
+            name: "Bank Cheque",
+        },
+    ];
+
+    const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
 
     const CreateFormRef = useRef();
     function openUpdateForm(id) {
@@ -597,14 +630,14 @@ function CustomerDepositIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("amount");
+                                                            sort("net_total");
                                                         }}
                                                     >
-                                                        Amount
-                                                        {sortField === "amount" && sortCustomerDeposit === "-" ? (
+                                                        Net Total
+                                                        {sortField === "net_total" && sortCustomerDeposit === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "amount" && sortCustomerDeposit === "" ? (
+                                                        {sortField === "net_total" && sortCustomerDeposit === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -616,14 +649,14 @@ function CustomerDepositIndex(props) {
                                                             cursor: "pointer",
                                                         }}
                                                         onClick={() => {
-                                                            sort("payment_method");
+                                                            sort("payment_methods");
                                                         }}
                                                     >
-                                                        Payment Method
-                                                        {sortField === "payment_method" && sortOrder === "-" ? (
+                                                        Payment Methods
+                                                        {sortField === "payment_methods" && sortOrder === "-" ? (
                                                             <i className="bi bi-sort-alpha-up-alt"></i>
                                                         ) : null}
-                                                        {sortField === "payment_method" && sortOrder === "" ? (
+                                                        {sortField === "payment_methods" && sortOrder === "" ? (
                                                             <i className="bi bi-sort-alpha-up"></i>
                                                         ) : null}
                                                     </b>
@@ -794,22 +827,32 @@ function CustomerDepositIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="amount"
+                                                        id="net_amount"
                                                         onChange={(e) =>
-                                                            searchByFieldValue("amount", e.target.value)
+                                                            searchByFieldValue("net_total", e.target.value)
                                                         }
                                                         className="form-control"
                                                     />
                                                 </th>
                                                 <th>
-                                                    <input
-                                                        type="text"
-                                                        id="method"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("payment_method", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
+                                                    <th>
+                                                        <Typeahead
+                                                            id="payment_methods"
+                                                            filterBy={() => true}
+                                                            labelKey="name"
+                                                            onChange={(selectedItems) => {
+                                                                searchByMultipleValuesField(
+                                                                    "payment_methods",
+                                                                    selectedItems
+                                                                );
+                                                            }}
+                                                            options={paymentMethodOptions}
+                                                            placeholder="Select payment methods"
+                                                            selected={selectedPaymentMethodList}
+                                                            highlightOnlyResult={true}
+                                                            multiple
+                                                        />
+                                                    </th>
                                                 </th>
                                                 <th>
                                                     <input
@@ -954,8 +997,16 @@ function CustomerDepositIndex(props) {
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={customerdeposit.customer_name} maxWidth={300} />
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.amount.toFixed(2)} SAR</td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{customerdeposit.payment_method}</td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            <Amount amount={trimTo2Decimals(customerdeposit.net_total)} />
+                                                        </td>
+                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {customerdeposit.payment_methods &&
+                                                                customerdeposit.payment_methods.map((name) => (
+                                                                    <><span className="badge bg-info">{name}</span>&nbsp;</>
+                                                                ))}
+
+                                                        </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={customerdeposit.description} maxWidth={300} />
                                                         </td>

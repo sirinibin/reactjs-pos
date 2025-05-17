@@ -3,22 +3,16 @@ import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
-import StoreCreate from "../store/create.js";
-import Resizer from "react-image-file-resizer";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import CustomerCreate from "./../customer/create.js";
 import CustomerView from "./../customer/view.js";
 import Customers from "./../utils/customers.js";
 import CustomerDepositPreview from './preview.js';
+import { trimTo2Decimals } from "../utils/numberUtils";
 
 
 const CustomerDepositCreate = forwardRef((props, ref) => {
-
-    //Store Auto Suggestion
-    let [selectedStores, setSelectedStores] = useState([]);
-    const isStoresLoading = false;
-
     useImperativeHandle(ref, () => ({
         open(id) {
             formData = {
@@ -65,27 +59,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     }, []);
 
 
-    function resizeFIle(file, w, h, cb) {
-        Resizer.imageFileResizer(
-            file,
-            w,
-            h,
-            "JPEG",
-            100,
-            0,
-            (uri) => {
-                cb(uri);
-            },
-            "base64"
-        );
-    }
-
-    let [selectedImage, setSelectedImage] = useState("");
-
-
-    let [storeOptions, setStoreOptions] = useState([]);
-
-    let selectedCategories = [];
 
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
@@ -95,6 +68,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     let [formData, setFormData] = useState({
         images_content: [],
         date_str: new Date(),
+        payments: [],
     });
 
     const [show, SetShow] = useState(false);
@@ -139,6 +113,15 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 formData = data.result;
                 formData.date_str = data.result.date;
 
+
+                if (data.result?.payments) {
+                    formData.payments = data.result.payments;
+                    for (var i = 0; i < formData.payments?.length; i++) {
+                        formData.payments[i].date_str = formData.payments[i].date
+                    }
+                }
+                findTotalPayments();
+
                 if (formData.customer_name && formData.customer_id) {
                     let selectedCustomers = [
                         {
@@ -150,14 +133,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                     setSelectedCustomers([...selectedCustomers]);
                 }
 
-                let selectedStores = [
-                    {
-                        id: formData.store_id,
-                        name: formData.store_name,
-                    }
-                ];
-                setSelectedStores([...selectedStores]);
-
                 formData.images_content = [];
                 setFormData({ ...formData });
             })
@@ -167,39 +142,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             });
     }
 
-    async function suggestStores(searchTerm) {
-        console.log("Inside handle suggest Stores");
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: localStorage.getItem("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(
-            "/v1/store?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setStoreOptions(data.result);
-    }
 
     useEffect(() => {
         let at = localStorage.getItem("access_token");
@@ -267,10 +209,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     function handleCreate(event) {
         event.preventDefault();
         console.log("Inside handle Create");
-
-        formData.category_id = [];
-        for (var i = 0; i < selectedCategories.length; i++) {
-            formData.category_id.push(selectedCategories[i].id);
+        if (!validatePaymentAmounts()) {
+            return;
         }
 
 
@@ -330,7 +270,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("CustomerDeposit Created Successfully!", "success");
+                props.showToastMessage("Created Successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -340,43 +280,105 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
             })
             .catch((error) => {
                 setProcessing(false);
-                console.log("Inside catch");
-                console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating CustomerDeposit!", "danger");
+                props.showToastMessage("Error Creating!", "danger");
             });
     }
 
 
+    function addNewPayment() {
+        let date = new Date();
+        if (!formData.id) {
+            date = formData.date_str;
+        }
 
+        if (!formData.payments) {
+            formData.payments = [];
+        }
 
-
-
-
-
-    function getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight) {
-
-        let ratio = parseFloat(originaleWidth / originalHeight);
-
-        targetWidth = parseInt(targetHeight * ratio);
-        targetHeight = parseInt(targetWidth * ratio);
-
-        return { targetWidth: targetWidth, targetHeight: targetHeight };
+        formData.payments.push({
+            "date_str": date,
+            // "amount": "",
+            "amount": 0.00,
+            "method": "",
+            "deleted": false,
+        });
+        setFormData({ ...formData });
+        findTotalPayments();
     }
 
-    /*
-    const DetailsViewRef = useRef();
-    function openDetailsView(id) {
-        console.log("id:", id);
-        DetailsViewRef.current.open(id);
-    }
-    */
 
-    const StoreCreateFormRef = useRef();
-    function openStoreCreateForm() {
-        StoreCreateFormRef.current.open();
+    function validatePaymentAmounts() {
+        errors = {};
+        setErrors({ ...errors });
+
+        let haveErrors = false;
+
+        if (!formData.payments || formData.payments?.length === 0) {
+            errors["payments"] = "At lease one payment is required";
+            setErrors({ ...errors });
+            haveErrors = true;
+        }
+
+        for (var key = 0; key < formData.payments?.length; key++) {
+            errors["customer_receivable_payment_amount_" + key] = "";
+            errors["customer_receivable_payment_date_" + key] = "";
+            errors["customer_receivable_payment_method_" + key] = "";
+            setErrors({ ...errors });
+
+            if (!formData.payments[key].amount) {
+                errors["customer_receivable_payment_amount_" + key] = "Payment amount is required";
+                setErrors({ ...errors });
+                haveErrors = true;
+            } else if (formData.payments[key].amount <= 0) {
+                errors["customer_receivable_payment_amount_" + key] = "Amount should be greater than zero";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+
+            if (!formData.payments[key].date_str) {
+                errors["customer_receivable_payment_date_" + key] = "Payment date is required";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+
+            if (!formData.payments[key].method) {
+                errors["customer_receivable_payment_method_" + key] = "Payment method is required";
+                setErrors({ ...errors });
+                haveErrors = true;
+            }
+        }
+
+        if (haveErrors) {
+            return false;
+        }
+
+        return true;
     }
+
+    let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
+
+    function findTotalPayments() {
+        console.log("Inisde findTotalPayments")
+        let totalPayment = 0.00;
+        for (var i = 0; i < formData.payments?.length; i++) {
+            if (formData.payments[i].amount && !formData.payments[i].deleted) {
+                totalPayment += formData.payments[i].amount;
+            }
+        }
+
+        totalPaymentAmount = totalPayment;
+        setTotalPaymentAmount(totalPaymentAmount);
+        return totalPayment;
+    }
+
+    function removePayment(key) {
+        formData.payments.splice(key, 1);
+        setFormData({ ...formData });
+        findTotalPayments()
+    }
+
 
     const CustomerCreateFormRef = useRef();
     function openCustomerCreateForm() {
@@ -413,7 +415,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         <>
             <CustomerDepositPreview ref={PreviewRef} />
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
-            <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
 
@@ -463,96 +464,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        {!localStorage.getItem('store_name') ? <div className="col-md-6">
-                            <label className="form-label">Store*</label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="store_id"
-                                    labelKey="name"
-                                    isLoading={isStoresLoading}
-                                    filterBy={() => true}
-                                    isInvalid={errors.store_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.store_id = "";
-                                        errors["product_id"] = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.store_id = "Invalid Store selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedStores([]);
-                                            return;
-                                        }
-                                        formData.store_id = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        console.log("formData.store_id:", formData.store_id);
-                                        selectedStores = selectedItems;
-                                        setSelectedStores([...selectedItems]);
-                                    }
-                                    }
-                                    options={storeOptions}
-                                    placeholder="Select Store"
-                                    selected={selectedStores}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestStores(searchTerm);
-                                    }}
-                                />
-
-                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                <div style={{ color: "red" }}>
-                                    <i className="bi x-lg"> </i>
-                                    {errors.store_id}
-                                </div>
-                            </div>
-                        </div> : ""}
-
-                        {!localStorage.getItem('store_name') ? <div className="col-md-6">
-                            <label className="form-label">Store*</label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="store_id"
-                                    labelKey="name"
-                                    isLoading={isStoresLoading}
-                                    filterBy={() => true}
-                                    isInvalid={errors.store_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.store_id = "";
-                                        errors["product_id"] = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.store_id = "Invalid Store selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedStores([]);
-                                            return;
-                                        }
-                                        formData.store_id = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        console.log("formData.store_id:", formData.store_id);
-                                        selectedStores = selectedItems;
-                                        setSelectedStores([...selectedItems]);
-                                    }
-                                    }
-                                    options={storeOptions}
-                                    placeholder="Select Store"
-                                    selected={selectedStores}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestStores(searchTerm);
-                                    }}
-                                />
-
-                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                <div style={{ color: "red" }}>
-                                    <i className="bi x-lg"> </i>
-                                    {errors.store_id}
-                                </div>
-                            </div>
-                        </div> : ""}
-
                         <div className="col-md-6" style={{ border: "solid 0px" }}>
                             <label className="form-label">Customer*</label>
                             <Typeahead
@@ -603,37 +514,10 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                         </div>
                         <div className="col-md-1">
                             <Button className="btn btn-primary" style={{ marginTop: "30px" }} onClick={openCustomers}>
-                                <i class="bi bi-list"></i>
+                                <i className="bi bi-list"></i>
                             </Button>
                         </div>
 
-                        <div className="col-md-3">
-                            <label className="form-label">ID</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    id="customer_deposit_code"
-                                    name="customer_deposit_code"
-                                    value={formData.code ? formData.code : ""}
-                                    type='string'
-                                    onChange={(e) => {
-                                        errors["code"] = "";
-                                        setErrors({ ...errors });
-                                        formData.code = e.target.value;
-                                        setFormData({ ...formData });
-                                        console.log(formData);
-                                    }}
-                                    className="form-control"
-
-                                    placeholder="ID"
-                                />
-                            </div>
-                            {errors.code && (
-                                <div style={{ color: "red" }}>
-                                    {errors.code}
-                                </div>
-                            )}
-                        </div>
                         <div className="col-md-3">
                             <label className="form-label">Date*</label>
 
@@ -665,7 +549,227 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                             </div>
                         </div>
 
-                        <div className="col-md-3">
+
+                        <div className="col-md-12">
+                            <label className="form-label">Payments</label>
+                            {errors.payments && (
+                                <div style={{ color: "red" }}>
+                                    {errors.payments}
+                                </div>
+                            )}
+
+                            <div className="table-responsive" style={{}}>
+                                <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
+                                    Create new payment
+                                </Button>
+                                <table className="table table-striped table-sm table-bordered">
+                                    {formData.payments && formData.payments.length > 0 &&
+                                        <thead>
+                                            <th>
+                                                Date
+                                            </th>
+                                            <th>
+                                                Amount
+                                            </th>
+                                            <th>
+                                                Payment method
+                                            </th>
+                                            <th>
+                                                Bank Reference #
+                                            </th>
+                                            <th>
+                                                Description
+                                            </th>
+                                            <th>
+                                                Action
+                                            </th>
+                                        </thead>}
+                                    <tbody>
+                                        {formData.payments &&
+                                            formData.payments.filter(payment => !payment.deleted).map((payment, key) => (
+                                                <tr key={key}>
+                                                    <td style={{ minWidth: "220px" }}>
+
+                                                        <DatePicker
+                                                            id="payment_date_str"
+                                                            selected={formData.payments[key].date_str ? new Date(formData.payments[key].date_str) : null}
+                                                            value={formData.payments[key].date_str ? format(
+                                                                new Date(formData.payments[key].date_str),
+                                                                "MMMM d, yyyy h:mm aa"
+                                                            ) : null}
+                                                            className="form-control"
+                                                            dateFormat="MMMM d, yyyy h:mm aa"
+                                                            showTimeSelect
+                                                            timeIntervals="1"
+                                                            onChange={(value) => {
+                                                                console.log("Value", value);
+                                                                formData.payments[key].date_str = value;
+                                                                setFormData({ ...formData });
+                                                            }}
+                                                        />
+                                                        {errors["customer_receivable_payment_date_" + key] && (
+                                                            <div style={{ color: "red" }}>
+
+                                                                {errors["customer_receivable_payment_date_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "300px" }}>
+                                                        <input type='number' id={`${"customer_receivable_payment_amount_" + key}`} name={`${"customer_receivable_payment_amount_" + key}`} value={formData.payments[key].amount} className="form-control "
+                                                            onChange={(e) => {
+                                                                errors["customer_receivable_payment_amount_" + key] = "";
+                                                                setErrors({ ...errors });
+
+                                                                if (!e.target.value) {
+                                                                    formData.payments[key].amount = e.target.value;
+                                                                    setFormData({ ...formData });
+                                                                    findTotalPayments();
+                                                                    //  validatePaymentAmounts();
+                                                                    return;
+                                                                }
+
+                                                                formData.payments[key].amount = parseFloat(e.target.value);
+
+                                                                // validatePaymentAmounts();
+                                                                findTotalPayments();
+                                                                setFormData({ ...formData });
+                                                                console.log(formData);
+                                                            }}
+                                                        />
+                                                        {errors["customer_receivable_payment_amount_" + key] && (
+                                                            <div style={{ color: "red" }}>
+
+                                                                {errors["customer_receivable_payment_amount_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        <select
+                                                            id={`${"customer_receivable_payment_method_" + key}`} name={`${"customer_receivable_payment_method_" + key}`}
+                                                            value={formData.payments[key].method} className="form-control "
+                                                            onChange={(e) => {
+                                                                // errors["payment_method"] = [];
+                                                                errors["customer_receivable_payment_method_" + key] = "";
+                                                                setErrors({ ...errors });
+
+                                                                if (!e.target.value) {
+                                                                    errors["customer_receivable_payment_method_" + key] = "Payment method is required";
+                                                                    setErrors({ ...errors });
+
+                                                                    formData.payments[key].method = "";
+                                                                    setFormData({ ...formData });
+                                                                    return;
+                                                                }
+
+
+                                                                formData.payments[key].method = e.target.value;
+                                                                setFormData({ ...formData });
+                                                                console.log(formData);
+                                                            }}
+                                                        >
+                                                            <option value="">Select</option>
+                                                            <option value="cash">Cash</option>
+                                                            <option value="debit_card">Debit Card</option>
+                                                            <option value="credit_card">Credit Card</option>
+                                                            <option value="bank_card">Bank Card</option>
+                                                            <option value="bank_transfer">Bank Transfer</option>
+                                                            <option value="bank_cheque">Bank Cheque</option>
+                                                        </select>
+                                                        {errors["customer_receivable_payment_method_" + key] && (
+                                                            <div style={{ color: "red" }}>
+
+                                                                {errors["customer_receivable_payment_method_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "300px" }}>
+                                                        <input type='text' id={`${"customer_receivable_bank_reference_" + key}`} name={`${"customer_receivable_bank_reference_" + key}`}
+                                                            value={formData.payments[key].bank_reference} className="form-control "
+                                                            onChange={(e) => {
+                                                                errors["customer_receivable_bank_reference_" + key] = "";
+                                                                setErrors({ ...errors });
+
+                                                                if (!e.target.value) {
+                                                                    formData.payments[key].bank_reference = e.target.value;
+                                                                    setFormData({ ...formData });
+
+                                                                    return;
+                                                                }
+
+                                                                formData.payments[key].bank_reference = e.target.value;
+                                                                setFormData({ ...formData });
+                                                            }}
+                                                        />
+                                                        {errors["customer_receivable_bank_reference_" + key] && (
+                                                            <div style={{ color: "red" }}>
+                                                                {errors["customer_receivable_bank_reference_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "300px" }}>
+                                                        <input type='text' id={`${"customer_receivable_description_" + key}`} name={`${"customer_receivable_description_" + key}`}
+                                                            value={formData.payments[key].description} className="form-control "
+                                                            onChange={(e) => {
+                                                                errors["customer_receivable_description_" + key] = "";
+                                                                setErrors({ ...errors });
+
+                                                                if (!e.target.value) {
+                                                                    formData.payments[key].description = e.target.value;
+                                                                    setFormData({ ...formData });
+
+                                                                    return;
+                                                                }
+
+                                                                formData.payments[key].description = e.target.value;
+                                                                setFormData({ ...formData });
+                                                            }}
+                                                        />
+                                                        {errors["customer_receivable_description_" + key] && (
+                                                            <div style={{ color: "red" }}>
+                                                                {errors["customer_receivable_description_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ width: "200px" }}>
+                                                        <Button variant="danger" onClick={(event) => {
+                                                            removePayment(key);
+                                                        }}>
+                                                            Remove
+                                                        </Button>
+
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        <tr>
+                                            <td className="text-end">
+                                                <b>Net Total</b>
+                                            </td>
+                                            <td><b style={{ marginLeft: "14px" }}>{trimTo2Decimals(totalPaymentAmount)}</b>
+                                                {errors["total_payment"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["total_payment"]}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td>
+                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}></b>
+                                                {errors["customer_credit_limit"] && (
+                                                    <div style={{ color: "red" }}>
+                                                        {errors["customer_credit_limit"]}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td colSpan={1}>
+
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+
+                        {/*<div className="col-md-3">
                             <label className="form-label">Amount*</label>
 
                             <div className="input-group mb-3">
@@ -786,7 +890,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </div>*/}
                         <div className="col-md-3">
                             <label className="form-label">Remarks</label>
                             <div className="input-group mb-3">
@@ -811,91 +915,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
-
-
-
-
-                        <div className="col-md-6">
-                            <label className="form-label">Image</label>
-
-                            <div className="input-group mb-3">
-                                <input
-                                    value={selectedImage ? selectedImage : ""}
-                                    type='file'
-                                    onChange={(e) => {
-                                        errors["image"] = "";
-                                        setErrors({ ...errors });
-
-                                        if (!e.target.value) {
-                                            errors["image"] = "Invalid Image File";
-                                            setErrors({ ...errors });
-                                            return;
-                                        }
-
-                                        selectedImage = e.target.value;
-                                        setSelectedImage(selectedImage);
-
-                                        let file = document.querySelector('#image').files[0];
-
-
-                                        let targetHeight = 400;
-                                        let targetWidth = 400;
-
-
-                                        let url = URL.createObjectURL(file);
-                                        let img = new Image();
-
-                                        img.onload = function () {
-                                            let originaleWidth = img.width;
-                                            let originalHeight = img.height;
-
-                                            let targetDimensions = getTargetDimension(originaleWidth, originalHeight, targetWidth, targetHeight);
-                                            targetWidth = targetDimensions.targetWidth;
-                                            targetHeight = targetDimensions.targetHeight;
-
-                                            resizeFIle(file, targetWidth, targetHeight, (result) => {
-                                                formData.images_content = [];
-                                                formData.images_content[0] = result;
-                                                setFormData({ ...formData });
-
-                                                console.log("formData.images_content[0]:", formData.images_content[0]);
-                                            });
-                                        };
-                                        img.src = url;
-
-
-                                        /*
-                                        resizeFIle(file, (result) => {
-                                            if (!formData.images_content) {
-                                                formData.images_content = [];
-                                            }
-                                            formData.images_content[0] = result;
-                                            setFormData({ ...formData });
-    
-                                            console.log("formData.images_content[0]:", formData.images_content[0]);
-                                        });
-                                        */
-                                    }}
-                                    className="form-control"
-                                    id="image"
-                                />
-                                {errors.image && (
-                                    <div style={{ color: "red" }}>
-                                        <i className="bi bi-x-lg"> </i>
-                                        {errors.image}
-                                    </div>
-                                )}
-                                {formData.image && !errors.image && (
-                                    <div style={{ color: "green" }}>
-                                        <i className="bi bi-check-lg"> </i>
-                                        Looks good!
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-
-
                         <Modal.Footer>
                             <Button variant="secondary" onClick={handleClose}>
                                 Close

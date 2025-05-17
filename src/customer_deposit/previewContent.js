@@ -213,7 +213,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                             >
                                 <thead style={{ fontSize: "2.2mm" }} className="fw-bold">
                                     <tr style={{}}>
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "5%" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "8%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -224,7 +224,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <li>SI No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "13%" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "42%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -236,7 +236,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             </ul>
                                         </th>
 
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "4%" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "10%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -247,7 +247,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <li>Payment Mode</li>
                                             </ul>
                                         </th>
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "4%" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "27%" }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -273,19 +273,21 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                     </tr>
                                 </thead>
                                 <tbody style={{ fontSize: "2.2mm" }} className="fw-bold" >
-                                    <tr className="text-center"  >
-                                        <td style={{ padding: "1px", height: "16px" }}>{1}</td>
-                                        <td style={{ padding: "1px" }}>
-                                            {props.model.modelName === "customer_deposit" ? "Payment Received" : ""}
-                                            {props.model.modelName === "customer_withdrawal" ? "Paid" : ""}
-                                            {props.model.customer?.name && props.model.modelName === "customer_deposit" ? " from " + props.model.customer.name : ""}
-                                            {props.model.customer?.name && props.model.modelName === "customer_withdrawal" ? " to " + props.model.customer.name : ""}
-                                            {props.model.description ? " | " + props.model.description : ""}
-                                        </td>
-                                        <td style={{ padding: "1px" }} className="text-end">{props.model.payment_method ? GetPaymentMode(props.model.payment_method) : ""} </td>
-                                        <td style={{ padding: "1px" }} className="text-end">{props.model.bank_reference_no ? props.model.bank_reference_no : ""} </td>
-                                        <td style={{ padding: "1px", textAlign: "right" }}> {props.model.amount ? <Amount amount={trimTo2Decimals(props.model.amount)} /> : ""}</td>
-                                    </tr>
+                                    {props.model.payments && props.model.payments.map((payment, index) => (
+                                        <tr className="text-center"  >
+                                            <td style={{ padding: "1px", height: "16px" }}>{(index + 1)}</td>
+                                            <td style={{ padding: "1px" }}>
+                                                {props.model.modelName === "customer_deposit" ? "Payment Received" : ""}
+                                                {props.model.modelName === "customer_withdrawal" ? "Paid" : ""}
+                                                {props.model.customer?.name && props.model.modelName === "customer_deposit" ? " from " + props.model.customer.name : ""}
+                                                {props.model.customer?.name && props.model.modelName === "customer_withdrawal" ? " to " + props.model.customer.name : ""}
+                                                {payment.description ? " | " + payment.description : ""}
+                                            </td>
+                                            <td style={{ padding: "1px" }} className="text-center">{payment.method ? GetPaymentMode(payment.method) : ""} </td>
+                                            <td style={{ padding: "1px" }} className="text-center">{payment.bank_reference ? payment.bank_reference : ""} </td>
+                                            <td style={{ padding: "1px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals(payment.amount)} /> : ""}</td>
+                                        </tr>
+                                    ))}
                                 </tbody>
 
                                 <tfoot style={{ fontSize: "2.2mm" }} className="fw-bold">
@@ -319,7 +321,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             </ul>
                                         </th>
                                     </tr>
-                                    {props.model.remarks ? <tr>
+                                    <tr>
                                         <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
                                             Remarks ملاحظات:
                                         </th>
@@ -331,7 +333,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             {props.model.remarks ? props.model.remarks : ""}
                                         </th>
 
-                                    </tr> : ""}
+                                    </tr>
                                 </tfoot>
                             </table>
 

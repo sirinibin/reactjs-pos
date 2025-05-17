@@ -72,7 +72,6 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
 
                 model.pages = [];
                 model.products = [{}];
-                model.net_total = model.amount;
 
 
                 let offset = 0;
@@ -585,6 +584,11 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     };
 
     function formatModelName(str) {
+        if (str === "customer_deposit") {
+            return "Customer Receivable"
+        } else if (str === "customer_withdrawal") {
+            return "Customer Payable"
+        }
         return str
             .replace(/_/g, ' ')                   // Replace _ with space
             .split(' ')                            // Split by spaces
