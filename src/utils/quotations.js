@@ -1083,7 +1083,7 @@ const Quotations = forwardRef((props, ref) => {
                                                     <thead>
                                                         <tr className="text-center">
                                                             <th></th>
-
+                                                            <th></th>
                                                             <th>
                                                                 <input
                                                                     type="text"
@@ -1095,6 +1095,7 @@ const Quotations = forwardRef((props, ref) => {
                                                                     className="form-control"
                                                                 />
                                                             </th>
+
                                                             <th>
                                                                 <DatePicker
                                                                     id="date_str"
@@ -1438,7 +1439,7 @@ const Quotations = forwardRef((props, ref) => {
                                                                             <i className="bi bi-eye"></i>
                                                                         </Button>
                                                                     </td>
-                                                                    {enableSelection && <td>
+                                                                    {enableSelection && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         <Button className="btn btn-success btn-sm" onClick={() => {
                                                                             handleSelected(quotation);
                                                                         }}>

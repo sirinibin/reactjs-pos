@@ -270,19 +270,20 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Created Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Created Successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
 
                 handleClose();
-                props.openDetailsView(data.result.id);
+                if (props.openDetailsView)
+                    props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Error Creating!", "danger");
             });
     }
 
@@ -436,7 +437,8 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
                         {formData.id ? <Button variant="primary" onClick={() => {
                             handleClose();
-                            props.openDetailsView(formData.id);
+                            if (props.openDetailsView)
+                                props.openDetailsView(formData.id);
                         }}>
                             <i className="bi bi-eye"></i> View Detail
                         </Button> : ""}

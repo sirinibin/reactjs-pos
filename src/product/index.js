@@ -717,7 +717,7 @@ function ProductIndex(props) {
                     return Promise.reject(error);
                 }
 
-                props.showToastMessage("Product restored successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Product restored successfully!", "success");
                 list();
             })
             .catch((error) => {
@@ -758,7 +758,7 @@ function ProductIndex(props) {
                     return Promise.reject(error);
                 }
 
-                props.showToastMessage("Product deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Product deleted successfully!", "success");
                 list();
             })
             .catch((error) => {

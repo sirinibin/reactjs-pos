@@ -598,15 +598,16 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         console.log("Response:");
         console.log(data);
         if (formData.id) {
-          props.showToastMessage("Delivery note updated successfully!", "success");
+          if (props.showToastMessage) props.showToastMessage("Delivery note updated successfully!", "success");
         } else {
-          props.showToastMessage("Delivery note created successfully!", "success");
+          if (props.showToastMessage) props.showToastMessage("Delivery note created successfully!", "success");
         }
         if (props.refreshList) {
           props.refreshList();
         }
         handleClose();
-        props.openDetailsView(data.result.id);
+        if (props.openDetailsView)
+          props.openDetailsView(data.result.id);
       })
       .catch((error) => {
         setProcessing(false);
@@ -614,7 +615,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
-        props.showToastMessage("Failed to process delivery note!", "danger");
+        if (props.showToastMessage) props.showToastMessage("Failed to process delivery note!", "danger");
       });
   }
 
@@ -883,7 +884,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
 
-    // props.showToastMessage("Successfully Added " + selected.length + " products", "success");
+    // if(props.showToastMessage) props.showToastMessage("Successfully Added " + selected.length + " products", "success");
   };
   */
 
@@ -1040,7 +1041,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
             &nbsp;&nbsp; &nbsp;&nbsp; &nbsp;&nbsp;
             {formData.id ? <Button variant="primary" onClick={() => {
               handleClose();
-              props.openDetailsView(formData.id);
+              if (props.openDetailsView)
+                props.openDetailsView(formData.id);
             }}>
               <i className="bi bi-eye"></i> View Detail
             </Button> : ""}

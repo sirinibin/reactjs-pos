@@ -871,9 +871,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 if (formData.id) {
-                    props.showToastMessage("Sales return updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("Sales return updated successfully!", "success");
                 } else {
-                    props.showToastMessage("Sales return created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("Sales return created successfully!", "success");
                 }
 
                 if (props.refreshList) {
@@ -893,7 +893,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Failed to process sales return!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Failed to process sales return!", "danger");
             });
     }
 

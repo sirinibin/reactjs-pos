@@ -262,9 +262,9 @@ const VendorCreate = forwardRef((props, ref) => {
                     setProcessing(false);
 
                     if (formData.id) {
-                        props.showToastMessage("Vendor updated successfully!", "success");
+                        if (props.showToastMessage) props.showToastMessage("Vendor updated successfully!", "success");
                     } else {
-                        props.showToastMessage("Vendor created successfully!", "success");
+                        if (props.showToastMessage) props.showToastMessage("Vendor created successfully!", "success");
                     }
 
                     if (props.refreshList) {
@@ -272,7 +272,8 @@ const VendorCreate = forwardRef((props, ref) => {
                     }
 
                     handleClose();
-                    props.openDetailsView(data.result.id);
+                    if (props.openDetailsView)
+                        props.openDetailsView(data.result.id);
 
                 }, 300);
 
@@ -284,7 +285,7 @@ const VendorCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Failed to process vendor!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Failed to process vendor!", "danger");
             });
     }
 
@@ -313,7 +314,8 @@ const VendorCreate = forwardRef((props, ref) => {
                     <div className="col align-self-end text-end">
                         {formData.id ? <Button variant="primary" onClick={() => {
                             handleClose();
-                            props.openDetailsView(formData.id);
+                            if (props.openDetailsView)
+                                props.openDetailsView(formData.id);
                         }}>
                             <i className="bi bi-eye"></i> View Detail
                         </Button> : ""}

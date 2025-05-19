@@ -402,7 +402,7 @@ function PurchasePaymentIndex(props) {
                 }
 
 
-                props.showToastMessage("Purchase payment deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Purchase payment deleted successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }

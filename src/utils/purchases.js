@@ -1858,7 +1858,7 @@ const Purchases = forwardRef((props, ref) => {
 
 
                                                                     </td>
-                                                                    <td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         <Button className="btn btn-success btn-sm" onClick={() => {
                                                                             handleSelected(purchase);
                                                                         }}>

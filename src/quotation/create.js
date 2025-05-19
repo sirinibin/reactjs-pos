@@ -859,16 +859,17 @@ const QuotationCreate = forwardRef((props, ref) => {
         console.log("Response:");
         console.log(data);
         if (formData.id) {
-          props.showToastMessage("Quotation updated successfully!", "success");
+          if (props.showToastMessage) props.showToastMessage("Quotation updated successfully!", "success");
         } else {
-          props.showToastMessage("Quotation created successfully!", "success");
+          if (props.showToastMessage) props.showToastMessage("Quotation created successfully!", "success");
         }
 
         if (props.refreshList) {
           props.refreshList();
         }
         handleClose();
-        props.openDetailsView(data.result.id);
+        if (props.openDetailsView)
+          props.openDetailsView(data.result.id);
       })
       .catch((error) => {
         setProcessing(false);
@@ -876,7 +877,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
-        props.showToastMessage("Failed to process quotation!", "danger");
+        if (props.showToastMessage) props.showToastMessage("Failed to process quotation!", "danger");
       });
   }
 
@@ -1416,7 +1417,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
 
-    // props.showToastMessage("Successfully Added " + selected.length + " products", "success");
+    // if(props.showToastMessage) props.showToastMessage("Successfully Added " + selected.length + " products", "success");
   };*/
 
   const [showToast, setShowToast] = useState(false);

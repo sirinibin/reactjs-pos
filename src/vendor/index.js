@@ -343,7 +343,7 @@ function VendorIndex(props) {
                     return Promise.reject(error);
                 }
 
-                props.showToastMessage("Vendor restored successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Vendor restored successfully!", "success");
                 list();
             })
             .catch((error) => {
@@ -384,7 +384,7 @@ function VendorIndex(props) {
                     return Promise.reject(error);
                 }
 
-                props.showToastMessage("Vendor deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Vendor deleted successfully!", "success");
                 list();
             })
             .catch((error) => {

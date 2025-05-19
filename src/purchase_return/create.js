@@ -636,9 +636,9 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 if (formData.id) {
-                    props.showToastMessage("Purchase return updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("Purchase return updated successfully!", "success");
                 } else {
-                    props.showToastMessage("Purchase return created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("Purchase return created successfully!", "success");
                 }
 
                 if (props.refreshList) {
@@ -658,7 +658,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Failed to process purchase return!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Failed to process purchase return!", "danger");
             });
     }
 

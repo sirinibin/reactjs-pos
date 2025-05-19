@@ -110,7 +110,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Store Connected to Zatca Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Store Connected to Zatca Successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
@@ -122,7 +122,7 @@ const ZatcaConnect = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Connecting to Zatca!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Error Connecting to Zatca!", "danger");
             });
     }
 

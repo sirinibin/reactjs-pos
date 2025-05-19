@@ -47,6 +47,24 @@ const TimeAgo = ({ date }) => {
 const Sales = forwardRef((props, ref) => {
     const [show, SetShow] = useState(false);
 
+    useImperativeHandle(ref, () => ({
+        open(selectedCustomers, selectedPaymentStatusList) {
+            ResetSearchParams();
+
+            if (selectedCustomers?.length > 0) {
+                searchByMultipleValuesField("customer_id", selectedCustomers, true)
+            }
+
+            if (selectedPaymentStatusList) {
+                searchByMultipleValuesField("payment_status", selectedPaymentStatusList, true)
+            }
+
+            list();
+
+            SetShow(true);
+        },
+    }));
+
     function handleClose() {
         SetShow(false);
     };
@@ -58,21 +76,6 @@ const Sales = forwardRef((props, ref) => {
             }
         }
     }
-    //let [order, setOrder] = useState({});
-
-    useImperativeHandle(ref, () => ({
-        open(selectedCustomers) {
-            ResetSearchParams();
-            if (selectedCustomers?.length > 0) {
-                setSelectedCustomers(selectedCustomers)
-                searchByMultipleValuesField("customer_id", selectedCustomers);
-            } else {
-                list();
-            }
-
-            SetShow(true);
-        },
-    }));
 
     let [allOrders, setAllOrders] = useState([]);
     let [excelData, setExcelData] = useState([]);
@@ -857,7 +860,7 @@ const Sales = forwardRef((props, ref) => {
         list();
     }
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
         } else if (field === "customer_id") {
@@ -877,7 +880,9 @@ const Sales = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        list();
+        if (!noList) {
+            list();
+        }
     }
 
 
@@ -1150,7 +1155,7 @@ const Sales = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Invoice reported successfully to Zatca!", "success");
+                if (props.showToastMessage) props.showToastMessage("Invoice reported successfully to Zatca!", "success");
                 setShowSuccess(true);
                 setSuccessMessage("Successfully Reported to Zatca!")
                 list();
@@ -1166,7 +1171,7 @@ const Sales = forwardRef((props, ref) => {
                 setErrors({ ...error });
                 // setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
                 list();
             });
     }
@@ -2219,7 +2224,7 @@ const Sales = forwardRef((props, ref) => {
                                                                             <i className="bi bi-eye"></i>
                                                                         </Button>
                                                                     </td>
-                                                                    <td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         <Button className="btn btn-success btn-sm" onClick={() => {
                                                                             handleSelected(order);
                                                                         }}>

@@ -192,13 +192,14 @@ const SignatureCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Signature Created Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Signature Created Successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
 
                 handleClose();
-                props.openDetailsView(data.result.id);
+                if (props.openDetailsView)
+                    props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -206,7 +207,7 @@ const SignatureCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating Signature!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Error Creating Signature!", "danger");
             });
     }
 
@@ -232,7 +233,8 @@ const SignatureCreate = forwardRef((props, ref) => {
                     <div className="col align-self-end text-end">
                         {formData.id ? <Button variant="primary" onClick={() => {
                             handleClose();
-                            props.openDetailsView(formData.id);
+                            if (props.openDetailsView)
+                                props.openDetailsView(formData.id);
                         }}>
                             <i className="bi bi-eye"></i> View Detail
                         </Button> : ""}

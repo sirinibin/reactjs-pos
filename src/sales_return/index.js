@@ -180,7 +180,7 @@ function SalesReturnIndex(props) {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Invoice reported successfully to Zatca!", "success");
+                if (props.showToastMessage) props.showToastMessage("Invoice reported successfully to Zatca!", "success");
                 setShowSuccess(true);
                 setSuccessMessage("Successfully Reported to Zatca!")
                 list();
@@ -196,7 +196,7 @@ function SalesReturnIndex(props) {
                 setErrors({ ...error });
                 // setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Invoice reporting to Zatca failed!", "danger");
                 list();
             });
     }

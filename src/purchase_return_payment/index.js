@@ -365,7 +365,7 @@ function PurchaseReturnPaymentIndex(props) {
                 }
 
 
-                props.showToastMessage("Purchase return payment deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Purchase return payment deleted successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }

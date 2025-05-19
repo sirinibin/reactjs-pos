@@ -892,7 +892,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
                                                         {deliverynoteList &&
                                                             deliverynoteList.map((deliverynote) => (
                                                                 <tr key={deliverynote.code}>
-                                                                    <td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         <Button className="btn btn-success btn-sm" onClick={() => {
                                                                             handleSelected(deliverynote);
                                                                         }}>

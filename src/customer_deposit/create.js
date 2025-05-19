@@ -8,9 +8,12 @@ import { format } from "date-fns";
 import CustomerCreate from "./../customer/create.js";
 import CustomerView from "./../customer/view.js";
 import Customers from "./../utils/customers.js";
+import Sales from "./../utils/sales.js";
 import CustomerDepositPreview from './preview.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
-
+import OrderCreate from "./../order/create.js";
+import { confirm } from 'react-bootstrap-confirmation';
+import InfoDialog from './../utils/InfoDialog';
 
 const CustomerDepositCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
@@ -270,19 +273,20 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Created Successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Created Successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }
 
                 handleClose();
-                props.openDetailsView(data.result.id);
+                if (props.openDetailsView)
+                    props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Creating!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Error Creating!", "danger");
             });
     }
 
@@ -402,6 +406,59 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
     };
 
+    const SalesRef = useRef();
+    function openSales(paymentIndex) {
+        selectedPaymentIndex = paymentIndex;
+        setSelectedPaymentIndex(selectedPaymentIndex);
+        let selectedPaymentStatusList = [
+            {
+                id: "not_paid",
+                name: "Not Paid",
+            },
+            {
+                id: "paid_partially",
+                name: "Paid partially",
+            }
+        ];
+        SalesRef.current.open(selectedCustomers, selectedPaymentStatusList);
+    }
+
+    let [selectedPaymentIndex, setSelectedPaymentIndex] = useState(null);
+    let [showInfo, setShowInfo] = useState(false);
+    let [infoMessage, setInfoMessage] = useState("");
+
+    const handleSelectedSale = (selectedSale) => {
+        console.log("selectedSale:", selectedSale);
+        if (selectedSale.payment_status === "paid") {
+            infoMessage = "The selected invoice is already paid";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+        // setSelectedCustomers([selectedCustomer])
+        formData.payments[selectedPaymentIndex].invoice_type = "sales";
+        formData.payments[selectedPaymentIndex].invoice_id = selectedSale.id;
+        formData.payments[selectedPaymentIndex].invoice_code = selectedSale.code;
+        formData.payments[selectedPaymentIndex].amount = selectedSale.balance_amount;
+        findTotalPayments();
+        setFormData({ ...formData });
+    };
+
+
+
+    const confirmInvoiceRemoval = async (paymentIndex) => {
+        const result = await confirm('Are you sure, you want to remove this invoice from this payment?');
+        console.log(result);
+        if (result) {
+            formData.payments[paymentIndex].invoice_type = "";
+            formData.payments[paymentIndex].invoice_id = "";
+            formData.payments[paymentIndex].invoice_code = "";
+            setFormData({ ...formData });
+        }
+    };
+
+
 
     const PreviewRef = useRef();
     function openPreview() {
@@ -411,14 +468,25 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         PreviewRef.current.open(formData, undefined, "customer_deposit");
     }
 
+    const SalesUpdateFormRef = useRef();
+    function openSalesUpdateForm(id) {
+        SalesUpdateFormRef.current.open(id);
+    }
+
+
     return (
         <>
+            <InfoDialog
+                show={showInfo}
+                message={infoMessage}
+                onClose={() => setShowInfo(false)}
+            />
+            <OrderCreate ref={SalesUpdateFormRef} />
             <CustomerDepositPreview ref={PreviewRef} />
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
+            <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
-
-
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
@@ -435,7 +503,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
                         {formData.id ? <Button variant="primary" onClick={() => {
                             handleClose();
-                            props.openDetailsView(formData.id);
+                            if (props.openDetailsView)
+                                props.openDetailsView(formData.id);
                         }}>
                             <i className="bi bi-eye"></i> View Detail
                         </Button> : ""}
@@ -564,23 +633,26 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 </Button>
                                 <table className="table table-striped table-sm table-bordered">
                                     {formData.payments && formData.payments.length > 0 &&
-                                        <thead>
-                                            <th>
+                                        <thead style={{ textAlign: "center" }}>
+                                            <th style={{ minWidth: "190px" }}>
                                                 Date
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "130px" }}>
                                                 Amount
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "180px" }}>
+                                                Invoice
+                                            </th>
+                                            <th style={{ minWidth: "130px" }}>
                                                 Payment method
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "140px" }}>
                                                 Bank Reference #
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "140px" }} >
                                                 Description
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "100px" }}>
                                                 Action
                                             </th>
                                         </thead>}
@@ -588,7 +660,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                         {formData.payments &&
                                             formData.payments.filter(payment => !payment.deleted).map((payment, key) => (
                                                 <tr key={key}>
-                                                    <td style={{ minWidth: "220px" }}>
+                                                    <td>
 
                                                         <DatePicker
                                                             id="payment_date_str"
@@ -614,7 +686,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px" }}>
+                                                    <td >
                                                         <input type='number' id={`${"customer_receivable_payment_amount_" + key}`} name={`${"customer_receivable_payment_amount_" + key}`} value={formData.payments[key].amount} className="form-control "
                                                             onChange={(e) => {
                                                                 errors["customer_receivable_payment_amount_" + key] = "";
@@ -637,13 +709,43 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             }}
                                                         />
                                                         {errors["customer_receivable_payment_amount_" + key] && (
-                                                            <div style={{ color: "red" }}>
+                                                            <div style={{ color: "red", fontSize: "10px" }}>
 
                                                                 {errors["customer_receivable_payment_amount_" + key]}
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td>
+                                                        <div className="row" style={{ border: "solid 0px" }}>
+                                                            <div className="" style={{ border: "solid 0px", maxWidth: "140px", fontSize: "12px" }}>
+                                                                <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                    openSalesUpdateForm(formData.payments[key].invoice_id);
+                                                                }}>{formData.payments[key].invoice_code}</span>
+                                                                {formData.payments[key].invoice_code && <span className="text-danger"
+                                                                    style={{ cursor: "pointer", fontSize: "0.75rem", marginLeft: "3px" }}
+                                                                    onClick={() => {
+                                                                        confirmInvoiceRemoval(key)
+                                                                    }}
+                                                                >
+                                                                    ❌
+                                                                </span>}
+                                                            </div>
+                                                            <div className="" style={{ border: "solid 0px", width: "40px" }}>
+                                                                <Button className="btn btn-primary" style={{ marginLeft: "-12px" }} onClick={() => {
+                                                                    openSales(key);
+                                                                }}>
+                                                                    <i className="bi bi-list"></i>
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                        {errors["customer_receivable_payment_invoice_" + key] && (
+                                                            <div style={{ color: "red" }}>
+
+                                                                {errors["customer_receivable_payment_invoice_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td >
                                                         <select
                                                             id={`${"customer_receivable_payment_method_" + key}`} name={`${"customer_receivable_payment_method_" + key}`}
                                                             value={formData.payments[key].method} className="form-control "
@@ -682,7 +784,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px" }}>
+                                                    <td >
                                                         <input type='text' id={`${"customer_receivable_bank_reference_" + key}`} name={`${"customer_receivable_bank_reference_" + key}`}
                                                             value={formData.payments[key].bank_reference} className="form-control "
                                                             onChange={(e) => {
@@ -706,7 +808,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px" }}>
+                                                    <td>
                                                         <input type='text' id={`${"customer_receivable_description_" + key}`} name={`${"customer_receivable_description_" + key}`}
                                                             value={formData.payments[key].description} className="form-control "
                                                             onChange={(e) => {
@@ -730,7 +832,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td >
                                                         <Button variant="danger" onClick={(event) => {
                                                             removePayment(key);
                                                         }}>
@@ -751,17 +853,10 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td>
-                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}></b>
-                                                {errors["customer_credit_limit"] && (
-                                                    <div style={{ color: "red" }}>
-                                                        {errors["customer_credit_limit"]}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td colSpan={1}>
+                                            <td colSpan={5}>
 
                                             </td>
+
                                         </tr>
                                     </tbody>
                                 </table>
@@ -936,7 +1031,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                     </form>
                 </Modal.Body>
 
-            </Modal>
+            </Modal >
 
 
         </>

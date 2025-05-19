@@ -885,9 +885,13 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log(data);
 
                 if (formData.id) {
-                    props.showToastMessage("Sale updated successfully!", "success");
+                    if (props.showToastMessage) {
+                        if (props.showToastMessage) props.showToastMessage("Sale updated successfully!", "success");
+                    }
                 } else {
-                    props.showToastMessage("Sale created successfully!", "success");
+                    if (props.showToastMessage) {
+                        if (props.showToastMessage) props.showToastMessage("Sale created successfully!", "success");
+                    }
                 }
 
                 if (props.refreshList) {
@@ -911,7 +915,10 @@ const OrderCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Failed to process sale!", "danger");
+                if (props.showToastMessage) {
+                    if (props.showToastMessage) props.showToastMessage("Failed to process sale!", "danger");
+                }
+
             });
     }
 
@@ -1775,7 +1782,7 @@ function findDiscount() {
 
 
 
-        // props.showToastMessage("Successfully Added " + selected.length + " products", "success");
+        // if(props.showToastMessage) props.showToastMessage("Successfully Added " + selected.length + " products", "success");
     };
 
     const [showToast, setShowToast] = useState(false);

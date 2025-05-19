@@ -669,16 +669,17 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 if (formData.id) {
-                    props.showToastMessage("Purchase updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("Purchase updated successfully!", "success");
                 } else {
-                    props.showToastMessage("Purchase created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("Purchase created successfully!", "success");
                 }
 
                 if (props.refreshList) {
                     props.refreshList();
                 }
                 handleClose();
-                props.openDetailsView(data.result.id);
+                if (props.openDetailsView)
+                    props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -686,7 +687,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Failed to process purchase!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Failed to process purchase!", "danger");
             });
     }
 

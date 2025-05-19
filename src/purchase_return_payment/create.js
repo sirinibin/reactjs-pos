@@ -232,9 +232,9 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 if (formData.id) {
-                    props.showToastMessage("Payment updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("Payment updated successfully!", "success");
                 } else {
-                    props.showToastMessage("Payment created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("Payment created successfully!", "success");
                 }
                 if (props.refreshList) {
                     props.refreshList();
@@ -243,7 +243,8 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
                 if (props.refreshPurchaseReturnList) {
                     props.refreshPurchaseReturnList();
                 }
-                //props.openDetailsView(data.result.id);
+                //if(props.openDetailsView)
+                props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -251,7 +252,7 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Failed to process payment!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Failed to process payment!", "danger");
             });
     }
 
@@ -266,7 +267,8 @@ const PurchaseReturnPaymentCreate = forwardRef((props, ref) => {
                     <div className="col align-self-end text-end">
                         {formData.id ? <Button variant="primary" onClick={() => {
                             handleClose();
-                            props.openDetailsView(formData.id);
+                            if (props.openDetailsView)
+                                props.openDetailsView(formData.id);
                         }}>
                             <i className="bi bi-eye"></i> View Detail
                         </Button> : ""}

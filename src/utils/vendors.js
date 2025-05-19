@@ -1323,7 +1323,7 @@ const Vendors = forwardRef((props, ref) => {
                                                                             <i className="bi bi-eye"></i>
                                                                         </Button>
                                                                     </td>
-                                                                    <td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         <Button className="btn btn-success btn-sm" onClick={() => {
                                                                             handleSelected(vendor);
                                                                         }}>

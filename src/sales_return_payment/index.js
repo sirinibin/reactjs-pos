@@ -363,7 +363,7 @@ function SalesReturnPaymentIndex(props) {
                 }
 
 
-                props.showToastMessage("Sales return payment deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Sales return payment deleted successfully!", "success");
                 if (props.refreshList) {
                     props.refreshList();
                 }

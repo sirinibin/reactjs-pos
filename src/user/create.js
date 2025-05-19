@@ -202,9 +202,9 @@ const UserCreate = forwardRef((props, ref) => {
                 console.log("Response:");
                 console.log(data);
                 if (formData.id) {
-                    props.showToastMessage("User updated successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("User updated successfully!", "success");
                 } else {
-                    props.showToastMessage("User created successfully!", "success");
+                    if (props.showToastMessage) props.showToastMessage("User created successfully!", "success");
                 }
                 if (props.refreshList) {
                     props.refreshList();
@@ -212,7 +212,8 @@ const UserCreate = forwardRef((props, ref) => {
                 handleClose();
 
 
-                props.openDetailsView(data.result.id);
+                if (props.openDetailsView)
+                    props.openDetailsView(data.result.id);
             })
             .catch((error) => {
                 setProcessing(false);
@@ -220,7 +221,7 @@ const UserCreate = forwardRef((props, ref) => {
                 console.log(error);
                 setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Failed to process user!", "danger");
+                if (props.showToastMessage) props.showToastMessage("Failed to process user!", "danger");
             });
     }
 
@@ -298,7 +299,8 @@ const UserCreate = forwardRef((props, ref) => {
                     <div className="col align-self-end text-end">
                         {formData.id ? <Button variant="primary" onClick={() => {
                             handleClose();
-                            props.openDetailsView(formData.id);
+                            if (props.openDetailsView)
+                                props.openDetailsView(formData.id);
                         }}>
                             <i className="bi bi-eye"></i> View Detail
                         </Button> : ""}

@@ -2323,7 +2323,7 @@ const Products = forwardRef((props, ref) => {
                                                             */}
                                                                         </span>
                                                                     </td>
-                                                                    {enableProductSelection && <td>
+                                                                    {enableProductSelection && <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                                                                         <input
                                                                             type="checkbox"
                                                                             checked={choosenProducts.some((p) => p.id === product.id)}

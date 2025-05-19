@@ -234,7 +234,7 @@ function StoreIndex(props) {
 
                 console.log("Response:");
                 console.log(data);
-                props.showToastMessage("Store Disconnected from Zatca Successfully!", "success");
+                if(props.showToastMessage) props.showToastMessage("Store Disconnected from Zatca Successfully!", "success");
                 list();
             })
             .catch((error) => {
@@ -242,7 +242,7 @@ function StoreIndex(props) {
                 console.log(error);
                 //setErrors({ ...error });
                 console.error("There was an error!", error);
-                props.showToastMessage("Error Connecting to Zatca!", "danger");
+                if(props.showToastMessage) props.showToastMessage("Error Connecting to Zatca!", "danger");
             });
     }
     */

@@ -534,9 +534,9 @@ const ProductCreate = forwardRef((props, ref) => {
           console.log("Response after creating  product:");
           console.log(data);
           if (formData.id) {
-            props.showToastMessage("Product updated successfully!", "success");
+            if (props.showToastMessage) props.showToastMessage("Product updated successfully!", "success");
           } else {
-            props.showToastMessage("Product created successfully!", "success");
+            if (props.showToastMessage) props.showToastMessage("Product created successfully!", "success");
           }
 
           if (props.refreshList) {
@@ -544,7 +544,8 @@ const ProductCreate = forwardRef((props, ref) => {
           }
 
           handleClose();
-          props.openDetailsView(data.result.id);
+          if (props.openDetailsView)
+            props.openDetailsView(data.result.id);
 
 
         }, 300);
@@ -560,7 +561,7 @@ const ProductCreate = forwardRef((props, ref) => {
         console.log(error);
         setErrors({ ...error });
         console.error("There was an error!", error);
-        props.showToastMessage("Failed to process product!", "danger");
+        if (props.showToastMessage) props.showToastMessage("Failed to process product!", "danger");
       });
   }
 
@@ -724,7 +725,8 @@ const ProductCreate = forwardRef((props, ref) => {
                 variant="primary"
                 onClick={() => {
                   handleClose();
-                  props.openDetailsView(formData.id);
+                  if (props.openDetailsView)
+                    props.openDetailsView(formData.id);
                 }}
               >
                 <i className="bi bi-eye"></i> View Detail

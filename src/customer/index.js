@@ -345,7 +345,7 @@ function CustomerIndex(props) {
                     return Promise.reject(error);
                 }
 
-                props.showToastMessage("Customer restored successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Customer restored successfully!", "success");
                 list();
             })
             .catch((error) => {
@@ -386,7 +386,7 @@ function CustomerIndex(props) {
                     return Promise.reject(error);
                 }
 
-                props.showToastMessage("Customer deleted successfully!", "success");
+                if (props.showToastMessage) props.showToastMessage("Customer deleted successfully!", "success");
                 list();
             })
             .catch((error) => {
