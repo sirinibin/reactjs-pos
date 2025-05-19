@@ -54,69 +54,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                 }
 
                 setReceiptTitle(modelName);
-
-                let pageSize = 20;
-                model.pageSize = pageSize;
-                let totalProducts = 1
-                let top = 0;
-                let totalPagesInt = parseInt(totalProducts / pageSize);
-                let totalPagesFloat = parseFloat(totalProducts / pageSize);
-
-                let totalPages = totalPagesInt;
-                if ((totalPagesFloat - totalPagesInt) > 0) {
-                    totalPages++;
-                }
-
-                model.total_pages = totalPages;
-
-
-                model.pages = [];
-                model.products = [{}];
-
-
-                let offset = 0;
-
-                for (let i = 0; i < totalPages; i++) {
-                    model.pages.push({
-                        top: top,
-                        products: [],
-                        lastPage: false,
-                        firstPage: false,
-                    });
-
-                    for (let j = offset; j < totalProducts; j++) {
-                        model.pages[i].products.push(model.products[j]);
-                        if (model.pages[i].products.length === pageSize) {
-                            break;
-                        }
-                    }
-
-                    if (model.pages[i].products.length < pageSize) {
-                        for (let s = model.pages[i].products.length; s < pageSize; s++) {
-                            model.pages[i].products.push({});
-                        }
-                    }
-
-                    top += 1057; //1057
-                    offset += pageSize;
-
-                    if (i === 0) {
-                        model.pages[i].firstPage = true;
-                    }
-
-                    if ((i + 1) === totalPages) {
-                        model.pages[i].lastPage = true;
-                    }
-                }
-
-                console.log("model.pages:", model.pages);
-                console.log("model.products:", model.products);
-
-
-
-                getQRCodeContents();
-                //model.qr_content = getQRCodeContents();
-                //setModel({ ...model });
+                preparePages();
 
                 setShow(true);
                 console.log("model:", model);
@@ -136,37 +74,6 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
         setShow(false);
     }
 
-
-    let [qrContent, setQrContent] = useState("");
-
-    function getQRCodeContents() {
-        qrContent = "";
-
-        if (model.code) {
-            qrContent += "Invoice #: " + model.code + "<br />";
-        }
-
-        if (model.store) {
-            qrContent += "Store: " + model.store.name + "<br />";
-        }
-
-        if (model.customer) {
-            qrContent += "Customer: " + model.customer.name + "<br />";
-        }
-
-
-        if (model.net_total) {
-            qrContent += "Net Total: " + model.net_total + "<br />";
-        }
-        qrContent += "Store: Test <br />";
-
-        setQrContent(qrContent);
-        model.qr_content = qrContent;
-        setModel({ ...model });
-        console.log("QR content:", model.qr_content);
-
-        return model.qr_content;
-    }
 
     function getStore(id) {
         console.log("inside get Store");
@@ -421,6 +328,9 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     let [selectedText, setSelectedText] = useState("");
 
     const defaultFontSizes = useMemo(() => ({
+        "pageSize": 15,
+        "reportPageSize": 20,
+        "font": "Cairo",
         "marginTop": {
             "value": 0,
             "unit": "px",
@@ -659,6 +569,116 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     };
 
 
+    const fonts = [
+        { label: 'Calibri Light', value: "Calibri Light" },
+        { label: 'IBM Plex Sans Arabic Regular', value: "IBM Plex Sans Arabic Regular" },
+        { label: 'Sakkal Majalla', value: 'Sakkal Majalla' },
+        { label: 'Arial', value: 'Arial' },
+        { label: 'Tahoma', value: 'Tahoma' },
+        { label: 'Akhbar Regular', value: 'Akhbar Regular' },
+        { label: 'Thuluth Regular', value: 'Thuluth Regular' },
+        { label: 'Simplified Arabic', value: 'Simplified Arabic' },
+        { label: 'Traditional Arabic', value: 'Traditional Arabic' },
+        { label: 'Andulus', value: 'Andulus' },
+        { label: 'Noto Naskh Bold', value: 'Noto Naskh Bold' },
+        { label: 'Noto Naskh Semi Bold', value: 'Noto Naskh Semi Bold' },
+        { label: 'Noto Naskh Regular', value: 'Noto Naskh Regular' },
+        { label: 'Noto Naskh Medium', value: 'Noto Naskh Medium' },
+        { label: 'Wafeq Regular', value: 'Wafeq Regular' },
+        { label: 'Wafeq Light', value: 'Wafeq Light' },
+        { label: 'Cairo', value: 'Cairo' },
+        { label: 'Amiri', value: 'Amiri' },
+        { label: 'Noto Naskh Arabic', value: '"Noto Naskh Arabic"' },
+        { label: 'Noto Kufi Arabic', value: '"Noto Kufi Arabic"' },
+        { label: 'Changa', value: 'Changa' },
+        { label: 'Lateef', value: 'Lateef' },
+        { label: 'Harmattan', value: 'Harmattan' },
+        { label: 'Scheherazade New', value: '"Scheherazade New"' },
+        { label: 'Reem Kufi', value: '"Reem Kufi"' },
+        { label: 'El Messiri', value: '"El Messiri"' },
+        { label: 'Tajawal', value: 'Tajawal' },
+        { label: 'Almarai', value: 'Almarai' },
+        { label: 'Markazi Text', value: '"Markazi Text"' },
+        { label: 'Aref Ruqaa', value: '"Aref Ruqaa"' },
+        { label: 'Baloo Bhaijaan 2', value: '"Baloo Bhaijaan 2"' }
+    ];
+
+
+    const handleFontChange = (e) => {
+        // setSelectedFont(e.target.value);
+        fontSizes[modelName + "_font"] = e.target.value;
+        setFontSizes({ ...fontSizes })
+        saveToLocalStorage("fontSizes", fontSizes);
+    };
+
+    function changePageSize(size) {
+        fontSizes[modelName + "_pageSize"] = parseInt(size);
+        setFontSizes({ ...fontSizes });
+        saveToLocalStorage("fontSizes", fontSizes);
+        preparePages();
+    }
+
+    function preparePages() {
+        if (fontSizes[modelName + "_pageSize"]) {
+            model.pageSize = fontSizes[modelName + "_pageSize"];
+        } else {
+            model.pageSize = 15
+        }
+
+        let totalPayments = model.payments.length;
+        // let top = 0;
+        let totalPagesInt = parseInt(totalPayments / model.pageSize);
+        let totalPagesFloat = parseFloat(totalPayments / model.pageSize);
+
+        let totalPages = totalPagesInt;
+        if ((totalPagesFloat - totalPagesInt) > 0) {
+            totalPages++;
+        }
+
+        model.total_pages = totalPages;
+
+
+        model.pages = [];
+
+
+        let offset = 0;
+
+        for (let i = 0; i < totalPages; i++) {
+            model.pages.push({
+                top: 0,
+                payments: [],
+                lastPage: false,
+                firstPage: false,
+            });
+
+            for (let j = offset; j < totalPayments; j++) {
+                model.pages[i].payments.push(model.payments[j]);
+                if (model.pages[i].payments.length === model.pageSize) {
+                    break;
+                }
+            }
+            /*
+            if (model.pages[i].products.length < pageSize) {
+                for (let s = model.pages[i].products.length; s < pageSize; s++) {
+                    model.pages[i].products.push({});
+                }
+            }*/
+
+            //top += 1057; //1057
+            //top += 5; //1057
+            offset += model.pageSize;
+
+            if (i === 0) {
+                model.pages[i].firstPage = true;
+            }
+
+            if ((i + 1) === totalPages) {
+                model.pages[i].lastPage = true;
+            }
+        }
+    }
+
+
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header className="d-flex flex-wrap align-items-center justify-content-between">
@@ -676,6 +696,15 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                             <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
                         </div>
                     )}
+
+                    <label htmlFor="font-select">Select Font: </label>
+                    <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
+                        {fonts.map((font) => (
+                            <option key={font.value} value={font.value}>
+                                {font.label}
+                            </option>
+                        ))}
+                    </select>
 
                     {/* Show Store Header - Always fixed here */}
                     {!whatsAppShare && <div className="form-check">
@@ -701,6 +730,47 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                         <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
                     </div>}
+
+                    <div className="col ">
+                        <>
+                            <label className="form-label">Page Size:&nbsp;</label>
+                            <select
+                                value={fontSizes[modelName + "_pageSize"]}
+                                onChange={(e) => {
+                                    changePageSize(e.target.value);
+                                }}
+                                className="form-control pull-right"
+                                style={{
+                                    border: "solid 1px",
+                                    borderColor: "silver",
+                                    width: "55px",
+                                }}
+                            >
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                                <option value="6">6</option>
+                                <option value="7">7</option>
+                                <option value="8">8</option>
+                                <option value="9">9</option>
+                                <option value="10">10</option>
+                                <option value="11">11</option>
+                                <option value="12">12</option>
+                                <option value="13">13</option>
+                                <option value="14">14</option>
+                                <option value="15">15</option>
+                                <option value="16">16</option>
+                                <option value="17">17</option>
+                                <option value="18">18</option>
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                                <option value="21">21</option>
+                                <option value="22">22</option>
+                                <option value="23">23</option>
+                            </select>
+                        </>
+                    </div>
 
 
                     <div className="col align-self-end text-end">

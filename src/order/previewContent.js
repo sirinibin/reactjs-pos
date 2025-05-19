@@ -60,7 +60,6 @@ const PreviewContent = forwardRef((props, ref) => {
                         paddingTop: "10px",
                         paddingBottom: "4px",
                         marginTop: page.top + "px",
-                        /* height: "auto",*/
                         height: "1118px",
                         width: `${props.whatsAppShare ? "750px" : "750px"}`
                     }}
@@ -364,7 +363,6 @@ const PreviewContent = forwardRef((props, ref) => {
                                     <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableBody"]?.size }} className="clickable-text print-value" onClick={() => {
                                         props.selectText("tableBody");
                                     }} >
-
                                         <tr style={{ borderBottom: tableBorderThickness, fontSize: props.fontSizes[props.modelName + "_tableHead"]?.size, height: "auto" }} onClick={(e) => {
                                             e.stopPropagation();
                                             props.selectText("tableHead");
@@ -636,11 +634,9 @@ const PreviewContent = forwardRef((props, ref) => {
                                             >
                                                 {props.model.remarks ? props.model.remarks : ""}
                                             </td>
-
                                         </tr>
                                         {props.modelName === "quotation" && props.model.type === "quotation" && <>
                                             <tr>
-
                                                 <th colSpan="2" className="text-end print-label" style={{ padding: "5px", borderRight: tableBorderThickness }}>
                                                     Validity صحة:
                                                 </th>

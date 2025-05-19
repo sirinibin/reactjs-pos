@@ -44,7 +44,10 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
 
     let detailsLabelsColumnWidthPercent = "32%";
     let detailsValuesColumnWidthPercent = "68%";
-    let detailsBorderThickness = "0.2px solid #dee2e6";
+    let detailsBorderThickness = "0.5px solid black";
+    let detailsBorderColor = "black";//#dee2e6
+    let tableBorderThickness = "0.5px solid black";
+
 
     return (<><span ref={ref}>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
@@ -52,25 +55,41 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                 className="container"
                 id="printableArea"
                 style={{
+                    fontFamily: props.fontSizes[props.modelName + "_font"],
                     backgroundColor: "white",
                     border: "solid 0px",
                     borderColor: "silver",
                     borderRadius: "2mm",
-                    padding: "20px",
+                    paddingLeft: "0px",
+                    paddingRight: "0px",
+                    paddingTop: "10px",
+                    paddingBottom: "4px",
                     marginTop: page.top + "px",
-                    height: "auto",
-                    width: "770px"
+                    height: "1118px",
+                    width: `${props.whatsAppShare ? "750px" : "750px"}`
                 }}
 
             >
-                {props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? <div className="row" style={{ fontSize: "3.5mm" }}>
+                {props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? < div className="row">
                     <div className="col">
                         <ul className="list-unstyled text-left">
-                            <li><h4 style={{ fontSize: "3.5mm" }}>{props.model.store ? props.model.store.name : "<STORE_NAME>"}</h4></li>
-                            <li>{props.model.store ? props.model.store.title : "<STORE_TITLE>"}</li>
+                            <li>
+                                <h4 className="clickable-text" onClick={() => {
+                                    props.selectText("storeName");
+                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeName"]?.size }}>
+                                    {props.model.store ? props.model.store.name : "<STORE_NAME>"}
+                                </h4>
+                            </li>
+                            <li className="clickable-text" onClick={() => {
+                                props.selectText("storeTitle");
+                            }} style={{ fontSize: props.fontSizes[props.modelName + "_storeTitle"]?.size }}>{props.model.store ? props.model.store.title : "<STORE_TITLE>"}</li>
                             {/*<!-- <li><hr /></li> --> */}
-                            <li style={{ fontSize: "2.2mm" }}>C.R. / {props.model.store ? props.model.store.registration_number : "<STORE_CR_NO>"}</li>
-                            <li style={{ fontSize: "2.2mm" }}>VAT / {props.model.store ? props.model.store.vat_no : "<STORE_VAT_NO>"}</li>
+                            <li className="clickable-text" onClick={() => {
+                                props.selectText("storeCR");
+                            }} style={{ fontSize: props.fontSizes[props.modelName + "_storeCR"]?.size }}>C.R. / {props.model.store ? props.model.store.registration_number : "<STORE_CR_NO>"}</li>
+                            <li className="clickable-text" onClick={() => {
+                                props.selectText("storeVAT");
+                            }} style={{ fontSize: props.fontSizes[props.modelName + "_storeVAT"]?.size }}>VAT / {props.model.store ? props.model.store.vat_no : "<STORE_VAT_NO>"}</li>
                         </ul>
                     </div>
                     <div className="col">
@@ -81,49 +100,61 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                     <div className="col">
                         <ul className="list-unstyled text-end">
                             <li>
-                                <h4 style={{ fontSize: "3.5mm" }}>
+                                <h4 className="clickable-text" onClick={() => {
+                                    props.selectText("storeNameArabic");
+                                }} style={{ fontSize: props.fontSizes[props.modelName + "_storeNameArabic"]?.size }}>
                                     <strong>
                                         {props.model.store ? props.model.store.name_in_arabic : "<STORE_NAME_ARABIC>"}
                                     </strong>
                                 </h4>
                             </li>
-                            <li>
+                            <li className="clickable-text" onClick={() => {
+                                props.selectText("storeTitleArabic");
+                            }} style={{ fontSize: props.fontSizes[props.modelName + "_storeTitleArabic"]?.size }}>
                                 {props.model.store ? props.model.store.title_in_arabic : "<STORE_TITLE_ARABIC>"}
                             </li>
                             {/* <!-- <li><hr /></li> --> */}
-                            <li style={{ fontSize: "2.2mm" }}>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"} / ‫ت‬.‫س‬</li>
-                            <li style={{ fontSize: "2.2mm" }} >{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"} / ‫الضريبي‬ ‫الرقم‬</li>
+                            <li className="clickable-text" onClick={() => {
+                                props.selectText("storeCRArabic");
+                            }} style={{ fontSize: props.fontSizes[props.modelName + "_storeCRArabic"]?.size }}>{props.model.store ? props.model.store.registration_number_in_arabic : "<STORE_CR_NO_ARABIC>"}</li>
+                            <li className="clickable-text" onClick={() => {
+                                props.selectText("storeVATArabic");
+                            }} style={{ fontSize: props.fontSizes[props.modelName + "_storeVATArabic"]?.size }} >{props.model.store ? props.model.store.vat_no_in_arabic : "<STORE_VAT_NO_ARABIC>"}</li>
                         </ul>
                     </div>
                 </div> : ""}
+
                 <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                     <div className="col">
-                        <u
-                        ><h1 className="text-center fw-bold" style={{ fontSize: "3mm" }}>
-                                {props.model.ReceiptTitle}
-                            </h1>
+                        <u><h1 className="text-center clickable-text fw-bold" onClick={() => {
+                            props.selectText("invoiceTitle");
+                        }} style={{ fontSize: props.fontSizes[props.modelName + "_invoiceTitle"]?.size }} >
+                            {props.model.ReceiptTitle}
+                        </h1>
                         </u>
                     </div>
                 </div>
 
-                <div className="row col-md-14 fw-bold" style={{ border: "solid 0px", fontSize: "2.6mm", padding: "10px" }} >
-                    <div className="col-md-12" style={{ border: detailsBorderThickness, marginLeft: "0px", width: "100%" }}>
-                        <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Receipt No. | رقم الإيصال:</div>
-                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >    {props.model.code ? props.model.code : ""}</div>
+                <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
+                    props.selectText("invoiceDetails");
+                }}>
+                    <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: `${(props.model.store?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
+                        <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                            <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Receipt No. | رقم الإيصال:</b></div>
+                            <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.code ? props.model.code : ""}</div>
                         </div>
-                        <div className="row" dir="ltr" style={{ border: "solid 0px" }} >
-                            <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Receipt Date | تاريخ الاستلام: </div>
-                            <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.date ? format(
+                        <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                            <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Receipt Date | تاريخ الاستلام:</b></div>
+                            <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >{props.model.date ? format(
                                 new Date(props.model.date),
                                 "yyyy-MM-dd h:mma"
                             ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
                         </div>
 
                         {props.modelName === "customer_deposit" || props.modelName === "customer_withdrawal" ? <>
-                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Customer Name | اسم العميل:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer Name | اسم العميل:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.customer ? props.model.customer.name : ""}
                                     {!props.model.customer && props.model.customerName ? props.model.customerName : ""}
                                     {!props.model.customerName && !props.model.customer ? "N/A" : ""}
@@ -131,17 +162,17 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </div>
 
-                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >  Customer ID | معرف العميل:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer ID | معرف العميل:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.customer?.code ? props.model.customer.code : "N/A"}
 
                                 </div>
                             </div>
 
-                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >   Customer VAT  | ضريبة القيمة المضافة للعملاء:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer VAT  | ضريبة القيمة المضافة للعملاء:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.customer?.vat_no ? props.model.customer.vat_no : ""}
                                     {!props.model.customer && props.model.vat_no ? props.model.vat_no : ""}
                                     {!props.model.customer && !props.model.vat_no ? "N/A" : ""}
@@ -150,16 +181,16 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                 </div>
                             </div>
 
-                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer C.R | رقم تسجيل شركة العميل:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                            <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer C.R | رقم تسجيل شركة العميل:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.customer?.registration_number ? props.model.customer.registration_number + " | " + convertToArabicNumber(props.model.customer.registration_number) : "N/A"}
                                 </div>
                             </div>
 
-                            <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} > Customer Address | عنوان العميل:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
+                            <div className="row" dir="ltr" style={{}} >
+                                <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer Address | عنوان العميل:</b></div>
+                                <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
                                     {props.model.address && !props.model.customer ? props.model.address : ""}
 
                                     {!props.model.customer?.national_address?.building_no && !props.model.customer?.national_address?.unit_no && props.model.customer?.national_address?.street_name && props.model.customer?.national_address?.district_name && props.model.customer?.national_address?.city_name ? props.model.customer?.address : ""}
@@ -173,6 +204,8 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         {props.model.customer?.national_address?.additional_no ? ` - ${props.model.customer.national_address.additional_no}` : ""}
                                         {/*props.model.customer?.country_name ? `, ${props.model.customer.country_name}` : ""*/}
                                     </span>
+
+                                    {props.model.address && !props.model.customer ? props.model.address : ""}
                                     {props.model.customer?.national_address?.building_no_arabic && props.model.customer?.national_address?.street_name_arabic && props.model.customer?.national_address?.district_name_arabic && props.model.customer?.national_address?.city_name_arabic && props.model.customer?.national_address?.zipcode_arabic && <span dir="rtl">
                                         <br />
                                         {props.model.customer?.national_address?.building_no_arabic ? `${props.model.customer.national_address.building_no_arabic}  ` : ""}
@@ -189,7 +222,10 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         </> : ""}
                     </div>
                 </div>
-                <div className="row" style={{ fontSize: "2.2mm" }}>
+
+                < div className="row clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_invoicePageCount"]?.size }} onClick={() => {
+                    props.selectText("invoicePageCount");
+                }}>
                     <div className="col text-start">
                         {props.model.total_pages ? "Page " + (pageIndex + 1) + " of " + props.model.total_pages : ""}
                     </div>
@@ -197,10 +233,11 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         {props.model.total_pages ? convertToArabicNumber(props.model.total_pages.toString()) + " الصفحة " + convertToArabicNumber((pageIndex + 1).toString()) + " من " : ""}
                     </div>
                 </div>
+
                 <div className="row">
                     <div className="col">
                         <div
-                            className="table-responsive"
+                            className=""
                             style={{
                                 overflow: "hidden", outline: "none"
                             }}
@@ -208,12 +245,17 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                         >
 
                             <table
-                                className="table table-bordered no-bold"
-                                style={{ borderRadius: "6px" }}
+                                className="table-responsive"
+                                style={{ border: tableBorderThickness, width: "100%" }}
                             >
-                                <thead style={{ fontSize: "2.2mm" }} className="fw-bold">
-                                    <tr style={{}}>
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "8%" }}>
+                                <tbody style={{ fontSize: props.fontSizes[props.modelName + "_tableBody"]?.size }} className="clickable-text print-value" onClick={() => {
+                                    props.selectText("tableBody");
+                                }} >
+                                    <tr style={{ borderBottom: tableBorderThickness, fontSize: props.fontSizes[props.modelName + "_tableHead"]?.size, height: "auto" }} onClick={(e) => {
+                                        e.stopPropagation();
+                                        props.selectText("tableHead");
+                                    }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "8%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -224,7 +266,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <li>SI No.</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "42%" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "39%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -236,7 +278,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             </ul>
                                         </th>
 
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "10%" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "13%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -247,7 +289,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <li>Payment Mode</li>
                                             </ul>
                                         </th>
-                                        <th className="per1 text-center" style={{ padding: "0px", width: "27%" }}>
+                                        <th className="per1 text-center" style={{ padding: "0px", width: "27%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -258,7 +300,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <li>Bank Ref. #</li>
                                             </ul>
                                         </th>
-                                        <th className="per68 text-center" style={{ padding: "0px", width: "13%" }}>
+                                        <th className="per68 text-center" style={{ padding: "0px", width: "13%", borderBottom: tableBorderThickness }}>
                                             <ul
                                                 className="list-unstyled"
                                                 style={{
@@ -269,30 +311,34 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                                 <li>Amount</li>
                                             </ul>
                                         </th>
-
                                     </tr>
-                                </thead>
-                                <tbody style={{ fontSize: "2.2mm" }} className="fw-bold" >
-                                    {props.model.payments && props.model.payments.map((payment, index) => (
-                                        <tr className="text-center"  >
-                                            <td style={{ padding: "1px", height: "16px" }}>{(index + 1)}</td>
-                                            <td style={{ padding: "1px" }}>
+                                    {page.payments && page.payments.map((payment, index) => (
+                                        <tr style={{ borderBottom: tableBorderThickness }} key={index} className="text-center"  >
+                                            <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{(index + 1) + (pageIndex * props.model.pageSize)}</td>
+                                            <td style={{ padding: "1px", borderRight: tableBorderThickness }}>
                                                 {props.model.modelName === "customer_deposit" ? "Payment Received" : ""}
                                                 {props.model.modelName === "customer_withdrawal" ? "Paid" : ""}
                                                 {props.model.customer?.name && props.model.modelName === "customer_deposit" ? " from " + props.model.customer.name : ""}
                                                 {props.model.customer?.name && props.model.modelName === "customer_withdrawal" ? " to " + props.model.customer.name : ""}
                                                 {payment.description ? " | " + payment.description : ""}
                                             </td>
-                                            <td style={{ padding: "1px" }} className="text-center">{payment.method ? GetPaymentMode(payment.method) : ""} </td>
-                                            <td style={{ padding: "1px" }} className="text-center">{payment.bank_reference ? payment.bank_reference : ""} </td>
-                                            <td style={{ padding: "1px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals(payment.amount)} /> : ""}</td>
+                                            <td style={{ padding: "1px", borderRight: tableBorderThickness }} className="text-center">{payment.method ? GetPaymentMode(payment.method) : ""} </td>
+                                            <td style={{ padding: "1px", borderRight: tableBorderThickness }} className="text-center">{payment.bank_reference ? payment.bank_reference : ""} </td>
+                                            <td style={{ padding: "1px", paddingRight: "2px", textAlign: "right" }}> {payment.amount ? <Amount amount={trimTo2Decimals(payment.amount)} /> : ""}</td>
                                         </tr>
                                     ))}
                                 </tbody>
-
-                                <tfoot style={{ fontSize: "2.2mm" }} className="fw-bold">
-                                    <tr>
-                                        <th colSpan="4" className="text-end" style={{ padding: "2px" }}>
+                                <tfoot
+                                    className=""
+                                    style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size, border: tableBorderThickness, width: "100%" }} onClick={() => {
+                                        props.selectText("tableFooter");
+                                    }}
+                                >
+                                    <tr
+                                        style={{ borderBottom: tableBorderThickness }}>
+                                        <th colSpan="4" className="text-end print-label"
+                                            style={{ padding: "2px", borderRight: tableBorderThickness }}
+                                        >
                                             Net Total  صافي المجموع:
                                         </th>
                                         <th className="text-end" colSpan="1" style={{ padding: "2px" }}>
@@ -301,15 +347,23 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             </span>
                                         </th>
                                     </tr>
-
-                                    <tr>
-
-                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
+                                </tfoot>
+                            </table>
+                            <table className="table-responsive"
+                                style={{ border: tableBorderThickness, width: "100%" }}>
+                                <tbody
+                                    style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
+                                        props.selectText("tableFooter");
+                                    }} className="clickable-text"
+                                >
+                                    <tr style={{ borderBottom: tableBorderThickness }}>
+                                        <th colSpan="1" className="text-end print-label" style={{ padding: "2px", width: "30%", borderRight: tableBorderThickness }}>
                                             In Words بكلمات:
                                         </th>
                                         <th
-                                            colSpan="7"
-                                            style={{ padding: "2px" }}
+                                            className="print-table-value"
+                                            colSpan="8"
+                                            style={{ padding: "2px", width: "70%" }}
 
                                         >
                                             <ul
@@ -321,63 +375,44 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                             </ul>
                                         </th>
                                     </tr>
-                                    <tr>
-                                        <th colSpan="2" className="text-end" style={{ padding: "2px" }}>
+                                    <tr style={{ borderBottom: tableBorderThickness }}>
+                                        <th colSpan="1" className="text-end print-label" style={{ padding: "2px", width: "30%", borderRight: tableBorderThickness }}>
                                             Remarks ملاحظات:
                                         </th>
                                         <th
-                                            colSpan="7"
-                                            style={{ padding: "2px" }}
+                                            className="text-end print-table-value"
+                                            colSpan="8"
+                                            style={{ padding: "2px", width: "70%" }}
 
                                         >
                                             {props.model.remarks ? props.model.remarks : ""}
                                         </th>
 
                                     </tr>
-                                </tfoot>
+                                </tbody>
                             </table>
-
-                            <table className="table table-bordered fw-bold" style={{ fontSize: "2.2mm" }} >
-                                <thead>
-                                    <tr style={{ height: "50px" }}>
-                                        <th className="text-end" style={{ width: "20%", padding: "2px" }}>
+                            <table
+                                className="table-responsive"
+                                style={{ border: tableBorderThickness, width: "100%" }}
+                            >
+                                <tbody
+                                    style={{ fontSize: props.fontSizes[props.modelName + "_tableFooter"]?.size }} onClick={() => {
+                                        props.selectText("tableFooter");
+                                    }} className="clickable-text"
+                                >
+                                    <tr style={{ borderBottom: tableBorderThickness }}>
+                                        <th className="text-end print-label" style={{ width: "20%", height: "30px", padding: "2px", borderRight: tableBorderThickness }}>
                                             Received From تم الاستلام من:
                                         </th>
-                                        <th style={{ width: "30%", padding: "2px" }}> {props.model.customer?.name ? props.model.customer.name : null}</th>
-                                        <th className="text-end" style={{ width: "20%", padding: "2px" }}>
+                                        <th style={{ width: "30%", padding: "2px", borderRight: tableBorderThickness }}> {props.model.customer?.name ? props.model.customer.name : null}</th>
+                                        <th className="text-end print-label" style={{ width: "20%", padding: "2px", borderRight: tableBorderThickness }}>
                                             Received By تم الاستلام بواسطة:
                                         </th>
                                         <th style={{ width: "30%", padding: "2px" }}>
                                             {props.model.store?.name ? props.model.store.name : null}
                                         </th>
                                     </tr>
-                                    {/*} <tr>
-                                        <th className="text-end" style={{ padding: "2px" }}>
-                                            Signature إمضاء:
-                                        </th>
-                                        <th style={{ width: "30%", height: "30px" }}>
-                                            {props.model.delivered_by_signature ?
-                                                <img alt="Signature" src={props.model.delivered_by_signature.signature + "?" + (Date.now())} key={props.model.delivered_by_signature.signature} style={{ width: 100, height: 80 }} ></img>
-                                                : null}
-                                        </th>
-                                        <th className="text-end" style={{ padding: "2px" }} >
-                                            Signature إمضاء:
-                                        </th>
-                                        <th></th>
-                                    </tr>*/}
-                                    {/*<tr>
-                                        <th className="text-end" style={{ padding: "2px" }}>
-                                            Date تاريخ:
-                                        </th>
-                                        <th style={{ padding: "2px" }} className="text-center">
-                                            {props.model.signature_date_str ? props.model.signature_date_str : ""}  {props.model.signature_date_str ? getArabicDate(props.model.signature_date_str) : ""}
-                                        </th>
-                                        <th className="text-end" style={{ padding: "2px" }}>
-                                            Date تاريخ:
-                                        </th>
-                                        <th></th>
-                                    </tr>*/}
-                                </thead>
+                                </tbody>
                             </table>
                         </div>
                     </div>
