@@ -8,9 +8,12 @@ import { format } from "date-fns";
 import CustomerCreate from "./../customer/create.js";
 import CustomerView from "./../customer/view.js";
 import Customers from "./../utils/customers.js";
+import SalesReturn from "./../utils/salesReturn.js";
 import CustomerWithdrawalPreview from './preview.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
-
+import SalesReturnCreate from "./../sales_return/create.js";
+import { confirm } from 'react-bootstrap-confirmation';
+import InfoDialog from './../utils/InfoDialog';
 
 const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     useImperativeHandle(ref, () => ({
@@ -322,7 +325,6 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
-
         for (var key = 0; key < formData.payments?.length; key++) {
             errors["customer_payable_payment_amount_" + key] = "";
             errors["customer_payable_payment_date_" + key] = "";
@@ -404,6 +406,59 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         setFormData({ ...formData });
     };
 
+    const SalesReturnRef = useRef();
+    function openSalesReturn(paymentIndex) {
+        selectedPaymentIndex = paymentIndex;
+        setSelectedPaymentIndex(selectedPaymentIndex);
+        let selectedPaymentStatusList = [
+            {
+                id: "not_paid",
+                name: "Not Paid",
+            },
+            {
+                id: "paid_partially",
+                name: "Paid partially",
+            }
+        ];
+        SalesReturnRef.current.open(selectedCustomers, selectedPaymentStatusList);
+    }
+
+    let [selectedPaymentIndex, setSelectedPaymentIndex] = useState(null);
+    let [showInfo, setShowInfo] = useState(false);
+    let [infoMessage, setInfoMessage] = useState("");
+
+    const handleSelectedSalesReturn = (selectedSalesReturn) => {
+        console.log("selectedSalesReturn:", selectedSalesReturn);
+        if (selectedSalesReturn.payment_status === "paid") {
+            infoMessage = "The selected invoice is already paid";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+        // setSelectedCustomers([selectedCustomer])
+        formData.payments[selectedPaymentIndex].invoice_type = "sales_return";
+        formData.payments[selectedPaymentIndex].invoice_id = selectedSalesReturn.id;
+        formData.payments[selectedPaymentIndex].invoice_code = selectedSalesReturn.code;
+        formData.payments[selectedPaymentIndex].amount = selectedSalesReturn.balance_amount;
+        findTotalPayments();
+        setFormData({ ...formData });
+    };
+
+
+
+    const confirmInvoiceRemoval = async (paymentIndex) => {
+        const result = await confirm('Are you sure, you want to remove this invoice from this payment?');
+        console.log(result);
+        if (result) {
+            formData.payments[paymentIndex].invoice_type = "";
+            formData.payments[paymentIndex].invoice_id = "";
+            formData.payments[paymentIndex].invoice_code = "";
+            setFormData({ ...formData });
+        }
+    };
+
+
 
     const PreviewRef = useRef();
     function openPreview() {
@@ -413,14 +468,27 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
         PreviewRef.current.open(formData, undefined, "customer_withdrawal");
     }
 
+    const SalesReturnUpdateFormRef = useRef();
+    function openSalesReturnUpdateForm(id) {
+        SalesReturnUpdateFormRef.current.open(id);
+    }
+
+    const inputRefs = useRef({});
+    const timerRef = useRef(null);
+
     return (
         <>
+            <InfoDialog
+                show={showInfo}
+                message={infoMessage}
+                onClose={() => setShowInfo(false)}
+            />
+            <SalesReturnCreate ref={SalesReturnUpdateFormRef} />
             <CustomerWithdrawalPreview ref={PreviewRef} />
             <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
+            <SalesReturn ref={SalesReturnRef} onSelectSalesReturn={handleSelectedSalesReturn} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} openDetailsView={openCustomerDetailsView} showToastMessage={props.showToastMessage} />
             <CustomerView ref={CustomerDetailsViewRef} showToastMessage={props.showToastMessage} />
-
-
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
@@ -487,7 +555,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                         return;
                                     }
                                     formData.customer_id = selectedItems[0].id;
-                                    if (selectedItems[0].use_remarks_in_sales && selectedItems[0].remarks) {
+                                    if (selectedItems[0].use_remarks_in_salesreturn && selectedItems[0].remarks) {
                                         formData.remarks = selectedItems[0].remarks;
                                     }
 
@@ -560,29 +628,33 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                     {errors.payments}
                                 </div>
                             )}
+
                             <div className="table-responsive" style={{}}>
                                 <Button variant="secondary" style={{ alignContent: "right", marginBottom: "10px" }} onClick={addNewPayment}>
                                     Create new payment
                                 </Button>
                                 <table className="table table-striped table-sm table-bordered">
                                     {formData.payments && formData.payments.length > 0 &&
-                                        <thead>
-                                            <th>
+                                        <thead style={{ textAlign: "center" }}>
+                                            <th style={{ minWidth: "190px" }}>
                                                 Date
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "130px" }}>
                                                 Amount
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "180px" }}>
+                                                Invoice
+                                            </th>
+                                            <th style={{ minWidth: "130px" }}>
                                                 Payment method
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "140px" }}>
                                                 Bank Reference #
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "140px" }} >
                                                 Description
                                             </th>
-                                            <th>
+                                            <th style={{ minWidth: "100px" }}>
                                                 Action
                                             </th>
                                         </thead>}
@@ -590,8 +662,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                         {formData.payments &&
                                             formData.payments.filter(payment => !payment.deleted).map((payment, key) => (
                                                 <tr key={key}>
-                                                    <td style={{ minWidth: "220px" }}>
-
+                                                    <td>
                                                         <DatePicker
                                                             id="payment_date_str"
                                                             selected={formData.payments[key].date_str ? new Date(formData.payments[key].date_str) : null}
@@ -616,8 +687,32 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px" }}>
+                                                    <td >
                                                         <input type='number' id={`${"customer_payable_payment_amount_" + key}`} name={`${"customer_payable_payment_amount_" + key}`} value={formData.payments[key].amount} className="form-control "
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                inputRefs.current[key][`${"customer_payable_payment_amount_" + key}`] = el;
+                                                            }}
+                                                            onFocus={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[key][`${"customer_payable_payment_amount_" + key}`].select();
+                                                                }, 100);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.code === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        if (key > 0) {
+                                                                            inputRefs.current[key - 1][`${"customer_payable_description_" + (key - 1)}`]?.focus();
+                                                                        }
+                                                                    }, 100);
+                                                                } else if (e.code === "Enter") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }}
+
                                                             onChange={(e) => {
                                                                 errors["customer_payable_payment_amount_" + key] = "";
                                                                 setErrors({ ...errors });
@@ -639,16 +734,65 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             }}
                                                         />
                                                         {errors["customer_payable_payment_amount_" + key] && (
-                                                            <div style={{ color: "red" }}>
+                                                            <div style={{ color: "red", fontSize: "10px" }}>
 
                                                                 {errors["customer_payable_payment_amount_" + key]}
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td>
+                                                        <div className="row" style={{ border: "solid 0px" }}>
+                                                            <div className="" style={{ border: "solid 0px", maxWidth: "140px", fontSize: "12px" }}>
+                                                                <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                    openSalesReturnUpdateForm(formData.payments[key].invoice_id);
+                                                                }}>{formData.payments[key].invoice_code}</span>
+                                                                {formData.payments[key].invoice_code && <span className="text-danger"
+                                                                    style={{ cursor: "pointer", fontSize: "0.75rem", marginLeft: "3px" }}
+                                                                    onClick={() => {
+                                                                        confirmInvoiceRemoval(key)
+                                                                    }}
+                                                                >
+                                                                    ❌
+                                                                </span>}
+                                                            </div>
+                                                            <div className="" style={{ border: "solid 0px", width: "40px" }}>
+                                                                <Button className="btn btn-primary" style={{ marginLeft: "-12px" }} onClick={() => {
+                                                                    openSalesReturn(key);
+                                                                }}>
+                                                                    <i className="bi bi-list"></i>
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+                                                        {errors["customer_payable_payment_invoice_" + key] && (
+                                                            <div style={{ color: "red" }}>
+
+                                                                {errors["customer_payable_payment_invoice_" + key]}
+                                                            </div>
+                                                        )}
+                                                    </td>
+                                                    <td >
                                                         <select
                                                             id={`${"customer_payable_payment_method_" + key}`} name={`${"customer_payable_payment_method_" + key}`}
                                                             value={formData.payments[key].method} className="form-control "
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                inputRefs.current[key][`${"customer_payable_payment_method_" + key}`] = el;
+                                                            }}
+                                                            onFocus={() => {
+                                                                /*
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].select();
+                                                                }, 100);*/
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (e.code === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_payable_payment_amount_" + key}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }}
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
                                                                 errors["customer_payable_payment_method_" + key] = "";
@@ -684,9 +828,27 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px" }}>
+                                                    <td >
                                                         <input type='text' id={`${"customer_payable_bank_reference_" + key}`} name={`${"customer_payable_bank_reference_" + key}`}
                                                             value={formData.payments[key].bank_reference} className="form-control "
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`] = el;
+                                                            }}
+                                                            onFocus={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`].select();
+                                                                }, 100);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (e.code === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }}
                                                             onChange={(e) => {
                                                                 errors["customer_payable_bank_reference_" + key] = "";
                                                                 setErrors({ ...errors });
@@ -708,9 +870,47 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "300px" }}>
+                                                    <td>
                                                         <input type='text' id={`${"customer_payable_description_" + key}`} name={`${"customer_payable_description_" + key}`}
                                                             value={formData.payments[key].description} className="form-control "
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                inputRefs.current[key][`${"customer_payable_description_" + key}`] = el;
+                                                            }}
+                                                            onFocus={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[key][`${"customer_payable_description_" + key}`].select();
+                                                                }, 100);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                if (e.code === "Enter") {
+                                                                    if ((key + 1) < formData.payments?.length && formData.payments?.length > 1) {
+                                                                        console.log("Moving to next line");
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[key + 1][`${"customer_payable_payment_amount_" + (key + 1)}`]?.focus();
+                                                                        }, 100);
+                                                                    } else {
+                                                                        if ((key + 1) === formData.payments?.length) {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[0][`${"customer_payable_payment_amount_0"}`]?.focus();
+                                                                            }, 100);
+                                                                        } else {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[key][`${"customer_payable_payment_amount_" + (key)}`]?.focus();
+                                                                            }, 100);
+                                                                        }
+
+                                                                    }
+                                                                } else if (e.code === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }}
+
                                                             onChange={(e) => {
                                                                 errors["customer_payable_description_" + key] = "";
                                                                 setErrors({ ...errors });
@@ -732,7 +932,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             </div>
                                                         )}
                                                     </td>
-                                                    <td style={{ width: "200px" }}>
+                                                    <td >
                                                         <Button variant="danger" onClick={(event) => {
                                                             removePayment(key);
                                                         }}>
@@ -753,17 +953,10 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td>
-                                                <b style={{ marginLeft: "12px", alignSelf: "end" }}></b>
-                                                {errors["customer_credit_limit"] && (
-                                                    <div style={{ color: "red" }}>
-                                                        {errors["customer_credit_limit"]}
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td colSpan={1}>
+                                            <td colSpan={5}>
 
                                             </td>
+
                                         </tr>
                                     </tbody>
                                 </table>
@@ -938,7 +1131,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                     </form>
                 </Modal.Body>
 
-            </Modal>
+            </Modal >
 
 
         </>
