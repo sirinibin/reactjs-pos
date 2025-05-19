@@ -408,6 +408,15 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
     const SalesRef = useRef();
     function openSales(paymentIndex) {
+
+        if (!formData.customer_id) {
+            infoMessage = "Please select a customer first then try again!";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
         selectedPaymentIndex = paymentIndex;
         setSelectedPaymentIndex(selectedPaymentIndex);
         let selectedPaymentStatusList = [
@@ -428,6 +437,14 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     let [infoMessage, setInfoMessage] = useState("");
 
     const handleSelectedSale = (selectedSale) => {
+        if (formData.customer_id !== selectedSale.customer_id) {
+            infoMessage = "The selected sale is not belongs to the customer: " + formData.customer_name;
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
         console.log("selectedSale:", selectedSale);
         if (selectedSale.payment_status === "paid") {
             infoMessage = "The selected invoice is already paid";

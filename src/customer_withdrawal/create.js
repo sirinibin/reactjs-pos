@@ -408,6 +408,14 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
     const SalesReturnRef = useRef();
     function openSalesReturn(paymentIndex) {
+        if (!formData.customer_id) {
+            infoMessage = "Please select a customer first then try again!";
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
         selectedPaymentIndex = paymentIndex;
         setSelectedPaymentIndex(selectedPaymentIndex);
         let selectedPaymentStatusList = [
@@ -428,6 +436,14 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
     let [infoMessage, setInfoMessage] = useState("");
 
     const handleSelectedSalesReturn = (selectedSalesReturn) => {
+        if (formData.customer_id !== selectedSalesReturn.customer_id) {
+            infoMessage = "The selected Sales Return is not belongs to the customer: " + formData.customer_name;
+            setInfoMessage(infoMessage);
+            showInfo = true;
+            setShowInfo(showInfo);
+            return;
+        }
+
         console.log("selectedSalesReturn:", selectedSalesReturn);
         if (selectedSalesReturn.payment_status === "paid") {
             infoMessage = "The selected invoice is already paid";
