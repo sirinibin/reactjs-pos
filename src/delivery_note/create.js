@@ -1297,7 +1297,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   suggestProducts(searchTerm);
                 }}
                 onKeyDown={(e) => {
-                  if (e.code === "Escape") {
+                  if (e.key === "Escape") {
                     setProductOptions([]);
                     setOpenProductSearchResult(false);
                     productSearchRef.current?.clear();
@@ -1305,7 +1305,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
                   moveToProductSearch();
 
-                  /* if (e.code === "Enter") {
+                  /* if (e.key === "Enter") {
                      moveToProductSearch();
                    }*/
 
@@ -1498,7 +1498,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             }}
                             onFocus={() => handleFocus(index, `${"delivery_note_quantity_" + index}`)}
                             onKeyDown={(e) => {
-                              if (e.code === "Enter") {
+                              if (e.key === "Enter") {
                                 moveToProductSearch();
                               }
                             }}

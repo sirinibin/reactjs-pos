@@ -910,6 +910,7 @@ const Preview = forwardRef((props, ref) => {
     const defaultFontSizes = useMemo(() => ({
         "pageSize": 15,
         "font": "Cairo",
+        "reportPageSize": 20,
         "marginTop": {
             "value": 0,
             "unit": "px",

@@ -1738,7 +1738,7 @@ async function reCalculate(productIndex) {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
-                                                            if (e.code === "ArrowLeft") {
+                                                            if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     if ((index + 1) < selectedProducts.length) {
                                                                         inputRefs.current[index + 1][`${"purchase_return_unit_discount_with_vat_" + (index + 1)}`]?.focus();
@@ -1804,14 +1804,14 @@ async function reCalculate(productIndex) {
                                                         }}
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                            if (e.code === "Backspace") {
+                                                            if (e.key === "Backspace") {
                                                                 selectedProducts[index].purchase_unit_price_with_vat = "";
                                                                 selectedProducts[index].purchase_unit_price = "";
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
                                                                 }, 300);
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_return_product_quantity_" + index}`].focus();
                                                                 }, 100);
@@ -1892,14 +1892,14 @@ async function reCalculate(productIndex) {
 
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                            if (e.code === "Backspace") {
+                                                            if (e.key === "Backspace") {
                                                                 selectedProducts[index].purchase_unit_price_with_vat = "";
                                                                 selectedProducts[index].purchase_unit_price = "";
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
                                                                 }, 300);
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_return_product_unit_price_" + index}`].focus();
                                                                 }, 200);
@@ -1981,7 +1981,7 @@ async function reCalculate(productIndex) {
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                            if (e.code === "Enter") {
+                                                            if (e.key === "Enter") {
                                                                 if (selectedProducts.length > (index - 1) && index > 0) {
                                                                     console.log("Moving to next line");
                                                                     timerRef.current = setTimeout(() => {
@@ -1992,7 +1992,7 @@ async function reCalculate(productIndex) {
                                                                         inputRefs.current[selectedProducts.length - 1][`${"purchase_return_product_quantity_" + (selectedProducts.length - 1)}`]?.focus();
                                                                     }, 100);
                                                                 }
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_return_product_unit_price_with_vat_" + index}`].focus();
                                                                 }, 100);
@@ -2086,7 +2086,7 @@ async function reCalculate(productIndex) {
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                            if (e.code === "Enter") {
+                                                            if (e.key === "Enter") {
                                                                 if (selectedProducts.length > (index - 1) && index > 0) {
                                                                     console.log("Moving to next line");
                                                                     timerRef.current = setTimeout(() => {
@@ -2097,7 +2097,7 @@ async function reCalculate(productIndex) {
                                                                         inputRefs.current[selectedProducts.length - 1][`${"purchase_return_product_quantity_" + (selectedProducts.length - 1)}`]?.focus();
                                                                     }, 100);
                                                                 }
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_return_unit_discount_" + index}`].focus();
                                                                 }, 100);

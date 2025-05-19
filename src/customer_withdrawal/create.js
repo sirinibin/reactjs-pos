@@ -700,13 +700,13 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                                 }, 100);
                                                             }}
                                                             onKeyDown={(e) => {
-                                                                if (e.code === "ArrowLeft") {
+                                                                if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
                                                                         if (key > 0) {
                                                                             inputRefs.current[key - 1][`${"customer_payable_description_" + (key - 1)}`]?.focus();
                                                                         }
                                                                     }, 100);
-                                                                } else if (e.code === "Enter") {
+                                                                } else if (e.key === "Enter") {
                                                                     timerRef.current = setTimeout(() => {
                                                                         inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
                                                                     }, 100);
@@ -787,7 +787,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
-                                                                if (e.code === "ArrowLeft") {
+                                                                if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
                                                                         inputRefs.current[key][`${"customer_payable_payment_amount_" + key}`].focus();
                                                                     }, 100);
@@ -843,7 +843,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
-                                                                if (e.code === "ArrowLeft") {
+                                                                if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
                                                                         inputRefs.current[key][`${"customer_payable_payment_method_" + key}`].focus();
                                                                     }, 100);
@@ -886,7 +886,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                             onKeyDown={(e) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                                if (e.code === "Enter") {
+                                                                if (e.key === "Enter") {
                                                                     if ((key + 1) < formData.payments?.length && formData.payments?.length > 1) {
                                                                         console.log("Moving to next line");
                                                                         timerRef.current = setTimeout(() => {
@@ -904,7 +904,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                                                         }
 
                                                                     }
-                                                                } else if (e.code === "ArrowLeft") {
+                                                                } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
                                                                         inputRefs.current[key][`${"customer_payable_bank_reference_" + key}`].focus();
                                                                     }, 100);

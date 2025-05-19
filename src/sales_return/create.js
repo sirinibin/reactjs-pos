@@ -1917,7 +1917,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
-                                                            if (e.code === "ArrowLeft") {
+                                                            if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     if ((index + 1) < selectedProducts.length) {
                                                                         inputRefs.current[index + 1][`${"sales_return_unit_discount_with_vat_" + (index + 1)}`]?.focus();
@@ -1980,14 +1980,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         }}
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                            if (e.code === "Backspace") {
+                                                            if (e.key === "Backspace") {
                                                                 selectedProducts[index].unit_price_with_vat = "";
                                                                 selectedProducts[index].unit_price = "";
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
                                                                 }, 300);
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_return_product_quantity_" + index}`].focus();
                                                                 }, 100);
@@ -2065,14 +2065,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         }}
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                            if (e.code === "Backspace") {
+                                                            if (e.key === "Backspace") {
                                                                 selectedProducts[index].unit_price_with_vat = "";
                                                                 selectedProducts[index].unit_price = "";
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
                                                                 }, 300);
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_return_product_unit_price_" + index}`].focus();
                                                                 }, 100);
@@ -2152,7 +2152,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         }}
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                            if (e.code === "ArrowLeft") {
+                                                            if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_return_product_unit_price_with_vat_" + index}`].focus();
                                                                 }, 100);
@@ -2245,7 +2245,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                            if (e.code === "Enter") {
+                                                            if (e.key === "Enter") {
                                                                 console.log("selectedProducts.length:", selectedProducts.length)
                                                                 console.log("index:", index);
                                                                 if (selectedProducts.length > (index - 1) && index > 0) {
@@ -2258,7 +2258,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                         inputRefs.current[selectedProducts.length - 1][`${"sales_return_product_quantity_" + (selectedProducts.length - 1)}`]?.focus();
                                                                     }, 100);
                                                                 }
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_return_unit_discount_" + index}`].focus();
                                                                 }, 100);

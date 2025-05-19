@@ -1157,12 +1157,12 @@ const ProductCreate = forwardRef((props, ref) => {
                         }}
                         onKeyDown={(e) => {
                           if (timerRef.current) clearTimeout(timerRef.current);
-                          if (e.code === "Enter") {
+                          if (e.key === "Enter") {
                             timerRef.current = setTimeout(() => {
                               inputRefs.current[0][`${"product_wholesale_unit_price_0"}`]?.select();
                             }, 100);
 
-                          } /*else if (e.code === "ArrowLeft") {
+                          } /*else if (e.key ===  "ArrowLeft") {
                             timerRef.current = setTimeout(() => {
                               inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].focus();
                             }, 100);
@@ -1224,12 +1224,12 @@ const ProductCreate = forwardRef((props, ref) => {
                         }}
                         onKeyDown={(e) => {
                           if (timerRef.current) clearTimeout(timerRef.current);
-                          if (e.code === "Enter") {
+                          if (e.key === "Enter") {
                             timerRef.current = setTimeout(() => {
                               inputRefs.current[0][`${"product_retail_unit_price_0"}`]?.select();
                             }, 100);
 
-                          } else if (e.code === "ArrowLeft") {
+                          } else if (e.key === "ArrowLeft") {
                             timerRef.current = setTimeout(() => {
                               inputRefs.current[0][`${"product_purchase_unit_price_0"}`].focus();
                             }, 100);
@@ -1291,7 +1291,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         }}
                         onKeyDown={(e) => {
                           if (timerRef.current) clearTimeout(timerRef.current);
-                          if (e.code === "ArrowLeft") {
+                          if (e.key === "ArrowLeft") {
                             timerRef.current = setTimeout(() => {
                               inputRefs.current[0][`${"product_wholesale_unit_price_0"}`].focus();
                             }, 100);

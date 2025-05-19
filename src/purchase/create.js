@@ -1904,7 +1904,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 onKeyDown={(e) => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
 
-                                    if (e.code === "Escape") {
+                                    if (e.key === "Escape") {
                                         setProductOptions([]);
                                         setOpenProductSearchResult(false);
                                         timerRef.current = setTimeout(() => {
@@ -2108,7 +2108,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         }}
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                            if (e.code === "ArrowLeft") {
+                                                            if (e.key === "ArrowLeft") {
                                                                 if ((index + 1) === selectedProducts.length) {
                                                                     timerRef.current = setTimeout(() => {
                                                                         productSearchRef.current?.focus();
@@ -2179,14 +2179,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         }}
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                            if (e.code === "Backspace") {
+                                                            if (e.key === "Backspace") {
                                                                 selectedProducts[index].purchase_unit_price_with_vat = "";
                                                                 selectedProducts[index].purchase_unit_price = "";
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
                                                                 }, 300);
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_product_quantity_" + index}`].focus();
                                                                 }, 100);
@@ -2272,14 +2272,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
-                                                            if (e.code === "Backspace") {
+                                                            if (e.key === "Backspace") {
                                                                 selectedProducts[index].purchase_unit_price_with_vat = "";
                                                                 selectedProducts[index].purchase_unit_price = "";
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
                                                                 }, 300);
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_product_unit_price_" + index}`].focus();
                                                                 }, 200);
@@ -2361,7 +2361,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                            if (e.code === "Enter") {
+                                                            if (e.key === "Enter") {
                                                                 if ((index + 1) === selectedProducts.length) {
                                                                     timerRef.current = setTimeout(() => {
                                                                         productSearchRef.current?.focus();
@@ -2381,7 +2381,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     }
 
                                                                 }
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_product_unit_price_" + index}`].focus();
                                                                 }, 100);
@@ -2478,7 +2478,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         onKeyDown={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                            if (e.code === "Enter") {
+                                                            if (e.key === "Enter") {
                                                                 if ((index + 1) === selectedProducts.length) {
                                                                     timerRef.current = setTimeout(() => {
                                                                         productSearchRef.current?.focus();
@@ -2498,7 +2498,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     }
 
                                                                 }
-                                                            } else if (e.code === "ArrowLeft") {
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_unit_discount_" + index}`].focus();
                                                                 }, 100);

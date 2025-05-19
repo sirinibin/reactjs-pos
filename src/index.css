@@ -195,3 +195,22 @@ code {
 .table:not(.no-bold) thead input {
   min-width: 120px;
 }
+
+.typeahead-scrollable-menu {
+  overflow-x: auto;
+  white-space: nowrap;
+  max-width: 100%;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  scrollbar-width: thin;
+}
+
+.typeahead-scrollable-menu::-webkit-scrollbar {
+  height: 6px;
+}
+.typeahead-scrollable-menu::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
