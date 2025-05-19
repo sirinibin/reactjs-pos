@@ -886,7 +886,7 @@ const SalesReturn = forwardRef((props, ref) => {
         list();
     }
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
         } else if (field === "customer_id") {
@@ -906,7 +906,9 @@ const SalesReturn = forwardRef((props, ref) => {
         page = 1;
         setPage(page);
 
-        list();
+        if (!noList) {
+            list();
+        }
     }
 
     const list = useCallback(() => {
