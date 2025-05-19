@@ -473,6 +473,8 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         SalesUpdateFormRef.current.open(id);
     }
 
+    const inputRefs = useRef({});
+    const timerRef = useRef(null);
 
     return (
         <>
@@ -661,7 +663,6 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                             formData.payments.filter(payment => !payment.deleted).map((payment, key) => (
                                                 <tr key={key}>
                                                     <td>
-
                                                         <DatePicker
                                                             id="payment_date_str"
                                                             selected={formData.payments[key].date_str ? new Date(formData.payments[key].date_str) : null}
@@ -688,6 +689,30 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     </td>
                                                     <td >
                                                         <input type='number' id={`${"customer_receivable_payment_amount_" + key}`} name={`${"customer_receivable_payment_amount_" + key}`} value={formData.payments[key].amount} className="form-control "
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                inputRefs.current[key][`${"customer_receivable_payment_amount_" + key}`] = el;
+                                                            }}
+                                                            onFocus={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[key][`${"customer_receivable_payment_amount_" + key}`].select();
+                                                                }, 100);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (e.code === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        if (key > 0) {
+                                                                            inputRefs.current[key - 1][`${"customer_receivable_description_" + (key - 1)}`]?.focus();
+                                                                        }
+                                                                    }, 100);
+                                                                } else if (e.code === "Enter") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_receivable_payment_method_" + key}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }}
+
                                                             onChange={(e) => {
                                                                 errors["customer_receivable_payment_amount_" + key] = "";
                                                                 setErrors({ ...errors });
@@ -749,6 +774,25 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                         <select
                                                             id={`${"customer_receivable_payment_method_" + key}`} name={`${"customer_receivable_payment_method_" + key}`}
                                                             value={formData.payments[key].method} className="form-control "
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                inputRefs.current[key][`${"customer_receivable_payment_method_" + key}`] = el;
+                                                            }}
+                                                            onFocus={() => {
+                                                                /*
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[key][`${"customer_receivable_payment_method_" + key}`].select();
+                                                                }, 100);*/
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (e.code === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_receivable_payment_amount_" + key}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }}
                                                             onChange={(e) => {
                                                                 // errors["payment_method"] = [];
                                                                 errors["customer_receivable_payment_method_" + key] = "";
@@ -787,6 +831,24 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     <td >
                                                         <input type='text' id={`${"customer_receivable_bank_reference_" + key}`} name={`${"customer_receivable_bank_reference_" + key}`}
                                                             value={formData.payments[key].bank_reference} className="form-control "
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                inputRefs.current[key][`${"customer_receivable_bank_reference_" + key}`] = el;
+                                                            }}
+                                                            onFocus={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[key][`${"customer_receivable_bank_reference_" + key}`].select();
+                                                                }, 100);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (e.code === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_receivable_payment_method_" + key}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }}
                                                             onChange={(e) => {
                                                                 errors["customer_receivable_bank_reference_" + key] = "";
                                                                 setErrors({ ...errors });
@@ -811,6 +873,44 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                                     <td>
                                                         <input type='text' id={`${"customer_receivable_description_" + key}`} name={`${"customer_receivable_description_" + key}`}
                                                             value={formData.payments[key].description} className="form-control "
+                                                            ref={(el) => {
+                                                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                                                inputRefs.current[key][`${"customer_receivable_description_" + key}`] = el;
+                                                            }}
+                                                            onFocus={() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    inputRefs.current[key][`${"customer_receivable_description_" + key}`].select();
+                                                                }, 100);
+                                                            }}
+                                                            onKeyDown={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                                if (e.code === "Enter") {
+                                                                    if ((key + 1) < formData.payments?.length && formData.payments?.length > 1) {
+                                                                        console.log("Moving to next line");
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            inputRefs.current[key + 1][`${"customer_receivable_payment_amount_" + (key + 1)}`]?.focus();
+                                                                        }, 100);
+                                                                    } else {
+                                                                        if ((key + 1) === formData.payments?.length) {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[0][`${"customer_receivable_payment_amount_0"}`]?.focus();
+                                                                            }, 100);
+                                                                        } else {
+                                                                            timerRef.current = setTimeout(() => {
+                                                                                inputRefs.current[key][`${"customer_receivable_payment_amount_" + (key)}`]?.focus();
+                                                                            }, 100);
+                                                                        }
+
+                                                                    }
+                                                                } else if (e.code === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[key][`${"customer_receivable_bank_reference_" + key}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }}
+
                                                             onChange={(e) => {
                                                                 errors["customer_receivable_description_" + key] = "";
                                                                 setErrors({ ...errors });
