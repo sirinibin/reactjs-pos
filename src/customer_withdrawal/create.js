@@ -437,7 +437,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
     const handleSelectedSalesReturn = (selectedSalesReturn) => {
         if (formData.customer_id !== selectedSalesReturn.customer_id) {
-            infoMessage = "The selected Sales Return is not belongs to the customer: " + formData.customer_name;
+            infoMessage = "The selected Sales Return is not belongs to the customer " + selectedCustomers[0]?.name;
             setInfoMessage(infoMessage);
             showInfo = true;
             setShowInfo(showInfo);
