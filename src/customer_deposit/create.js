@@ -437,6 +437,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     let [infoMessage, setInfoMessage] = useState("");
 
     const handleSelectedSale = (selectedSale) => {
+
         if (formData.customer_id !== selectedSale.customer_id) {
             infoMessage = "The selected sale is not belongs to the customer: " + formData.customer_name;
             setInfoMessage(infoMessage);
