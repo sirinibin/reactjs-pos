@@ -1059,7 +1059,7 @@ const Preview = forwardRef((props, ref) => {
             storedFontSizes = {};
         }
 
-        let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note"];
+        let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note", "customer_deposit", "customer_withdrawal", "balance_sheet"];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {
                 if (!storedFontSizes[modelNames[key1] + "_" + key2]) {

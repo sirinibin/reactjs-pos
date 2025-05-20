@@ -65,98 +65,90 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 }
                 */
 
-                let pageSize = 17;
-                if (whatsAppShare) {
-                    pageSize = 17;
-                }
-                model.pageSize = pageSize;
-                let totalPosts = model.posts.length;
-                let top = 0;
-                let totalPagesInt = parseInt(totalPosts / pageSize);
-                let totalPagesFloat = parseFloat(totalPosts / pageSize);
+                preparePages();
 
-                let totalPages = totalPagesInt;
-                if ((totalPagesFloat - totalPagesInt) > 0) {
-                    totalPages++;
-                }
-
-                model.total_pages = totalPages;
-
-
-                model.pages = [];
-
-
-                let offset = 0;
-
-                for (let i = 0; i < totalPages; i++) {
-                    model.pages.push({
-                        top: top,
-                        posts: [],
-                        lastPage: false,
-                        firstPage: false,
-                    });
-
-                    for (let j = offset; j < totalPosts; j++) {
-                        for (let k = 0; k < model.posts[j].posts.length; k++) {
-                            model.pages[i].posts.push({
-                                "date": model.posts[j].posts[k].date,
-                                "debit_account": model.posts[j].posts[k].debit_or_credit === "debit" ? "To " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Dr." : "",
-                                "debit_account_number": model.posts[j].posts[k].debit_or_credit === "debit" ? model.posts[j].posts[k].account_number : "",
-                                "credit_account": model.posts[j].posts[k].debit_or_credit === "credit" ? "By " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Cr." : "",
-                                "credit_account_number": model.posts[j].posts[k].debit_or_credit === "credit" ? model.posts[j].posts[k].account_number : "",
-                                "debit_or_credit": model.posts[j].posts[k].debit_or_credit,
-                                "debit_amount": model.posts[j].posts[k].debit ? model.posts[j].posts[0].debit : "",
-                                "credit_amount": model.posts[j].posts[k].credit ? model.posts[j].posts[0].credit : "",
-                                "reference_code": model.posts[j].reference_code,
-                                "reference_model": model.posts[j].reference_model,
-                            });
-                        }
-                        //  model.pages[i].posts.push(model.posts[j]);
-
-                        if (model.pages[i].posts.length === pageSize) {
-                            break;
-                        }
-                    }
-
-                    if (model.pages[i].posts.length < pageSize) {
-                        for (let s = model.pages[i].posts.length; s < pageSize; s++) {
-                            model.pages[i].posts.push({});
-                        }
-                    }
-
-                    if (whatsAppShare) {
-                        top += 10;
-                    } else {
-                        // top += 1057;
-                        top += 10;
-                    }
-
-
-                    offset += pageSize;
-
-                    if (i === 0) {
-                        model.pages[i].firstPage = true;
-                    }
-
-                    if ((i + 1) === totalPages) {
-                        model.pages[i].lastPage = true;
-                    }
-                }
-
-                console.log("model.pages:", model.pages);
-                console.log("model.posts:", model.posts);
-                //  getQRCodeContents();
-                //model.qr_content = getQRCodeContents();
-                //setModel({ ...model });
 
                 setShow(true);
-                console.log("model:", model);
             }
 
         },
 
     }));
 
+
+
+    function preparePages() {
+        if (fontSizes[modelName + "_balanceSheetpPageSize"]) {
+            model.pageSize = fontSizes[modelName + "_balanceSheetpPageSize"];
+        } else {
+            model.pageSize = 20
+        }
+
+        let totalPosts = model.posts.length;
+        let top = 0;
+        let totalPagesInt = parseInt(totalPosts / model.pageSize);
+        let totalPagesFloat = parseFloat(totalPosts / model.pageSize);
+
+        let totalPages = totalPagesInt;
+        if ((totalPagesFloat - totalPagesInt) > 0) {
+            totalPages++;
+        }
+
+        model.total_pages = totalPages;
+
+
+        model.pages = [];
+        let no = 1;
+        let offset = 0;
+
+        for (let i = 0; i < totalPages; i++) {
+            model.pages.push({
+                top: top,
+                posts: [],
+                lastPage: false,
+                firstPage: false,
+            });
+            for (let j = offset; j < totalPosts; j++) {
+                for (let k = 0; k < model.posts[j].posts.length; k++) {
+                    model.pages[i].posts.push({
+                        "no": no,
+                        "date": model.posts[j].posts[k].date,
+                        "debit_account": model.posts[j].posts[k].debit_or_credit === "debit" ? "To " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Dr." : "",
+                        "debit_account_number": model.posts[j].posts[k].debit_or_credit === "debit" ? model.posts[j].posts[k].account_number : "",
+                        "credit_account": model.posts[j].posts[k].debit_or_credit === "credit" ? "By " + model.posts[j].posts[k].account_name + " A/c #" + model.posts[j].posts[k].account_number + " Cr." : "",
+                        "credit_account_number": model.posts[j].posts[k].debit_or_credit === "credit" ? model.posts[j].posts[k].account_number : "",
+                        "debit_or_credit": model.posts[j].posts[k].debit_or_credit,
+                        "debit_amount": model.posts[j].posts[k].debit ? model.posts[j].posts[0].debit : "",
+                        "credit_amount": model.posts[j].posts[k].credit ? model.posts[j].posts[0].credit : "",
+                        "reference_code": model.posts[j].reference_code,
+                        "reference_model": model.posts[j].reference_model,
+                    });
+                    no++;
+                    if (model.pages[i].posts.length === model.pageSize) {
+                        break;
+                    }
+                }
+                if (model.pages[i].posts.length === model.pageSize) {
+                    break;
+                }
+            }
+
+            if (model.pages[i].posts.length < model.pageSize) {
+                for (let s = model.pages[i].posts.length; s < model.pageSize; s++) {
+                    model.pages[i].posts.push({});
+                }
+            }
+            offset += model.pageSize;
+
+            if (i === 0) {
+                model.pages[i].firstPage = true;
+            }
+
+            if ((i + 1) === totalPages) {
+                model.pages[i].lastPage = true;
+            }
+        }
+    }
 
 
     let [model, setModel] = useState({});
@@ -456,12 +448,16 @@ const handlePrint = useCallback(async () => {
 
 
 
-    let modelName = "balanceSheet";
+    let modelName = "balance_sheet";
 
     const [showSlider, setShowSlider] = useState(false);
     let [selectedText, setSelectedText] = useState("");
 
     const defaultFontSizes = useMemo(() => ({
+        "pageSize": 15,
+        "balanceSheetpPageSize": 20,
+        "font": "Noto Naskh Semi Bold",
+        "reportPageSize": 20,
         "marginTop": {
             "value": 0,
             "unit": "px",
@@ -581,6 +577,7 @@ const handlePrint = useCallback(async () => {
         },
     }), []);
 
+
     const selectText = (name) => {
         selectedText = name;
         setSelectedText(name);
@@ -602,6 +599,7 @@ const handlePrint = useCallback(async () => {
 
     let [fontSizes, setFontSizes] = useState(defaultFontSizes);
 
+
     useEffect(() => {
         let storedFontSizes = getFromLocalStorage("fontSizes");
         if (storedFontSizes) {
@@ -610,7 +608,7 @@ const handlePrint = useCallback(async () => {
             storedFontSizes = {};
         }
 
-        let modelNames = ["balanceSheet"];
+        let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note", "balance_sheet", "customer_deposit", "customer_withdrawal"];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {
                 if (!storedFontSizes[modelNames[key1] + "_" + key2]) {
@@ -682,6 +680,57 @@ const handlePrint = useCallback(async () => {
         }
     };
 
+    const fonts = [
+        { label: 'Calibri Light', value: "Calibri Light" },
+        { label: 'IBM Plex Sans Arabic Regular', value: "IBM Plex Sans Arabic Regular" },
+        { label: 'Sakkal Majalla', value: 'Sakkal Majalla' },
+        { label: 'Arial', value: 'Arial' },
+        { label: 'Tahoma', value: 'Tahoma' },
+        { label: 'Akhbar Regular', value: 'Akhbar Regular' },
+        { label: 'Thuluth Regular', value: 'Thuluth Regular' },
+        { label: 'Simplified Arabic', value: 'Simplified Arabic' },
+        { label: 'Traditional Arabic', value: 'Traditional Arabic' },
+        { label: 'Andulus', value: 'Andulus' },
+        { label: 'Noto Naskh Bold', value: 'Noto Naskh Bold' },
+        { label: 'Noto Naskh Semi Bold', value: 'Noto Naskh Semi Bold' },
+        { label: 'Noto Naskh Regular', value: 'Noto Naskh Regular' },
+        { label: 'Noto Naskh Medium', value: 'Noto Naskh Medium' },
+        { label: 'Wafeq Regular', value: 'Wafeq Regular' },
+        { label: 'Wafeq Light', value: 'Wafeq Light' },
+        { label: 'Cairo', value: 'Cairo' },
+        { label: 'Amiri', value: 'Amiri' },
+        { label: 'Noto Naskh Arabic', value: '"Noto Naskh Arabic"' },
+        { label: 'Noto Kufi Arabic', value: '"Noto Kufi Arabic"' },
+        { label: 'Changa', value: 'Changa' },
+        { label: 'Lateef', value: 'Lateef' },
+        { label: 'Harmattan', value: 'Harmattan' },
+        { label: 'Scheherazade New', value: '"Scheherazade New"' },
+        { label: 'Reem Kufi', value: '"Reem Kufi"' },
+        { label: 'El Messiri', value: '"El Messiri"' },
+        { label: 'Tajawal', value: 'Tajawal' },
+        { label: 'Almarai', value: 'Almarai' },
+        { label: 'Markazi Text', value: '"Markazi Text"' },
+        { label: 'Aref Ruqaa', value: '"Aref Ruqaa"' },
+        { label: 'Baloo Bhaijaan 2', value: '"Baloo Bhaijaan 2"' }
+    ];
+
+    //const [selectedFont, setSelectedFont] = useState(fontSizes[modelName + "_font"]);
+
+    const handleFontChange = (e) => {
+        // setSelectedFont(e.target.value);
+        fontSizes[modelName + "_font"] = e.target.value;
+        setFontSizes({ ...fontSizes })
+        saveToLocalStorage("fontSizes", fontSizes);
+    };
+
+    function changePageSize(size) {
+        fontSizes[modelName + "_balanceSheetpPageSize"] = parseInt(size);
+        setFontSizes({ ...fontSizes });
+        saveToLocalStorage("fontSizes", fontSizes);
+        preparePages();
+    }
+
+
     return (<>
         <Modal show={show} scrollable={true} size="xl" fullscreen onHide={handleClose} animation={false}>
             <Modal.Header>
@@ -697,6 +746,15 @@ const handlePrint = useCallback(async () => {
                             <button className="btn-close ms-2" onClick={() => setShowSlider(false)}></button>
                         </div>
                     )}
+
+                    <label htmlFor="font-select">Select Font: </label>
+                    <select id="font-select" value={fontSizes[modelName + "_font"]} onChange={handleFontChange}>
+                        {fonts.map((font) => (
+                            <option key={font.value} value={font.value}>
+                                {font.label}
+                            </option>
+                        ))}
+                    </select>
 
                     {/* Show Store Header - Always fixed here */}
                     {!whatsAppShare && <div className="form-check">
@@ -726,6 +784,37 @@ const handlePrint = useCallback(async () => {
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
 
                     </div>}
+
+
+                    <>
+                        <label className="form-label">Page Size:</label>
+                        <select
+                            value={fontSizes[modelName + "_balanceSheetpPageSize"]}
+                            onChange={(e) => {
+                                changePageSize(e.target.value);
+                            }}
+                            className="form-control pull-right"
+                            style={{
+                                border: "solid 1px",
+                                borderColor: "silver",
+                                width: "55px",
+                            }}
+                        >
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="21">21</option>
+                            <option value="22">22</option>
+                            <option value="23">23</option>
+                            <option value="24">24</option>
+                            <option value="25">25</option>
+                            <option value="30">30</option>
+                            <option value="35">35</option>
+                            <option value="40">40</option>
+                        </select>
+                    </>
+
+
 
 
 

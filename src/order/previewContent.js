@@ -135,14 +135,6 @@ const PreviewContent = forwardRef((props, ref) => {
                         props.selectText("invoiceDetails");
                     }}>
                         <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: `${(props.model.store?.zatca_qr_on_left_bottom || (props.modelName === "quotation" && props.model.type !== "invoice")) ? "100%" : "74%"}` }}>
-                            {/*props.model.invoice_count_value && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >Invoice Count Value | عد الفاتورة (ICV):</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} >  {props.model.invoice_count_value ? props.model.invoice_count_value : ""}</div>
-                            </div> : ""*/}
-                            {/*props.model.uuid && props.model.store?.zatca?.phase === "2" && props.model.zatca?.reporting_passed ? <div className="row" dir="ltr" style={{ border: detailsBorderThickness }} >
-                                <div className="col-md-4" dir="ltr" style={{ border: detailsBorderThickness, width: detailsLabelsColumnWidthPercent, padding: "3px" }} >UUID | معرف فريد:</div>
-                                <div className="col-md-8" dir="ltr" style={{ border: detailsBorderThickness, width: detailsValuesColumnWidthPercent, padding: "3px" }} > {props.model.uuid ? props.model.uuid : ""}</div>
-                            </div> : ""*/}
                             {props.modelName === "quotation" && props.model.type !== "invoice" && <>
                                 <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                     <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Quotation No. | رقم الاقتباس:</b></div>
@@ -345,6 +337,7 @@ const PreviewContent = forwardRef((props, ref) => {
                             {props.model.total_pages ? convertToArabicNumber(props.model.total_pages.toString()) + " الصفحة " + convertToArabicNumber((pageIndex + 1).toString()) + " من " : ""}
                         </div>
                     </div>
+
                     <div className="row">
                         <div className="col">
                             <div

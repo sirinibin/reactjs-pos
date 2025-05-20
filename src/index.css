@@ -214,3 +214,8 @@ code {
   background-color: #ccc;
   border-radius: 4px;
 }
+
+.break-text {
+  word-break: break-all;
+  white-space: normal;
+}
