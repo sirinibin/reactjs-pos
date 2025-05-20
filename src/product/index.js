@@ -23,8 +23,6 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 import StatsSummary from "../utils/StatsSummary.js";
 import countryList from 'react-select-country-list'
-import { Menu, MenuItem } from 'react-bootstrap-typeahead';
-//import debounce from 'lodash.debounce';
 
 function ProductIndex(props) {
     const countryOptions = useMemo(() => countryList().getData(), [])
@@ -1850,21 +1848,6 @@ function ProductIndex(props) {
                                                         clearButton={true}
                                                         open={openProductSearchResult}
                                                         isLoading={isProductsLoading}
-                                                        renderMenu={(results, menuProps) => (
-                                                            <Menu {...menuProps} className="typeahead-scroll-menu">
-                                                                {results.map((result, index) => (
-                                                                    <MenuItem
-                                                                        key={index}
-                                                                        option={result}
-                                                                        position={index}
-                                                                        className="scrollable-item-wrapper"
-                                                                    >
-                                                                        <div className="scrollable-item">{result.search_label}</div>
-                                                                    </MenuItem>
-                                                                ))}
-                                                            </Menu>
-                                                        )}
-
                                                         onChange={(selectedItems) => {
 
                                                             /*

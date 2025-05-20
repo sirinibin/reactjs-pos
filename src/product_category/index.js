@@ -9,6 +9,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import { confirm } from 'react-bootstrap-confirmation';
 
 function ProductCategoryIndex(props) {
 
@@ -168,7 +169,7 @@ function ProductCategoryIndex(props) {
             },
         };
         let Select =
-            "select=id,name,parent_name,parent_id,created_by_name,created_at";
+            "select=id,name,parent_name,parent_id,created_by_name,created_at,deleted";
 
 
         if (localStorage.getItem("store_id")) {
@@ -264,6 +265,108 @@ function ProductCategoryIndex(props) {
     }
 
 
+    function restoreProductCategory(id) {
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/product-category/restore/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                if (props.showToastMessage) props.showToastMessage("Restored successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+
+    function deleteProductCategory(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/product-category/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                if (props.showToastMessage) props.showToastMessage("Deleted successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+
+    const confirmDelete = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to delete this product category?');
+        console.log(result);
+        if (result) {
+            deleteProductCategory(id);
+        }
+    };
+
+    const confirmRestore = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to restore this product category?');
+        console.log(result);
+        if (result) {
+            restoreProductCategory(id);
+        }
+    };
+
+
+    let [deleted, setDeleted] = useState(false);
 
     return (
         <>
@@ -490,6 +593,7 @@ function ProductCategoryIndex(props) {
                                                     </b>
                                                 </th>
                                                 <th>Actions</th>
+                                                <th>Deleted</th>
                                             </tr>
                                         </thead>
 
@@ -604,6 +708,23 @@ function ProductCategoryIndex(props) {
                                                     ) : null}
                                                 </th>
                                                 <th></th>
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("deleted", e.target.value);
+                                                            if (e.target.value === "1") {
+                                                                deleted = true;
+                                                                setDeleted(deleted);
+                                                            } else {
+                                                                deleted = false;
+                                                                setDeleted(deleted);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="0" >NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
                                             </tr>
                                         </thead>
 
@@ -624,6 +745,17 @@ function ProductCategoryIndex(props) {
                                                             )}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {!productcategory.deleted && <Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                confirmDelete(productcategory.id);
+                                                            }}>
+                                                                <i className="bi bi-trash"></i>
+                                                            </Button>}
+                                                            {productcategory.deleted && <Button className="btn btn-success btn-sm" onClick={() => {
+                                                                confirmRestore(productcategory.id);
+                                                            }}>
+                                                                <i className="bi bi-arrow-counterclockwise"></i>
+                                                            </Button>}
+
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(productcategory.id);
                                                             }}>
@@ -653,6 +785,7 @@ function ProductCategoryIndex(props) {
                                                         </ul>
                                                        */}
                                                         </td>
+                                                        <td>{productcategory.deleted ? "YES" : "NO"}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>

@@ -8,6 +8,7 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
+import { confirm } from 'react-bootstrap-confirmation';
 
 function ProductBrandIndex(props) {
 
@@ -117,7 +118,7 @@ function ProductBrandIndex(props) {
             },
         };
         let Select =
-            "select=id,code,name,created_at";
+            "select=id,code,name,created_at,deleted";
 
 
         if (localStorage.getItem("store_id")) {
@@ -213,6 +214,108 @@ function ProductBrandIndex(props) {
     }
 
 
+    function restoreProductBrand(id) {
+        const requestOptions = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/product-brand/restore/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                if (props.showToastMessage) props.showToastMessage("Restored successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+
+    function deleteProductBrand(id) {
+        const requestOptions = {
+            method: "DELETE",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        fetch(
+            "/v1/product-brand/" + id + "?" + queryParams,
+            requestOptions
+        )
+            .then(async (response) => {
+                const isJson = response.headers
+                    .get("content-type")
+                    ?.includes("application/json");
+                const data = isJson && (await response.json());
+
+                // check for error response
+                if (!response.ok) {
+                    const error = data && data.errors;
+                    return Promise.reject(error);
+                }
+
+                if (props.showToastMessage) props.showToastMessage("Deleted successfully!", "success");
+                list();
+            })
+            .catch((error) => {
+
+                console.log(error);
+            });
+    }
+
+
+    const confirmDelete = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to delete this product brand?');
+        console.log(result);
+        if (result) {
+            deleteProductBrand(id);
+        }
+    };
+
+    const confirmRestore = async (id) => {
+        console.log(id);
+        const result = await confirm('Are you sure, you want to restore this product brand?');
+        console.log(result);
+        if (result) {
+            restoreProductBrand(id);
+        }
+    };
+
+
+    let [deleted, setDeleted] = useState(false);
 
     return (
         <>
@@ -419,6 +522,7 @@ function ProductBrandIndex(props) {
                                                     </b>
                                                 </th>
                                                 <th>Actions</th>
+                                                <th>Deleted</th>
                                             </tr>
                                         </thead>
 
@@ -512,6 +616,23 @@ function ProductBrandIndex(props) {
                                                     ) : null}
                                                 </th>
                                                 <th></th>
+                                                <th>
+                                                    <select
+                                                        onChange={(e) => {
+                                                            searchByFieldValue("deleted", e.target.value);
+                                                            if (e.target.value === "1") {
+                                                                deleted = true;
+                                                                setDeleted(deleted);
+                                                            } else {
+                                                                deleted = false;
+                                                                setDeleted(deleted);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <option value="0" >NO</option>
+                                                        <option value="1">YES</option>
+                                                    </select>
+                                                </th>
                                             </tr>
                                         </thead>
 
@@ -523,7 +644,6 @@ function ProductBrandIndex(props) {
                                                         <td className="text-start" style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             <OverflowTooltip value={productbrand.name} maxWidth={250} />
                                                         </td>
-                                                        <td style={{ width: "auto", whiteSpace: "nowrap" }} >{productbrand.created_by_name}</td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                             {format(
                                                                 new Date(productbrand.created_at),
@@ -531,6 +651,17 @@ function ProductBrandIndex(props) {
                                                             )}
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                            {!productbrand.deleted && <Button className="btn btn-danger btn-sm" onClick={() => {
+                                                                confirmDelete(productbrand.id);
+                                                            }}>
+                                                                <i className="bi bi-trash"></i>
+                                                            </Button>}
+                                                            {productbrand.deleted && <Button className="btn btn-success btn-sm" onClick={() => {
+                                                                confirmRestore(productbrand.id);
+                                                            }}>
+                                                                <i className="bi bi-arrow-counterclockwise"></i>
+                                                            </Button>}
+
                                                             <Button className="btn btn-light btn-sm" onClick={() => {
                                                                 openUpdateForm(productbrand.id);
                                                             }}>
@@ -560,6 +691,7 @@ function ProductBrandIndex(props) {
                                                         </ul>
                                                        */}
                                                         </td>
+                                                        <td>{productbrand.deleted ? "YES" : "NO"}</td>
                                                     </tr>
                                                 ))}
                                         </tbody>
