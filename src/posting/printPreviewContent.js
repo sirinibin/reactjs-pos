@@ -466,7 +466,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         <tr style={{ borderBottom: tableBorderThickness, }} key={index}   >
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.no}</td>
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
-                                            <td className="text-start" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px" }}>
+                                            <td className="text-start break-text" style={{ width: "auto", padding: "3px", alignContent: "start", borderRightWidth: "0px" }}>
                                                 {post.debit_account}
                                             </td>
                                             <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px", borderRight: tableBorderThickness }}>
@@ -479,7 +479,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td style={{ width: "auto", whiteSpace: "nowrap", padding: "3px", alignContent: "start", borderRightWidth: "0px" }}>
+                                            <td style={{ width: "auto", padding: "3px", alignContent: "start", borderRightWidth: "0px" }} className="break-text">
                                                 {post.credit_account}
                                             </td>
                                             <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px", borderRight: tableBorderThickness }}>
@@ -491,8 +491,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td style={{ width: "auto", whiteSpace: "nowrap", padding: "3px", borderRight: tableBorderThickness }}>{toTitleCaseFromUnderscore(post.reference_model)}</td>
-                                            <td style={{ padding: "3px", }} className="break-text ">{post.reference_code}</td>
+                                            <td className="break-text" style={{ width: "auto", padding: "3px", borderRight: tableBorderThickness }}>{toTitleCaseFromUnderscore(post.reference_model)}</td>
+                                            <td style={{ padding: "3px", }} className="break-text">{post.reference_code}</td>
                                         </tr>
                                     ))}
 

@@ -23,6 +23,8 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 import StatsSummary from "../utils/StatsSummary.js";
 import countryList from 'react-select-country-list'
+//import debounce from 'lodash.debounce';
+import ResizableTableCell from './../utils/ResizableTableCell';
 
 function ProductIndex(props) {
     const countryOptions = useMemo(() => countryList().getData(), [])
@@ -1761,6 +1763,7 @@ function ProductIndex(props) {
                                                     </select>
                                                 </th>
                                                 <th style={{ minWidth: "100px" }}></th>
+
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="product_id_by_part_no"
@@ -1809,7 +1812,9 @@ function ProductIndex(props) {
                                                     />*/}
                                                 </th>
 
-                                                <th style={{ minWidth: "250px" }}>
+                                                {/*<th style={{ minWidth: "250px" }}>*/}
+                                                <ResizableTableCell>
+
                                                     {/*<input
                                                         style={{ minWidth: "275px" }}
                                                         type="text"
@@ -1875,7 +1880,8 @@ function ProductIndex(props) {
                                                         ignoreDiacritics={true}
                                                         multiple
                                                     />
-                                                </th>
+                                                </ResizableTableCell>
+                                                {/*</th>*/}
                                                 <th>
                                                     <input
                                                         type="text"
