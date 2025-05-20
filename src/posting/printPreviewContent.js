@@ -496,7 +496,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         </tr>
                                     ))}
                                     {props.model.pages.length === (pageIndex + 1) && props.model ? <tr style={{ borderBottom: tableBorderThickness }}>
-                                        <td colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
+                                        <td className="text-end" colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                             <b>Amount</b>
                                         </td>
                                         <td colSpan={2} style={{ textAlign: "right", padding: "3px", borderRight: tableBorderThickness }}><b>
@@ -527,7 +527,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
                                     {props.model.pages.length === (pageIndex + 1) && props.model && (props.model.debitBalance > 0 || props.model.creditBalance > 0) ?
                                         <tr style={{ borderBottom: tableBorderThickness }}>
-                                            <th colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
+                                            <th className="text-end" colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                                 <b>Due Amount</b>
                                             </th>
                                             <th colSpan={2} style={{ textAlign: "right", padding: "3px", color: "red", borderRight: tableBorderThickness }}><b>
@@ -556,7 +556,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         </tr> : ""}
 
                                     {props.model.pages.length === (pageIndex + 1) && props.model ? <tr style={{ borderBottom: tableBorderThickness }}>
-                                        <td colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
+                                        <td className="text-end" colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                             <b>Total Amount</b>
                                         </td>
                                         <td colSpan={2} style={{ textAlign: "right", padding: "3px", borderRight: tableBorderThickness }}><b>
