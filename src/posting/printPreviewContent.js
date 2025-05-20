@@ -77,7 +77,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                 style={{
                     fontFamily: props.fontSizes[props.modelName + "_font"],
                     backgroundColor: "white",
-                    border: "solid 1px",
+                    border: "solid 0px",
                     borderColor: "silver",
                     borderRadius: "2mm",
                     paddingLeft: "0px",
