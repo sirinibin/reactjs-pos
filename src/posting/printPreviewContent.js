@@ -155,7 +155,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     </div>
                 </div>
 
-                <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
+                {pageIndex === 0 && <div className="row col-md-14" style={{ border: "solid 0px", borderColor: detailsBorderColor, fontSize: props.fontSizes[props.modelName + "_invoiceDetails"]?.size, padding: "10px" }} onClick={() => {
                     props.selectText("invoiceDetails");
                 }}>
                     <div className="col-md-12" style={{ border: detailsBorderThickness, borderColor: detailsBorderColor, marginLeft: "0px", width: "100%" }}>
@@ -323,7 +323,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                             </div>
                         </> : ""}
                     </div>
-                </div>
+                </div>}
 
                 < div className="row clickable-text" style={{ fontSize: props.fontSizes[props.modelName + "_invoicePageCount"]?.size }} onClick={() => {
                     props.selectText("invoicePageCount");

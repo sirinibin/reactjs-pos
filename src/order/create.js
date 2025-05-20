@@ -2659,6 +2659,7 @@ function findDiscount() {
                                             <td>
                                                 <div className={`input-group mb-3 ${errors["quantity_" + index] ? "mt-3" : ""}`}>
                                                     <input type="number" id={`${"sales_product_quantity_" + index}`} name={`${"sales_product_quantity" + index}`} onWheel={(e) => e.target.blur()} value={product.quantity} className="form-control text-end"
+
                                                         placeholder="Quantity"
                                                         ref={(el) => {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};
@@ -2742,13 +2743,14 @@ function findDiscount() {
 
                                                         }} />
                                                     <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
-                                                    {errors["quantity_" + index] && (
-                                                        <div style={{ color: "red", fontSize: "12px" }}>
-                                                            {errors["quantity_" + index]}
-                                                        </div>
-                                                    )}
+
 
                                                 </div>
+                                                {errors["quantity_" + index] && (
+                                                    <div style={{ color: "red", fontSize: "12px" }}>
+                                                        {errors["quantity_" + index]}
+                                                    </div>
+                                                )}
 
                                             </td>
                                             <td>
