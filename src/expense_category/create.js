@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useRef } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -267,7 +267,7 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
         setParentCategoryOptions(data.result);
         setIsExpenseCategoriesLoading(false);
     }
-
+    const categorySearchRef = useRef();
 
 
     return (
@@ -378,6 +378,13 @@ const ExpenseCategoryCreate = forwardRef((props, ref) => {
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestCategories(searchTerm);
+                                    }}
+                                    ref={categorySearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            setParentCategoryOptions([]);
+                                            categorySearchRef.current?.clear();
+                                        }
                                     }}
                                 />
 

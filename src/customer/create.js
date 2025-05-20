@@ -454,6 +454,8 @@ const CustomerCreate = forwardRef((props, ref) => {
         QuotationsRef.current.open(false, selectedCustomers, "invoice", "paid");
     }
 
+    const countrySearchRef = useRef();
+
     return (
         <>
             <Quotations ref={QuotationsRef} showToastMessage={props.showToastMessage} />
@@ -751,6 +753,12 @@ const CustomerCreate = forwardRef((props, ref) => {
                                         formData.country_name = selectedItems[0].label;
                                         setFormData({ ...formData });
                                         setSelectedCountries(selectedItems);
+                                    }}
+                                    ref={countrySearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            countrySearchRef.current?.clear();
+                                        }
                                     }}
                                     options={countryOptions}
                                     placeholder="Country name"

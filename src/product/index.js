@@ -23,8 +23,6 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import Dropdown from 'react-bootstrap/Dropdown';
 import StatsSummary from "../utils/StatsSummary.js";
 import countryList from 'react-select-country-list'
-//import debounce from 'lodash.debounce';
-import ResizableTableCell from './../utils/ResizableTableCell';
 
 function ProductIndex(props) {
     const countryOptions = useMemo(() => countryList().getData(), [])
@@ -787,6 +785,13 @@ function ProductIndex(props) {
     };
 
     let [deleted, setDeleted] = useState(false);
+
+
+    const productSearchRef = useRef();
+    const productSearchByPartNoRef = useRef();
+    const countrySearchRef = useRef();
+    const brandSearchRef = useRef();
+    const categorySearchRef = useRef();
 
     return (
         <>
@@ -1769,10 +1774,18 @@ function ProductIndex(props) {
                                                         id="product_id_by_part_no"
                                                         filterBy={() => true}
                                                         size="lg"
+                                                        ref={productSearchByPartNoRef}
                                                         labelKey="search_label"
                                                         emptyLabel="No products found"
                                                         open={openProductSearchResultByPartNo}
                                                         isLoading={isProductsLoadingByPartNo}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setProductOptionsByPartNo([]);
+                                                                setOpenProductSearchResultByPartNo(false);
+                                                                productSearchByPartNoRef.current?.clear();
+                                                            }
+                                                        }}
                                                         onChange={(selectedItems) => {
 
                                                             /*
@@ -1812,40 +1825,10 @@ function ProductIndex(props) {
                                                     />*/}
                                                 </th>
 
-                                                {/*<th style={{ minWidth: "250px" }}>*/}
-                                                <ResizableTableCell>
-
-                                                    {/*<input
-                                                        style={{ minWidth: "275px" }}
-                                                        type="text"
-                                                        id="name"
-                                                        onChange={(e) =>
-                                                            searchByFieldValue("name", e.target.value)
-                                                        }
-                                                        className="form-control"
-                                                    />
+                                                <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="product_id"
-                                                        labelKey="name"
-                                                          filterBy={() => true}
-                                                        onChange={(selectedItems) => {
-                                                            searchByMultipleValuesField(
-                                                                "category_id",
-                                                                selectedItems
-                                                            );
-                                                        }}
-                                                        options={categoryOptions}
-                                                        placeholder="Select Categories"
-                                                        selected={selectedProductCategories}
-                                                        highlightOnlyResult={true}
-                                                        onInputChange={(searchTerm, e) => {
-                                                            suggestCategories(searchTerm);
-                                                        }}
-                                                        multiple
-                                                    />*/}
-
-                                                    <Typeahead
-                                                        id="product_id"
+                                                        ref={productSearchRef}
                                                         filterBy={() => true}
                                                         size="lg"
                                                         labelKey="search_label"
@@ -1853,6 +1836,13 @@ function ProductIndex(props) {
                                                         clearButton={true}
                                                         open={openProductSearchResult}
                                                         isLoading={isProductsLoading}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setProductOptions([]);
+                                                                setOpenProductSearchResult(false);
+                                                                productSearchRef.current?.clear();
+                                                            }
+                                                        }}
                                                         onChange={(selectedItems) => {
 
                                                             /*
@@ -1880,8 +1870,7 @@ function ProductIndex(props) {
                                                         ignoreDiacritics={true}
                                                         multiple
                                                     />
-                                                </ResizableTableCell>
-                                                {/*</th>*/}
+                                                </th>
                                                 <th>
                                                     <input
                                                         type="text"
@@ -2014,6 +2003,13 @@ function ProductIndex(props) {
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCategories(searchTerm);
                                                         }}
+                                                        ref={categorySearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setCategoryOptions([]);
+                                                                categorySearchRef.current?.clear();
+                                                            }
+                                                        }}
                                                         multiple
                                                     />
                                                 </th>
@@ -2036,6 +2032,13 @@ function ProductIndex(props) {
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestBrands(searchTerm);
                                                         }}
+                                                        ref={brandSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setBrandOptions([]);
+                                                                brandSearchRef.current?.clear();
+                                                            }
+                                                        }}
                                                         multiple
                                                     />
                                                 </th>
@@ -2055,6 +2058,12 @@ function ProductIndex(props) {
                                                         placeholder="Select countries"
                                                         selected={selectedCountries}
                                                         highlightOnlyResult={true}
+                                                        ref={countrySearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                countrySearchRef.current?.clear();
+                                                            }
+                                                        }}
                                                         onInputChange={(searchTerm, e) => {
                                                             //suggestBrands(searchTerm);
                                                         }}

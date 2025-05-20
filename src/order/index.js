@@ -1192,6 +1192,7 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
 
+    const customerSearchRef = useRef();
 
     return (
         <>
@@ -1943,6 +1944,13 @@ const OrderIndex = forwardRef((props, ref) => {
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCustomers(searchTerm);
+                                                        }}
+                                                        ref={customerSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setCustomerOptions([]);
+                                                                customerSearchRef.current?.clear();
+                                                            }
                                                         }}
                                                         multiple
                                                     />

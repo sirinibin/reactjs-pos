@@ -1156,6 +1156,8 @@ function SalesReturnIndex(props) {
         PreviewRef.current.open(model, "whatsapp", "sales_return");
     }
 
+    const customerSearchRef = useRef();
+
 
     return (
         <>
@@ -1845,6 +1847,13 @@ function SalesReturnIndex(props) {
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCustomers(searchTerm);
+                                                        }}
+                                                        ref={customerSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setCustomerOptions([]);
+                                                                customerSearchRef.current?.clear();
+                                                            }
                                                         }}
                                                         multiple
                                                     />

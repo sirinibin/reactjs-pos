@@ -1482,6 +1482,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     const inputRefs = useRef({});
 
+    const vendorSearchRef = useRef();
+
     return (
         <>
             <div
@@ -1645,6 +1647,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 placeholder="Vendor Name / Mob / VAT # / ID"
                                 selected={selectedVendors}
                                 highlightOnlyResult={true}
+                                ref={vendorSearchRef}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                        setVendorOptions([]);
+                                        vendorSearchRef.current?.clear();
+                                    }
+                                }}
                                 onInputChange={(searchTerm, e) => {
                                     if (searchTerm) {
                                         formData.vendor_name = searchTerm;

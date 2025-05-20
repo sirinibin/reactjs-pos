@@ -383,6 +383,8 @@ function CustomerDepositIndex(props) {
         PreviewRef.current.open(model, "whatsapp", "customer_deposit");
     }
 
+    const customerSearchRef = useRef();
+
 
     return (
         <>
@@ -818,6 +820,12 @@ function CustomerDepositIndex(props) {
                                                         placeholder="Customer Name / Mob / VAT # / ID"
                                                         selected={selectedCustomers}
                                                         highlightOnlyResult={true}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setCustomerOptions([]);
+                                                                customerSearchRef.current?.clear();
+                                                            }
+                                                        }}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCustomers(searchTerm);
                                                         }}

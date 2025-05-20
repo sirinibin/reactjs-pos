@@ -413,6 +413,8 @@ function VendorIndex(props) {
 
     let [deleted, setDeleted] = useState(false);
 
+    const vendorSearchRef = useRef();
+
     return (
         <>
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
@@ -1110,6 +1112,13 @@ function VendorIndex(props) {
                                                         placeholder="Vendor Name / Mob / VAT # / ID"
                                                         selected={selectedVendors}
                                                         highlightOnlyResult={true}
+                                                        ref={vendorSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setVendorOptions([]);
+                                                                vendorSearchRef.current?.clear();
+                                                            }
+                                                        }}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestVendors(searchTerm);
                                                         }}

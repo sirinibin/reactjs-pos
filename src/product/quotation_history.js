@@ -332,6 +332,8 @@ const QuotationHistory = forwardRef((props, ref) => {
     }
 
 
+    const customerSearchRef = useRef();
+
 
     return (
         <>
@@ -945,6 +947,13 @@ const QuotationHistory = forwardRef((props, ref) => {
                                                                 placeholder="Customer Name | Mob | VAT # | ID"
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
+                                                                ref={customerSearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setCustomerOptions([]);
+                                                                        customerSearchRef.current?.clear();
+                                                                    }
+                                                                }}
                                                                 onInputChange={(searchTerm, e) => {
                                                                     suggestCustomers(searchTerm);
                                                                 }}

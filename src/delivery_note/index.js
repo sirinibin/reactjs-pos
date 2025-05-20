@@ -372,6 +372,8 @@ function DeliveryNoteIndex(props) {
     PreviewRef.current.open(model, "whatsapp", "delivery_note");
   }
 
+  const customerSearchRef = useRef();
+
   return (
     <>
       <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
@@ -743,6 +745,13 @@ function DeliveryNoteIndex(props) {
                             placeholder="Customer Name / Mob / VAT # / ID"
                             selected={selectedCustomers}
                             highlightOnlyResult={true}
+                            ref={customerSearchRef}
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape") {
+                                setCustomerOptions([]);
+                                customerSearchRef.current?.clear();
+                              }
+                            }}
                             onInputChange={(searchTerm, e) => {
                               suggestCustomers(searchTerm);
                             }}

@@ -344,6 +344,7 @@ const PurchaseHistory = forwardRef((props, ref) => {
     }
 
 
+    const vendorSearchRef = useRef();
 
     return (
         <>
@@ -982,6 +983,13 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                                                 placeholder="Vendor Name | Mob | VAT # | ID"
                                                                 selected={selectedVendors}
                                                                 highlightOnlyResult={true}
+                                                                ref={vendorSearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setVendorOptions([]);
+                                                                        vendorSearchRef.current?.clear();
+                                                                    }
+                                                                }}
                                                                 onInputChange={(searchTerm, e) => {
                                                                     suggestVendors(searchTerm);
                                                                 }}

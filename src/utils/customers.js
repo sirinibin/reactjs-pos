@@ -344,6 +344,8 @@ const Customers = forwardRef((props, ref) => {
         AccountBalanceSheetRef.current.open(account);
     }
 
+    const customerSearchRef = useRef();
+
     return (
         <>
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
@@ -1361,6 +1363,13 @@ const Customers = forwardRef((props, ref) => {
                                                                     highlightOnlyResult={true}
                                                                     onInputChange={(searchTerm, e) => {
                                                                         suggestCustomers(searchTerm);
+                                                                    }}
+                                                                    ref={customerSearchRef}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Escape") {
+                                                                            setCustomerOptions([]);
+                                                                            customerSearchRef.current?.clear();
+                                                                        }
                                                                     }}
                                                                     multiple
                                                                 />

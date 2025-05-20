@@ -795,6 +795,8 @@ function PurchaseReturnIndex(props) {
         PreviewRef.current.open(model, "whatsapp", "purchase_return");
     }
 
+    const vendorSearchRef = useRef();
+
     return (
         <>
             <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
@@ -1314,6 +1316,13 @@ function PurchaseReturnIndex(props) {
                                                         placeholder="Vendor Name / Mob / VAT # / ID"
                                                         selected={selectedVendors}
                                                         highlightOnlyResult={true}
+                                                        ref={vendorSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setVendorOptions([]);
+                                                                vendorSearchRef.current?.clear();
+                                                            }
+                                                        }}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestVendors(searchTerm);
                                                         }}

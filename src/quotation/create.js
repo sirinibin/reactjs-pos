@@ -1697,6 +1697,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     findTotalPayments()
   }
 
+  const customerSearchRef = useRef();
 
   return (
     <>
@@ -1944,6 +1945,14 @@ const QuotationCreate = forwardRef((props, ref) => {
                 placeholder="Customer Name / Mob / VAT # / ID"
                 selected={selectedCustomers}
                 highlightOnlyResult={true}
+                ref={customerSearchRef}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setCustomerOptions([]);
+                    customerSearchRef.current?.clear();
+                  }
+                }}
+
                 onInputChange={(searchTerm, e) => {
                   formData.customerName = searchTerm;
                   if (searchTerm) {

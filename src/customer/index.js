@@ -414,6 +414,7 @@ function CustomerIndex(props) {
     };
 
     let [deleted, setDeleted] = useState(false);
+    const customerSearchRef = useRef();
 
 
     return (
@@ -1427,6 +1428,13 @@ function CustomerIndex(props) {
                                                                 "customer_id",
                                                                 selectedItems
                                                             );
+                                                        }}
+                                                        ref={customerSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setCustomerOptions([]);
+                                                                customerSearchRef.current?.clear();
+                                                            }
                                                         }}
                                                         options={customerOptions}
                                                         placeholder="Customer Name / Mob / VAT # / ID"

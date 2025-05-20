@@ -493,6 +493,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
 
     const inputRefs = useRef({});
     const timerRef = useRef(null);
+    const customerSearchRef = useRef();
 
     return (
         <>
@@ -584,6 +585,13 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                                 placeholder="Customer Name / Mob / VAT # / ID"
                                 selected={selectedCustomers}
                                 highlightOnlyResult={true}
+                                ref={customerSearchRef}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                        setCustomerOptions([]);
+                                        customerSearchRef.current?.clear();
+                                    }
+                                }}
                                 onInputChange={(searchTerm, e) => {
                                     if (searchTerm) {
                                         formData.customerName = searchTerm;

@@ -1887,6 +1887,7 @@ function findDiscount() {
         }
     };*/
 
+    const customerSearchRef = useRef();
 
     return (
         <>
@@ -2131,6 +2132,13 @@ function findDiscount() {
                                 placeholder="Customer Name / Mob / VAT # / ID"
                                 selected={selectedCustomers}
                                 highlightOnlyResult={true}
+                                ref={customerSearchRef}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                        setCustomerOptions([]);
+                                        customerSearchRef.current?.clear();
+                                    }
+                                }}
                                 onInputChange={(searchTerm, e) => {
                                     if (searchTerm) {
                                         formData.customerName = searchTerm;
@@ -2364,7 +2372,6 @@ function findDiscount() {
                                         setProductOptions([]);
                                         setOpenProductSearchResult(false);
                                         productSearchRef.current?.clear();
-                                        //productSearchRef.current?.blur();
                                     }
 
                                     moveToProductSearch();

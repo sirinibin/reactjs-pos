@@ -319,7 +319,7 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
         CustomerDetailsViewRef.current.open(id);
     }
 
-
+    const customerSearchRef = useRef();
 
     return (
         <>
@@ -711,6 +711,13 @@ const DeliveryNoteHistory = forwardRef((props, ref) => {
                                                                 highlightOnlyResult={true}
                                                                 onInputChange={(searchTerm, e) => {
                                                                     suggestCustomers(searchTerm);
+                                                                }}
+                                                                ref={customerSearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setCustomerOptions([]);
+                                                                        customerSearchRef.current?.clear();
+                                                                    }
                                                                 }}
                                                                 multiple
                                                             />

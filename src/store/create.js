@@ -1,4 +1,4 @@
-import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
@@ -702,6 +702,8 @@ const StoreCreate = forwardRef((props, ref) => {
     //const [selectedCountry, setSelectedCountry] = useState('')
     let [selectedCountries, setSelectedCountries] = useState([]);
 
+    const countrySearchRef = useRef();
+
     return (
         <>
             <Modal show={show} size="xl" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
@@ -1356,6 +1358,12 @@ const StoreCreate = forwardRef((props, ref) => {
                                     placeholder="Country name"
                                     selected={selectedCountries}
                                     highlightOnlyResult={true}
+                                    ref={countrySearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            countrySearchRef.current?.clear();
+                                        }
+                                    }}
                                     onInputChange={(searchTerm, e) => {
                                         //suggestBrands(searchTerm);
                                     }}

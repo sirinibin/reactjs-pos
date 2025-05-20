@@ -383,6 +383,8 @@ function CustomerWithdrawalIndex(props) {
         PreviewRef.current.open(model, "whatsapp", "customer_withdrawal");
     }
 
+    const customerSearchRef = useRef();
+
 
     return (
         <>
@@ -818,6 +820,13 @@ function CustomerWithdrawalIndex(props) {
                                                         placeholder="Customer Name / Mob / VAT # / ID"
                                                         selected={selectedCustomers}
                                                         highlightOnlyResult={true}
+                                                        ref={customerSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setCustomerOptions([]);
+                                                                customerSearchRef.current?.clear();
+                                                            }
+                                                        }}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCustomers(searchTerm);
                                                         }}

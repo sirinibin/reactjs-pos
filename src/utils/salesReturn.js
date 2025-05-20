@@ -1198,6 +1198,7 @@ const SalesReturn = forwardRef((props, ref) => {
         handleClose();
     };
 
+    const customerSearchRef = useRef();
 
     return (
         <>
@@ -1903,6 +1904,13 @@ const SalesReturn = forwardRef((props, ref) => {
                                                                     placeholder="Customer Name / Mob / VAT # / ID"
                                                                     selected={selectedCustomers}
                                                                     highlightOnlyResult={true}
+                                                                    ref={customerSearchRef}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Escape") {
+                                                                            setCustomerOptions([]);
+                                                                            customerSearchRef.current?.clear();
+                                                                        }
+                                                                    }}
                                                                     onInputChange={(searchTerm, e) => {
                                                                         suggestCustomers(searchTerm);
                                                                     }}

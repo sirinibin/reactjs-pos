@@ -348,6 +348,8 @@ function ExpenseIndex(props) {
         CreateFormRef.current.open();
     }
 
+    const categorySearchRef = useRef();
+
 
     return (
         <>
@@ -792,6 +794,13 @@ function ExpenseIndex(props) {
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestCategories(searchTerm);
+                                                        }}
+                                                        ref={categorySearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === "Escape") {
+                                                                setCategoryOptions([]);
+                                                                categorySearchRef.current?.clear();
+                                                            }
                                                         }}
                                                         multiple
                                                     />

@@ -611,6 +611,12 @@ const Products = forwardRef((props, ref) => {
     };
 
 
+    const productSearchRef = useRef();
+    const productSearchByPartNoRef = useRef();
+    const countrySearchRef = useRef();
+    const brandSearchRef = useRef();
+    const categorySearchRef = useRef();
+
     return (
         <>
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
@@ -1621,6 +1627,14 @@ const Products = forwardRef((props, ref) => {
                                                                     size="lg"
                                                                     labelKey="search_label"
                                                                     emptyLabel="No products found"
+                                                                    ref={productSearchByPartNoRef}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Escape") {
+                                                                            setProductOptionsByPartNo([]);
+                                                                            setOpenProductSearchResultByPartNo(false);
+                                                                            productSearchByPartNoRef.current?.clear();
+                                                                        }
+                                                                    }}
                                                                     open={openProductSearchResultByPartNo}
                                                                     isLoading={isProductsLoadingByPartNo}
                                                                     onChange={(selectedItems) => {
@@ -1696,9 +1710,17 @@ const Products = forwardRef((props, ref) => {
                                                                     size="lg"
                                                                     labelKey="search_label"
                                                                     emptyLabel="No products found"
+                                                                    ref={productSearchRef}
                                                                     clearButton={true}
                                                                     open={openProductSearchResult}
                                                                     isLoading={isProductsLoading}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Escape") {
+                                                                            setProductOptions([]);
+                                                                            setOpenProductSearchResult(false);
+                                                                            productSearchRef.current?.clear();
+                                                                        }
+                                                                    }}
                                                                     onChange={(selectedItems) => {
 
                                                                         /*
@@ -1851,6 +1873,13 @@ const Products = forwardRef((props, ref) => {
                                                                     placeholder="Select Categories"
                                                                     selected={selectedProductCategories}
                                                                     highlightOnlyResult={true}
+                                                                    ref={categorySearchRef}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Escape") {
+                                                                            setCategoryOptions([]);
+                                                                            categorySearchRef.current?.clear();
+                                                                        }
+                                                                    }}
                                                                     onInputChange={(searchTerm, e) => {
                                                                         suggestCategories(searchTerm);
                                                                     }}
@@ -1876,6 +1905,13 @@ const Products = forwardRef((props, ref) => {
                                                                     onInputChange={(searchTerm, e) => {
                                                                         suggestBrands(searchTerm);
                                                                     }}
+                                                                    ref={brandSearchRef}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Escape") {
+                                                                            setBrandOptions([]);
+                                                                            brandSearchRef.current?.clear();
+                                                                        }
+                                                                    }}
                                                                     multiple
                                                                 />
                                                             </th>
@@ -1897,6 +1933,12 @@ const Products = forwardRef((props, ref) => {
                                                                     highlightOnlyResult={true}
                                                                     onInputChange={(searchTerm, e) => {
                                                                         //suggestBrands(searchTerm);
+                                                                    }}
+                                                                    ref={countrySearchRef}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Escape") {
+                                                                            countrySearchRef.current?.clear();
+                                                                        }
                                                                     }}
                                                                     multiple
                                                                 />

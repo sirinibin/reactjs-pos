@@ -338,6 +338,8 @@ const SalesReturnHistory = forwardRef((props, ref) => {
     let [totalProfit, setTotalProfit] = useState(0.00);
     let [totalLoss, setTotalLoss] = useState(0.00);
 
+    const customerSearchRef = useRef();
+
 
     return (
         <>
@@ -947,6 +949,13 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                 placeholder="Customer Name | Mob | VAT # | ID"
                                                                 selected={selectedCustomers}
                                                                 highlightOnlyResult={true}
+                                                                ref={customerSearchRef}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === "Escape") {
+                                                                        setCustomerOptions([]);
+                                                                        customerSearchRef.current?.clear();
+                                                                    }
+                                                                }}
                                                                 onInputChange={(searchTerm, e) => {
                                                                     suggestCustomers(searchTerm);
                                                                 }}

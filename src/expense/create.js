@@ -400,6 +400,8 @@ const ExpenseCreate = forwardRef((props, ref) => {
         ExpenseCategoryCreateFormRef.current.open(id);
     }
 
+    const categorySearchRef = useRef();
+
     return (
         <>
 
@@ -622,6 +624,13 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         suggestCategories(searchTerm);
+                                    }}
+                                    ref={categorySearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            setCategoryOptions([]);
+                                            categorySearchRef.current?.clear();
+                                        }
                                     }}
                                 />
                                 <Button hide={true.toString()} onClick={openExpenseCategoryCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>

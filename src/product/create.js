@@ -608,6 +608,9 @@ const ProductCreate = forwardRef((props, ref) => {
   //const [isProductsLoading, setIsProductsLoading] = useState(false);
   let [selectedLinkedProducts, setSelectedLinkedProducts] = useState([]);
 
+  const productSearchRef = useRef();
+  let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
+
   const suggestProducts = useCallback(async (searchTerm) => {
     console.log("Inside handle suggestProducts");
     setProductOptions([]);
@@ -654,14 +657,13 @@ const ProductCreate = forwardRef((props, ref) => {
 
     let products = data.result;
     if (!products || products.length === 0) {
-      // openProductSearchResult = false;
-      //setOpenProductSearchResult(false);
+      setOpenProductSearchResult(false);
       // setIsProductsLoading(false);
       return;
     }
 
-    // openProductSearchResult = true;
-    //setOpenProductSearchResult(true);
+
+    setOpenProductSearchResult(true);
     /*
     const sortedProducts = products
       .filter(item => item.country_name)                        // Keep only items with name
@@ -684,6 +686,10 @@ const ProductCreate = forwardRef((props, ref) => {
   const [operationType, setOperationType] = useState(null); // 'add' or 'remove'
 
   const inputRefs = useRef({});
+  const countrySearchRef = useRef();
+  const brandSearchRef = useRef();
+  const categorySearchRef = useRef();
+
 
   return (
     <>
@@ -711,6 +717,7 @@ const ProductCreate = forwardRef((props, ref) => {
         animation={false}
         backdrop="static"
         scrollable={true}
+        keyboard={false}
       >
         <Modal.Header>
           <Modal.Title>
@@ -881,6 +888,13 @@ const ProductCreate = forwardRef((props, ref) => {
                   placeholder="Brand name"
                   selected={selectedBrands}
                   highlightOnlyResult={true}
+                  ref={brandSearchRef}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setBrandOptions([]);
+                      brandSearchRef.current?.clear();
+                    }
+                  }}
                   onInputChange={(searchTerm, e) => {
                     suggestBrands(searchTerm);
                   }}
@@ -929,6 +943,12 @@ const ProductCreate = forwardRef((props, ref) => {
                   placeholder="Country name"
                   selected={selectedCountries}
                   highlightOnlyResult={true}
+                  ref={countrySearchRef}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      countrySearchRef.current?.clear();
+                    }
+                  }}
                   onInputChange={(searchTerm, e) => {
                     //suggestBrands(searchTerm);
                   }}
@@ -1050,6 +1070,13 @@ const ProductCreate = forwardRef((props, ref) => {
                   highlightOnlyResult={true}
                   onInputChange={(searchTerm, e) => {
                     suggestCategories(searchTerm);
+                  }}
+                  ref={categorySearchRef}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") {
+                      setCategoryOptions([]);
+                      categorySearchRef.current?.clear();
+                    }
                   }}
                 />
                 <Button
@@ -1482,6 +1509,7 @@ const ProductCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="product_id"
                 labelKey="search_label"
+                ref={productSearchRef}
                 filterBy={() => true}
                 onChange={(selectedItems) => {
                   setSelectedLinkedProducts(selectedItems);
@@ -1495,6 +1523,14 @@ const ProductCreate = forwardRef((props, ref) => {
                 placeholder="Select Products"
                 selected={selectedLinkedProducts}
                 highlightOnlyResult={true}
+                open={openProductSearchResult}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setProductOptions([]);
+                    setOpenProductSearchResult(false);
+                    productSearchRef.current?.clear();
+                  }
+                }}
                 onInputChange={(searchTerm, e) => {
                   suggestProducts(searchTerm);
 

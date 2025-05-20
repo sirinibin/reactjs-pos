@@ -521,6 +521,8 @@ function QuotationIndex(props) {
   ];
   const [selectedPaymentMethodList, setSelectedPaymentMethodList] = useState([]);
 
+  const customerSearchRef = useRef();
+
   return (
     <>
       <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
@@ -1138,6 +1140,13 @@ function QuotationIndex(props) {
                             highlightOnlyResult={true}
                             onInputChange={(searchTerm, e) => {
                               suggestCustomers(searchTerm);
+                            }}
+                            ref={customerSearchRef}
+                            onKeyDown={(e) => {
+                              if (e.key === "Escape") {
+                                setCustomerOptions([]);
+                                customerSearchRef.current?.clear();
+                              }
                             }}
                             multiple
                           />

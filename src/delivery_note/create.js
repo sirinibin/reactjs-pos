@@ -984,6 +984,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     }, 300);
   }
 
+  const customerSearchRef = useRef();
+
   return (
     <>
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
@@ -1152,6 +1154,13 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 placeholder="Customer Name / Mob / VAT # / ID"
                 selected={selectedCustomers}
                 highlightOnlyResult={true}
+                ref={customerSearchRef}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    setCustomerOptions([]);
+                    customerSearchRef.current?.clear();
+                  }
+                }}
                 onInputChange={(searchTerm, e) => {
                   if (searchTerm) {
                     formData.customer_name = searchTerm;

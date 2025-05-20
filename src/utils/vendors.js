@@ -339,6 +339,8 @@ const Vendors = forwardRef((props, ref) => {
     }
 
 
+    const vendorSearchRef = useRef();
+
     return (
         <>
             <PostingIndex ref={AccountBalanceSheetRef} showToastMessage={props.showToastMessage} />
@@ -1036,6 +1038,13 @@ const Vendors = forwardRef((props, ref) => {
                                                                     placeholder="Vendor Name / Mob / VAT # / ID"
                                                                     selected={selectedVendors}
                                                                     highlightOnlyResult={true}
+                                                                    ref={vendorSearchRef}
+                                                                    onKeyDown={(e) => {
+                                                                        if (e.key === "Escape") {
+                                                                            setVendorOptions([]);
+                                                                            vendorSearchRef.current?.clear();
+                                                                        }
+                                                                    }}
                                                                     onInputChange={(searchTerm, e) => {
                                                                         suggestVendors(searchTerm);
                                                                     }}

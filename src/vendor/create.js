@@ -303,6 +303,8 @@ const VendorCreate = forwardRef((props, ref) => {
     const countryOptions = useMemo(() => countryList().getData(), [])
     let [selectedCountries, setSelectedCountries] = useState([]);
 
+    const countrySearchRef = useRef();
+
     return (
         <>
             <Modal show={show} size="lg" fullscreen onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
@@ -610,6 +612,12 @@ const VendorCreate = forwardRef((props, ref) => {
                                     highlightOnlyResult={true}
                                     onInputChange={(searchTerm, e) => {
                                         //suggestBrands(searchTerm);
+                                    }}
+                                    ref={countrySearchRef}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Escape") {
+                                            countrySearchRef.current?.clear();
+                                        }
                                     }}
                                 />
                             </div>
