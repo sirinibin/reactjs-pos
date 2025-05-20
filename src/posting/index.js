@@ -1243,15 +1243,21 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         ))}
 
                                                     {selectedAccount ? <tr>
-                                                        <td></td>
-                                                        <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
-                                                        <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
+                                                        <td>Amount</td>
+                                                        <td style={{ textAlign: "right" }}><b>{<Amount amount={debitTotal} />}</b></td>
+                                                        <td style={{ textAlign: "right" }}><b>{<Amount amount={creditTotal} />}</b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
                                                     {selectedAccount && (debitBalance > 0 || creditBalance > 0) ? <tr>
-                                                        <td></td>
+                                                        <td>Due Amount</td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{debitBalance > 0 ? "To balance c/d " : ""} {debitBalance > 0 ? <Amount amount={debitBalance} /> : ""} </b></td>
                                                         <td style={{ textAlign: "right", color: "red" }}><b>{creditBalance > 0 ? "By balance c/d " : ""} {creditBalance > 0 ? <Amount amount={creditBalance} /> : ""}  </b></td>
+                                                        <td colSpan={2}></td>
+                                                    </tr> : ""}
+                                                    {selectedAccount ? <tr>
+                                                        <td>Total Amount</td>
+                                                        <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
+                                                        <td style={{ textAlign: "right" }}><b>{creditTotal > debitTotal ? <Amount amount={creditTotal} /> : <Amount amount={debitTotal} />}</b></td>
                                                         <td colSpan={2}></td>
                                                     </tr> : ""}
                                                 </tbody>
