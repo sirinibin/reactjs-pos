@@ -756,9 +756,6 @@ const PostingIndex = forwardRef((props, ref) => {
                                             <table className="table table-striped table-sm table-bordered">
                                                 <thead>
                                                     <tr className="text-center">
-
-
-
                                                         {/*
                                                 <th>
                                                     <b
@@ -1195,19 +1192,19 @@ const PostingIndex = forwardRef((props, ref) => {
                                                                             <tr key={key} style={{ border: "solid 1px" }}>
                                                                                 <td style={{ border: "solid 1px", minWidth: "248px" }}>{format(new Date(post.date), "MMM dd yyyy h:mma")}</td>
                                                                                 <td colSpan={2} style={{ border: "solid 0px" }}>
-                                                                                    <td style={{ border: "solid 0px", borderRight: "solid 0px", paddingLeft: "5px" }}>
-                                                                                        <td style={{ textAlign: "left", border: "solid 0px", minWidth: "162px" }}>
+                                                                                    <td style={{ border: "solid 0px", borderRight: "solid 0px", minWidth: "304px", paddingLeft: "5px" }}>
+                                                                                        <td style={{ textAlign: "left", border: "solid 0px", minWidth: "207px" }}>
                                                                                             {post.debit_or_credit === "debit" ? "To " + post.account_name + " A/c #" + post.account_number + " Dr." : ""}
                                                                                         </td>
-                                                                                        <td style={{ textAlign: "right", border: "solid 0px", minWidth: "140px" }}>
+                                                                                        <td style={{ textAlign: "right", border: "solid 0px", minWidth: "97px" }}>
                                                                                             {post.debit ? <Amount amount={post.debit} /> : ""}
                                                                                         </td>
                                                                                     </td>
                                                                                     <td style={{ border: "solid 0px", paddingLeft: "5px", borderLeft: "solid 1px" }}>
-                                                                                        <td style={{ textAlign: "left", border: "solid 0px", minWidth: "193px" }}>
+                                                                                        <td style={{ textAlign: "left", border: "solid 0px", minWidth: "203px" }}>
                                                                                             {post.debit_or_credit === "credit" ? "By " + post.account_name + " A/c #" + post.account_number + "  Cr." : ""}
                                                                                         </td>
-                                                                                        <td style={{ textAlign: "right", border: "solid 0px", minWidth: "105px" }}>
+                                                                                        <td style={{ textAlign: "right", border: "solid 0px", minWidth: "95px" }}>
                                                                                             {post.credit ? <Amount amount={post.credit} /> : ""}
                                                                                         </td>
                                                                                     </td>
