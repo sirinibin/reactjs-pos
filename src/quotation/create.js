@@ -1009,6 +1009,14 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
 
 
+    errors["purchase_unit_price_" + index] = "";
+    if (product.purchase_unit_price > product.unit_price) {
+      errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
+      console.log("errors:", errors);
+    }
+    setErrors({ ...errors });
+
+
     if (alreadyAdded) {
       selectedProducts[index].quantity = parseFloat(quantity);
     }
@@ -2460,6 +2468,14 @@ const QuotationCreate = forwardRef((props, ref) => {
                                 }
 
 
+                                errors["purchase_unit_price_" + index] = "";
+                                if (selectedProducts[index].purchase_unit_price > selectedProducts[index].unit_price) {
+                                  errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
+                                  console.log("errors:", errors);
+                                }
+                                setErrors({ ...errors });
+
+
                               }} />
                             <div
                               style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
@@ -2650,6 +2666,14 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                   reCalculate(index);
                                 }, 300);
+
+
+                                errors["purchase_unit_price_" + index] = "";
+                                if (selectedProducts[index].purchase_unit_price > selectedProducts[index].unit_price) {
+                                  errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
+                                  console.log("errors:", errors);
+                                }
+                                setErrors({ ...errors });
 
                               }} />
 

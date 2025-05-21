@@ -1059,6 +1059,16 @@ const OrderCreate = forwardRef((props, ref) => {
             setErrors({ ...errors });
         }
 
+        if (product.purchase_unit_price > product.unit_price) {
+            if (index === false) {
+                index = selectedProducts.length;
+            }
+            // errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
+            errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
+            console.log("errors:", errors);
+            setErrors({ ...errors });
+        }
+
 
         if (alreadyAdded) {
             selectedProducts[index].quantity = parseFloat(quantity);
@@ -2607,7 +2617,13 @@ function findDiscount() {
                                             <td>
 
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_product_purchase_unit_price" + index}`} name={`${"sales_product_purchase_unit_price" + index}`} onWheel={(e) => e.target.blur()} value={product.purchase_unit_price} disabled={!selectedProducts[index].can_edit} className="form-control text-end"
+                                                    <input type="number"
+                                                        id={`${"sales_product_purchase_unit_price" + index}`}
+                                                        name={`${"sales_product_purchase_unit_price" + index}`}
+                                                        onWheel={(e) => e.target.blur()}
+                                                        value={product.purchase_unit_price}
+                                                        disabled={!selectedProducts[index].can_edit}
+                                                        className="form-control text-end"
 
                                                         placeholder="Purchase Unit Price" onChange={(e) => {
                                                             errors["purchase_unit_price_" + index] = "";
@@ -2640,6 +2656,13 @@ function findDiscount() {
                                                                 //reCalculate();
                                                             }
 
+                                                            errors["purchase_unit_price_" + index] = "";
+
+                                                            if (selectedProducts[index].purchase_unit_price > selectedProducts[index].unit_price) {
+                                                                errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
+                                                                console.log("errors:", errors);
+                                                            }
+                                                            setErrors({ ...errors });
 
                                                         }} />
                                                     <div
@@ -2657,8 +2680,7 @@ function findDiscount() {
                                                     {/*<span className="input-group-text" id="basic-addon2"></span>*/}
                                                 </div>
                                                 {errors["purchase_unit_price_" + index] && (
-                                                    <div style={{ color: "red" }}>
-
+                                                    <div style={{ color: "red", fontSize: "12px" }}>
                                                         {errors["purchase_unit_price_" + index]}
                                                     </div>
                                                 )}
@@ -2841,6 +2863,14 @@ function findDiscount() {
                                                                 selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                 reCalculate(index);
                                                             }, 300);
+
+                                                            errors["purchase_unit_price_" + index] = "";
+
+                                                            if (selectedProducts[index].purchase_unit_price > selectedProducts[index].unit_price) {
+                                                                errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
+                                                                console.log("errors:", errors);
+                                                            }
+                                                            setErrors({ ...errors });
 
                                                         }} />
 

@@ -1881,6 +1881,15 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 //reCalculate();
                                                             }
+
+
+                                                            errors["purchase_unit_price_" + index] = "";
+                                                            if (selectedProducts[index].purchase_unit_price > selectedProducts[index].unit_price) {
+                                                                errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
+                                                                console.log("errors:", errors);
+                                                            }
+                                                            setErrors({ ...errors });
+
                                                         }} />
                                                     <div
                                                         style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
@@ -1965,7 +1974,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"sales_return_product_unit_price" + index}`} name={`${"sales_return_product_unit_price" + index}`} onWheel={(e) => e.target.blur()}
+                                                    <input type="number"
+                                                        id={`${"sales_return_product_unit_price" + index}`}
+                                                        name={`${"sales_return_product_unit_price" + index}`} onWheel={(e) => e.target.blur()}
                                                         value={product.unit_price} className="form-control text-end"
                                                         placeholder="Unit Price(without VAT)"
                                                         ref={(el) => {
@@ -2037,6 +2048,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                                                                 reCalculate(index);
                                                             }, 300);
+
+
+                                                            errors["purchase_unit_price_" + index] = "";
+                                                            if (selectedProducts[index].purchase_unit_price > selectedProducts[index].unit_price) {
+                                                                errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
+                                                                console.log("errors:", errors);
+                                                            }
+                                                            setErrors({ ...errors });
 
                                                         }} />
 
