@@ -23,6 +23,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
     useImperativeHandle(ref, () => ({
         open(account) {
+            searchParams = {};
             showAccountBalanceSheet = true;
             setShowAccountBalanceSheet(true);
             selectedAccount = account;
@@ -92,7 +93,7 @@ const PostingIndex = forwardRef((props, ref) => {
 
 
     //Search params
-    const [searchParams, setSearchParams] = useState({});
+    let [searchParams, setSearchParams] = useState({});
     let [sortField, setSortField] = useState("posts.date");
     let [sortPosting, setSortPosting] = useState("-");
 
