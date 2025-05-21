@@ -2,7 +2,6 @@ import { React, forwardRef } from "react";
 import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
-import "./../utils/OverflowTooltip.css";
 
 const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
@@ -70,6 +69,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
     let detailsBorderColor = "black";//#dee2e6
     let tableBorderThickness = "0.5px solid black";
 
+    let accountNameMaxWidth = "80px";
+
 
 
     return (<>
@@ -89,7 +90,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     paddingBottom: "4px",
                     marginTop: "0px",
                     height: "1118px",
-                    width: `${props.whatsAppShare ? "770px" : "770px"}`
+                    width: `${props.whatsAppShare ? "750px" : "750px"}`
                 }}
 
             >
@@ -474,7 +475,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 {post.debit_account_name && <span>
                                                     <span style={{
                                                         display: 'inline-block',
-                                                        maxWidth: '100px',
+                                                        maxWidth: accountNameMaxWidth,
                                                         whiteSpace: 'nowrap',
                                                         overflow: 'hidden',
                                                         textOverflow: 'ellipsis',
@@ -498,7 +499,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                 {post.credit_account_name && <span>
                                                     By <span style={{
                                                         display: 'inline-block',
-                                                        maxWidth: '100px',
+                                                        maxWidth: accountNameMaxWidth,
                                                         whiteSpace: 'nowrap',
                                                         overflow: 'hidden',
                                                         textOverflow: 'ellipsis',
