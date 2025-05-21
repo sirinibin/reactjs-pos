@@ -2,6 +2,7 @@ import { React, forwardRef } from "react";
 import NumberFormat from "react-number-format";
 import { format } from "date-fns";
 import n2words from 'n2words'
+import "./../utils/OverflowTooltip.css";
 
 const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
 
@@ -68,6 +69,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
     let detailsBorderThickness = "0.5px solid black";
     let detailsBorderColor = "black";//#dee2e6
     let tableBorderThickness = "0.5px solid black";
+
+
 
     return (<>
         {props.model.pages && props.model.pages.map((page, pageIndex) => (
@@ -466,8 +469,18 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                         <tr style={{ borderBottom: tableBorderThickness, }} key={index}   >
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.no}</td>
                                             <td style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", borderRight: tableBorderThickness, }} >{post.date ? format(new Date(post.date), "MMM dd yyyy h:mma") : ""}</td>
-                                            <td className="text-start break-text" style={{ width: "auto", padding: "3px", alignContent: "start", borderRightWidth: "0px" }}>
-                                                {post.debit_account}
+                                            <td className="text-start break-text" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px" }}>
+                                                {/*post.debit_account*/}
+                                                {post.debit_account_name && <span>
+                                                    <span style={{
+                                                        display: 'inline-block',
+                                                        maxWidth: '100px',
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        verticalAlign: 'bottom'
+                                                    }}>{post.debit_account_name}</span> A/c {post.debit_account_number} Dr.
+                                                </span>}
                                             </td>
                                             <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px", borderRight: tableBorderThickness }}>
 
@@ -479,8 +492,19 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td style={{ width: "auto", padding: "3px", alignContent: "start", borderRightWidth: "0px" }} className="break-text">
-                                                {post.credit_account}
+                                            <td style={{ width: "auto", padding: "3px", alignContent: "start", whiteSpace: "nowrap", borderRightWidth: "0px" }} className="break-text">
+                                                {/*post.credit_account*/}
+
+                                                {post.credit_account_name && <span>
+                                                    By <span style={{
+                                                        display: 'inline-block',
+                                                        maxWidth: '100px',
+                                                        whiteSpace: 'nowrap',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        verticalAlign: 'bottom'
+                                                    }}>{post.credit_account_name}</span> A/c {post.credit_account_number} Cr.
+                                                </span>}
                                             </td>
                                             <td className="text-end" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", border: "solid 0px", borderRight: tableBorderThickness }}>
                                                 <NumberFormat
@@ -491,7 +515,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                                     renderText={(value, props) => value}
                                                 />
                                             </td>
-                                            <td className="break-text" style={{ width: "auto", padding: "3px", borderRight: tableBorderThickness }}>{toTitleCaseFromUnderscore(post.reference_model)}</td>
+                                            <td style={{ width: "auto", whiteSpace: "nowrap", padding: "3px", borderRight: tableBorderThickness }}>{toTitleCaseFromUnderscore(post.reference_model)}</td>
                                             <td style={{ padding: "3px", }} className="break-text">{post.reference_code}</td>
                                         </tr>
                                     ))}
@@ -525,7 +549,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                     </tr> : ""}
 
 
-                                    {props.model.pages.length === (pageIndex + 1) && props.model && (props.model.debitBalance > 0 || props.model.creditBalance > 0) ?
+                                    {props.model.pages.length === (pageIndex + 1) && props.model ?
                                         <tr style={{ borderBottom: tableBorderThickness }}>
                                             <th className="text-end" colSpan={2} style={{ borderRight: tableBorderThickness, padding: "3px" }}>
                                                 <b>Due Amount</b>

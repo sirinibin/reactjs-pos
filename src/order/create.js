@@ -2665,8 +2665,13 @@ function findDiscount() {
                                             </td>
                                             <td>
                                                 <div className={`input-group mb-3 ${errors["quantity_" + index] ? "mt-3" : ""}`}>
-                                                    <input type="number" id={`${"sales_product_quantity_" + index}`} name={`${"sales_product_quantity" + index}`} onWheel={(e) => e.target.blur()} value={product.quantity} className="form-control text-end"
-
+                                                    <input type="number"
+                                                        style={{ minWidth: "25px" }}
+                                                        id={`${"sales_product_quantity_" + index}`}
+                                                        name={`${"sales_product_quantity" + index}`}
+                                                        onWheel={(e) => e.target.blur()}
+                                                        value={product.quantity}
+                                                        className="form-control text-end"
                                                         placeholder="Quantity"
                                                         ref={(el) => {
                                                             if (!inputRefs.current[index]) inputRefs.current[index] = {};

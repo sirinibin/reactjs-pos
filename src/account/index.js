@@ -7,6 +7,7 @@ import { Button, Spinner } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import PostingIndex from "./../posting/index.js";
 import Amount from "../utils/amount.js";
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 function AccountIndex(props) {
 
@@ -937,7 +938,8 @@ function AccountIndex(props) {
                                                             <Button variant="link" onClick={() => {
                                                                 openBalanceSheetDialogue(account);
                                                             }}>
-                                                                {account.name}
+                                                                <OverflowTooltip value={account.name} />
+
                                                             </Button>
                                                         </td>
                                                         <td style={{ width: "auto", whiteSpace: "nowrap" }}>{account.debit_or_credit_balance === "debit_balance" ? <Amount amount={account.balance} /> : "0"}</td>
