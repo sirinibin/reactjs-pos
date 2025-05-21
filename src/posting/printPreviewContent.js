@@ -473,7 +473,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                                             <td className="text-start break-text" style={{ width: "auto", padding: "3px", whiteSpace: "nowrap", alignContent: "start", borderRightWidth: "0px" }}>
                                                 {/*post.debit_account*/}
                                                 {post.debit_account_name && <span>
-                                                    <span style={{
+                                                    To <span style={{
                                                         display: 'inline-block',
                                                         maxWidth: accountNameMaxWidth,
                                                         whiteSpace: 'nowrap',
