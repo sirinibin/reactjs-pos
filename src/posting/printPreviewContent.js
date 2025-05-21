@@ -54,9 +54,9 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join(' ');
         if (newStr === "Customer Deposit") {
-            return "Customer Payable"
-        } else if (newStr === "Customer Withdrawal") {
             return "Customer Receivable"
+        } else if (newStr === "Customer Withdrawal") {
+            return "Customer Payable"
         }
 
         return newStr;
