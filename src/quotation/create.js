@@ -1049,6 +1049,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     timerRef.current = setTimeout(() => {
       reCalculate(index);
+      checkWarnings();
     }, 300);
     return true;
   }

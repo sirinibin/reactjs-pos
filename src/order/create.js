@@ -1130,9 +1130,6 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         if (product.purchase_unit_price > product.unit_price) {
-            if (index === false) {
-                index = selectedProducts.length;
-            }
             // errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
             errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
             console.log("errors:", errors);
@@ -1171,6 +1168,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
         timerRef.current = setTimeout(() => {
             reCalculate(index);
+            checkWarnings();
         }, 300);
         return true;
     }
