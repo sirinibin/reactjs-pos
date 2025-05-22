@@ -15,9 +15,10 @@ import StoreCreate from "../store/create.js";
 import ProductCategoryCreate from "../product_category/create.js";
 import ProductBrandCreate from "../product_brand/create.js";
 import countryList from 'react-select-country-list';
-
 import ImageGallery from '../utils/ImageGallery.js';
+import { trimTo2Decimals } from "../utils/numberUtils";
 //import Select from 'react-select'
+import ProductUpdate from "./update.js";
 
 const ProductCreate = forwardRef((props, ref) => {
 
@@ -37,6 +38,7 @@ const ProductCreate = forwardRef((props, ref) => {
         images_content: [],
         unit: "",
         item_code: "",
+        store_id: localStorage.getItem("store_id"),
       };
 
       if (linkToProductID) {
@@ -50,14 +52,10 @@ const ProductCreate = forwardRef((props, ref) => {
         await getProduct(id);
         if (timerRef.current) clearTimeout(timerRef.current);
         timerRef.current = setTimeout(() => {
-          ImageGalleryRef.current.open();
-        }, 300);
+          ImageGalleryRef.current?.open();
+        }, 400);
 
       }
-
-
-
-
 
       SetShow(true);
     },
@@ -91,7 +89,6 @@ const ProductCreate = forwardRef((props, ref) => {
         console.log(data);
         store = data.result;
         setStore(store);
-
         //stores = data.result;
         //setStores(data.result);
         productStores = {};
@@ -207,8 +204,8 @@ const ProductCreate = forwardRef((props, ref) => {
         if (categoryIds && categoryNames) {
           for (var i = 0; i < categoryIds.length; i++) {
             selectedCategories.push({
-              id: categoryIds[i],
-              name: categoryNames[i],
+              id: categoryIds[i] ? categoryIds[i] : " ",
+              name: categoryNames[i] ? categoryNames[i] : " ",
             });
           }
         }
@@ -394,10 +391,33 @@ const ProductCreate = forwardRef((props, ref) => {
     event.preventDefault();
     console.log("Inside handle Create");
     let haveErrors = false;
+    errors = {};
     setErrors({ ...errors });
 
+    for (var i = 0; i < formData.set?.products?.length; i++) {
+      if (!formData.set?.products[i].retail_unit_price) {
+        formData.set.products[i].retail_unit_price = 0;
+      }
+      if (!formData.set?.products[i].retail_unit_price_with_vat) {
+        formData.set.products[i].retail_unit_price_with_vat = 0;
+      }
+
+      if (/^\d*\.?\d{0,2}$/.test(formData.set?.products[i].retail_unit_price_with_vat) === false) {
+        errors["set_product_unit_price_with_vat_" + i] = "Only 2 decimal points are allowed";
+        haveErrors = true;
+        setErrors({ ...errors });
+      }
+
+      if (/^\d*\.?\d{0,2}$/.test(formData.set?.products[i].retail_unit_price) === false) {
+        errors["set_product_unit_price_" + i] = "Only 2 decimal points are allowed";
+        haveErrors = true;
+        setErrors({ ...errors });
+      }
+    }
+
+
     formData.category_id = [];
-    for (var i = 0; i < selectedCategories.length; i++) {
+    for (i = 0; i < selectedCategories.length; i++) {
       formData.category_id.push(selectedCategories[i].id);
     }
 
@@ -609,11 +629,22 @@ const ProductCreate = forwardRef((props, ref) => {
   let [selectedLinkedProducts, setSelectedLinkedProducts] = useState([]);
 
   const productSearchRef = useRef();
+
+
+  const [productSetOptions, setProductSetOptions] = useState([]);
+  const productSetSearchRef = useRef();
+  let [openProductSetSearchResult, setOpenProductSetSearchResult] = useState(false);
+
   let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
-  const suggestProducts = useCallback(async (searchTerm) => {
+  const suggestProducts = useCallback(async (searchTerm, type) => {
     console.log("Inside handle suggestProducts");
-    setProductOptions([]);
+    if (type === "set") {
+      setProductSetOptions([]);
+    } else {
+      setProductOptions([]);
+    }
+
 
     console.log("searchTerm:" + searchTerm);
     if (!searchTerm) {
@@ -647,7 +678,7 @@ const ProductCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
+    let Select = `select=id,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
     //setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
@@ -657,20 +688,32 @@ const ProductCreate = forwardRef((props, ref) => {
 
     let products = data.result;
     if (!products || products.length === 0) {
-      setOpenProductSearchResult(false);
+      if (type === "set") {
+        setOpenProductSetSearchResult(false);
+      } else {
+        setOpenProductSearchResult(false);
+      }
+
       // setIsProductsLoading(false);
       return;
     }
 
 
-    setOpenProductSearchResult(true);
+
     /*
     const sortedProducts = products
       .filter(item => item.country_name)                        // Keep only items with name
       .sort((a, b) => a.country_name.localeCompare(b.country_name))     // Sort alphabetically
       .concat(products.filter(item => !item.country_name));*/
 
-    setProductOptions(products);
+    if (type === "set") {
+      setOpenProductSetSearchResult(true);
+      setProductSetOptions(products);
+    } else {
+      setOpenProductSearchResult(true);
+      setProductOptions(products);
+    }
+
     //setIsProductsLoading(false);
 
   }, []);
@@ -690,9 +733,86 @@ const ProductCreate = forwardRef((props, ref) => {
   const brandSearchRef = useRef();
   const categorySearchRef = useRef();
 
+  function AddProductToSet(product) {
+    console.log("product:", product);
+    if (!formData.set) {
+      formData["set"] = {};
+    }
+
+    if (!formData.set.products) {
+      formData["set"]["products"] = [];
+    }
+
+    if (IsProductExistsInSet(product.id)) {
+      return;
+    }
+
+    if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
+      if (product.product_stores[formData.store_id].with_vat) {
+        product.unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price / (1 + (store.vat_percent / 100))));
+        product.unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price;
+      } else {
+        product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+        product.unit_price_with_vat = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price * (1 + (store.vat_percent / 100))));
+      }
+    }
+
+    formData.set.products.push({
+      "product_id": product.id,
+      "name": product.name,
+      "retail_unit_price": product.unit_price,
+      "retail_unit_price_with_vat": product.unit_price_with_vat,
+    });
+    setFormData({ ...formData });
+    findSetTotal();
+  }
+
+
+  function IsProductExistsInSet(productID) {
+    for (var i = 0; i < formData.set.products.length; i++) {
+      if (formData.set.products[i].product_id === productID) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function RemoveProductFromSet(index) {
+    if (index > -1) {
+      formData.set.products.splice(index, 1);
+    }
+    setFormData({ ...formData });
+    findSetTotal();
+  }
+
+  function findSetTotal() {
+    let total = 0.00;
+    let totalWithVAT = 0.00;
+    for (let i = 0; i < formData.set.products.length; i++) {
+      total += formData.set.products[i].retail_unit_price;
+      totalWithVAT += formData.set.products[i].retail_unit_price_with_vat;
+    }
+    formData.set.total = parseFloat(trimTo2Decimals(total));
+    formData.set.total_with_vat = parseFloat(trimTo2Decimals(totalWithVAT));
+
+    if (productStores[localStorage.getItem('store_id')]?.with_vat) {
+      productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total_with_vat;
+    } else {
+      productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total;
+    }
+
+    setFormData({ ...formData });
+  }
+
+
+  const ProductUpdateFormRef = useRef();
+  function openUpdateForm(id) {
+    ProductUpdateFormRef.current.open(id);
+  }
 
   return (
     <>
+      <ProductUpdate ref={ProductUpdateFormRef} showToastMessage={props.showToastMessage} />
       <StoreCreate
         ref={StoreCreateFormRef}
         showToastMessage={props.showToastMessage}
@@ -917,6 +1037,7 @@ const ProductCreate = forwardRef((props, ref) => {
               <label className="form-label">Country</label>
 
               <div className="input-group mb-3">
+
                 <Typeahead
                   id="country_code"
                   labelKey="label"
@@ -1046,7 +1167,9 @@ const ProductCreate = forwardRef((props, ref) => {
               <label className="form-label">Category</label>
 
               <div className="input-group mb-4">
+
                 <Typeahead
+                  ref={categorySearchRef}
                   id="category_id"
                   labelKey="name"
                   filterBy={() => true}
@@ -1071,7 +1194,6 @@ const ProductCreate = forwardRef((props, ref) => {
                   onInputChange={(searchTerm, e) => {
                     suggestCategories(searchTerm);
                   }}
-                  ref={categorySearchRef}
                   onKeyDown={(e) => {
                     if (e.key === "Escape") {
                       setCategoryOptions([]);
@@ -1301,6 +1423,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         id={`${"product_retail_unit_price"}`}
                         name={`${"product_retail_unit_price"}`}
                         type="number"
+                        disabled={formData.set?.total}
                         value={
                           productStores[localStorage.getItem('store_id')]?.retail_unit_price || productStores[localStorage.getItem('store_id')]?.retail_unit_price === 0
                             ? productStores[localStorage.getItem('store_id')]?.retail_unit_price
@@ -1504,15 +1627,325 @@ const ProductCreate = forwardRef((props, ref) => {
               </table>
             </div>
 
+            <h4>SET</h4>
+            <div className="col-md-3">
+              <label className="form-label">Set Name</label>
+              <div className="input-group mb-3">
+                <input
+                  id="set_name"
+                  name="set_name"
+                  value={formData.set?.name ? formData.set.name : ""}
+                  type="string"
+                  onChange={(e) => {
+                    errors["set_name"] = "";
+                    setErrors({ ...errors });
+                    formData.set.name = e.target.value;
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+                  placeholder="Set Name"
+
+                />
+                {errors.set_name && (
+                  <div style={{ color: "red" }}>
+                    <i className="bi bi-x-lg"> </i>
+                    {errors.set_name}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="col-md-9">
+              <label className="form-label">Select Products</label>
+              <Typeahead
+                id="set_product_id"
+                labelKey="search_label"
+                emptyLabel=""
+                ref={productSetSearchRef}
+                filterBy={() => true}
+                onChange={(selectedItems) => {
+                  if (timerRef.current) clearTimeout(timerRef.current);
+
+                  if (selectedItems.length === 0) {
+                    return;
+                  }
+
+                  AddProductToSet(selectedItems[0])
+                  // setSelectedLinkedProducts(selectedItems);
+
+
+                  timerRef.current = setTimeout(() => {
+                    setOpenProductSetSearchResult(false);
+                    setProductSetOptions([]);
+                    productSetSearchRef.current?.clear();
+                    inputRefs.current[(formData.set.products.length - 1)][`${"set_product_unit_price_" + (formData.set.products.length - 1)}`].select();
+                  }, 300);
+
+                  /*
+                  if (timerRef.current) clearTimeout(timerRef.current);
+                  timerRef.current = setTimeout(() => {
+                    inputRefs.current[0][`${"set_product_unit_price_0"}`].select();
+                  }, 100);*/
+
+
+                  /*
+                  setProductOptions([]);
+                  setOpenProductSearchResult(false);
+                  productSearchRef.current?.clear();
+                  */
+                  /*
+                  searchByMultipleValuesField(
+                    "category_id",
+                    selectedItems
+                  );*/
+                }}
+                options={productSetOptions}
+                placeholder="Select Products"
+                highlightOnlyResult={true}
+                open={openProductSetSearchResult}
+                onKeyDown={(e) => {
+                  if (timerRef.current) clearTimeout(timerRef.current);
+                  if (e.key === "Escape") {
+                    timerRef.current = setTimeout(() => {
+                      setOpenProductSetSearchResult(false);
+                      setProductSetOptions([]);
+                      productSetSearchRef.current?.clear();
+                    }, 100);
+                  }
+
+                  timerRef.current = setTimeout(() => {
+                    productSetSearchRef.current?.focus();
+                  }, 100);
+
+                }}
+                onInputChange={(searchTerm, e) => {
+                  suggestProducts(searchTerm, "set");
+
+                }}
+              />
+            </div>
+
+            <div className="col-md-12">
+              <label className="form-label">Set Products</label>
+              <div class="table-responsive" style={{}}>
+                <table class="table table-striped table-sm table-bordered">
+                  {formData.set?.products && formData.set?.products?.length > 0 &&
+                    <thead className="text-center">
+                      <th>
+                        Name
+                      </th>
+                      <th>
+                        Unit Price
+                      </th>
+                      <th>
+                        Unit Price(with VAT)
+                      </th>
+                      <th>
+                        Action
+                      </th>
+                    </thead>}
+                  <tbody>
+                    {formData.set?.products &&
+                      formData.set?.products.map((product, key) => (
+                        <tr key={key}>
+                          <td style={{ minWidth: "300px" }}>
+                            <span style={{ color: "blue", cursor: "pointer" }} onClick={() => {
+                              openUpdateForm(product.product_id);
+                            }}>{product.name}</span>
+                          </td>
+                          <td style={{ width: "200px" }}>
+                            <input type='number'
+                              id={`${"set_product_unit_price_" + key}`}
+                              name={`${"set_product_unit_price_" + key}`}
+                              value={formData.set.products[key].retail_unit_price}
+                              className="form-control"
+                              ref={(el) => {
+                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                inputRefs.current[key][`${"set_product_unit_price_" + key}`] = el;
+                              }}
+                              onFocus={() => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                timerRef.current = setTimeout(() => {
+                                  inputRefs.current[key][`${"set_product_unit_price_" + key}`].select();
+                                }, 100);
+                              }}
+                              onKeyDown={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                if (e.key === "ArrowLeft") {
+                                  if ((key + 1) === formData.set.products.length) {
+                                    timerRef.current = setTimeout(() => {
+                                      productSetSearchRef.current?.focus();
+                                    }, 100);
+                                  } else {
+                                    timerRef.current = setTimeout(() => {
+                                      inputRefs.current[(key + 1)][`${"set_product_unit_price_with_vat_" + (key + 1)}`].focus();
+                                    }, 100);
+                                  }
+                                }
+                              }}
+
+                              onChange={(e) => {
+                                errors["set_product_unit_price_" + key] = "";
+                                setErrors({ ...errors });
+
+                                if (e.target.value === 0) {
+                                  formData.set.products[key].retail_unit_price_with_vat = 0;
+                                  formData.set.products[key].retail_unit_price = 0;
+                                  setFormData({ ...formData });
+                                  return;
+                                }
+
+                                if (!e.target.value) {
+                                  formData.set.products[key].retail_unit_price_with_vat = "";
+                                  formData.set.products[key].retail_unit_price = ""
+                                  setFormData({ ...formData });
+                                  return;
+                                }
+
+                                formData.set.products[key].retail_unit_price = parseFloat(e.target.value);
+                                formData.set.products[key].retail_unit_price_with_vat = parseFloat(trimTo2Decimals(formData.set.products[key].retail_unit_price * (1 + (store.vat_percent / 100))));
+                                setFormData({ ...formData });
+                                findSetTotal();
+                                console.log(formData);
+                              }}
+                            />
+                            {errors["set_product_unit_price_" + key] && (
+                              <div style={{ color: "red" }}>
+
+                                {errors["set_product_unit_price_" + key]}
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ width: "200px" }}>
+                            <input type='number'
+                              id={`${"set_product_unit_price_with_vat_" + key}`}
+                              name={`${"set_product_unit_price_with_vat_" + key}`}
+                              value={formData.set.products[key].retail_unit_price_with_vat}
+                              className="form-control "
+                              ref={(el) => {
+                                if (!inputRefs.current[key]) inputRefs.current[key] = {};
+                                inputRefs.current[key][`${"set_product_unit_price_with_vat_" + key}`] = el;
+                              }}
+                              onFocus={() => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+                                timerRef.current = setTimeout(() => {
+                                  inputRefs.current[key][`${"set_product_unit_price_with_vat_" + key}`]?.select();
+                                }, 100);
+                              }}
+                              onKeyDown={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
+
+                                if (e.key === "Enter") {
+                                  if ((key + 1) === formData.set.products.length) {
+                                    timerRef.current = setTimeout(() => {
+                                      productSetSearchRef.current?.focus();
+                                    }, 100);
+                                  } else {
+                                    console.log("moviing to next line")
+                                    if (key === 0) {
+                                      timerRef.current = setTimeout(() => {
+                                        productSetSearchRef.current?.focus();
+                                      }, 100);
+                                    } else {
+                                      timerRef.current = setTimeout(() => {
+                                        inputRefs.current[key - 1][`${"set_product_unit_price_" + (key - 1)}`]?.focus();
+                                      }, 100);
+                                    }
+                                  }
+                                } else if (e.key === "ArrowLeft") {
+                                  timerRef.current = setTimeout(() => {
+                                    inputRefs.current[key][`${"set_product_unit_price_" + key}`].focus();
+                                  }, 100);
+                                }
+                              }}
+
+                              onChange={(e) => {
+                                errors["set_product_unit_price_with_vat_" + key] = "";
+                                setErrors({ ...errors });
+
+                                if (e.target.value === 0) {
+                                  formData.set.products[key].retail_unit_price_with_vat = 0;
+                                  formData.set.products[key].retail_unit_price = 0;
+                                  setFormData({ ...formData });
+                                  return;
+                                }
+
+                                if (!e.target.value) {
+                                  formData.set.products[key].retail_unit_price_with_vat = "";
+                                  formData.set.products[key].retail_unit_price = ""
+                                  setFormData({ ...formData });
+                                  return;
+                                }
+
+                                formData.set.products[key].retail_unit_price_with_vat = parseFloat(e.target.value);
+                                formData.set.products[key].retail_unit_price = parseFloat(trimTo2Decimals(formData.set.products[key].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                                setFormData({ ...formData });
+                                findSetTotal();
+                                console.log(formData);
+                              }}
+                            />
+                            {errors["set_product_unit_price_with_vat_" + key] && (
+                              <div style={{ color: "red" }}>
+
+                                {errors["set_product_unit_price_with_vat_" + key]}
+                              </div>
+                            )}
+                          </td>
+                          <td style={{ width: "100px" }}>
+                            <Button variant="danger" onClick={(event) => {
+                              RemoveProductFromSet(key);
+                            }}>
+                              Remove
+                            </Button>
+                          </td>
+
+                        </tr>
+                      )).reverse()}
+                    <tr>
+                      <td class="text-end">
+                        <b>Total</b>
+                      </td>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total ? trimTo2Decimals(formData.set?.total) + " (without VAT)" : ""}</b>
+                        {errors["set_total"] && (
+                          <div style={{ color: "red" }}>
+                            {errors["set_total"]}
+                          </div>
+                        )}
+                      </td>
+                      <td><b style={{ marginLeft: "14px" }}>{formData.set?.total_with_vat ? trimTo2Decimals(formData.set?.total_with_vat) + " (with VAT)" : ""}</b>
+                        {errors["set_total_with_vat"] && (
+                          <div style={{ color: "red" }}>
+                            {errors["set_total_with_vat"]}
+                          </div>
+                        )}
+                      </td>
+                      <td></td>
+                    </tr>
+                  </tbody>
+                </table>
+
+              </div>
+            </div>
+
+            <h4>Link Products</h4>
             <div className="col-md-12">
               <label className="form-label">Linked Products</label>
               <Typeahead
-                id="product_id"
+                id="linked_product_id"
                 labelKey="search_label"
+                emptyLabel=""
                 ref={productSearchRef}
                 filterBy={() => true}
                 onChange={(selectedItems) => {
                   setSelectedLinkedProducts(selectedItems);
+                  setOpenProductSearchResult(false);
+                  /*
+                  setProductOptions([]);
+                  setOpenProductSearchResult(false);
+                  productSearchRef.current?.clear();
+                  */
                   /*
                   searchByMultipleValuesField(
                     "category_id",
@@ -1526,9 +1959,9 @@ const ProductCreate = forwardRef((props, ref) => {
                 open={openProductSearchResult}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
-                    setProductOptions([]);
+                    // setProductOptions([]);
                     setOpenProductSearchResult(false);
-                    productSearchRef.current?.clear();
+                    // productSearchRef.current?.clear();
                   }
                 }}
                 onInputChange={(searchTerm, e) => {

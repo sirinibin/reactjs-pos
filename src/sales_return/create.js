@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import { Modal, Button } from "react-bootstrap";
 import StoreCreate from "../store/create.js";
 import CustomerCreate from "./../customer/create.js";
-import ProductCreate from "./../product/create.js";
 import UserCreate from "./../user/create.js";
 import SignatureCreate from "./../signature/create.js";
 
@@ -11,7 +10,6 @@ import DatePicker from "react-datepicker";
 import { format } from "date-fns";
 import { Spinner } from "react-bootstrap";
 import SalesReturnView from "./view.js";
-import ProductView from "./../product/view.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Preview from "./../order/preview.js";
 import { Dropdown } from 'react-bootstrap';
@@ -25,6 +23,8 @@ import Products from "./../utils/products.js";
 import ResizableTableCell from './../utils/ResizableTableCell';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import Amount from "../utils/amount.js";
+
+import ProductCreate from "./../product/create.js";
 
 const SalesReturnCreate = forwardRef((props, ref) => {
 
@@ -1187,13 +1187,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     const SignatureCreateFormRef = useRef();
 
 
-
-    const ProductDetailsViewRef = useRef();
-    function openProductDetailsView(id) {
-        ProductDetailsViewRef.current.open(id);
-    }
-
-
     let [totalPaymentAmount, setTotalPaymentAmount] = useState(0.00);
     let [balanceAmount, setBalanceAmount] = useState(0.00);
     let [paymentStatus, setPaymentStatus] = useState("");
@@ -1467,6 +1460,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
     const inputRefs = useRef({});
     const discountRef = useRef(null);
 
+    function openUpdateProductForm(id) {
+        ProductCreateFormRef.current.open(id);
+    }
+
     return (
         <>
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
@@ -1480,7 +1477,6 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
             <Preview ref={PreviewRef} />
             <SalesReturnView ref={DetailsViewRef} />
-            <ProductView ref={ProductDetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
             <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -1770,7 +1766,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     <div
                                                         style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
                                                         onClick={() => {
-                                                            openProductDetailsView(product.product_id);
+                                                            openUpdateProductForm(product.product_id);
                                                         }}
                                                     >
                                                         <i className="bi bi-eye"> </i>

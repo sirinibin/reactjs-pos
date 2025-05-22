@@ -497,7 +497,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         };
 
         // let Select = "select=id,item_code,bar_code,name,product_stores,unit,part_number,name_in_arabic";
-        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.with_vat`;
+        let Select = `select=id,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.with_vat`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
@@ -1322,9 +1322,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
     const ProductDetailsViewRef = useRef();
-    function openProductDetailsView(id) {
-        ProductDetailsViewRef.current.open(id);
-    }
 
     const VendorsRef = useRef();
     function openVendors(model) {
@@ -1518,7 +1515,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             <Preview ref={PreviewRef} />
             <Vendors ref={VendorsRef} onSelectVendor={handleSelectedVendor} showToastMessage={props.showToastMessage} />
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
-            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
+            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
 
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
 
@@ -2023,7 +2020,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     <div
                                                         style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
                                                         onClick={() => {
-                                                            openProductDetailsView(product.product_id);
+                                                            openProductUpdateForm(product.product_id);
                                                         }}
                                                     >
                                                         <i className="bi bi-eye"> </i>

@@ -542,7 +542,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = `select=id,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
+        let Select = `select=id,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
@@ -1569,10 +1569,8 @@ function findDiscount() {
     const SignatureCreateFormRef = useRef();
 
 
+
     const ProductDetailsViewRef = useRef();
-    function openProductDetailsView(id) {
-        ProductDetailsViewRef.current.open(id);
-    }
 
     function addNewPayment() {
         let date = new Date();
@@ -1899,9 +1897,13 @@ function findDiscount() {
 
     const customerSearchRef = useRef();
 
+
+    function openUpdateProductForm(id) {
+        ProductCreateFormRef.current.open(id);
+    }
+
     return (
         <>
-
             <OrderPreview ref={PreviewRef} />
             <div
                 className="toast-container position-fixed top-0 end-0 p-3"
@@ -2537,7 +2539,7 @@ function findDiscount() {
                                                     <div
                                                         style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
                                                         onClick={() => {
-                                                            openProductDetailsView(product.product_id);
+                                                            openUpdateProductForm(product.product_id);
                                                         }}
                                                     >
                                                         <i className="bi bi-eye"> </i>
@@ -2865,7 +2867,6 @@ function findDiscount() {
                                                             }, 300);
 
                                                             errors["purchase_unit_price_" + index] = "";
-
                                                             if (selectedProducts[index].purchase_unit_price > selectedProducts[index].unit_price) {
                                                                 errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
                                                                 console.log("errors:", errors);

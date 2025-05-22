@@ -1036,9 +1036,6 @@ async function reCalculate(productIndex) {
     const SignatureCreateFormRef = useRef();
 
     const ProductDetailsViewRef = useRef();
-    function openProductDetailsView(id) {
-        ProductDetailsViewRef.current.open(id);
-    }
 
     const PurchaseDetailsViewRef = useRef();
 
@@ -1336,9 +1333,7 @@ async function reCalculate(productIndex) {
 
             <Preview ref={PreviewRef} />
             <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
-            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
-
-
+            <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} />
 
             <PurchaseReturnedView ref={DetailsViewRef} />
             <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -1653,7 +1648,7 @@ async function reCalculate(productIndex) {
                                                 cursor: "pointer",
                                             }}
                                                 onClick={() => {
-                                                    openProductDetailsView(product.product_id);
+                                                    openProductUpdateForm(product.product_id);
                                                 }}>{product.name}
                                             </td>
                                             <td>
