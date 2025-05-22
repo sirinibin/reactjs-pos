@@ -1322,6 +1322,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
 
     const ProductDetailsViewRef = useRef();
+    function openProductDetails(id) {
+        ProductDetailsViewRef.current.open(id);
+    }
+
 
     const VendorsRef = useRef();
     function openVendors(model) {
@@ -1480,6 +1484,25 @@ const PurchaseCreate = forwardRef((props, ref) => {
     const inputRefs = useRef({});
 
     const vendorSearchRef = useRef();
+
+    function RunKeyActions(event, product) {
+        if (event.key === "F10") {
+            openLinkedProducts(product);
+        } else if (event.key === "F4") {
+            openSalesHistory(product);
+        } else if (event.key === "F5") {
+            openSalesReturnHistory(product);
+        } else if (event.key === "F6") {
+            openPurchaseHistory(product);
+        } else if (event.key === "F8") {
+            openPurchaseReturnHistory(product);
+        } else if (event.key === "F3") {
+            openDeliveryNoteHistory(product);
+        } else if (event.key === "F1") {
+            openQuotationHistory(product);
+        }
+    }
+
 
     return (
         <>
@@ -1989,7 +2012,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 <div className="input-group mb-3">
                                                     <input
                                                         id={`${"purchase_product_name" + index}`} name={`${"purchase_product_name" + index}`}
-                                                        type="text" onWheel={(e) => e.target.blur()} value={product.name} disabled={!selectedProducts[index].can_edit_name} className="form-control"
+                                                        type="text" onWheel={(e) => e.target.blur()}
+                                                        value={product.name}
+                                                        className="form-control"
                                                         placeholder="Name" onChange={(e) => {
                                                             errors["name_" + index] = "";
                                                             setErrors({ ...errors });
@@ -2007,20 +2032,21 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             selectedProducts[index].name = e.target.value;
                                                             setSelectedProducts([...selectedProducts]);
                                                         }} />
-                                                    <div
-                                                        style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
-                                                        onClick={() => {
-                                                            selectedProducts[index].can_edit_name = !selectedProducts[index].can_edit_name;
-                                                            setSelectedProducts([...selectedProducts]);
-                                                        }}
-                                                    >
-                                                        {selectedProducts[index].can_edit_name ? <i className="bi bi-floppy"> </i> : <i className="bi bi-pencil"> </i>}
-                                                    </div>
+
 
                                                     <div
                                                         style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
                                                         onClick={() => {
                                                             openProductUpdateForm(product.product_id);
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-pencil"> </i>
+                                                    </div>
+
+                                                    <div
+                                                        style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                                                        onClick={() => {
+                                                            openProductDetails(product.product_id);
                                                         }}
                                                     >
                                                         <i className="bi bi-eye"> </i>
@@ -2046,7 +2072,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             }}>
                                                                 <i className="bi bi-link"></i>
                                                                 &nbsp;
-                                                                Linked Products
+                                                                Linked Products (F10)
                                                             </Dropdown.Item>
 
                                                             <Dropdown.Item onClick={() => {
@@ -2054,44 +2080,43 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Sales History
+                                                                Sales History (F4)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openSalesReturnHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Sales Return History
+                                                                Sales Return History (F5)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openPurchaseHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Purchase History
+                                                                Purchase History (F6)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openPurchaseReturnHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Purchase Return History
+                                                                Purchase Return History (F8)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openDeliveryNoteHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Delivery Note History
+                                                                Delivery Note History (F3)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openQuotationHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Quotation History
+                                                                Quotation History  (F1)
                                                             </Dropdown.Item>
-
                                                         </Dropdown.Menu>
                                                     </Dropdown>
                                                 </div>
@@ -2113,6 +2138,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             if (e.key === "ArrowLeft") {
                                                                 if ((index + 1) === selectedProducts.length) {
@@ -2184,6 +2211,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             if (e.key === "Backspace") {
                                                                 selectedProducts[index].purchase_unit_price_with_vat = "";
@@ -2277,6 +2306,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         }}
 
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             if (e.key === "Backspace") {
                                                                 selectedProducts[index].purchase_unit_price_with_vat = "";
@@ -2365,6 +2396,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
                                                             if (e.key === "Enter") {
@@ -2482,6 +2515,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
                                                             if (e.key === "Enter") {
@@ -2586,68 +2621,70 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             </td>
                                             <td>
                                                 <div className="input-group mb-3">
-                                                    <input type="number" id={`${"purchase_unit_discount_percent" + index}`} disabled={true} name={`${"purchase_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
-                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                    <input type="number" id={`${"purchase_unit_discount_percent" + index}`}
+                                                        disabled={true}
+                                                        name={`${"purchase_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                        if (parseFloat(e.target.value) === 0) {
-                                                            selectedProducts[index].unit_discount_percent = 0.00;
-                                                            selectedProducts[index].unit_discount_with_vat = 0.00;
-                                                            selectedProducts[index].unit_discount = 0.00;
-                                                            selectedProducts[index].unit_discount_percent_with_vat = 0.00;
-                                                            setFormData({ ...formData });
+                                                            if (parseFloat(e.target.value) === 0) {
+                                                                selectedProducts[index].unit_discount_percent = 0.00;
+                                                                selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                                selectedProducts[index].unit_discount = 0.00;
+                                                                selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                                setFormData({ ...formData });
+                                                                errors["unit_discount_percent_" + index] = "";
+                                                                setErrors({ ...errors });
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                                return;
+                                                            }
+
+                                                            if (parseFloat(e.target.value) < 0) {
+                                                                selectedProducts[index].unit_discount_percent = 0.00;
+                                                                selectedProducts[index].unit_discount_with_vat = 0.00;
+                                                                selectedProducts[index].unit_discount = 0.00;
+                                                                selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                                setFormData({ ...formData });
+                                                                errors["unit_discount_percent_" + index] = "Unit discount % should be >= 0";
+                                                                setErrors({ ...errors });
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                                return;
+                                                            }
+
+                                                            if (!e.target.value) {
+                                                                selectedProducts[index].unit_discount_percent = "";
+                                                                selectedProducts[index].unit_discount_with_vat = "";
+                                                                selectedProducts[index].unit_discount = "";
+                                                                selectedProducts[index].unit_discount_percent_with_vat = "";
+                                                                //errors["discount_percent_" + index] = "Invalid Discount Percent";
+                                                                setFormData({ ...formData });
+                                                                timerRef.current = setTimeout(() => {
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                                //setErrors({ ...errors });
+                                                                return;
+                                                            }
+
                                                             errors["unit_discount_percent_" + index] = "";
+                                                            errors["unit_discount_" + index] = "";
                                                             setErrors({ ...errors });
-                                                            timerRef.current = setTimeout(() => {
-                                                                reCalculate(index);
-                                                            }, 300);
-                                                            return;
-                                                        }
 
-                                                        if (parseFloat(e.target.value) < 0) {
-                                                            selectedProducts[index].unit_discount_percent = 0.00;
-                                                            selectedProducts[index].unit_discount_with_vat = 0.00;
-                                                            selectedProducts[index].unit_discount = 0.00;
-                                                            selectedProducts[index].unit_discount_percent_with_vat = 0.00;
+                                                            selectedProducts[index].unit_discount_percent = parseFloat(e.target.value); //input
+
+
                                                             setFormData({ ...formData });
-                                                            errors["unit_discount_percent_" + index] = "Unit discount % should be >= 0";
-                                                            setErrors({ ...errors });
+
                                                             timerRef.current = setTimeout(() => {
+                                                                selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].purchase_unit_price * (selectedProducts[index].unit_discount_percent / 100)));
+                                                                selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+                                                                selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
+
                                                                 reCalculate(index);
                                                             }, 300);
-                                                            return;
-                                                        }
-
-                                                        if (!e.target.value) {
-                                                            selectedProducts[index].unit_discount_percent = "";
-                                                            selectedProducts[index].unit_discount_with_vat = "";
-                                                            selectedProducts[index].unit_discount = "";
-                                                            selectedProducts[index].unit_discount_percent_with_vat = "";
-                                                            //errors["discount_percent_" + index] = "Invalid Discount Percent";
-                                                            setFormData({ ...formData });
-                                                            timerRef.current = setTimeout(() => {
-                                                                reCalculate(index);
-                                                            }, 300);
-                                                            //setErrors({ ...errors });
-                                                            return;
-                                                        }
-
-                                                        errors["unit_discount_percent_" + index] = "";
-                                                        errors["unit_discount_" + index] = "";
-                                                        setErrors({ ...errors });
-
-                                                        selectedProducts[index].unit_discount_percent = parseFloat(e.target.value); //input
-
-
-                                                        setFormData({ ...formData });
-
-                                                        timerRef.current = setTimeout(() => {
-                                                            selectedProducts[index].unit_discount = parseFloat(trimTo2Decimals(selectedProducts[index].purchase_unit_price * (selectedProducts[index].unit_discount_percent / 100)));
-                                                            selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
-                                                            selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].purchase_unit_price_with_vat) * 100)))
-
-                                                            reCalculate(index);
-                                                        }, 300);
-                                                    }} />
+                                                        }} />
                                                 </div>
                                                 {errors["unit_discount_percent_" + index] && (
                                                     <div style={{ color: "red" }}>
@@ -2661,7 +2698,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                         id={`${"purchase_product_wholesale_unit_price" + index}`} name={`${"purchase_product_wholesale_unit_price" + index}`}
                                                         type="number" value={product.wholesale_unit_price} className="form-control"
 
-                                                        placeholder="Wholesale Unit Price" onChange={(e) => {
+                                                        placeholder="Wholesale Unit Price"
+                                                        onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+                                                        }}
+                                                        onChange={(e) => {
                                                             errors["wholesale_unit_price_" + index] = "";
                                                             setErrors({ ...errors });
                                                             if (!e.target.value) {
@@ -2703,7 +2744,12 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 <div className="input-group mb-3">
                                                     <input
                                                         id={`${"purchase_product_retail_unit_price" + index}`} name={`${"purchase_product_retail_unit_price" + index}`}
-                                                        type="number" value={product.retail_unit_price} className="form-control"
+                                                        type="number"
+                                                        value={product.retail_unit_price}
+                                                        className="form-control"
+                                                        onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+                                                        }}
 
                                                         placeholder="Retail Unit Price" onChange={(e) => {
                                                             errors["retail_unit_price_" + index] = "";

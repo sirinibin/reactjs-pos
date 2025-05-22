@@ -395,6 +395,23 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   }
 
 
+  function RunKeyActions(event, product) {
+    if (event.key === "F10") {
+      openLinkedProducts(product);
+    } else if (event.key === "F4") {
+      openSalesHistory(product);
+    } else if (event.key === "F5") {
+      openSalesReturnHistory(product);
+    } else if (event.key === "F6") {
+      openPurchaseHistory(product);
+    } else if (event.key === "F8") {
+      openPurchaseReturnHistory(product);
+    } else if (event.key === "F3") {
+      openDeliveryNoteHistory(product);
+    } else if (event.key === "F1") {
+      openQuotationHistory(product);
+    }
+  }
 
   let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
@@ -1507,6 +1524,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                             }}
                             onFocus={() => handleFocus(index, `${"delivery_note_quantity_" + index}`)}
                             onKeyDown={(e) => {
+                              RunKeyActions(e, product);
+
                               if (e.key === "Enter") {
                                 moveToProductSearch();
                               }

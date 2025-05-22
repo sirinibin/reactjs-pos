@@ -69,7 +69,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     useImperativeHandle(ref, () => ({
-        open(id) {
+        async open(id) {
             //ResetFormData();
             errors = {};
             setErrors({ ...errors });
@@ -135,6 +135,8 @@ const OrderCreate = forwardRef((props, ref) => {
             if (id) {
                 getOrder(id);
             }
+
+
             setFormData({ ...formData });
             reCalculate();
             setShow(true);
@@ -313,8 +315,12 @@ const OrderCreate = forwardRef((props, ref) => {
                 }
 
 
+
+
                 reCalculate();
                 setFormData({ ...formData });
+                await checkStockWarnings();
+                checkWarnings();
             })
             .catch(error => {
                 setProcessing(false);
@@ -941,6 +947,70 @@ const OrderCreate = forwardRef((props, ref) => {
         return false;
     }
 
+    function checkWarnings() {
+        errors = {};
+        for (let i = 0; i < selectedProducts.length; i++) {
+            if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
+                errors["purchase_unit_price_" + i] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
+                setErrors({ ...errors });
+            }
+        }
+    }
+
+    async function checkStockWarnings() {
+        errors = {};
+        for (let i = 0; i < selectedProducts.length; i++) {
+            let product = await getProduct(selectedProducts[i].product_id);
+            let stock = 0;
+
+            if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
+                stock = product.product_stores[localStorage.getItem("store_id")].stock;
+            }
+
+            if (product.product_stores && stock < selectedProducts[i].quantity) {
+                errors["quantity_" + i] = "Warning: Available stock is " + stock;
+                setErrors({ ...errors });
+            }
+
+        }
+
+    }
+
+
+    async function getProduct(id) {
+        console.log("inside get Product");
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        try {
+            const response = await fetch(`/v1/product/${id}?${queryParams}`, requestOptions);
+            const isJson = response.headers.get("content-type")?.includes("application/json");
+            const data = isJson ? await response.json() : null;
+
+            if (!response.ok) {
+                const error = data?.errors || "Unknown error";
+                throw error;
+            }
+
+            return data.result;  // ✅ return the result here
+        } catch (error) {
+            setProcessing(false);
+            setErrors(error);
+            return null;  // ✅ explicitly return null or a fallback if there's an error
+        }
+    }
+
     function addProduct(product) {
         console.log("Inside Add product");
         if (!formData.store_id) {
@@ -1134,7 +1204,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 (parseFloat(selectedProducts[i].unit_price - productUnitDiscount) *
                     parseFloat(selectedProducts[i].quantity));
         }
-
+ 
         // formData.total = Math.round(formData.total * 100) / 100;
         setFormData.total(formData.total);
     }
@@ -1149,7 +1219,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (formData.total > 0) {
             console.log("formData.vat_percent:", formData.vat_percent);
             //(35.8 / 100) * 10000;
-
+ 
             vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(formData.total) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
             console.log("vatPrice:", vatPrice);
         }
@@ -1175,20 +1245,20 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.net_total = RoundFloat(formData.net_total, 2);
         // formData.net_total = Math.round(formData.net_total * 100) / 100;
         setFormData.net_total(formData.net_total);
-
+ 
         if (!formData.id) {
             let method = "";
             if (formData.payments_input && formData.payments_input[0]) {
                 method = formData.payments_input[0].method;
             }
-
+ 
             formData.payments_input = [{
                 "date_str": formData.date_str,
                 "amount": 0.00,
                 "method": method,
                 "deleted": false,
             }];
-
+ 
             if (formData.net_total > 0) {
                 formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
                 if (formData.cash_discount) {
@@ -1197,7 +1267,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
             }
         }
-
+ 
         /*
         if (formData.payments_input[0].amount === 0) {
             formData.payments_input[0].amount = "";
@@ -1214,17 +1284,17 @@ const OrderCreate = forwardRef((props, ref) => {
         if (selectedProducts[productIndex].unit_discount
             && parseFloat(selectedProducts[productIndex].unit_discount) >= 0
             && unitPrice > 0) {
-
+ 
             let unitDiscountPercent = parseFloat(parseFloat(selectedProducts[productIndex].unit_discount / unitPrice) * 100);
             //selectedProducts[productIndex].unit_discount_percent = parseFloat(trimTo2Decimals(unitDiscountPercent));
             selectedProducts[productIndex].unit_discount_percent = unitDiscountPercent;
             setSelectedProducts([...selectedProducts]);
         }
     }
-
+ 
     function findProductUnitDiscount(productIndex) {
         let unitPrice = parseFloat(selectedProducts[productIndex].unit_price);
-
+ 
         if (selectedProducts[productIndex].unit_discount_percent
             && selectedProducts[productIndex].unit_discount_percent >= 0
             && unitPrice > 0) {
@@ -1768,6 +1838,24 @@ function findDiscount() {
 
     function openProducts() {
         ProductsRef.current.open();
+    }
+
+    function RunKeyActions(event, product) {
+        if (event.key === "F10") {
+            openLinkedProducts(product);
+        } else if (event.key === "F4") {
+            openSalesHistory(product);
+        } else if (event.key === "F5") {
+            openSalesReturnHistory(product);
+        } else if (event.key === "F6") {
+            openPurchaseHistory(product);
+        } else if (event.key === "F8") {
+            openPurchaseReturnHistory(product);
+        } else if (event.key === "F3") {
+            openDeliveryNoteHistory(product);
+        } else if (event.key === "F1") {
+            openQuotationHistory(product);
+        }
     }
 
 
@@ -2565,7 +2653,7 @@ function findDiscount() {
                                                             }}>
                                                                 <i className="bi bi-link"></i>
                                                                 &nbsp;
-                                                                Linked Products
+                                                                Linked Products (F10)
                                                             </Dropdown.Item>
 
                                                             <Dropdown.Item onClick={() => {
@@ -2573,42 +2661,42 @@ function findDiscount() {
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Sales History
+                                                                Sales History (F4)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openSalesReturnHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Sales Return History
+                                                                Sales Return History (F5)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openPurchaseHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Purchase History
+                                                                Purchase History (F6)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openPurchaseReturnHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Purchase Return History
+                                                                Purchase Return History (F8)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openDeliveryNoteHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Delivery Note History
+                                                                Delivery Note History (F3)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openQuotationHistory(product);
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Quotation History
+                                                                Quotation History  (F1)
                                                             </Dropdown.Item>
 
                                                         </Dropdown.Menu>
@@ -2660,10 +2748,7 @@ function findDiscount() {
 
                                                             errors["purchase_unit_price_" + index] = "";
 
-                                                            if (selectedProducts[index].purchase_unit_price > selectedProducts[index].unit_price) {
-                                                                errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
-                                                                console.log("errors:", errors);
-                                                            }
+                                                            checkWarnings();
                                                             setErrors({ ...errors });
 
                                                         }} />
@@ -2708,6 +2793,7 @@ function findDiscount() {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
                                                             if (e.key === "ArrowLeft") {
@@ -2775,6 +2861,7 @@ function findDiscount() {
                                                             setSelectedProducts([...selectedProducts]);
                                                             timerRef.current = setTimeout(() => {
                                                                 reCalculate(index);
+                                                                checkStockWarnings();
                                                             }, 300);
 
                                                         }} />
@@ -2807,6 +2894,8 @@ function findDiscount() {
                                                         }}
 
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             if (e.key === "Backspace") {
                                                                 selectedProducts[index].unit_price_with_vat = "";
@@ -2866,11 +2955,7 @@ function findDiscount() {
                                                                 reCalculate(index);
                                                             }, 300);
 
-                                                            errors["purchase_unit_price_" + index] = "";
-                                                            if (selectedProducts[index].purchase_unit_price > selectedProducts[index].unit_price) {
-                                                                errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
-                                                                console.log("errors:", errors);
-                                                            }
+                                                            checkWarnings();
                                                             setErrors({ ...errors });
 
                                                         }} />
@@ -2901,6 +2986,8 @@ function findDiscount() {
                                                         }}
 
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             if (e.key === "Backspace") {
                                                                 selectedProducts[index].unit_price_with_vat = "";
@@ -2990,6 +3077,8 @@ function findDiscount() {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             if (e.key === "ArrowLeft") {
                                                                 timerRef.current = setTimeout(() => {
@@ -3084,6 +3173,8 @@ function findDiscount() {
                                                             }, 100);
                                                         }}
                                                         onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
                                                             if (e.key === "Enter") {
@@ -3260,7 +3351,10 @@ function findDiscount() {
                                             <td>
                                                 <div className="input-group mb-3">
                                                     <input type="number"
-                                                        id={`${"sales_unit_discount_percent_with_vat_" + index}`} disabled={true} name={`${"sales_unit_discount_percent_with_vat_" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent_with_vat} onChange={(e) => {
+                                                        id={`${"sales_unit_discount_percent_with_vat_" + index}`}
+                                                        disabled={true}
+                                                        name={`${"sales_unit_discount_percent_with_vat_" + index}`}
+                                                        onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent_with_vat} onChange={(e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
                                                             if (parseFloat(e.target.value) === 0) {
