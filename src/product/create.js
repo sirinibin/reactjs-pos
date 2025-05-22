@@ -39,6 +39,10 @@ const ProductCreate = forwardRef((props, ref) => {
         unit: "",
         item_code: "",
         store_id: localStorage.getItem("store_id"),
+        set: {
+          name: "",
+          products: [],
+        },
       };
 
       if (linkToProductID) {
