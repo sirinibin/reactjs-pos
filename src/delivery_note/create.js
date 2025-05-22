@@ -400,7 +400,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       openLinkedProducts(product);
     } else if (event.key === "F4") {
       openSalesHistory(product);
-    } else if (event.key === "F5") {
+    } else if (event.key === "F9") {
       openSalesReturnHistory(product);
     } else if (event.key === "F6") {
       openPurchaseHistory(product);
@@ -408,7 +408,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       openPurchaseReturnHistory(product);
     } else if (event.key === "F3") {
       openDeliveryNoteHistory(product);
-    } else if (event.key === "F1") {
+    } else if (event.key === "F2") {
       openQuotationHistory(product);
     }
   }
@@ -1461,7 +1461,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               }}>
                                 <i className="bi bi-link"></i>
                                 &nbsp;
-                                Linked Products
+                                Linked Products (F10)
                               </Dropdown.Item>
 
                               <Dropdown.Item onClick={() => {
@@ -1469,44 +1469,43 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               }}>
                                 <i className="bi bi-clock-history"></i>
                                 &nbsp;
-                                Sales History
+                                Sales History (F4)
                               </Dropdown.Item>
                               <Dropdown.Item onClick={() => {
                                 openSalesReturnHistory(product);
                               }}>
                                 <i className="bi bi-clock-history"></i>
                                 &nbsp;
-                                Sales Return History
+                                Sales Return History (F9)
                               </Dropdown.Item>
                               <Dropdown.Item onClick={() => {
                                 openPurchaseHistory(product);
                               }}>
                                 <i className="bi bi-clock-history"></i>
                                 &nbsp;
-                                Purchase History
+                                Purchase History (F6)
                               </Dropdown.Item>
                               <Dropdown.Item onClick={() => {
                                 openPurchaseReturnHistory(product);
                               }}>
                                 <i className="bi bi-clock-history"></i>
                                 &nbsp;
-                                Purchase Return History
+                                Purchase Return History (F8)
                               </Dropdown.Item>
                               <Dropdown.Item onClick={() => {
                                 openDeliveryNoteHistory(product);
                               }}>
                                 <i className="bi bi-clock-history"></i>
                                 &nbsp;
-                                Delivery Note History
+                                Delivery Note History (F3)
                               </Dropdown.Item>
                               <Dropdown.Item onClick={() => {
                                 openQuotationHistory(product);
                               }}>
                                 <i className="bi bi-clock-history"></i>
                                 &nbsp;
-                                Quotation History
+                                Quotation History  (F2)
                               </Dropdown.Item>
-
                             </Dropdown.Menu>
                           </Dropdown>
                         </div>

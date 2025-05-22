@@ -1316,13 +1316,12 @@ async function reCalculate(productIndex) {
         setSelectedProducts([...selectedProducts]);
         reCalculate();
     };
-
     function RunKeyActions(event, product) {
         if (event.key === "F10") {
             openLinkedProducts(product);
         } else if (event.key === "F4") {
             openSalesHistory(product);
-        } else if (event.key === "F5") {
+        } else if (event.key === "F9") {
             openSalesReturnHistory(product);
         } else if (event.key === "F6") {
             openPurchaseHistory(product);
@@ -1330,7 +1329,7 @@ async function reCalculate(productIndex) {
             openPurchaseReturnHistory(product);
         } else if (event.key === "F3") {
             openDeliveryNoteHistory(product);
-        } else if (event.key === "F1") {
+        } else if (event.key === "F2") {
             openQuotationHistory(product);
         }
     }
@@ -1755,7 +1754,7 @@ async function reCalculate(productIndex) {
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Sales Return History (F5)
+                                                                Sales Return History (F9)
                                                             </Dropdown.Item>
                                                             <Dropdown.Item onClick={() => {
                                                                 openPurchaseHistory(product);
@@ -1783,7 +1782,7 @@ async function reCalculate(productIndex) {
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Quotation History  (F1)
+                                                                Quotation History  (F2)
                                                             </Dropdown.Item>
                                                         </Dropdown.Menu>
                                                     </Dropdown>
