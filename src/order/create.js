@@ -2601,6 +2601,9 @@ function findDiscount() {
                                                         name={`${"sales_product_name" + index}`}
                                                         onWheel={(e) => e.target.blur()} value={product.name}
                                                         className="form-control"
+                                                        onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+                                                        }}
                                                         placeholder="Name" onChange={(e) => {
                                                             errors["name_" + index] = "";
                                                             setErrors({ ...errors });

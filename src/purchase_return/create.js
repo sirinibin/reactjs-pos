@@ -1678,6 +1678,9 @@ async function reCalculate(productIndex) {
                                                         type="text"
                                                         onWheel={(e) => e.target.blur()}
                                                         value={product.name}
+                                                        onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+                                                        }}
                                                         className="form-control"
                                                         placeholder="Name" onChange={(e) => {
                                                             errors["name_" + index] = "";
