@@ -759,6 +759,9 @@ const ProductCreate = forwardRef((props, ref) => {
         product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
         product.unit_price_with_vat = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price * (1 + (store.vat_percent / 100))));
       }
+    } else {
+      product.unit_price = 0;
+      product.unit_price_with_vat = 0;
     }
 
     formData.set.products.push({
@@ -793,8 +796,14 @@ const ProductCreate = forwardRef((props, ref) => {
     let total = 0.00;
     let totalWithVAT = 0.00;
     for (let i = 0; i < formData.set.products.length; i++) {
-      total += formData.set.products[i].retail_unit_price;
-      totalWithVAT += formData.set.products[i].retail_unit_price_with_vat;
+      if (formData.set.products[i].retail_unit_price) {
+        total += formData.set.products[i].retail_unit_price;
+      }
+
+      if (formData.set.products[i].retail_unit_price_with_vat) {
+        totalWithVAT += formData.set.products[i].retail_unit_price_with_vat;
+      }
+
     }
     formData.set.total = parseFloat(trimTo2Decimals(total));
     formData.set.total_with_vat = parseFloat(trimTo2Decimals(totalWithVAT));
