@@ -1639,9 +1639,6 @@ function findDiscount() {
     const SignatureCreateFormRef = useRef();
 
 
-
-    const ProductDetailsViewRef = useRef();
-
     function addNewPayment() {
         let date = new Date();
         if (!formData.id) {
@@ -1989,6 +1986,12 @@ function findDiscount() {
     function openUpdateProductForm(id) {
         ProductCreateFormRef.current.open(id);
     }
+
+    const ProductDetailsViewRef = useRef();
+    function openProductDetails(id) {
+        ProductDetailsViewRef.current.open(id);
+    }
+
 
     return (
         <>
@@ -2596,7 +2599,10 @@ function findDiscount() {
                                             <ResizableTableCell
                                             >
                                                 <div className="input-group mb-3">
-                                                    <input type="text" id={`${"sales_product_name" + index}`} name={`${"sales_product_name" + index}`} onWheel={(e) => e.target.blur()} value={product.name} disabled={!selectedProducts[index].can_edit_name} className="form-control"
+                                                    <input type="text" id={`${"sales_product_name" + index}`}
+                                                        name={`${"sales_product_name" + index}`}
+                                                        onWheel={(e) => e.target.blur()} value={product.name}
+                                                        className="form-control"
                                                         placeholder="Name" onChange={(e) => {
                                                             errors["name_" + index] = "";
                                                             setErrors({ ...errors });
@@ -2614,20 +2620,21 @@ function findDiscount() {
                                                             selectedProducts[index].name = e.target.value;
                                                             setSelectedProducts([...selectedProducts]);
                                                         }} />
-                                                    <div
-                                                        style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
-                                                        onClick={() => {
-                                                            selectedProducts[index].can_edit_name = !selectedProducts[index].can_edit_name;
-                                                            setSelectedProducts([...selectedProducts]);
-                                                        }}
-                                                    >
-                                                        {selectedProducts[index].can_edit_name ? <i className="bi bi-floppy"> </i> : <i className="bi bi-pencil"> </i>}
-                                                    </div>
+
 
                                                     <div
                                                         style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
                                                         onClick={() => {
                                                             openUpdateProductForm(product.product_id);
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-pencil"> </i>
+                                                    </div>
+
+                                                    <div
+                                                        style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                                                        onClick={() => {
+                                                            openProductDetails(product.product_id);
                                                         }}
                                                     >
                                                         <i className="bi bi-eye"> </i>

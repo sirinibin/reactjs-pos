@@ -1353,13 +1353,6 @@ const QuotationCreate = forwardRef((props, ref) => {
   const SignatureCreateFormRef = useRef();
 
 
-  const ProductDetailsViewRef = useRef();
-  function openProductDetailsView(id) {
-    ProductDetailsViewRef.current.open(id);
-  }
-
-
-
   const PreviewRef = useRef();
   function openPreview() {
     let model = formData;
@@ -1734,6 +1727,12 @@ const QuotationCreate = forwardRef((props, ref) => {
     }
   }
 
+  const ProductDetailsViewRef = useRef();
+  function openProductDetails(id) {
+    ProductDetailsViewRef.current.open(id);
+  }
+
+
   const customerSearchRef = useRef();
 
   return (
@@ -1777,7 +1776,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       <ProductCreate
         ref={ProductCreateFormRef}
         showToastMessage={props.showToastMessage}
-        openDetailsView={openProductDetailsView}
+        openDetailsView={openProductDetails}
       />
 
       <StoreCreate
@@ -2353,7 +2352,10 @@ const QuotationCreate = forwardRef((props, ref) => {
                         <ResizableTableCell
                         >
                           <div className="input-group mb-3">
-                            <input type="text" onWheel={(e) => e.target.blur()} value={product.name} disabled={!selectedProducts[index].can_edit_name} className="form-control"
+                            <input type="text"
+                              onWheel={(e) => e.target.blur()}
+                              value={product.name}
+                              className="form-control"
                               placeholder="Name" onChange={(e) => {
                                 errors["name_" + index] = "";
                                 setErrors({ ...errors });
@@ -2371,20 +2373,21 @@ const QuotationCreate = forwardRef((props, ref) => {
                                 selectedProducts[index].name = e.target.value;
                                 setSelectedProducts([...selectedProducts]);
                               }} />
-                            <div
-                              style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
-                              onClick={() => {
-                                selectedProducts[index].can_edit_name = !selectedProducts[index].can_edit_name;
-                                setSelectedProducts([...selectedProducts]);
-                              }}
-                            >
-                              {selectedProducts[index].can_edit_name ? <i className="bi bi-floppy"> </i> : <i className="bi bi-pencil"> </i>}
-                            </div>
+
 
                             <div
                               style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
                               onClick={() => {
                                 openProductUpdateForm(product.product_id);
+                              }}
+                            >
+                              <i className="bi bi-pencil"> </i>
+                            </div>
+
+                            <div
+                              style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                              onClick={() => {
+                                openProductDetails(product.product_id);
                               }}
                             >
                               <i className="bi bi-eye"> </i>

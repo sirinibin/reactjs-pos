@@ -26,6 +26,7 @@ import DeliveryNoteHistory from "./../product/delivery_note_history.js";
 import Products from "./../utils/products.js";
 import Amount from "../utils/amount.js";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import ResizableTableCell from './../utils/ResizableTableCell';
 
 
 const PurchaseReturnedCreate = forwardRef((props, ref) => {
@@ -1035,7 +1036,6 @@ async function reCalculate(productIndex) {
 
     const SignatureCreateFormRef = useRef();
 
-    const ProductDetailsViewRef = useRef();
 
     const PurchaseDetailsViewRef = useRef();
 
@@ -1339,6 +1339,15 @@ async function reCalculate(productIndex) {
     const inputRefs = useRef({});
     const discountRef = useRef(null);
 
+    const ProductDetailsViewRef = useRef();
+    function openProductDetails(id) {
+        ProductDetailsViewRef.current.open(id);
+    }
+
+    function openUpdateProductForm(id) {
+        ProductCreateFormRef.current.open(id);
+    }
+
     return (
         <>
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
@@ -1616,24 +1625,25 @@ async function reCalculate(productIndex) {
                             <table className="table table-striped table-sm table-bordered">
                                 <thead>
                                     <tr className="text-center">
-                                        <th style={{ width: "5%" }}>
+                                        <th style={{}} >
                                             Select All
                                             <input
+                                                style={{}}
                                                 type="checkbox"
                                                 checked={isAllSelected}
                                                 onChange={handleSelectAll}
                                             />
                                         </th>
-                                        <th>SI No.</th>
-                                        <th>Part No.</th>
-                                        <th>Name</th>
+                                        <th  >SI No.</th>
+                                        <th >Part No.</th>
+                                        <th style={{ minWidth: "300px" }} >Name</th>
                                         <th>Info</th>
                                         <th>Qty</th>
                                         <th>Unit Price(without VAT)</th>
                                         <th>Unit Price(with VAT)</th>
-                                        <th style={{ width: "10%" }}>Unit Disc.(without VAT)</th>
-                                        <th style={{ width: "10%" }}>Unit Disc.(with VAT)</th>
-                                        <th style={{ width: "10%" }}>Disc. %(without VAT)</th>
+                                        <th >Unit Disc.(without VAT)</th>
+                                        <th >Unit Disc.(with VAT)</th>
+                                        <th >Disc. %(without VAT)</th>
                                         <th>Price(without VAT)</th>
                                         <th>Price(with VAT)</th>
                                     </tr>
@@ -1660,15 +1670,60 @@ async function reCalculate(productIndex) {
                                             </td>
                                             <td>{index + 1}</td>
                                             <td>{product.part_number}</td>
-                                            <td style={{
-                                                textDecoration: "underline",
-                                                color: "blue",
-                                                cursor: "pointer",
-                                            }}
-                                                onClick={() => {
-                                                    openProductUpdateForm(product.product_id);
-                                                }}>{product.name}
-                                            </td>
+                                            <ResizableTableCell
+                                            >
+                                                <div className="input-group mb-3">
+                                                    <input id={`${"sales_return_product_name" + index}`}
+                                                        name={`${"sales_return_product_name" + index}`}
+                                                        type="text"
+                                                        onWheel={(e) => e.target.blur()}
+                                                        value={product.name}
+                                                        className="form-control"
+                                                        placeholder="Name" onChange={(e) => {
+                                                            errors["name_" + index] = "";
+                                                            setErrors({ ...errors });
+
+                                                            if (!e.target.value) {
+                                                                //errors["purchase_unit_price_" + index] = "Invalid purchase unit price";
+                                                                selectedProducts[index].name = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                //setErrors({ ...errors });
+                                                                console.log("errors:", errors);
+                                                                return;
+                                                            }
+
+
+                                                            selectedProducts[index].name = e.target.value;
+                                                            setSelectedProducts([...selectedProducts]);
+                                                        }} />
+
+
+                                                    <div
+                                                        style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                                                        onClick={() => {
+                                                            openUpdateProductForm(product.product_id);
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-pencil"> </i>
+                                                    </div>
+
+                                                    <div
+                                                        style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                                                        onClick={() => {
+                                                            openProductDetails(product.product_id);
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-eye"> </i>
+                                                    </div>
+                                                </div>
+                                                {errors["name_" + index] && (
+                                                    <div style={{ color: "red" }}>
+
+                                                        {errors["name_" + index]}
+                                                    </div>
+                                                )}
+                                            </ResizableTableCell>
+
                                             <td>
                                                 <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
                                                     <Dropdown drop="top">

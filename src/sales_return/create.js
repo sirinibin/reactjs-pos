@@ -25,6 +25,7 @@ import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import Amount from "../utils/amount.js";
 
 import ProductCreate from "./../product/create.js";
+import ProductView from "./../product/view.js";
 
 const SalesReturnCreate = forwardRef((props, ref) => {
 
@@ -1483,6 +1484,11 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         ProductCreateFormRef.current.open(id);
     }
 
+    const ProductDetailsViewRef = useRef();
+    function openProductDetails(id) {
+        ProductDetailsViewRef.current.open(id);
+    }
+
     function checkWarnings() {
         errors = {};
         for (let i = 0; i < selectedProducts.length; i++) {
@@ -1495,6 +1501,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     return (
         <>
+            <ProductView ref={ProductDetailsViewRef} />
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1763,8 +1770,12 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             <ResizableTableCell
                                             >
                                                 <div className="input-group mb-3">
-                                                    <input id={`${"sales_return_product_name" + index}`} name={`${"sales_return_product_name" + index}`}
-                                                        type="text" onWheel={(e) => e.target.blur()} value={product.name} disabled={!selectedProducts[index].can_edit_name} className="form-control"
+                                                    <input id={`${"sales_return_product_name" + index}`}
+                                                        name={`${"sales_return_product_name" + index}`}
+                                                        type="text"
+                                                        onWheel={(e) => e.target.blur()}
+                                                        value={product.name}
+                                                        className="form-control"
                                                         placeholder="Name" onChange={(e) => {
                                                             errors["name_" + index] = "";
                                                             setErrors({ ...errors });
@@ -1782,20 +1793,21 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                             selectedProducts[index].name = e.target.value;
                                                             setSelectedProducts([...selectedProducts]);
                                                         }} />
-                                                    <div
-                                                        style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
-                                                        onClick={() => {
-                                                            selectedProducts[index].can_edit_name = !selectedProducts[index].can_edit_name;
-                                                            setSelectedProducts([...selectedProducts]);
-                                                        }}
-                                                    >
-                                                        {selectedProducts[index].can_edit_name ? <i className="bi bi-floppy"> </i> : <i className="bi bi-pencil"> </i>}
-                                                    </div>
+
 
                                                     <div
                                                         style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
                                                         onClick={() => {
                                                             openUpdateProductForm(product.product_id);
+                                                        }}
+                                                    >
+                                                        <i className="bi bi-pencil"> </i>
+                                                    </div>
+
+                                                    <div
+                                                        style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
+                                                        onClick={() => {
+                                                            openProductDetails(product.product_id);
                                                         }}
                                                     >
                                                         <i className="bi bi-eye"> </i>
