@@ -1053,7 +1053,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="use_products_from_store_id"
-                                      filterBy={() => true}
+                                      filterBy={store?.client_filter ? undefined : () => true}
                                     labelKey="name"
                                     isInvalid={errors.use_products_from_store_id ? true : false}
                                     onChange={(selectedItems) => {
@@ -3127,7 +3127,7 @@ const StoreCreate = forwardRef((props, ref) => {
                                     checked={formData.client_filter}
                                     onChange={(e) => {
                                         errors["client_filter"] = "";
-                                        formData.default_client_filter = !formData.client_filter;
+                                        formData.client_filter = !formData.client_filter;
                                         setFormData({ ...formData });
                                         console.log(formData);
                                     }}

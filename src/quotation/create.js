@@ -130,11 +130,17 @@ const QuotationCreate = forwardRef((props, ref) => {
       } else {
         getStore(localStorage.getItem("store_id"));
       }
+
+      getStore(localStorage.getItem("store_id"));
+
       SetShow(true);
     },
   }));
 
 
+
+
+  let [store, setStore] = useState({});
 
   function getStore(id) {
     console.log("inside get Store");
@@ -169,6 +175,10 @@ const QuotationCreate = forwardRef((props, ref) => {
         }
 
         setFormData(formData);
+
+        store = data.result;
+        setStore(store);
+
       })
       .catch(error => {
 
@@ -1859,7 +1869,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   <Typeahead
                     id="store_id"
                     labelKey="name"
-                    filterBy={() => true}
+                    filterBy={store?.client_filter ? undefined : () => true}
                     isLoading={isStoresLoading}
                     isInvalid={errors.store_id ? true : false}
                     onChange={(selectedItems) => {
@@ -1960,7 +1970,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="customer_id"
                 labelKey="search_label"
-                filterBy={() => true}
+                filterBy={store?.client_filter ? undefined : () => true}
                 isLoading={isCustomersLoading}
                 onChange={(selectedItems) => {
                   errors.customer_id = "";
@@ -2215,7 +2225,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="product_id"
                 ref={productSearchRef}
-                filterBy={() => true}
+                filterBy={store?.client_filter ? undefined : () => true}
                 size="lg"
                 labelKey="search_label"
                 emptyLabel=""

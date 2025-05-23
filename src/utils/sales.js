@@ -60,10 +60,11 @@ const Sales = forwardRef((props, ref) => {
             }
 
             list();
-
+            getStore(localStorage.getItem("store_id"));
             SetShow(true);
         },
     }));
+
 
     function handleClose() {
         SetShow(false);
@@ -652,9 +653,7 @@ const Sales = forwardRef((props, ref) => {
 
     useEffect(() => {
         list();
-        if (localStorage.getItem("store_id")) {
-            getStore(localStorage.getItem("store_id"));
-        }
+
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -1944,7 +1943,7 @@ const Sales = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="customer_id"
                                                                     labelKey="search_label"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     style={{ minWidth: "300px" }}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
@@ -2000,7 +1999,7 @@ const Sales = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="payment_status"
                                                                     labelKey="name"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "payment_status",
@@ -2018,7 +2017,7 @@ const Sales = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="payment_methods"
                                                                     labelKey="name"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "payment_methods",
@@ -2099,7 +2098,7 @@ const Sales = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="created_by"
                                                                     labelKey="name"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "created_by",
@@ -2199,7 +2198,7 @@ const Sales = forwardRef((props, ref) => {
                                                     <Typeahead
                                                         id="status"
                                                         labelKey="name"
-                                                        filterBy={() => true}
+                                                        filterBy={store?.client_filter ? undefined : () => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "status",

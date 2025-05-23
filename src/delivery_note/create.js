@@ -82,11 +82,46 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       if (id) {
         getDeliveryNote(id);
       }
+
+      getStore(localStorage.getItem("store_id"));
       SetShow(true);
     },
 
 
   }));
+
+  let [store, setStore] = useState({});
+
+  async function getStore(id) {
+    console.log("inside get Store");
+    const requestOptions = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('access_token'),
+      },
+    };
+
+    await fetch('/v1/store/' + id, requestOptions)
+      .then(async response => {
+        const isJson = response.headers.get('content-type')?.includes('application/json');
+        const data = isJson && await response.json();
+
+        // check for error response
+        if (!response.ok) {
+          const error = (data && data.errors);
+          return Promise.reject(error);
+        }
+
+        console.log("Response:");
+        console.log(data);
+        store = data.result;
+        setStore(store);
+      })
+      .catch(error => {
+
+      });
+  }
 
   useEffect(() => {
     const listener = event => {
@@ -1107,7 +1142,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 <Typeahead
                   id="store_id"
                   labelKey="name"
-                  filterBy={() => true}
+                  filterBy={store?.client_filter ? undefined : () => true}
                   isLoading={isStoresLoading}
                   isInvalid={errors.store_id ? true : false}
                   onChange={(selectedItems) => {
@@ -1147,7 +1182,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="customer_id"
                 labelKey="search_label"
-                filterBy={() => true}
+                filterBy={store?.client_filter ? undefined : () => true}
                 isLoading={isCustomersLoading}
                 onChange={(selectedItems) => {
                   errors.customer_id = "";
@@ -1294,7 +1329,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="product_id"
                 size="lg"
-                filterBy={() => true}
+                filterBy={store?.client_filter ? undefined : () => true}
                 ref={productSearchRef}
                 labelKey="search_label"
                 inputProps={{ className: 'productSearch' }}

@@ -146,7 +146,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
     let [store, setStore] = useState({});
 
-    function getStore(id) {
+    async function getStore(id) {
         console.log("inside get Store");
         const requestOptions = {
             method: 'GET',
@@ -156,7 +156,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/store/' + id, requestOptions)
+        await fetch('/v1/store/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -548,7 +548,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = `select=id,set.name,name_prefixes,name_in_arabic_prefixes,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
+        let Select = `select=id,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
@@ -2104,7 +2104,7 @@ function findDiscount() {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="store_id"
-                                    filterBy={() => true}
+                                    filterBy={store?.client_filter ? undefined : () => true}
                                     labelKey="name"
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
@@ -2201,7 +2201,7 @@ function findDiscount() {
                             <label className="form-label">Customer</label>
                             <Typeahead
                                 id="customer_id"
-                                filterBy={() => true}
+                                filterBy={store?.client_filter ? undefined : () => true}
                                 labelKey="search_label"
                                 isLoading={isCustomersLoading}
                                 onChange={(selectedItems) => {
@@ -2438,14 +2438,15 @@ function findDiscount() {
                             )}
                         </div>
 
-                        {/*filterBy={() => true}
+                        {/*filterBy={store?.client_filter ? undefined : () => true}
                         filterBy={true ? undefined : () => true}
+                         filterBy={['name_prefixes', 'name_in_arabic_prefixes']}
                         */}
                         <div className="col-md-8">
                             <label className="form-label">Product Search*</label>
                             <Typeahead
                                 id="product_id"
-                                filterBy={['name_prefixes', 'name_in_arabic_prefixes']}
+                                filterBy={store?.client_filter ? undefined : () => true}
                                 size="lg"
                                 ref={productSearchRef}
                                 labelKey="search_label"
@@ -3984,7 +3985,7 @@ function findDiscount() {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="delivered_by_signature_id"
-                                    filterBy={() => true}
+                                    filterBy={store?.client_filter ? undefined : () => true}
                                     labelKey="name"
                                     isLoading={isDeliveredBySignaturesLoading}
                                     isInvalid={errors.delivered_by_signature_id ? true : false}

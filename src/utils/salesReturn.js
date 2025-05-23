@@ -65,10 +65,12 @@ const SalesReturn = forwardRef((props, ref) => {
             }
 
             list();
+            getStore(localStorage.getItem("store_id"));
 
             SetShow(true);
         },
     }));
+
 
     function ResetSearchParams() {
         for (let key in searchParams) {
@@ -1892,7 +1894,7 @@ const SalesReturn = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     id="customer_id"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     labelKey="search_label"
                                                                     style={{ minWidth: "300px" }}
                                                                     onChange={(selectedItems) => {
@@ -1994,7 +1996,7 @@ const SalesReturn = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     id="payment_status"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     labelKey="name"
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
@@ -2012,7 +2014,7 @@ const SalesReturn = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     id="payment_methods"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     labelKey="name"
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
@@ -2065,7 +2067,7 @@ const SalesReturn = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="created_by"
                                                                     labelKey="name"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "created_by",

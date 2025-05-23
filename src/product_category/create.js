@@ -17,10 +17,45 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
             if (id) {
                 getProductCategory(id);
             }
+
+            getStore(localStorage.getItem("store_id"));
             SetShow(true);
         },
 
     }));
+
+    let [store, setStore] = useState({});
+
+    async function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        await fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+                store = data.result;
+                setStore(store);
+            })
+            .catch(error => {
+
+            });
+    }
 
 
     useEffect(() => {
@@ -351,7 +386,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="parent_id"
-                                    filterBy={() => true}
+                                    filterBy={store?.client_filter ? undefined : () => true}
                                     labelKey="name"
                                     isLoading={isProductCategoriesLoading}
                                     isInvalid={errors.parent_id ? true : false}

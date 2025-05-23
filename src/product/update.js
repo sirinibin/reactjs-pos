@@ -975,7 +975,7 @@ const ProductUpdate = forwardRef((props, ref) => {
                 <Typeahead
                   id="brand_id"
                   labelKey="name"
-                  filterBy={() => true}
+                  filterBy={store?.client_filter ? undefined : () => true}
                   isLoading={isBrandsLoading}
                   onChange={(selectedItems) => {
                     errors.brand_id = "";
@@ -1164,7 +1164,7 @@ const ProductUpdate = forwardRef((props, ref) => {
                 <Typeahead
                   id="category_id"
                   labelKey="name"
-                  filterBy={() => true}
+                  filterBy={store?.client_filter ? undefined : () => true}
                   isInvalid={errors.category_id ? true : false}
                   onChange={(selectedItems) => {
                     errors.category_id = "";
@@ -1656,7 +1656,7 @@ const ProductUpdate = forwardRef((props, ref) => {
                 labelKey="search_label"
                 emptyLabel=""
                 ref={productSetSearchRef}
-                filterBy={() => true}
+                filterBy={store?.client_filter ? undefined : () => true}
                 onChange={(selectedItems) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -1928,7 +1928,7 @@ const ProductUpdate = forwardRef((props, ref) => {
                 labelKey="search_label"
                 emptyLabel=""
                 ref={productSearchRef}
-                filterBy={() => true}
+                filterBy={store?.client_filter ? undefined : () => true}
                 onChange={(selectedItems) => {
                   setSelectedLinkedProducts(selectedItems);
                   setOpenProductSearchResult(false);

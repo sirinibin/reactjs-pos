@@ -795,7 +795,7 @@ function PurchaseReturnPaymentIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
-                                                        filterBy={() => true}
+                                                        filterBy={store?.client_filter ? undefined : () => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",

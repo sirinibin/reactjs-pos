@@ -83,12 +83,48 @@ const Products = forwardRef((props, ref) => {
 
             list();
 
+            getStore(localStorage.getItem("store_id"));
+
             SetShow(true);
             // setSelectedIds([]);
             setChoosenProducts([]);
         },
 
     }));
+
+
+    let [store, setStore] = useState({});
+
+    async function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        await fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+                store = data.result;
+                setStore(store);
+            })
+            .catch(error => {
+
+            });
+    }
 
 
     const countryOptions = useMemo(() => countryList().getData(), [])
@@ -1623,7 +1659,7 @@ const Products = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     id="product_id_by_part_no"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     size="lg"
                                                                     labelKey="search_label"
                                                                     emptyLabel="No products found"
@@ -1686,7 +1722,7 @@ const Products = forwardRef((props, ref) => {
                                                     />
                                                     <Typeahead
                                                         id="product_id"
-                                                          filterBy={() => true}
+                                                          filterBy={store?.client_filter ? undefined : () => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -1706,7 +1742,7 @@ const Products = forwardRef((props, ref) => {
 
                                                                 <Typeahead
                                                                     id="product_id"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     size="lg"
                                                                     labelKey="search_label"
                                                                     emptyLabel="No products found"
@@ -1861,7 +1897,7 @@ const Products = forwardRef((props, ref) => {
                                                             <th style={{ minWidth: "250px" }}>
                                                                 <Typeahead
                                                                     id="category_id"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     labelKey="name"
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
@@ -1890,7 +1926,7 @@ const Products = forwardRef((props, ref) => {
                                                             <th style={{ minWidth: "250px" }}>
                                                                 <Typeahead
                                                                     id="brand_id"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     labelKey="name"
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
@@ -1919,7 +1955,7 @@ const Products = forwardRef((props, ref) => {
                                                             <th style={{ minWidth: "250px" }}>
                                                                 <Typeahead
                                                                     id="country_code"
-                                                                    filterBy={() => true}
+                                                                    filterBy={store?.client_filter ? undefined : () => true}
                                                                     labelKey="label"
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
@@ -2138,7 +2174,7 @@ const Products = forwardRef((props, ref) => {
                                                             {/*<th>
                                                     <Typeahead
                                                         id="created_by"
-                                                        filterBy={() => true}
+                                                        filterBy={store?.client_filter ? undefined : () => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

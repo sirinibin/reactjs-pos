@@ -118,10 +118,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 getPurchase(id);
             }
             reCalculate();
+            getStore(localStorage.getItem("store_id"));
             setShow(true);
         },
 
     }));
+
+    let [store, setStore] = useState({});
 
     function getStore(id) {
         console.log("inside get Store");
@@ -146,7 +149,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                 console.log("Response:");
                 console.log(data);
-                let store = data.result;
+                store = data.result;
+                setStore(store);
+
                 formData.vat_percent = parseFloat(store.vat_percent);
                 setFormData({ ...formData });
             })
@@ -1596,7 +1601,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="store_id"
-                                    filterBy={() => true}
+                                    filterBy={store?.client_filter ? undefined : () => true}
                                     labelKey="name"
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
@@ -1641,7 +1646,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <label className="form-label">Vendor</label>
                             <Typeahead
                                 id="vendor_id"
-                                filterBy={() => true}
+                                filterBy={store?.client_filter ? undefined : () => true}
                                 labelKey="search_label"
                                 isLoading={isVendorsLoading}
                                 onChange={(selectedItems) => {
@@ -1905,7 +1910,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <label className="form-label">Product*</label>
                             <Typeahead
                                 id="product_id"
-                                filterBy={() => true}
+                                filterBy={store?.client_filter ? undefined : () => true}
                                 size="lg"
                                 ref={productSearchRef}
                                 labelKey="search_label"

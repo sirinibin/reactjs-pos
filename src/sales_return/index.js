@@ -1833,7 +1833,7 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="customer_id"
-                                                        filterBy={() => true}
+                                                        filterBy={store?.client_filter ? undefined : () => true}
                                                         labelKey="search_label"
                                                         style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
@@ -1935,7 +1935,7 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="payment_status"
-                                                        filterBy={() => true}
+                                                        filterBy={store?.client_filter ? undefined : () => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -1953,7 +1953,7 @@ function SalesReturnIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="payment_methods"
-                                                        filterBy={() => true}
+                                                        filterBy={store?.client_filter ? undefined : () => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2006,7 +2006,7 @@ function SalesReturnIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
-                                                        filterBy={() => true}
+                                                        filterBy={store?.client_filter ? undefined : () => true}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",
