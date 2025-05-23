@@ -548,7 +548,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = `select=id,set.name,name_prefixes,name_arabic_prefixes,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
+        let Select = `select=id,set.name,name_prefixes,name_in_arabic_prefixes,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
         setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
@@ -2445,7 +2445,7 @@ function findDiscount() {
                             <label className="form-label">Product Search*</label>
                             <Typeahead
                                 id="product_id"
-                                filterBy={['name_prefixes', 'name_arabic_prefixes']}
+                                filterBy={['name_prefixes', 'name_in_arabic_prefixes']}
                                 size="lg"
                                 ref={productSearchRef}
                                 labelKey="search_label"
