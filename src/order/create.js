@@ -2438,7 +2438,7 @@ function findDiscount() {
                             )}
                         </div>
 
-
+                        {/*filterBy={() => true}*/}
                         <div className="col-md-8">
                             <label className="form-label">Product Search*</label>
                             <Typeahead
