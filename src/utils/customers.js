@@ -345,6 +345,7 @@ const Customers = forwardRef((props, ref) => {
     }
 
     const customerSearchRef = useRef();
+    const timerRef = useRef(null);
 
     return (
         <>
@@ -1362,7 +1363,10 @@ const Customers = forwardRef((props, ref) => {
                                                                     selected={selectedCustomers}
                                                                     highlightOnlyResult={true}
                                                                     onInputChange={(searchTerm, e) => {
-                                                                        suggestCustomers(searchTerm);
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            suggestCustomers(searchTerm);
+                                                                        }, 100);
                                                                     }}
                                                                     ref={customerSearchRef}
                                                                     onKeyDown={(e) => {

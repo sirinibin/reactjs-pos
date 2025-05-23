@@ -1678,7 +1678,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         formData.vendor_name = searchTerm;
                                     }
                                     setFormData({ ...formData });
-                                    suggestVendors(searchTerm);
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        suggestVendors(searchTerm);
+                                    }, 100);
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
@@ -1948,7 +1951,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                 highlightOnlyResult={true}
                                 onInputChange={(searchTerm, e) => {
-                                    suggestProducts(searchTerm);
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        suggestProducts(searchTerm);
+                                    }, 100);
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>

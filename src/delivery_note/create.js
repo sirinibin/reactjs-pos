@@ -1002,6 +1002,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   }
 
   const customerSearchRef = useRef();
+  const timerRef = useRef(null);
 
   return (
     <>
@@ -1184,7 +1185,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   }
                   setFormData({ ...formData });
 
-                  suggestCustomers(searchTerm);
+                  if (timerRef.current) clearTimeout(timerRef.current);
+                  timerRef.current = setTimeout(() => {
+                    suggestCustomers(searchTerm);
+                  }, 100);
                 }}
               />
               <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
@@ -1320,7 +1324,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                 highlightOnlyResult={true}
                 onInputChange={(searchTerm, e) => {
-                  suggestProducts(searchTerm);
+                  if (timerRef.current) clearTimeout(timerRef.current);
+                  timerRef.current = setTimeout(() => {
+                    suggestProducts(searchTerm);
+                  }, 100);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {

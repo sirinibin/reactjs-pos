@@ -1995,7 +1995,10 @@ const QuotationCreate = forwardRef((props, ref) => {
                     formData.customer_name = searchTerm;
                   }
                   setFormData({ ...formData });
-                  suggestCustomers(searchTerm);
+                  if (timerRef.current) clearTimeout(timerRef.current);
+                  timerRef.current = setTimeout(() => {
+                    suggestCustomers(searchTerm);
+                  }, 100);
                 }}
               />
               <Button
@@ -2240,7 +2243,10 @@ const QuotationCreate = forwardRef((props, ref) => {
                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                 highlightOnlyResult={true}
                 onInputChange={(searchTerm, e) => {
-                  suggestProducts(searchTerm);
+                  if (timerRef.current) clearTimeout(timerRef.current);
+                  timerRef.current = setTimeout(() => {
+                    suggestProducts(searchTerm);
+                  }, 100);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {

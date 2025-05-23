@@ -401,6 +401,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
 
 
     const customerSearchRef = useRef();
+    const timerRef = useRef(null);
 
     return (
         <>
@@ -789,7 +790,10 @@ const DeliveryNotes = forwardRef((props, ref) => {
                                                                         }
                                                                     }}
                                                                     onInputChange={(searchTerm, e) => {
-                                                                        suggestCustomers(searchTerm);
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            suggestCustomers(searchTerm);
+                                                                        }, 100);
                                                                     }}
                                                                     multiple
                                                                 />

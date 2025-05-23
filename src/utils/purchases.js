@@ -819,6 +819,7 @@ const Purchases = forwardRef((props, ref) => {
 
 
     const vendorSearchRef = useRef();
+    const timerRef = useRef(null);
 
     return (
         <>
@@ -1444,7 +1445,10 @@ const Purchases = forwardRef((props, ref) => {
                                                                         }
                                                                     }}
                                                                     onInputChange={(searchTerm, e) => {
-                                                                        suggestVendors(searchTerm);
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            suggestVendors(searchTerm);
+                                                                        }, 100);
                                                                     }}
                                                                     multiple
                                                                 />

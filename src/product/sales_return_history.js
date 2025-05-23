@@ -339,6 +339,7 @@ const SalesReturnHistory = forwardRef((props, ref) => {
     let [totalLoss, setTotalLoss] = useState(0.00);
 
     const customerSearchRef = useRef();
+    const timerRef = useRef(null);
 
 
     return (
@@ -957,7 +958,10 @@ const SalesReturnHistory = forwardRef((props, ref) => {
                                                                     }
                                                                 }}
                                                                 onInputChange={(searchTerm, e) => {
-                                                                    suggestCustomers(searchTerm);
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        suggestCustomers(searchTerm);
+                                                                    }, 100);
                                                                 }}
                                                                 multiple
                                                             />

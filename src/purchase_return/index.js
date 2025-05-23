@@ -796,6 +796,7 @@ function PurchaseReturnIndex(props) {
     }
 
     const vendorSearchRef = useRef();
+    const timerRef = useRef(null);
 
     return (
         <>
@@ -1324,7 +1325,13 @@ function PurchaseReturnIndex(props) {
                                                             }
                                                         }}
                                                         onInputChange={(searchTerm, e) => {
-                                                            suggestVendors(searchTerm);
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    suggestVendors(searchTerm);
+                                                                }, 100);
+                                                            }, 100);
                                                         }}
                                                         multiple
                                                     />

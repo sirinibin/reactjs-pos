@@ -2246,7 +2246,11 @@ function findDiscount() {
                                         formData.customer_name = searchTerm;
                                         setFormData({ ...formData });
                                     }
-                                    suggestCustomers(searchTerm);
+
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        suggestCustomers(searchTerm);
+                                    }, 100);
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
@@ -2480,8 +2484,10 @@ function findDiscount() {
 
                                 }}
                                 onInputChange={(searchTerm, e) => {
-                                    //handleSuggestProducts(searchTerm);
-                                    suggestProducts(searchTerm);
+                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                    timerRef.current = setTimeout(() => {
+                                        suggestProducts(searchTerm);
+                                    }, 100);
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>

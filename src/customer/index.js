@@ -415,6 +415,7 @@ function CustomerIndex(props) {
 
     let [deleted, setDeleted] = useState(false);
     const customerSearchRef = useRef();
+    const timerRef = useRef(null);
 
 
     return (
@@ -1441,7 +1442,10 @@ function CustomerIndex(props) {
                                                         selected={selectedCustomers}
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
-                                                            suggestCustomers(searchTerm);
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                suggestCustomers(searchTerm);
+                                                            }, 100);
                                                         }}
                                                         multiple
                                                     />

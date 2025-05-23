@@ -414,6 +414,7 @@ function VendorIndex(props) {
     let [deleted, setDeleted] = useState(false);
 
     const vendorSearchRef = useRef();
+    const timerRef = useRef(null);
 
     return (
         <>
@@ -1120,7 +1121,10 @@ function VendorIndex(props) {
                                                             }
                                                         }}
                                                         onInputChange={(searchTerm, e) => {
-                                                            suggestVendors(searchTerm);
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                suggestVendors(searchTerm);
+                                                            }, 100);
                                                         }}
                                                         multiple
                                                     />
