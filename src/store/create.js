@@ -3120,6 +3120,28 @@ const StoreCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.client_filter}
+                                    checked={formData.client_filter}
+                                    onChange={(e) => {
+                                        errors["client_filter"] = "";
+                                        formData.default_client_filter = !formData.client_filter;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="client_filter"
+                                /> &nbsp;Enable Client Search Filter
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.client_filter && (
+                                <div style={{ color: "red" }}>
+                                    {errors.client_filter}
+                                </div>
+                            )}
+                        </div>
 
                         <div className="col-md-3">
                             <label className="form-label">Default quotation validity (# of Days)*</label>
