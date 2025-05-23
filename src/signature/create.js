@@ -14,11 +14,45 @@ const SignatureCreate = forwardRef((props, ref) => {
             if (id) {
                 getSignature(id);
             }
-            SetShow(true);
 
+            getStore(localStorage.getItem("store_id"));
+            SetShow(true);
         },
 
     }));
+
+    let [store, setStore] = useState({});
+
+    async function getStore(id) {
+        console.log("inside get Store");
+        const requestOptions = {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('access_token'),
+            },
+        };
+
+        await fetch('/v1/store/' + id, requestOptions)
+            .then(async response => {
+                const isJson = response.headers.get('content-type')?.includes('application/json');
+                const data = isJson && await response.json();
+
+                // check for error response
+                if (!response.ok) {
+                    const error = (data && data.errors);
+                    return Promise.reject(error);
+                }
+
+                console.log("Response:");
+                console.log(data);
+                store = data.result;
+                setStore(store);
+            })
+            .catch(error => {
+
+            });
+    }
 
     useEffect(() => {
         const listener = event => {
