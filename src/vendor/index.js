@@ -1124,7 +1124,7 @@ function VendorIndex(props) {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
                                                                 suggestVendors(searchTerm);
-                                                            }, 100);
+                                                            }, 400);
                                                         }}
                                                         multiple
                                                     />

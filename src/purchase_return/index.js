@@ -1327,11 +1327,8 @@ function PurchaseReturnIndex(props) {
                                                         onInputChange={(searchTerm, e) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
-                                                                timerRef.current = setTimeout(() => {
-                                                                    suggestVendors(searchTerm);
-                                                                }, 100);
-                                                            }, 100);
+                                                                suggestVendors(searchTerm);
+                                                            }, 400);
                                                         }}
                                                         multiple
                                                     />

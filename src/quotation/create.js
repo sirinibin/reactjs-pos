@@ -1998,7 +1998,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
                   timerRef.current = setTimeout(() => {
                     suggestCustomers(searchTerm);
-                  }, 100);
+                  }, 400);
                 }}
               />
               <Button
@@ -2246,7 +2246,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
                   timerRef.current = setTimeout(() => {
                     suggestProducts(searchTerm);
-                  }, 100);
+                  }, 400);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {

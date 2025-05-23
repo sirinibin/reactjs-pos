@@ -1366,7 +1366,7 @@ const Customers = forwardRef((props, ref) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         timerRef.current = setTimeout(() => {
                                                                             suggestCustomers(searchTerm);
-                                                                        }, 100);
+                                                                        }, 400);
                                                                     }}
                                                                     ref={customerSearchRef}
                                                                     onKeyDown={(e) => {
