@@ -27,6 +27,7 @@ import Products from "./../utils/products.js";
 import Amount from "../utils/amount.js";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import ResizableTableCell from './../utils/ResizableTableCell';
+import ImageViewerModal from './../utils/ImageViewerModal';
 
 
 const PurchaseReturnedCreate = forwardRef((props, ref) => {
@@ -1316,7 +1317,15 @@ async function reCalculate(productIndex) {
         setSelectedProducts([...selectedProducts]);
         reCalculate();
     };
+
+
     function RunKeyActions(event, product) {
+        const isMac = navigator.userAgentData
+            ? navigator.userAgentData.platform === 'macOS'
+            : /Mac/i.test(navigator.userAgent);
+
+        const isCmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
         if (event.key === "F10") {
             openLinkedProducts(product);
         } else if (event.key === "F4") {
@@ -1331,8 +1340,55 @@ async function reCalculate(productIndex) {
             openDeliveryNoteHistory(product);
         } else if (event.key === "F2") {
             openQuotationHistory(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
+            openProductImages(product.product_id);
         }
     }
+
+    const imageViewerRef = useRef();
+    let [productImages, setProductImages] = useState([]);
+
+    async function openProductImages(id) {
+        let product = await getProduct(id);
+        productImages = product?.images;
+        setProductImages(productImages);
+        imageViewerRef.current.open(0);
+    }
+
+    async function getProduct(id) {
+        console.log("inside get Product");
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        try {
+            const response = await fetch(`/v1/product/${id}?${queryParams}`, requestOptions);
+            const isJson = response.headers.get("content-type")?.includes("application/json");
+            const data = isJson ? await response.json() : null;
+
+            if (!response.ok) {
+                const error = data?.errors || "Unknown error";
+                throw error;
+            }
+
+            return data.result;  // ✅ return the result here
+        } catch (error) {
+            setProcessing(false);
+            setErrors(error);
+            return null;  // ✅ explicitly return null or a fallback if there's an error
+        }
+    }
+
 
 
     const inputRefs = useRef({});
@@ -1349,6 +1405,7 @@ async function reCalculate(productIndex) {
 
     return (
         <>
+            <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
             <SalesReturnHistory ref={SalesReturnHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1783,6 +1840,13 @@ async function reCalculate(productIndex) {
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
                                                                 Quotation History  (F2)
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openProductImages(product.product_id);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Images  (CTR + SHIFT + P)
                                                             </Dropdown.Item>
                                                         </Dropdown.Menu>
                                                     </Dropdown>

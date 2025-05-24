@@ -26,6 +26,7 @@ import Amount from "../utils/amount.js";
 
 import ProductCreate from "./../product/create.js";
 import ProductView from "./../product/view.js";
+import ImageViewerModal from './../utils/ImageViewerModal';
 
 const SalesReturnCreate = forwardRef((props, ref) => {
 
@@ -601,7 +602,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         }
     });
 
+
     function RunKeyActions(event, product) {
+        const isMac = navigator.userAgentData
+            ? navigator.userAgentData.platform === 'macOS'
+            : /Mac/i.test(navigator.userAgent);
+
+        const isCmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
         if (event.key === "F10") {
             openLinkedProducts(product);
         } else if (event.key === "F4") {
@@ -616,9 +624,56 @@ const SalesReturnCreate = forwardRef((props, ref) => {
             openDeliveryNoteHistory(product);
         } else if (event.key === "F2") {
             openQuotationHistory(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
+            openProductImages(product.product_id);
         }
     }
 
+
+
+    const imageViewerRef = useRef();
+    let [productImages, setProductImages] = useState([]);
+
+    async function openProductImages(id) {
+        let product = await getProduct(id);
+        productImages = product?.images;
+        setProductImages(productImages);
+        imageViewerRef.current.open(0);
+    }
+
+    async function getProduct(id) {
+        console.log("inside get Product");
+        const requestOptions = {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: localStorage.getItem("access_token"),
+            },
+        };
+
+        let searchParams = {};
+        if (localStorage.getItem("store_id")) {
+            searchParams.store_id = localStorage.getItem("store_id");
+        }
+        let queryParams = ObjectToSearchQueryParams(searchParams);
+
+        try {
+            const response = await fetch(`/v1/product/${id}?${queryParams}`, requestOptions);
+            const isJson = response.headers.get("content-type")?.includes("application/json");
+            const data = isJson ? await response.json() : null;
+
+            if (!response.ok) {
+                const error = data?.errors || "Unknown error";
+                throw error;
+            }
+
+            return data.result;  // ✅ return the result here
+        } catch (error) {
+            setProcessing(false);
+            setErrors(error);
+            return null;  // ✅ explicitly return null or a fallback if there's an error
+        }
+    }
 
 
 
@@ -1501,6 +1556,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     return (
         <>
+            <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <ProductView ref={ProductDetailsViewRef} />
             <Products ref={ProductsRef} showToastMessage={props.showToastMessage} />
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1880,6 +1936,14 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
                                                                 Quotation History  (F2)
+                                                            </Dropdown.Item>
+
+                                                            <Dropdown.Item onClick={() => {
+                                                                openProductImages(product.product_id);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Images  (CTR + SHIFT + P)
                                                             </Dropdown.Item>
 
                                                         </Dropdown.Menu>

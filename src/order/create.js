@@ -36,9 +36,12 @@ import DeliveryNotes from "./../utils/delivery_notes.js";
 import Customers from "./../utils/customers.js";
 import Amount from "../utils/amount.js";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import ImageViewerModal from './../utils/ImageViewerModal';
 
 
 const OrderCreate = forwardRef((props, ref) => {
+
+
 
     /*
     function ResetFormData() {
@@ -1836,6 +1839,12 @@ function findDiscount() {
     }
 
     function RunKeyActions(event, product) {
+        const isMac = navigator.userAgentData
+            ? navigator.userAgentData.platform === 'macOS'
+            : /Mac/i.test(navigator.userAgent);
+
+        const isCmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
         if (event.key === "F10") {
             openLinkedProducts(product);
         } else if (event.key === "F4") {
@@ -1850,6 +1859,8 @@ function findDiscount() {
             openDeliveryNoteHistory(product);
         } else if (event.key === "F2") {
             openQuotationHistory(product);
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
+            openProductImages(product.product_id);
         }
     }
 
@@ -1990,9 +2001,20 @@ function findDiscount() {
         ProductDetailsViewRef.current.open(id);
     }
 
+    const imageViewerRef = useRef();
+    let [productImages, setProductImages] = useState([]);
+
+    async function openProductImages(id) {
+        let product = await getProduct(id);
+        productImages = product?.images;
+        setProductImages(productImages);
+        imageViewerRef.current.open(0);
+    }
+
 
     return (
         <>
+            <ImageViewerModal ref={imageViewerRef} images={productImages} />
             <OrderPreview ref={PreviewRef} />
             <div
                 className="toast-container position-fixed top-0 end-0 p-3"
@@ -2714,6 +2736,13 @@ function findDiscount() {
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
                                                                 Quotation History  (F2)
+                                                            </Dropdown.Item>
+                                                            <Dropdown.Item onClick={() => {
+                                                                openProductImages(product.product_id);
+                                                            }}>
+                                                                <i className="bi bi-clock-history"></i>
+                                                                &nbsp;
+                                                                Images  (CTR + SHIFT + P)
                                                             </Dropdown.Item>
 
                                                         </Dropdown.Menu>
