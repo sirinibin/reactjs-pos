@@ -3143,6 +3143,31 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.block_sale_when_purchase_price_is_higher}
+                                    checked={formData.block_sale_when_purchase_price_is_higher}
+                                    onChange={(e) => {
+                                        errors["block_sale_when_purchase_price_is_higher"] = "";
+                                        formData.block_sale_when_purchase_price_is_higher = !formData.block_sale_when_purchase_price_is_higher;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="block_sale_when_purchase_price_is_higher"
+                                /> &nbsp;Block Sales When purchase price is lower
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.block_sale_when_purchase_price_is_higher && (
+                                <div style={{ color: "red" }}>
+                                    {errors.block_sale_when_purchase_price_is_higher}
+                                </div>
+                            )}
+                        </div>
+
+
+
                         <div className="col-md-3">
                             <label className="form-label">Default quotation validity (# of Days)*</label>
                             <div className="input-group mb-3">
