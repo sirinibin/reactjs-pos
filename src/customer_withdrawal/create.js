@@ -524,6 +524,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
 
     const inputRefs = useRef({});
     const timerRef = useRef(null);
+    const customerSearchRef = useRef();
 
     return (
         <>
@@ -623,6 +624,13 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                     timerRef.current = setTimeout(() => {
                                         suggestCustomers(searchTerm);
                                     }, 400);
+                                }}
+                                ref={customerSearchRef}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Escape") {
+                                        setCustomerOptions([]);
+                                        customerSearchRef.current?.clear();
+                                    }
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
