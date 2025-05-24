@@ -12,11 +12,6 @@ import OverflowTooltip from "../utils/OverflowTooltip.js";
 import { confirm } from 'react-bootstrap-confirmation';
 
 function ProductCategoryIndex(props) {
-
-
-
-    const selectedDate = new Date();
-
     //list
     const [productcategoryList, setProductCategoryList] = useState([]);
 
@@ -398,6 +393,14 @@ function ProductCategoryIndex(props) {
         }
     };
 
+    let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
+    let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
+    let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
+
+
+    const timerRef = useRef(null);
+    const categoryNameSearchRef = useRef();
+    const parentCategoryNameSearchRef = useRef();
 
     let [deleted, setDeleted] = useState(false);
 
@@ -635,21 +638,43 @@ function ProductCategoryIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="name"
                                                         onChange={(e) =>
                                                             searchByFieldValue("name", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        id="product_category_name"
+                                                        name="product_category_name"
+                                                        ref={categoryNameSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    categoryNameSearchRef.current.value = "";
+                                                                    searchByFieldValue("name", "")
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="parent_name"
                                                         onChange={(e) =>
                                                             searchByFieldValue("parent_name", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        id="product_parent_category_name"
+                                                        name="product_parent_category_name"
+                                                        ref={parentCategoryNameSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    parentCategoryNameSearchRef.current.value = "";
+                                                                    searchByFieldValue("parent_name", "")
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th>
@@ -670,6 +695,17 @@ function ProductCategoryIndex(props) {
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    searchByMultipleValuesField(
+                                                                        "created_by",
+                                                                        []
+                                                                    );
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                         multiple
                                                     />
                                                 </th>
@@ -677,7 +713,7 @@ function ProductCategoryIndex(props) {
                                                     <DatePicker
                                                         id="created_at"
                                                         value={createdAtValue}
-                                                        selected={selectedDate}
+                                                        selected={selectedCreatedAtDate}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
@@ -687,6 +723,17 @@ function ProductCategoryIndex(props) {
                                                                 return;
                                                             }
                                                             searchByDateField("created_at", date);
+                                                            selectedCreatedAtDate = date;
+                                                            setSelectedCreatedAtDate(date);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    setCreatedAtValue("");
+                                                                    searchByDateField("created_at", "");
+                                                                }, 100);
+                                                            }
                                                         }}
                                                     />
                                                     <small
@@ -709,7 +756,7 @@ function ProductCategoryIndex(props) {
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtFromDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
@@ -719,13 +766,24 @@ function ProductCategoryIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_from", date);
+                                                                    selectedCreatedAtFromDate = date;
+                                                                    setSelectedCreatedAtFromDate(date);
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setCreatedAtFromValue("");
+                                                                            searchByDateField("created_at_from", "");
+                                                                        }, 100);
+                                                                    }
                                                                 }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtToDate}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
@@ -735,6 +793,17 @@ function ProductCategoryIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_to", date);
+                                                                    selectedCreatedAtToDate = date;
+                                                                    setSelectedCreatedAtToDate(date);
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setCreatedAtToValue("");
+                                                                            searchByDateField("created_at_to", "");
+                                                                        }, 100);
+                                                                    }
                                                                 }}
                                                             />
                                                         </span>

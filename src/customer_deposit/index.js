@@ -10,7 +10,7 @@ import { Button, Spinner, Badge } from "react-bootstrap";
 import ReactPaginate from "react-paginate";
 import NumberFormat from "react-number-format";
 import OverflowTooltip from "../utils/OverflowTooltip.js";
-import CustomerDepositPreview from './preview.js';
+import CustomerDepositPreview from './../customer_deposit/preview.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 
@@ -20,7 +20,13 @@ function CustomerDepositIndex(props) {
 
     //Date filter
     const [showDateRange, setShowDateRange] = useState(false);
-    const selectedDate = new Date();
+    let [selectedDate, setSelectedDate] = useState(new Date());
+    let [selectedFromDate, setSelectedFromDate] = useState(new Date());
+    let [selectedToDate, setSelectedToDate] = useState(new Date());
+    let [selectedCreatedAtDate, setSelectedCreatedAtDate] = useState(new Date());
+    let [selectedCreatedAtFromDate, setSelectedCreatedAtFromDate] = useState(new Date());
+    let [selectedCreatedAtToDate, setSelectedCreatedAtToDate] = useState(new Date());
+
     const [dateValue, setDateValue] = useState("");
     const [fromDateValue, setFromDateValue] = useState("");
     const [toDateValue, setToDateValue] = useState("");
@@ -95,6 +101,7 @@ function CustomerDepositIndex(props) {
 
             });
     }
+
 
     //Search params
     const [searchParams, setSearchParams] = useState({});
@@ -420,6 +427,9 @@ function CustomerDepositIndex(props) {
     const customerSearchRef = useRef();
     const timerRef = useRef(null);
 
+    const idSearchRef = useRef();
+    const netTotalSearchRef = useRef();
+    const descriptionSearchRef = useRef();
 
     return (
         <>
@@ -767,18 +777,30 @@ function CustomerDepositIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="code"
                                                         onChange={(e) =>
                                                             searchByFieldValue("code", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        id="receivable_id"
+                                                        name="receivable_id"
+                                                        ref={idSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    idSearchRef.current.value = "";
+                                                                    searchByFieldValue("code", "")
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th>
                                                     <DatePicker
-                                                        id="date_str"
+                                                        id="receivable_date"
                                                         value={dateValue}
                                                         selected={selectedDate}
+                                                        isClearable={true}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
@@ -788,6 +810,17 @@ function CustomerDepositIndex(props) {
                                                                 return;
                                                             }
                                                             searchByDateField("date_str", date);
+                                                            selectedDate = date;
+                                                            setSelectedDate(date);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    setDateValue("");
+                                                                    searchByDateField("date_str", "");
+                                                                }, 100);
+                                                            }
                                                         }}
                                                     />
                                                     <small
@@ -806,9 +839,10 @@ function CustomerDepositIndex(props) {
                                                         <span className="text-left">
                                                             From:{" "}
                                                             <DatePicker
-                                                                id="from_date"
+                                                                id="receivable_from_date"
                                                                 value={fromDateValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedFromDate}
+                                                                isClearable={true}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
@@ -818,13 +852,25 @@ function CustomerDepositIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("from_date", date);
+                                                                    selectedFromDate = date;
+                                                                    setSelectedFromDate(date);
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setFromDateValue("");
+                                                                            searchByDateField("from_date", "");
+                                                                        }, 100);
+                                                                    }
                                                                 }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
-                                                                id="to_date"
+                                                                id="receivable_to_date"
                                                                 value={toDateValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedToDate}
+                                                                isClearable={true}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
@@ -834,6 +880,17 @@ function CustomerDepositIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("to_date", date);
+                                                                    selectedToDate = date;
+                                                                    setSelectedToDate(date);
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setToDateValue("");
+                                                                            searchByDateField("to_date", "");
+                                                                        }, 100);
+                                                                    }
                                                                 }}
                                                             />
                                                         </span>
@@ -855,6 +912,7 @@ function CustomerDepositIndex(props) {
                                                         placeholder="Customer Name / Mob / VAT # / ID"
                                                         selected={selectedCustomers}
                                                         highlightOnlyResult={true}
+                                                        ref={customerSearchRef}
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Escape") {
                                                                 setCustomerOptions([]);
@@ -873,11 +931,22 @@ function CustomerDepositIndex(props) {
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="net_amount"
                                                         onChange={(e) =>
                                                             searchByFieldValue("net_total", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        id="receivable_net_total"
+                                                        name="receivable_net_total"
+                                                        ref={netTotalSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    netTotalSearchRef.current.value = "";
+                                                                    searchByFieldValue("net_total", "")
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th>
@@ -897,17 +966,39 @@ function CustomerDepositIndex(props) {
                                                             selected={selectedPaymentMethodList}
                                                             highlightOnlyResult={true}
                                                             multiple
+                                                            onKeyDown={(e) => {
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (e.key === "Escape") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        searchByMultipleValuesField(
+                                                                            "payment_methods",
+                                                                            []
+                                                                        );
+                                                                    }, 100);
+                                                                }
+                                                            }}
                                                         />
                                                     </th>
                                                 </th>
                                                 <th>
                                                     <input
                                                         type="text"
-                                                        id="description"
                                                         onChange={(e) =>
                                                             searchByFieldValue("description", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        id="receivable_description"
+                                                        name="receivable_description"
+                                                        ref={descriptionSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    descriptionSearchRef.current.value = "";
+                                                                    searchByFieldValue("description", "")
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
 
@@ -929,14 +1020,28 @@ function CustomerDepositIndex(props) {
                                                         onInputChange={(searchTerm, e) => {
                                                             suggestUsers(searchTerm);
                                                         }}
+
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    searchByMultipleValuesField(
+                                                                        "created_by",
+                                                                        []
+                                                                    );
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                         multiple
+
                                                     />
                                                 </th>
                                                 <th>
                                                     <DatePicker
                                                         id="created_at"
                                                         value={createdAtValue}
-                                                        selected={selectedDate}
+                                                        selected={selectedCreatedAtDate}
+                                                        isClearable={true}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
@@ -946,6 +1051,17 @@ function CustomerDepositIndex(props) {
                                                                 return;
                                                             }
                                                             searchByDateField("created_at", date);
+                                                            selectedCreatedAtDate = date;
+                                                            setSelectedCreatedAtDate(date);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    setCreatedAtValue("");
+                                                                    searchByDateField("created_at", "");
+                                                                }, 100);
+                                                            }
                                                         }}
                                                     />
                                                     <small
@@ -968,7 +1084,8 @@ function CustomerDepositIndex(props) {
                                                             <DatePicker
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtFromDate}
+                                                                isClearable={true}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
@@ -978,22 +1095,47 @@ function CustomerDepositIndex(props) {
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_from", date);
+                                                                    selectedCreatedAtFromDate = date;
+                                                                    setSelectedCreatedAtFromDate(date);
                                                                 }}
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setCreatedAtFromValue("");
+                                                                            searchByDateField("created_at_from", "");
+                                                                        }, 100);
+                                                                    }
+                                                                }}
+
+
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
-                                                                selected={selectedDate}
+                                                                selected={selectedCreatedAtToDate}
+                                                                isClearable={true}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
                                                                     if (!date) {
-                                                                        setCreatedAtFromValue("");
+                                                                        setCreatedAtToValue("");
                                                                         searchByDateField("created_at_to", "");
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_to", date);
+                                                                    selectedCreatedAtToDate = date;
+                                                                    setSelectedCreatedAtToDate(date);
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setCreatedAtToValue("");
+                                                                            searchByDateField("created_at_to", "");
+                                                                        }, 100);
+                                                                    }
                                                                 }}
                                                             />
                                                         </span>

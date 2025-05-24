@@ -265,6 +265,14 @@ function AccountIndex(props) {
         AccountBalanceSheetRef.current.open(account);
     }
 
+    const timerRef = useRef(null);
+    const accountNoSearchRef = useRef();
+    const accountNameSearchRef = useRef();
+    const debitBalanceSearchRef = useRef();
+    const creditBalanceSearchRef = useRef();
+    const phoneSearchRef = useRef();
+    const vatSearchRef = useRef();
+    const balanceSearchRef = useRef();
 
     return (
         <>
@@ -676,10 +684,22 @@ function AccountIndex(props) {
                                                 <th style={{ width: "110px" }}>
                                                     <input
                                                         type="text"
-                                                        id="number"
+                                                        id="account_no"
+                                                        name="account_no"
                                                         onChange={(e) =>
                                                             searchByFieldValue("number", e.target.value)
                                                         }
+
+                                                        ref={accountNoSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    accountNoSearchRef.current.value = "";
+                                                                    searchByFieldValue("number", "");
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                         className="form-control"
                                                     />
                                                 </th>
@@ -687,48 +707,105 @@ function AccountIndex(props) {
                                                     <input
                                                         type="text"
                                                         id="name"
+                                                        name="name"
                                                         onChange={(e) =>
                                                             searchByFieldValue("name", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        ref={accountNameSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    accountNameSearchRef.current.value = "";
+                                                                    searchByFieldValue("name", "");
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th style={{ width: "110px" }}>
                                                     <input
                                                         type="text"
+                                                        id="debit_balance"
+                                                        name="debit_balance"
                                                         onChange={(e) =>
                                                             searchByFieldValue("balance", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        ref={debitBalanceSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    debitBalanceSearchRef.current.value = "";
+                                                                    searchByFieldValue("balance", "");
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th style={{ width: "110px" }}>
                                                     <input
                                                         type="text"
+                                                        id="credit_balance"
+                                                        name="credit_balance"
                                                         onChange={(e) =>
                                                             searchByFieldValue("balance", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        ref={creditBalanceSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    creditBalanceSearchRef.current.value = "";
+                                                                    searchByFieldValue("balance", "");
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th style={{ width: "110px" }}>
                                                     <input
                                                         type="text"
-                                                        id="phone"
+                                                        id="account_phone"
+                                                        name="account_phone"
                                                         onChange={(e) =>
                                                             searchByFieldValue("phone", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        ref={phoneSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    phoneSearchRef.current.value = "";
+                                                                    searchByFieldValue("phone", "");
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th style={{ width: "110px" }}>
                                                     <input
                                                         type="text"
-                                                        id="vat_no"
+                                                        id="account_vat_no"
+                                                        name="account_vat_no"
                                                         onChange={(e) =>
                                                             searchByFieldValue("vat_no", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        ref={vatSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    vatSearchRef.current.value = "";
+                                                                    searchByFieldValue("vat_no", "");
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th style={{ width: "110px" }}>
@@ -748,11 +825,22 @@ function AccountIndex(props) {
                                                 <th style={{ width: "110px" }}>
                                                     <input
                                                         type="text"
-                                                        id="balance"
+                                                        id="account_balance"
+                                                        name="account_balance"
                                                         onChange={(e) =>
                                                             searchByFieldValue("balance", e.target.value)
                                                         }
                                                         className="form-control"
+                                                        ref={balanceSearchRef}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    balanceSearchRef.current.value = "";
+                                                                    searchByFieldValue("balance", "");
+                                                                }, 100);
+                                                            }
+                                                        }}
                                                     />
                                                 </th>
                                                 <th style={{ minWidth: "130px" }}>
@@ -784,6 +872,7 @@ function AccountIndex(props) {
                                                         id="updated_at"
                                                         value={updatedAtValue}
                                                         selected={selectedUpdatedAtDate}
+                                                        isClearable={true}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
@@ -796,6 +885,17 @@ function AccountIndex(props) {
                                                             selectedUpdatedAtDate = date;
                                                             setSelectedUpdatedAtDate(date);
                                                         }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    setUpdatedAtValue("");
+                                                                    searchByDateField("updated_at", "");
+                                                                }, 100);
+                                                            }
+                                                        }}
+
+
                                                     />
                                                     <small
                                                         style={{
@@ -818,11 +918,12 @@ function AccountIndex(props) {
                                                                 id="updated_at_from"
                                                                 value={updatedAtFromValue}
                                                                 selected={selectedUpdatedAtFromDate}
+                                                                isClearable={true}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
                                                                     if (!date) {
-                                                                        setCreatedAtFromValue("");
+                                                                        setUpdatedAtFromValue("");
                                                                         searchByDateField("updated_at_from", "");
                                                                         return;
                                                                     }
@@ -830,23 +931,45 @@ function AccountIndex(props) {
                                                                     selectedUpdatedAtFromDate = date;
                                                                     setSelectedUpdatedAtFromDate(date);
                                                                 }}
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setUpdatedAtFromValue("");
+                                                                            searchByDateField("updated_at_from", "");
+
+                                                                        }, 100);
+                                                                    }
+                                                                }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="updated_at_to"
                                                                 value={updatedAtToValue}
                                                                 selected={selectedUpdatedAtToDate}
+                                                                isClearable={true}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
                                                                     if (!date) {
-                                                                        setUpdatedAtFromValue("");
+                                                                        setUpdatedAtToValue("");
                                                                         searchByDateField("updated_at_to", "");
                                                                         return;
                                                                     }
                                                                     searchByDateField("updated_at_to", date);
                                                                     selectedUpdatedAtToDate = date;
                                                                     setSelectedUpdatedAtToDate(date);
+                                                                }}
+
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setUpdatedAtToValue("");
+                                                                            searchByDateField("updated_at_to", "");
+
+                                                                        }, 100);
+                                                                    }
                                                                 }}
                                                             />
                                                         </span>
@@ -858,6 +981,7 @@ function AccountIndex(props) {
                                                         id="created_at"
                                                         value={createdAtValue}
                                                         selected={selectedCreatedAtDate}
+                                                        isClearable={true}
                                                         className="form-control"
                                                         dateFormat="MMM dd yyyy"
                                                         onChange={(date) => {
@@ -870,6 +994,16 @@ function AccountIndex(props) {
                                                             selectedCreatedAtDate = date;
                                                             setSelectedCreatedAtDate(date);
                                                         }}
+                                                        onKeyDown={(e) => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            if (e.key === "Escape") {
+                                                                timerRef.current = setTimeout(() => {
+                                                                    setCreatedAtValue("");
+                                                                    searchByDateField("created_at", "");
+                                                                }, 100);
+                                                            }
+                                                        }}
+
                                                     />
                                                     <small
                                                         style={{
@@ -892,6 +1026,7 @@ function AccountIndex(props) {
                                                                 id="created_at_from"
                                                                 value={createdAtFromValue}
                                                                 selected={selectedCreatedAtFromDate}
+                                                                isClearable={true}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
@@ -904,23 +1039,42 @@ function AccountIndex(props) {
                                                                     selectedCreatedAtFromDate = date;
                                                                     setSelectedCreatedAtFromDate(date);
                                                                 }}
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setCreatedAtFromValue("");
+                                                                            searchByDateField("created_at_from", "");
+                                                                        }, 100);
+                                                                    }
+                                                                }}
                                                             />
                                                             To:{" "}
                                                             <DatePicker
                                                                 id="created_at_to"
                                                                 value={createdAtToValue}
                                                                 selected={selectedCreatedAtToDate}
+                                                                isClearable={true}
                                                                 className="form-control"
                                                                 dateFormat="MMM dd yyyy"
                                                                 onChange={(date) => {
                                                                     if (!date) {
-                                                                        setCreatedAtFromValue("");
+                                                                        setCreatedAtToValue("");
                                                                         searchByDateField("created_at_to", "");
                                                                         return;
                                                                     }
                                                                     searchByDateField("created_at_to", date);
                                                                     selectedCreatedAtToDate = date;
                                                                     setSelectedCreatedAtToDate(date);
+                                                                }}
+                                                                onKeyDown={(e) => {
+                                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                                    if (e.key === "Escape") {
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            setCreatedAtToValue("");
+                                                                            searchByDateField("created_at_to", "");
+                                                                        }, 100);
+                                                                    }
                                                                 }}
                                                             />
                                                         </span>

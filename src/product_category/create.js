@@ -305,7 +305,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
 
     return (
         <>
-            <Modal show={show} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+            <Modal show={show} keyboard={false} size="lg" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
                         {formData.id ? "Update Product Category #" + formData.name : "Create New Product Category"}
