@@ -1513,7 +1513,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             openDeliveryNoteHistory(product);
         } else if (event.key === "F2") {
             openQuotationHistory(product);
-        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'p') {
+        } else if (isCmdOrCtrl && event.shiftKey && event.key.toLowerCase() === 'f') {
             openProductImages(product.product_id);
         }
     }
@@ -2191,7 +2191,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                             }}>
                                                                 <i className="bi bi-clock-history"></i>
                                                                 &nbsp;
-                                                                Images  (CTR + SHIFT + P)
+                                                                Images  (CTR + SHIFT + F)
                                                             </Dropdown.Item>
                                                         </Dropdown.Menu>
                                                     </Dropdown>
