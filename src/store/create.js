@@ -3166,6 +3166,29 @@ const StoreCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <div className="col-md-2">
+                            <div className="input-group mb-3">
+                                <input type="checkbox"
+                                    value={formData.enable_monthly_serial_number}
+                                    checked={formData.enable_monthly_serial_number}
+                                    onChange={(e) => {
+                                        errors["enable_monthly_serial_number"] = "";
+                                        formData.enable_monthly_serial_number = !formData.enable_monthly_serial_number;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className=""
+                                    id="block_sale_when_purchase_price_is_higher"
+                                /> &nbsp;Enable monthly serial number
+                            </div>
+                            <label className="form-label"></label>
+                            {errors.enable_monthly_serial_number && (
+                                <div style={{ color: "red" }}>
+                                    {errors.enable_monthly_serial_number}
+                                </div>
+                            )}
+                        </div>
+
 
 
                         <div className="col-md-3">
