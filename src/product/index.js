@@ -548,12 +548,12 @@ function ProductIndex(props) {
 
     const [productOptions, setProductOptions] = useState([]);
     let [selectedProducts, setSelectedProducts] = useState([]);
-    const [isProductsLoading, setIsProductsLoading] = useState(false);
+    // const [isProductsLoading, setIsProductsLoading] = useState(false);
     let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
     const [productOptionsByPartNo, setProductOptionsByPartNo] = useState([]);
     let [selectedProductsByPartNo, setSelectedProductsByPartNo] = useState([]);
-    const [isProductsLoadingByPartNo, setIsProductsLoadingByPartNo] = useState(false);
+    // const [isProductsLoadingByPartNo, setIsProductsLoadingByPartNo] = useState(false);
     let [openProductSearchResultByPartNo, setOpenProductSearchResultByPartNo] = useState(false);
 
 
@@ -607,9 +607,9 @@ function ProductIndex(props) {
         let Select = `select=id,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
 
         if (searchBy === "name") {
-            setIsProductsLoading(true);
+            // setIsProductsLoading(true);
         } else if (searchBy === "part_number") {
-            setIsProductsLoadingByPartNo(true);
+            //setIsProductsLoadingByPartNo(true);
         }
 
 
@@ -626,10 +626,10 @@ function ProductIndex(props) {
 
             if (searchBy === "name") {
                 setOpenProductSearchResult(false);
-                setIsProductsLoading(false);
+                // setIsProductsLoading(false);
             } else if (searchBy === "part_number") {
                 setOpenProductSearchResultByPartNo(false);
-                setIsProductsLoadingByPartNo(false);
+                // setIsProductsLoadingByPartNo(false);
             }
 
 
@@ -649,11 +649,11 @@ function ProductIndex(props) {
                 */
 
             setProductOptions(products);
-            setIsProductsLoading(false);
+            // setIsProductsLoading(false);
         } else if (searchBy === "part_number") {
             setOpenProductSearchResultByPartNo(true);
             setProductOptionsByPartNo(products);
-            setIsProductsLoadingByPartNo(false);
+            // setIsProductsLoadingByPartNo(false);
         }
 
 
@@ -1811,7 +1811,7 @@ function ProductIndex(props) {
                                                         labelKey="search_label"
                                                         emptyLabel="No products found"
                                                         open={openProductSearchResultByPartNo}
-                                                        isLoading={isProductsLoadingByPartNo}
+                                                        isLoading={false}
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Escape") {
                                                                 setProductOptionsByPartNo([]);
@@ -1868,7 +1868,7 @@ function ProductIndex(props) {
                                                         emptyLabel="No products found"
                                                         clearButton={true}
                                                         open={openProductSearchResult}
-                                                        isLoading={isProductsLoading}
+                                                        isLoading={false}
                                                         onKeyDown={(e) => {
                                                             if (e.key === "Escape") {
                                                                 setProductOptions([]);

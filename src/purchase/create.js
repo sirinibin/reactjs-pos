@@ -220,13 +220,13 @@ const PurchaseCreate = forwardRef((props, ref) => {
     //Vendor Auto Suggestion
     const [vendorOptions, setVendorOptions] = useState([]);
     let [selectedVendors, setSelectedVendors] = useState([]);
-    const [isVendorsLoading, setIsVendorsLoading] = useState(false);
+    //const [isVendorsLoading, setIsVendorsLoading] = useState(false);
 
     //Product Auto Suggestion
     const [productOptions, setProductOptions] = useState([]);
     let selectedProduct = [];
     let [selectedProducts, setSelectedProducts] = useState([]);
-    const [isProductsLoading, setIsProductsLoading] = useState(false);
+    // const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     //Order Placed By Auto Suggestion
 
@@ -451,7 +451,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         };
 
         let Select = "select=id,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
-        setIsVendorsLoading(true);
+        // setIsVendorsLoading(true);
         let result = await fetch(
             "/v1/vendor?" + Select + queryString,
             requestOptions
@@ -459,7 +459,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         let data = await result.json();
 
         setVendorOptions(data.result);
-        setIsVendorsLoading(false);
+        // setIsVendorsLoading(false);
     }
 
 
@@ -477,7 +477,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             }, 300);
 
 
-            setIsProductsLoading(false);
+            // setIsProductsLoading(false);
             return;
         }
 
@@ -504,7 +504,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         // let Select = "select=id,item_code,bar_code,name,product_stores,unit,part_number,name_in_arabic";
         let Select = `select=id,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.with_vat`;
-        setIsProductsLoading(true);
+        //  setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
             requestOptions
@@ -515,7 +515,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         if (!products || products.length === 0) {
             openProductSearchResult = false;
             setOpenProductSearchResult(false);
-            setIsProductsLoading(false);
+            // setIsProductsLoading(false);
             return;
         }
 
@@ -530,7 +530,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             .concat(products.filter(item => !item.country_name));*/
 
         setProductOptions(products);
-        setIsProductsLoading(false);
+        // setIsProductsLoading(false);
     }
 
     function handleCreate(event) {
@@ -1704,7 +1704,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 id="vendor_id"
                                 filterBy={store?.client_filter ? undefined : () => true}
                                 labelKey="search_label"
-                                isLoading={isVendorsLoading}
+                                isLoading={false}
                                 onChange={(selectedItems) => {
                                     errors.vendor_id = "";
                                     setErrors(errors);
@@ -1973,7 +1973,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                 emptyLabel=""
                                 clearButton={true}
                                 open={openProductSearchResult}
-                                isLoading={isProductsLoading}
+                                isLoading={false}
                                 isInvalid={errors.product_id ? true : false}
                                 onChange={(selectedItems) => {
                                     if (selectedItems.length === 0) {
@@ -2266,7 +2266,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                 </div>
                                                 {errors["quantity_" + index] && (
                                                     <div style={{ color: "red" }}>
-                                                        <i className="bi bi-x-lg"> </i>
                                                         {errors["quantity_" + index]}
                                                     </div>
                                                 )}

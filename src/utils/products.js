@@ -454,14 +454,14 @@ const Products = forwardRef((props, ref) => {
     //let [selectedProduct, setSelectedProduct] = useState([]);
     // let [selectedProducts, setSelectedProducts] = useState([]);
     let [selectedProducts, setSelectedProducts] = useState([]);
-    const [isProductsLoading, setIsProductsLoading] = useState(false);
+    //const [isProductsLoading, setIsProductsLoading] = useState(false);
     let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
 
 
 
     const [productOptionsByPartNo, setProductOptionsByPartNo] = useState([]);
     let [selectedProductsByPartNo, setSelectedProductsByPartNo] = useState([]);
-    const [isProductsLoadingByPartNo, setIsProductsLoadingByPartNo] = useState(false);
+    // const [isProductsLoadingByPartNo, setIsProductsLoadingByPartNo] = useState(false);
     let [openProductSearchResultByPartNo, setOpenProductSearchResultByPartNo] = useState(false);
 
     const suggestProducts = useCallback(async (searchTerm, searchBy) => {
@@ -513,9 +513,9 @@ const Products = forwardRef((props, ref) => {
         let Select = `select=id,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
 
         if (searchBy === "name") {
-            setIsProductsLoading(true);
+            //(true);
         } else if (searchBy === "part_number") {
-            setIsProductsLoadingByPartNo(true);
+            //setIsProductsLoadingByPartNo(true);
         }
 
 
@@ -532,10 +532,10 @@ const Products = forwardRef((props, ref) => {
 
             if (searchBy === "name") {
                 setOpenProductSearchResult(false);
-                setIsProductsLoading(false);
+                // setIsProductsLoading(false);
             } else if (searchBy === "part_number") {
                 setOpenProductSearchResultByPartNo(false);
-                setIsProductsLoadingByPartNo(false);
+                //setIsProductsLoadingByPartNo(false);
             }
 
 
@@ -553,11 +553,11 @@ const Products = forwardRef((props, ref) => {
                 .sort((a, b) => a.country_name.localeCompare(b.country_name))     // Sort alphabetically
                 .concat(products.filter(item => !item.country_name));*/
             setProductOptions(products);
-            setIsProductsLoading(false);
+            // setIsProductsLoading(false);
         } else if (searchBy === "part_number") {
             setOpenProductSearchResultByPartNo(true);
             setProductOptionsByPartNo(products);
-            setIsProductsLoadingByPartNo(false);
+            //setIsProductsLoadingByPartNo(false);
         }
 
     }, []);
@@ -1672,7 +1672,7 @@ const Products = forwardRef((props, ref) => {
                                                                         }
                                                                     }}
                                                                     open={openProductSearchResultByPartNo}
-                                                                    isLoading={isProductsLoadingByPartNo}
+                                                                    isLoading={false}
                                                                     onChange={(selectedItems) => {
 
                                                                         /*
@@ -1749,7 +1749,7 @@ const Products = forwardRef((props, ref) => {
                                                                     ref={productSearchRef}
                                                                     clearButton={true}
                                                                     open={openProductSearchResult}
-                                                                    isLoading={isProductsLoading}
+                                                                    isLoading={false}
                                                                     onKeyDown={(e) => {
                                                                         if (e.key === "Escape") {
                                                                             setProductOptions([]);

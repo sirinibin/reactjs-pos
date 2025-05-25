@@ -200,7 +200,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
     //Customer Auto Suggestion
     const [customerOptions, setCustomerOptions] = useState([]);
     const [selectedCustomers, setSelectedCustomers] = useState([]);
-    const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+    // const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
     async function suggestCustomers(searchTerm) {
         console.log("Inside handle suggestCustomers");
@@ -233,7 +233,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         };
 
         let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
-        setIsCustomersLoading(true);
+        // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
             requestOptions
@@ -241,7 +241,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
         let data = await result.json();
 
         setCustomerOptions(data.result);
-        setIsCustomersLoading(false);
+        //setIsCustomersLoading(false);
     }
 
     function handleCreate(event) {
@@ -594,7 +594,7 @@ const CustomerDepositCreate = forwardRef((props, ref) => {
                             <Typeahead
                                 id="customer_id"
                                 labelKey="search_label"
-                                isLoading={isCustomersLoading}
+                                isLoading={false}
                                 filterBy={store?.client_filter ? undefined : () => true}
                                 isInvalid={errors.customer_id ? true : false}
                                 onChange={(selectedItems) => {

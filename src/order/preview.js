@@ -121,9 +121,9 @@ const Preview = forwardRef((props, ref) => {
             model.invoiceTitle = "QUOTATION / اقتباس";
 
             if (model.type === "invoice" && model.payment_status === "not_paid") {
-                model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
+                model.invoiceTitle = "CREDIT INVOICE | فاتورة ائتمانية";
             } else if (model.type === "invoice") {
-                model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
+                model.invoiceTitle = "INVOICE | فاتورة";
             }
         } else if (model.modelName === "delivery_note") {
             model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";

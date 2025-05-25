@@ -396,13 +396,13 @@ const OrderCreate = forwardRef((props, ref) => {
     //Customer Auto Suggestion
     const [customerOptions, setCustomerOptions] = useState([]);
     let [selectedCustomers, setSelectedCustomers] = useState([]);
-    const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+    //const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
     //Product Auto Suggestion
     const [productOptions, setProductOptions] = useState([]);
     let [selectedProduct, setSelectedProduct] = useState([]);
     let [selectedProducts, setSelectedProducts] = useState([]);
-    const [isProductsLoading, setIsProductsLoading] = useState(false);
+    // const [isProductsLoading, setIsProductsLoading] = useState(false);
 
     //Delivered By Auto Suggestion
     let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
@@ -500,7 +500,7 @@ const OrderCreate = forwardRef((props, ref) => {
         };
 
         let Select = "select=id,code,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
-        setIsCustomersLoading(true);
+        // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
             requestOptions
@@ -508,7 +508,7 @@ const OrderCreate = forwardRef((props, ref) => {
         let data = await result.json();
 
         setCustomerOptions(data.result);
-        setIsCustomersLoading(false);
+        // setIsCustomersLoading(false);
     }
 
 
@@ -552,7 +552,7 @@ const OrderCreate = forwardRef((props, ref) => {
         };
 
         let Select = `select=id,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
-        setIsProductsLoading(true);
+        // setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
             requestOptions
@@ -563,7 +563,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (!products || products.length === 0) {
             // openProductSearchResult = false;
             setOpenProductSearchResult(false);
-            setIsProductsLoading(false);
+            //  setIsProductsLoading(false);
             return;
         }
 
@@ -576,7 +576,7 @@ const OrderCreate = forwardRef((props, ref) => {
             .concat(products.filter(item => !item.country_name));*/
 
         setProductOptions(products);
-        setIsProductsLoading(false);
+        //  setIsProductsLoading(false);
 
     }, []);
 
@@ -959,12 +959,14 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     function checkWarnings() {
-        errors = {};
+        //errors = {};
         for (let i = 0; i < selectedProducts.length; i++) {
             if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
                 errors["purchase_unit_price_" + i] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
-                setErrors({ ...errors });
+            } else {
+                errors["purchase_unit_price_" + i] = "";
             }
+            setErrors({ ...errors });
         }
     }
 
@@ -2233,7 +2235,7 @@ function findDiscount() {
                                 id="customer_id"
                                 filterBy={store?.client_filter ? undefined : () => true}
                                 labelKey="search_label"
-                                isLoading={isCustomersLoading}
+                                isLoading={false}
                                 onChange={(selectedItems) => {
                                     errors.customer_id = "";
                                     setErrors(errors);
@@ -2472,7 +2474,7 @@ function findDiscount() {
                         filterBy={true ? undefined : () => true}
                          filterBy={['name_prefixes', 'name_in_arabic_prefixes']}
                         */}
-                        <div className="col-md-8">
+                        <div className="col-md-8" >
                             <label className="form-label">Product Search*</label>
                             <Typeahead
                                 id="product_id"
@@ -2484,7 +2486,7 @@ function findDiscount() {
                                 emptyLabel=""
                                 clearButton={true}
                                 open={openProductSearchResult}
-                                isLoading={isProductsLoading}
+                                isLoading={false}
                                 isInvalid={errors.product_id ? true : false}
                                 onChange={(selectedItems) => {
                                     console.log("Inside onChange product")
@@ -2594,7 +2596,7 @@ function findDiscount() {
 
 
 
-                        <div className="table-responsive" style={{ overflowY: "auto", maxHeight: "400px" }}>
+                        <div className="table-responsive" style={{ overflowX: "auto", maxHeight: "400px", overflowY: "auto" }}>
 
 
                             <table className="table table-striped table-sm table-bordered">
@@ -2826,10 +2828,10 @@ function findDiscount() {
                                                     </div>
                                                 )}
                                             </td>
-                                            <td>
-                                                <div className={`input-group mb-3 ${errors["quantity_" + index] ? "mt-3" : ""}`}>
+                                            <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                <div className={`input-group mb-3 ${errors["quantity_" + index] ? "mt-4" : ""}`}>
                                                     <input type="number"
-                                                        style={{ minWidth: "25px" }}
+                                                        style={{}}
                                                         id={`${"sales_product_quantity_" + index}`}
                                                         name={`${"sales_product_quantity" + index}`}
                                                         onWheel={(e) => e.target.blur()}
@@ -2868,7 +2870,7 @@ function findDiscount() {
                                                             errors["quantity_" + index] = "";
                                                             setErrors({ ...errors });
                                                             if (!e.target.value) {
-                                                                errors["quantity_" + index] = "Invalid Quantity";
+                                                                // errors["quantity_" + index] = "Invalid Quantity";
                                                                 selectedProducts[index].quantity = e.target.value;
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 setErrors({ ...errors });
@@ -2905,7 +2907,7 @@ function findDiscount() {
 
                                                             if (stock < parseFloat(e.target.value) && selectedProducts[index].product_stores) {
                                                                 // errors["quantity_" + index] = " Warning: Stock is only " + stock + " in Store: " + formData.store_name + " for this product";
-                                                                errors["quantity_" + index] = " Warning: Available stock is " + stock;
+                                                                errors["quantity_" + index] = "Warning: Available stock is " + stock;
                                                                 setErrors({ ...errors });
                                                                 return;
                                                             }
@@ -2918,18 +2920,17 @@ function findDiscount() {
                                                                 checkStockWarnings();
                                                             }, 300);
 
-                                                        }} />
-                                                    <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
-
-
+                                                        }} />  <span className="input-group-text" id="basic-addon2">{selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
                                                 </div>
+
                                                 {errors["quantity_" + index] && (
-                                                    <div style={{ color: "red", fontSize: "12px" }}>
+                                                    <div style={{ color: "red", fontSize: "12px" }} className="break-text">
                                                         {errors["quantity_" + index]}
                                                     </div>
                                                 )}
 
                                             </td>
+
                                             <td>
                                                 <div className="input-group mb-3">
                                                     <input type="number" id={`${"sales_product_unit_price_" + index}`} name={`${"sales_product_unit_price_" + index}`} onWheel={(e) => e.target.blur()} value={selectedProducts[index].unit_price} className="form-control text-end"

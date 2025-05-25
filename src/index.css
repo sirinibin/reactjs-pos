@@ -220,3 +220,36 @@ code {
   white-space: normal;
 }
 
+    /* Wrapper must be relative */
+    .typeahead-position-wrapper {
+      position: relative;
+      width: 100%;
+    }
+    
+    /* Dropdown menu */
+    .typeahead-position-wrapper .rbt-menu {
+      position: absolute !important;
+      top: 100% !important;
+      left: 0 !important;
+      right: 0 !important;
+      z-index: 1050 !important;
+      background: white !important;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+      border-radius: 0 0 4px 4px;
+      
+      /* FIX: keep a fixed max-height and scroll inside */
+      max-height: 300px !important;
+      overflow-y: auto !important;
+      
+      /* FIX: reserve space for spinner so height does not jump */
+      min-height: 40px !important;
+      transition: max-height 0.2s ease;
+    }
+    
+    /* Optional: spinner container inside dropdown */
+    .typeahead-position-wrapper .rbt-menu .spinner-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 40px;
+    }

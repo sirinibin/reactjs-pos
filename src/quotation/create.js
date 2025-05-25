@@ -243,13 +243,13 @@ const QuotationCreate = forwardRef((props, ref) => {
   //Customer Auto Suggestion
   const [customerOptions, setCustomerOptions] = useState([]);
   let [selectedCustomers, setSelectedCustomers] = useState([]);
-  const [isCustomersLoading, setIsCustomersLoading] = useState(false);
+  //const [isCustomersLoading, setIsCustomersLoading] = useState(false);
 
   //Product Auto Suggestion
   let [productOptions, setProductOptions] = useState([]);
   let selectedProduct = [];
   let [selectedProducts, setSelectedProducts] = useState([]);
-  const [isProductsLoading, setIsProductsLoading] = useState(false);
+  //const [isProductsLoading, setIsProductsLoading] = useState(false);
 
   //Delivered By Auto Suggestion
   let [selectedDeliveredByUsers, setSelectedDeliveredByUsers] = useState([]);
@@ -491,7 +491,7 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     let Select =
       "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
-    setIsCustomersLoading(true);
+    // setIsCustomersLoading(true);
     let result = await fetch(
       "/v1/customer?" + Select + queryString,
       requestOptions
@@ -499,7 +499,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     let data = await result.json();
 
     setCustomerOptions(data.result);
-    setIsCustomersLoading(false);
+    //setIsCustomersLoading(false);
   }
 
   let [openProductSearchResult, setOpenProductSearchResult] = useState(false);
@@ -515,7 +515,7 @@ const QuotationCreate = forwardRef((props, ref) => {
         setOpenProductSearchResult(false);
       }, 300);
 
-      setIsProductsLoading(false);
+      //setIsProductsLoading(false);
       return;
     }
 
@@ -541,7 +541,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     };
 
     let Select = `select=id,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
-    setIsProductsLoading(true);
+    //setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
       requestOptions
@@ -552,7 +552,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     if (!products || products.length === 0) {
       openProductSearchResult = false;
       setOpenProductSearchResult(false);
-      setIsProductsLoading(false);
+      //setIsProductsLoading(false);
       return;
     }
 
@@ -565,7 +565,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       .concat(products.filter(item => !item.country_name));*/
 
     setProductOptions(products);
-    setIsProductsLoading(false);
+    //setIsProductsLoading(false);
   }
 
   async function getProductByBarCode(barcode) {
@@ -1971,7 +1971,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 id="customer_id"
                 labelKey="search_label"
                 filterBy={store?.client_filter ? undefined : () => true}
-                isLoading={isCustomersLoading}
+                isLoading={false}
                 onChange={(selectedItems) => {
                   errors.customer_id = "";
                   setErrors(errors);
@@ -2231,7 +2231,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 emptyLabel=""
                 clearButton={true}
                 open={openProductSearchResult}
-                isLoading={isProductsLoading}
+                isLoading={false}
                 isInvalid={errors.product_id ? true : false}
                 onChange={(selectedItems) => {
                   if (selectedItems.length === 0) {
@@ -2590,8 +2590,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                                 errors["quantity_" + index] = "";
                                 setErrors({ ...errors });
                                 if (!e.target.value) {
-                                  errors["quantity_" + index] =
-                                    "Invalid Quantity";
+                                  //  errors["quantity_" + index] =
+                                  //   "Invalid Quantity";
                                   selectedProducts[index].quantity =
                                     e.target.value;
                                   setSelectedProducts([...selectedProducts]);
