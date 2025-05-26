@@ -926,7 +926,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 delete errors["purchase_unit_price_" + i];
             }
         }
-        */
+        
 
 
         if (selectedProducts[i].purchase_unit_price > 0 && selectedProducts[i].unit_price > 0) {
@@ -942,6 +942,7 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
         setErrors({ ...errors });
+        */
     }
 
 
