@@ -3443,16 +3443,10 @@ function findDiscount() {
                                                 </div>
                                             </td>
                                             <td className="text-end" style={{ verticalAlign: 'middle', padding: '0.25rem' }} >
-
                                                 <Amount amount={trimTo2Decimals((selectedProducts[index].unit_price - selectedProducts[index].unit_discount) * selectedProducts[index].quantity)} />
-
                                             </td>
                                             <td className="text-end" style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
-                                                <div className="d-flex" style={{ minWidth: 0 }}>
-                                                    <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
-                                                        <Amount amount={trimTo2Decimals(((selectedProducts[index].unit_price_with_vat - selectedProducts[index].unit_discount_with_vat) * selectedProducts[index].quantity))} />
-                                                    </div>
-                                                </div>
+                                                <Amount amount={trimTo2Decimals(((selectedProducts[index].unit_price_with_vat - selectedProducts[index].unit_discount_with_vat) * selectedProducts[index].quantity))} />
                                             </td>
                                         </tr>
                                     )).reverse()}
