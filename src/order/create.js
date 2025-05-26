@@ -897,7 +897,6 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     function checkError(i) {
-        setErrors({ ...errors });
         if (selectedProducts[i].quantity && selectedProducts[i].quantity <= 0) {
             errors["quantity_" + i] = "Quantity should be > 0";
         } else if (!selectedProducts[i].quantity) {
@@ -929,7 +928,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
     async function checkWarning(i) {
-        setWarnings({ ...warnings });
         let product = await getProduct(selectedProducts[i].product_id);
         let stock = 0;
 
@@ -1139,8 +1137,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
         timerRef.current = setTimeout(() => {
             reCalculate(index);
-            //  checkErrors();
-            // checkStockWarnings();
+            checkErrors(index);
+            checkWarnings(index);
         }, 300);
         return true;
     }
@@ -1976,25 +1974,24 @@ function findDiscount() {
         imageViewerRef.current.open(0);
     }
 
-
     useEffect(() => {
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        const tooltipInstances = [];
-
         tooltipTriggerList.forEach((el) => {
-            // Dispose existing instance if any
-            const existingTooltip = bootstrap.Tooltip.getInstance(el);
-            if (existingTooltip) existingTooltip.dispose();
+            // Dispose existing
+            const existing = bootstrap.Tooltip.getInstance(el);
+            if (existing) existing.dispose();
 
-            // Create new instance
-            const tooltip = new bootstrap.Tooltip(el);
-            tooltipInstances.push(tooltip);
+            // Read new values from attributes
+            const errMsg = el.getAttribute('data-error');
+            const warnMsg = el.getAttribute('data-warning');
+            const tooltipMsg = errMsg || warnMsg || '';
+
+            // Update title
+            el.setAttribute('title', tooltipMsg);
+
+            // Create new tooltip instance
+            new bootstrap.Tooltip(el);
         });
-
-        // Optional cleanup if tooltips need to be removed later (e.g., on unmount)
-        return () => {
-            tooltipInstances.forEach((tooltip) => tooltip.dispose());
-        };
     }, [errors, warnings]);
 
     return (
@@ -2579,11 +2576,12 @@ function findDiscount() {
                                                 </div>
                                                 {(errors[`name_${index}`] || warnings[`name_${index}`]) && (
                                                     <i
-                                                        className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'
-                                                            } ms-2`}
+                                                        className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                         data-bs-toggle="tooltip"
                                                         data-bs-placement="top"
-                                                        title={errors[`name_${index}`] || warnings[`name_${index}`]}
+                                                        data-error={errors[`name_${index}`] || ''}
+                                                        data-warning={warnings[`name_${index}`] || ''}
+                                                        title={errors[`name_${index}`] || warnings[`name_${index}`] || ''}
                                                         style={{
                                                             fontSize: '1rem',
                                                             cursor: 'pointer',
@@ -2726,11 +2724,12 @@ function findDiscount() {
 
                                                     {(errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`]) && (
                                                         <i
-                                                            className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'
-                                                                } ms-2`}
+                                                            className={`bi bi-exclamation-circle-fill ${errors[`purchase_unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            title={errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`]}
+                                                            data-error={errors[`purchase_unit_price_${index}`] || ''}
+                                                            data-warning={warnings[`purchase_unit_price_${index}`] || ''}
+                                                            title={errors[`purchase_unit_price_${index}`] || warnings[`purchase_unit_price_${index}`] || ''}
                                                             style={{
                                                                 fontSize: '1rem',
                                                                 cursor: 'pointer',
@@ -2776,6 +2775,8 @@ function findDiscount() {
                                                                     selectedProducts[index].quantity = "";
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
+                                                                        checkWarnings(index);
+                                                                        checkErrors(index);
                                                                         reCalculate(index);
                                                                     }, 300);
                                                                 } else if (e.key === "ArrowLeft") {
@@ -2785,7 +2786,6 @@ function findDiscount() {
                                                                 }
                                                             }}
                                                             onChange={(e) => {
-                                                                delete errors["quantity_" + index];
                                                                 setErrors({ ...errors });
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -2793,9 +2793,9 @@ function findDiscount() {
                                                                     selectedProducts[index].quantity = e.target.value;
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
-                                                                        reCalculate(index);
                                                                         checkWarnings(index);
                                                                         checkErrors(index);
+                                                                        reCalculate(index);
                                                                     }, 300);
                                                                     return;
                                                                 }
@@ -2805,9 +2805,9 @@ function findDiscount() {
                                                                     selectedProducts[index].quantity = e.target.value;
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
-                                                                        reCalculate(index);
-                                                                        checkWarnings(index);
                                                                         checkErrors(index);
+                                                                        checkWarnings(index);
+                                                                        reCalculate(index);
                                                                     }, 300);
                                                                     return;
                                                                 }
@@ -2816,8 +2816,9 @@ function findDiscount() {
                                                                 product.quantity = parseFloat(e.target.value);
                                                                 selectedProducts[index].quantity = parseFloat(e.target.value);
                                                                 timerRef.current = setTimeout(() => {
-                                                                    reCalculate(index);
+                                                                    checkErrors(index);
                                                                     checkWarnings(index);
+                                                                    reCalculate(index);
                                                                 }, 300);
                                                             }} />
                                                         <span className="input-group-text text-nowrap">
@@ -2826,11 +2827,12 @@ function findDiscount() {
                                                     </div>
                                                     {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
                                                         <i
-                                                            className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'
-                                                                } ms-2`}
+                                                            className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            title={errors[`quantity_${index}`] || warnings[`quantity_${index}`]}
+                                                            data-error={errors[`quantity_${index}`] || ''}
+                                                            data-warning={warnings[`quantity_${index}`] || ''}
+                                                            title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
                                                             style={{
                                                                 fontSize: '1rem',
                                                                 cursor: 'pointer',
@@ -2930,11 +2932,12 @@ function findDiscount() {
                                                     </div>
                                                     {(errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]) && (
                                                         <i
-                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'
-                                                                } ms-2`}
+                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_price_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            title={errors[`unit_price_${index}`] || warnings[`unit_price_${index}`]}
+                                                            data-error={errors[`unit_price_${index}`] || ''}
+                                                            data-warning={warnings[`unit_price_${index}`] || ''}
+                                                            title={errors[`unit_price_${index}`] || warnings[`unit_price_${index}`] || ''}
                                                             style={{
                                                                 fontSize: '1rem',
                                                                 cursor: 'pointer',
@@ -3039,11 +3042,12 @@ function findDiscount() {
                                                     </div>
                                                     {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
                                                         <i
-                                                            className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'
-                                                                } ms-2`}
+                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_price_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            title={errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]}
+                                                            data-error={errors[`unit_price_with_vat_${index}`] || ''}
+                                                            data-warning={warnings[`unit_price_with_vat_${index}`] || ''}
+                                                            title={errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`] || ''}
                                                             style={{
                                                                 fontSize: '1rem',
                                                                 cursor: 'pointer',
@@ -3149,11 +3153,12 @@ function findDiscount() {
                                                     </div>
                                                     {(errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`]) && (
                                                         <i
-                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'
-                                                                } ms-2`}
+                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            title={errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`]}
+                                                            data-error={errors[`unit_discount_${index}`] || ''}
+                                                            data-warning={warnings[`unit_discount__${index}`] || ''}
+                                                            title={errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`] || ''}
                                                             style={{
                                                                 fontSize: '1rem',
                                                                 cursor: 'pointer',
@@ -3284,11 +3289,12 @@ function findDiscount() {
                                                     </div>
                                                     {(errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`]) && (
                                                         <i
-                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'
-                                                                } ms-2`}
+                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            title={errors[`unit_discount_with_vat_${index}`] || warnings[`quantity_${index}`]}
+                                                            data-error={errors[`unit_discount_with_vat_${index}`] || ''}
+                                                            data-warning={warnings[`unit_discount_with_vat_${index}`] || ''}
+                                                            title={errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`] || ''}
                                                             style={{
                                                                 fontSize: '1rem',
                                                                 cursor: 'pointer',
@@ -3452,11 +3458,12 @@ function findDiscount() {
                                                     </div>
                                                     {(errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`]) && (
                                                         <i
-                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'
-                                                                } ms-2`}
+                                                            className={`bi bi-exclamation-circle-fill ${errors[`unit_discount_percent_with_vat_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
                                                             data-bs-toggle="tooltip"
                                                             data-bs-placement="top"
-                                                            title={errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`]}
+                                                            data-error={errors[`unit_discount_percent_with_vat_${index}`] || ''}
+                                                            data-warning={warnings[`unit_discount_percent_with_vat_${index}`] || ''}
+                                                            title={errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`] || ''}
                                                             style={{
                                                                 fontSize: '1rem',
                                                                 cursor: 'pointer',
