@@ -1503,6 +1503,7 @@ const OrderCreate = forwardRef((props, ref) => {
                     for (let j = 0; j < res.result?.products?.length; j++) {
                         if (res.result?.products[j].product_id === selectedProducts[i].product_id) {
 
+                            /*
                             if (res.result?.products[j].unit_discount_percent) {
                                 selectedProducts[i].unit_discount_percent = res.result?.products[j].unit_discount_percent;
                             }
@@ -1514,8 +1515,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             if (res.result?.products[j].unit_discount) {
                                 selectedProducts[i].unit_discount = res.result?.products[j].unit_discount;
                             }
-
-
+                                
                             if (res.result?.products[j].unit_price) {
                                 selectedProducts[i].unit_price = res.result?.products[j].unit_price;
                             }
@@ -1523,6 +1523,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             if (res.result?.products[j].unit_price_with_vat) {
                                 selectedProducts[i].unit_price_with_vat = res.result?.products[j].unit_price_with_vat;
                             }
+                            */
 
                             /*
                             if (res.result?.products[j].unit_price) {
@@ -2982,7 +2983,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
-                                                                    reCalculate(index);
+                                                                    //reCalculate(index);
                                                                     checkErrors(index);
                                                                 }, 100);
                                                             }} />
@@ -3045,8 +3046,9 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 }
                                                             }}
                                                             onChange={(e) => {
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
                                                                 delete errors["unit_price_with_vat_" + index];
+
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
 
                                                                 setErrors({ ...errors });
                                                                 if (!e.target.value) {
@@ -3085,15 +3087,16 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                                                 selectedProducts[index].unit_price_with_vat = parseFloat(e.target.value);
 
-                                                                selectedProducts[index].unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
 
-                                                                selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
-
-                                                                selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
-                                                                selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 // Set new debounce timer
                                                                 timerRef.current = setTimeout(() => {
+                                                                    selectedProducts[index].unit_price = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price_with_vat / (1 + (formData.vat_percent / 100))))
+                                                                    selectedProducts[index].unit_discount_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_discount * (1 + (formData.vat_percent / 100))))
+
+                                                                    selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
+                                                                    selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
+
                                                                     reCalculate(index);
                                                                 }, 100);
                                                             }} />
