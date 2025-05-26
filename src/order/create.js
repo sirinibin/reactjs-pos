@@ -2721,7 +2721,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 timerRef.current = setTimeout(() => {
                                                                     checkErrors(index);
                                                                     reCalculate(index);
-                                                                }, 300);
+                                                                }, 500);
                                                             } else if (e.key === "ArrowLeft") {
                                                                 if ((index + 1) === selectedProducts.length) {
                                                                     timerRef.current = setTimeout(() => {
@@ -2743,7 +2743,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 timerRef.current = setTimeout(() => {
                                                                     checkErrors(index);
                                                                     reCalculate(index);
-                                                                }, 300);
+                                                                }, 500);
                                                                 return;
                                                             }
 
@@ -2754,7 +2754,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     checkWarnings(index);
                                                                     checkErrors(index);
                                                                     reCalculate(index);
-                                                                }, 300);
+                                                                }, 500);
                                                                 return;
                                                             }
 
@@ -2823,7 +2823,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         checkWarnings(index);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
                                                                         inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].focus();
@@ -2841,7 +2841,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         checkWarnings(index);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -2853,7 +2853,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         checkErrors(index);
                                                                         checkWarnings(index);
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -2864,7 +2864,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     checkErrors(index);
                                                                     checkWarnings(index);
                                                                     reCalculate(index);
-                                                                }, 300);
+                                                                }, 500);
                                                             }} />
                                                         <span className="input-group-text text-nowrap">
                                                             {selectedProducts[index].unit ? selectedProducts[index].unit : 'Units'}
@@ -2921,7 +2921,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     timerRef.current = setTimeout(() => {
                                                                         checkErrors(index);
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
                                                                         inputRefs.current[index][`${"sales_product_quantity_" + index}`].focus();
@@ -2939,7 +2939,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         //  checkWarnings(index);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -2951,7 +2951,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         //checkWarnings(index);
                                                                         checkErrors(index);
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -3023,7 +3023,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
                                                                         inputRefs.current[index][`${"sales_product_unit_price_" + index}`].focus();
@@ -3045,7 +3045,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     // Set new debounce timer
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -3059,7 +3059,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     // Set new debounce timer
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -3081,7 +3081,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 // Set new debounce timer
                                                                 timerRef.current = setTimeout(() => {
                                                                     reCalculate(index);
-                                                                }, 300);
+                                                                }, 500);
                                                             }} />
                                                     </div>
                                                     {(errors[`unit_price_with_vat_${index}`] || warnings[`unit_price_with_vat_${index}`]) && (
@@ -3155,7 +3155,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -3168,7 +3168,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setFormData({ ...formData });
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     //setErrors({...errors});
                                                                     return;
                                                                 }
@@ -3192,7 +3192,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                     reCalculate(index);
-                                                                }, 300);
+                                                                }, 500);
                                                             }} />
                                                     </div>
                                                     {(errors[`unit_discount_${index}`] || warnings[`unit_discount_${index}`]) && (
@@ -3276,7 +3276,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -3290,7 +3290,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -3303,7 +3303,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setFormData({ ...formData });
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     //setErrors({ ...errors });
                                                                     return;
                                                                 }
@@ -3328,7 +3328,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
 
                                                                     reCalculate(index);
-                                                                }, 300);
+                                                                }, 500);
                                                             }} />
                                                     </div>
                                                     {(errors[`unit_discount_with_vat_${index}`] || warnings[`unit_discount_with_vat_${index}`]) && (
@@ -3442,7 +3442,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -3456,7 +3456,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     return;
                                                                 }
 
@@ -3469,7 +3469,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     setFormData({ ...formData });
                                                                     timerRef.current = setTimeout(() => {
                                                                         reCalculate(index);
-                                                                    }, 300);
+                                                                    }, 500);
                                                                     //setErrors({ ...errors });
                                                                     return;
                                                                 }
@@ -3497,7 +3497,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
 
                                                                     reCalculate(index);
-                                                                }, 300);
+                                                                }, 500);
                                                             }} />{""}
                                                     </div>
                                                     {(errors[`unit_discount_percent_with_vat_${index}`] || warnings[`unit_discount_percent_with_vat_${index}`]) && (
