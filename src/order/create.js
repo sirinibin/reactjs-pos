@@ -897,6 +897,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
     function checkError(i) {
+        console.log("INSIDE CHECK ERROR");
         if (selectedProducts[i].quantity && selectedProducts[i].quantity <= 0) {
             errors["quantity_" + i] = "Quantity should be > 0";
         } else if (!selectedProducts[i].quantity) {
@@ -905,13 +906,39 @@ const OrderCreate = forwardRef((props, ref) => {
             delete errors["quantity_" + i];
         }
 
-        if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
-            errors["purchase_unit_price_" + i] = "Purchase Unit Price should not be greater than Unit Price(without VAT)"
-            errors["unit_price_" + i] = "Unit price should not be less than Purchase Unit Price(without VAT)"
+
+        if (selectedProducts[i].unit_price && selectedProducts[i].unit_price <= 0) {
+            errors["unit_price_" + i] = "Unit Price should be > 0";
+        } else if (!selectedProducts[i].unit_price) {
+            errors["unit_price_" + i] = "Unit Price is required";
         } else {
-            delete errors["purchase_unit_price_" + i];
             delete errors["unit_price_" + i];
         }
+
+
+        if (store.block_sale_when_purchase_price_is_higher) {
+            if (selectedProducts[i].purchase_unit_price && selectedProducts[i].purchase_unit_price <= 0) {
+                errors["purchase_unit_price_" + i] = "Purchase Unit Price should be > 0";
+            } else if (!selectedProducts[i].purchase_unit_price) {
+                errors["purchase_unit_price_" + i] = "Purchase Unit Price is required";
+            } else {
+                delete errors["purchase_unit_price_" + i];
+            }
+        }
+
+
+        if (selectedProducts[i].purchase_unit_price > 0 && selectedProducts[i].unit_price > 0) {
+
+            if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
+                errors["purchase_unit_price_" + i] = "Purchase Unit Price should not be greater than Unit Price(without VAT)"
+                errors["unit_price_" + i] = "Unit price should not be less than Purchase Unit Price(without VAT)"
+            } else {
+                delete errors["purchase_unit_price_" + i];
+                delete errors["unit_price_" + i];
+            }
+        }
+
+
         setErrors({ ...errors });
     }
 
@@ -1173,7 +1200,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 (parseFloat(selectedProducts[i].unit_price - productUnitDiscount) *
                     parseFloat(selectedProducts[i].quantity));
         }
- 
+     
         // formData.total = Math.round(formData.total * 100) / 100;
         setFormData.total(formData.total);
     }
@@ -1188,7 +1215,7 @@ const OrderCreate = forwardRef((props, ref) => {
         if (formData.total > 0) {
             console.log("formData.vat_percent:", formData.vat_percent);
             //(35.8 / 100) * 10000;
- 
+     
             vatPrice = (parseFloat(formData.vat_percent) / 100) * (parseFloat(formData.total) + parseFloat(formData.shipping_handling_fees) - parseFloat(formData.discount));
             console.log("vatPrice:", vatPrice);
         }
@@ -1214,20 +1241,20 @@ const OrderCreate = forwardRef((props, ref) => {
         formData.net_total = RoundFloat(formData.net_total, 2);
         // formData.net_total = Math.round(formData.net_total * 100) / 100;
         setFormData.net_total(formData.net_total);
- 
+     
         if (!formData.id) {
             let method = "";
             if (formData.payments_input && formData.payments_input[0]) {
                 method = formData.payments_input[0].method;
             }
- 
+     
             formData.payments_input = [{
                 "date_str": formData.date_str,
                 "amount": 0.00,
                 "method": method,
                 "deleted": false,
             }];
- 
+     
             if (formData.net_total > 0) {
                 formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
                 if (formData.cash_discount) {
@@ -1236,7 +1263,7 @@ const OrderCreate = forwardRef((props, ref) => {
                 formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
             }
         }
- 
+     
         /*
         if (formData.payments_input[0].amount === 0) {
             formData.payments_input[0].amount = "";
@@ -1253,17 +1280,17 @@ const OrderCreate = forwardRef((props, ref) => {
         if (selectedProducts[productIndex].unit_discount
             && parseFloat(selectedProducts[productIndex].unit_discount) >= 0
             && unitPrice > 0) {
- 
+     
             let unitDiscountPercent = parseFloat(parseFloat(selectedProducts[productIndex].unit_discount / unitPrice) * 100);
             //selectedProducts[productIndex].unit_discount_percent = parseFloat(trimTo2Decimals(unitDiscountPercent));
             selectedProducts[productIndex].unit_discount_percent = unitDiscountPercent;
             setSelectedProducts([...selectedProducts]);
         }
     }
- 
+     
     function findProductUnitDiscount(productIndex) {
         let unitPrice = parseFloat(selectedProducts[productIndex].unit_price);
- 
+     
         if (selectedProducts[productIndex].unit_discount_percent
             && selectedProducts[productIndex].unit_discount_percent >= 0
             && unitPrice > 0) {
@@ -1286,12 +1313,12 @@ const OrderCreate = forwardRef((props, ref) => {
     }*/
 
     /*
-function findDiscount() {
+    function findDiscount() {
     if (formData.discount_percent >= 0 && formData.total > 0) {
         formData.discount = parseFloat(formData.total * parseFloat(formData.discount_percent / 100));
         setFormData({ ...formData });
     }
-}
+    }
     */
 
     let [shipping, setShipping] = useState(0.00);
@@ -1352,17 +1379,17 @@ function findDiscount() {
                 errors["unit_price_" + i] = "Max decimal points allowed is 2 - WIITHOUT VAT";
                 setErrors({ ...errors });
                 return;
-    
+     
             }
-    
+     
           
-    
-    
+     
+     
             if (unitPriceWithVAT && /^\d*\.?\d{0,2}$/.test(unitPriceWithVAT) === false) {
                 errors["unit_price_with_vat" + i] = "Max decimal points allowed is 2 - WITH VAT";
                 setErrors({ ...errors });
                 return;
-    
+     
             }*/
 
 
@@ -1498,7 +1525,7 @@ function findDiscount() {
                             } else if (res.result?.products[j].unit_price === 0 || !res.result?.products[j].unit_price) {
                                 selectedProducts[i].unit_price = "";
                             }
-    
+     
                             if (res.result?.products[j].unit_price_with_vat) {
                                 selectedProducts[i].unit_price_with_vat = res.result?.products[j].unit_price_with_vat;
                             } else if (res.result?.products[j].unit_price_with_vat === 0 || !res.result?.products[j].unit_price_with_vat) {
@@ -2685,7 +2712,14 @@ function findDiscount() {
                                                             RunKeyActions(e, product);
                                                             if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                            if (e.key === "ArrowLeft") {
+                                                            if (e.key === "Backspace") {
+                                                                selectedProducts[index].purchase_unit_price = "";
+                                                                setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    checkErrors(index);
+                                                                    reCalculate(index);
+                                                                }, 300);
+                                                            } else if (e.key === "ArrowLeft") {
                                                                 if ((index + 1) === selectedProducts.length) {
                                                                     timerRef.current = setTimeout(() => {
                                                                         productSearchRef.current?.focus();
@@ -2698,18 +2732,26 @@ function findDiscount() {
                                                             }
                                                         }}
                                                         onChange={(e) => {
-                                                            delete errors["purchase_unit_price_" + index];
-                                                            setErrors({ ...errors });
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                            if (!e.target.value) {
-                                                                selectedProducts[index].purchase_unit_price = "";
+                                                            if (parseFloat(e.target.value) === 0) {
+                                                                selectedProducts[index].purchase_unit_price = e.target.value;
                                                                 setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    checkErrors(index);
+                                                                    reCalculate(index);
+                                                                }, 300);
                                                                 return;
                                                             }
 
-                                                            if (parseFloat(e.target.value) === 0) {
-                                                                selectedProducts[index].purchase_unit_price = 0;
+                                                            if (!e.target.value) {
+                                                                selectedProducts[index].purchase_unit_price = e.target.value;
                                                                 setSelectedProducts([...selectedProducts]);
+                                                                timerRef.current = setTimeout(() => {
+                                                                    checkWarnings(index);
+                                                                    checkErrors(index);
+                                                                    reCalculate(index);
+                                                                }, 300);
                                                                 return;
                                                             }
 
@@ -2874,6 +2916,7 @@ function findDiscount() {
                                                                     selectedProducts[index].unit_price = "";
                                                                     setSelectedProducts([...selectedProducts]);
                                                                     timerRef.current = setTimeout(() => {
+                                                                        checkErrors(index);
                                                                         reCalculate(index);
                                                                     }, 300);
                                                                 } else if (e.key === "ArrowLeft") {
@@ -2885,23 +2928,27 @@ function findDiscount() {
 
                                                             onChange={(e) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
-                                                                delete errors["unit_price_" + index];
-
-                                                                setErrors({ ...errors });
-                                                                if (!e.target.value) {
-                                                                    selectedProducts[index].unit_price = "";
-                                                                    selectedProducts[index].unit_price_with_vat = "";
+                                                                if (parseFloat(e.target.value) === 0) {
+                                                                    selectedProducts[index].unit_price = e.target.value;
+                                                                    selectedProducts[index].unit_price_with_vat = e.target.value;
                                                                     setSelectedProducts([...selectedProducts]);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        //  checkWarnings(index);
+                                                                        checkErrors(index);
+                                                                        reCalculate(index);
+                                                                    }, 300);
                                                                     return;
                                                                 }
 
-                                                                if (e.target.value === 0) {
-
-                                                                    selectedProducts[index].unit_price = 0
-                                                                    selectedProducts[index].unit_price_with_vat = 0;
+                                                                if (!e.target.value) {
+                                                                    selectedProducts[index].unit_price = e.target.value;
+                                                                    selectedProducts[index].unit_price_with_vat = e.target.value;
                                                                     setSelectedProducts([...selectedProducts]);
-
-
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        //checkWarnings(index);
+                                                                        checkErrors(index);
+                                                                        reCalculate(index);
+                                                                    }, 300);
                                                                     return;
                                                                 }
 
