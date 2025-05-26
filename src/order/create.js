@@ -907,8 +907,8 @@ const OrderCreate = forwardRef((props, ref) => {
         }
 
         if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
-            errors["purchase_unit_price_" + i] = "Purchase Unit Price should not be than Unit Price(without VAT)"
-            errors["unit_price_" + i] = "Unit price should not be than Purchase Unit Price(without VAT)"
+            errors["purchase_unit_price_" + i] = "Purchase Unit Price should not be greater than Unit Price(without VAT)"
+            errors["unit_price_" + i] = "Unit price should not be less than Purchase Unit Price(without VAT)"
         } else {
             delete errors["purchase_unit_price_" + i];
             delete errors["unit_price_" + i];
