@@ -2912,21 +2912,15 @@ function findDiscount() {
                                                                 }
 
                                                                 selectedProducts[index].unit_price = parseFloat(e.target.value);
-
-
-                                                                // selectedProducts[index].unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))));
-                                                                // console.log("selectedProducts[index].unit_price:", selectedProducts[index].unit_price);
                                                                 setSelectedProducts([...selectedProducts]);
+
                                                                 timerRef.current = setTimeout(() => {
                                                                     selectedProducts[index].unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                     reCalculate(index);
-                                                                }, 300);
-
-                                                                checkErrors(index);
-                                                                setErrors({ ...errors });
-
+                                                                    checkErrors(index);
+                                                                }, 100);
                                                             }} />
 
                                                     </div>
