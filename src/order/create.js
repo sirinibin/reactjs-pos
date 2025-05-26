@@ -661,8 +661,12 @@ const OrderCreate = forwardRef((props, ref) => {
             if (store.block_sale_when_purchase_price_is_higher) {
                 if (selectedProducts[i].purchase_unit_price > selectedProducts[i].unit_price) {
                     errors["purchase_unit_price_" + i] = "Purchase unit price is greater than Unit Price(without VAT)";
+                    errors["unit_price_" + i] = "Unit price is less  than Purchase Unit Price(without VAT)";
                     setErrors({ ...errors });
                     haveErrors = true;
+                } else {
+                    delete errors["purchase_unit_price_" + i];
+                    delete errors["unit_price_" + i];
                 }
             }
 
