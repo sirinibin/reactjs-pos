@@ -2024,6 +2024,18 @@ const OrderCreate = forwardRef((props, ref) => {
         });
     }, [errors, warnings]);
 
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
     return (
         <>
             <ImageViewerModal ref={imageViewerRef} images={productImages} />
@@ -2071,7 +2083,7 @@ const OrderCreate = forwardRef((props, ref) => {
             <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
 
 
-            <Modal show={show} size="xl" keyboard={false} fullscreen
+            <Modal show={show} size="xl" fullscreen id="sales_create_form"
                 onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
