@@ -2970,7 +2970,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
                                                                     reCalculate(index);
                                                                     checkErrors(index);
-                                                                }, 100);
+                                                                }, 500);
                                                             }} />
 
                                                     </div>
