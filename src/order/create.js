@@ -2983,7 +2983,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     selectedProducts[index].unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].unit_price * (1 + (formData.vat_percent / 100))))
                                                                     selectedProducts[index].unit_discount_percent = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount / selectedProducts[index].unit_price) * 100)))
                                                                     selectedProducts[index].unit_discount_percent_with_vat = parseFloat(trimTo2Decimals(((selectedProducts[index].unit_discount_with_vat / selectedProducts[index].unit_price_with_vat) * 100)))
-                                                                    //reCalculate(index);
+                                                                    reCalculate(index);
                                                                     checkErrors(index);
                                                                 }, 100);
                                                             }} />
