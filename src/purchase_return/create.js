@@ -838,6 +838,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     for (let j = 0; j < res.result?.products?.length; j++) {
                         if (res.result?.products[j].product_id === selectedProducts[i].product_id) {
 
+                            /*
                             if (res.result?.products[j].unit_discount_percent) {
                                 selectedProducts[i].unit_discount_percent = res.result?.products[j].unit_discount_percent;
                             }
@@ -857,7 +858,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                             if (res.result?.products[j].purchasereturn_unit_price_with_vat) {
                                 selectedProducts[i].purchase_unit_price_with_vat = res.result?.products[j].purchasereturn_unit_price_with_vat;
-                            }
+                            }*/
 
                             /*
                             if (res.result?.products[j].unit_price) {

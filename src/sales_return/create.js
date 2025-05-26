@@ -1147,6 +1147,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                     for (let j = 0; j < res.result?.products?.length; j++) {
                         if (res.result?.products[j].product_id === selectedProducts[i].product_id) {
 
+                            /*
                             if (res.result?.products[j].unit_discount_percent) {
                                 selectedProducts[i].unit_discount_percent = res.result?.products[j].unit_discount_percent;
                             }
@@ -1166,7 +1167,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
                             if (res.result?.products[j].unit_price_with_vat) {
                                 selectedProducts[i].unit_price_with_vat = res.result?.products[j].unit_price_with_vat;
-                            }
+                            }*/
 
                             /*
                             if (res.result?.products[j].unit_price) {
