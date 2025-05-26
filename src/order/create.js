@@ -2667,12 +2667,38 @@ function findDiscount() {
                                                 <div className="input-group">
                                                     <input
                                                         type="number"
-                                                        id={`sales_product_purchase_unit_price${index}`}
-                                                        name={`sales_product_purchase_unit_price${index}`}
+                                                        id={`sales_product_purchase_unit_price_${index}`}
+                                                        name={`sales_product_purchase_unit_price_${index}`}
                                                         className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                                         onWheel={(e) => e.target.blur()}
                                                         value={product.purchase_unit_price}
                                                         placeholder="Purchase Unit Price"
+                                                        ref={(el) => {
+                                                            if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                                            inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`] = el;
+                                                        }}
+                                                        onFocus={() => {
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].select();
+                                                            }, 100);
+                                                        }}
+                                                        onKeyDown={(e) => {
+                                                            RunKeyActions(e, product);
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+
+                                                            if (e.key === "ArrowLeft") {
+                                                                if ((index + 1) === selectedProducts.length) {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        productSearchRef.current?.focus();
+                                                                    }, 100);
+                                                                } else {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[(index + 1)][`${"sales_unit_discount_with_vat_" + (index + 1)}`].focus();
+                                                                    }, 100);
+                                                                }
+                                                            }
+                                                        }}
                                                         onChange={(e) => {
                                                             delete errors["purchase_unit_price_" + index];
                                                             setErrors({ ...errors });
@@ -2694,9 +2720,7 @@ function findDiscount() {
                                                                 setSelectedProducts([...selectedProducts]);
                                                             }
 
-
-                                                            checkErrors();
-
+                                                            checkErrors(index);
                                                         }}
                                                     />
 
@@ -2746,18 +2770,18 @@ function findDiscount() {
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
-                                                                if (timerRef.current) clearTimeout(timerRef.current);
 
-                                                                if (e.key === "ArrowLeft") {
-                                                                    if ((index + 1) === selectedProducts.length) {
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            productSearchRef.current?.focus();
-                                                                        }, 100);
-                                                                    } else {
-                                                                        timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[(index + 1)][`${"sales_unit_discount_with_vat_" + (index + 1)}`].focus();
-                                                                        }, 100);
-                                                                    }
+                                                                if (timerRef.current) clearTimeout(timerRef.current);
+                                                                if (e.key === "Backspace") {
+                                                                    selectedProducts[index].quantity = "";
+                                                                    setSelectedProducts([...selectedProducts]);
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        reCalculate(index);
+                                                                    }, 300);
+                                                                } else if (e.key === "ArrowLeft") {
+                                                                    timerRef.current = setTimeout(() => {
+                                                                        inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].focus();
+                                                                    }, 200);
                                                                 }
                                                             }}
                                                             onChange={(e) => {
@@ -2898,7 +2922,7 @@ function findDiscount() {
                                                                     reCalculate(index);
                                                                 }, 300);
 
-                                                                checkErrors();
+                                                                checkErrors(index);
                                                                 setErrors({ ...errors });
 
                                                             }} />
