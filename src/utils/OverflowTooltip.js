@@ -3,7 +3,7 @@ import { Tooltip } from "bootstrap";
 import { Copy, Check } from "lucide-react";
 import "./OverflowTooltip.css";
 
-const OverflowTooltip = ({ value, maxWidth = 250, hideCopyIcon = false, accountNumber, debit }) => {
+const OverflowTooltip = ({ value, maxWidth = 250, hideCopyIcon = false }) => {
     const tooltipRef = useRef(null);
     const tooltipInstance = useRef(null);
     const [copied, setCopied] = useState(false);
@@ -48,7 +48,7 @@ const OverflowTooltip = ({ value, maxWidth = 250, hideCopyIcon = false, accountN
                 onMouseLeave={hideTooltip}
             >
                 {value}
-                {!hideCopyIcon && <button className="copy-btn" onClick={copyToClipboard}>
+                {!hideCopyIcon && <button type="button" className="copy-btn" onClick={copyToClipboard}>
                     {copied ? <Check size={14} /> : <Copy size={14} />}
                 </button>}
                 {copied && <span className="copied-text">Copied!</span>}
