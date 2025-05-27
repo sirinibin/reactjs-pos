@@ -18,6 +18,7 @@ import Preview from "./../order/preview.js"
 import ReportPreview from "./../order/report.js";
 import { formatDistanceToNowStrict } from "date-fns";
 import { enUS } from "date-fns/locale";
+import OrderCreate from "./../order/create.js";
 
 const shortLocale = {
   ...enUS,
@@ -579,8 +580,15 @@ function QuotationIndex(props) {
   const customerSearchRef = useRef();
   const timerRef = useRef(null);
 
+
+  const SalesUpdateFormRef = useRef();
+  function openSalesUpdateForm(id) {
+    SalesUpdateFormRef.current.open(id);
+  }
+
   return (
     <>
+      <OrderCreate ref={SalesUpdateFormRef} />
       <ReportPreview ref={ReportPreviewRef} searchParams={searchParams} sortOrder={sortOrder} sortField={sortField} />
       <Preview ref={PreviewRef} />
       <QuotationCreate ref={CreateFormRef} refreshList={list} showToastMessage={props.showToastMessage} openDetailsView={openDetailsView} />
@@ -1548,7 +1556,11 @@ function QuotationIndex(props) {
                               <OverflowTooltip value={quotation.customer_name} />
                             </td>
                             <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
-                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.order_code}</td>
+                            <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                              {quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                openSalesUpdateForm(quotation.order_id);
+                              }}>{quotation.order_code}</span>}
+                            </td>
                             {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
                               {quotation.reported_to_zatca ? <span>&nbsp;<span className="badge bg-success">
                                 Reported
