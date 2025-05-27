@@ -3968,6 +3968,40 @@ const QuotationCreate = forwardRef((props, ref) => {
               </div>
             </>}
 
+            <div className="col-md-3">
+              <label className="form-label">Sales ID</label>
+              <div className="input-group mb-3">
+                <input
+                  id="quotation_order_code"
+                  name="quotation_order_code"
+                  value={formData.order_code ? formData.order_code : ""}
+                  type='string'
+                  onChange={(e) => {
+                    delete errors["order_code"];
+                    setErrors({ ...errors });
+                    formData.order_id = "";
+                    formData.order_code = e.target.value;
+                    setFormData({ ...formData });
+                    console.log(formData);
+                  }}
+                  className="form-control"
+
+                  placeholder="Sales ID"
+                />
+                <Button className="btn btn-primary" style={{ marginLeft: "0px" }} onClick={() => {
+                  openSales();
+                }}>
+                  <i className="bi bi-list"></i>
+                </Button>
+              </div>
+              {errors.order_code && (
+                <div style={{ color: "red" }}>
+                  {errors.order_code}
+                </div>
+              )}
+
+            </div>
+
             {formData.type === "quotation" && <>
               <div className="col-md-2">
                 <label className="form-label">Status*</label>
@@ -4009,39 +4043,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                 </div>
               </div>
 
-              <div className="col-md-3">
-                <label className="form-label">Sales ID</label>
-                <div className="input-group mb-3">
-                  <input
-                    id="quotation_order_code"
-                    name="quotation_order_code"
-                    value={formData.order_code ? formData.order_code : ""}
-                    type='string'
-                    onChange={(e) => {
-                      delete errors["order_code"];
-                      setErrors({ ...errors });
-                      formData.order_id = "";
-                      formData.order_code = e.target.value;
-                      setFormData({ ...formData });
-                      console.log(formData);
-                    }}
-                    className="form-control"
 
-                    placeholder="Sales ID"
-                  />
-                  <Button className="btn btn-primary" style={{ marginLeft: "0px" }} onClick={() => {
-                    openSales();
-                  }}>
-                    <i className="bi bi-list"></i>
-                  </Button>
-                </div>
-                {errors.order_code && (
-                  <div style={{ color: "red" }}>
-                    {errors.order_code}
-                  </div>
-                )}
-
-              </div>
 
 
               <div className="col-md-3">
