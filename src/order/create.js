@@ -1861,7 +1861,7 @@ const OrderCreate = forwardRef((props, ref) => {
     }
 
 
-    const handleSelectedProducts = (selected, selectedCustomers) => {
+    const handleSelectedProducts = (selected, selectedCustomers, modelName, modelID, modelCode) => {
         console.log("Selected Products:", selected);
         let addedCount = 0;
         for (var i = 0; i < selected.length; i++) {
@@ -1873,13 +1873,17 @@ const OrderCreate = forwardRef((props, ref) => {
         setShowToast(true);
         if (selectedCustomers && !formData.id) {
             formData.customer_id = selectedCustomers[0]?.id;
-            setFormData({ ...formData });
             setSelectedCustomers(selectedCustomers);
         }
         setTimeout(() => setShowToast(false), 3000);
 
-
-
+        if (modelName && modelID && modelCode) {
+            if (modelName === "quotation") {
+                formData.quotation_id = modelID;
+                formData.quotation_code = modelCode;
+            }
+        }
+        setFormData({ ...formData });
         // if(props.showToastMessage) props.showToastMessage("Successfully Added " + selected.length + " products", "success");
     };
 
@@ -3458,7 +3462,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     delete errors["unit_discount_percent_" + index];
                                                                     setErrors({ ...errors });
                                                                     timerRef.current = setTimeout(() => {
-                                                                        reCalculate(index);
+                                                                        reCalculate(index)
                                                                     }, 100);
                                                                     return;
                                                                 }

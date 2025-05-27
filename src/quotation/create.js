@@ -35,6 +35,8 @@ import Customers from "./../utils/customers.js";
 import { trimTo2Decimals } from "../utils/numberUtils";
 import Amount from "../utils/amount.js";
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import Sales from "./../utils/sales.js";
+import InfoDialog from './../utils/InfoDialog';
 
 const QuotationCreate = forwardRef((props, ref) => {
   //const [operationType, setoperationType] = useState("")
@@ -330,6 +332,8 @@ const QuotationCreate = forwardRef((props, ref) => {
         formData = {
           id: quotation.id,
           type: quotation.type,
+          order_id: quotation.order_id,
+          order_code: quotation.order_code,
           payment_status: quotation.payment_status,
           code: quotation.code,
           store_id: quotation.store_id,
@@ -1475,7 +1479,7 @@ const QuotationCreate = forwardRef((props, ref) => {
   const handleSendSelected = () => {
     const newlySelectedProducts = selectedProducts.filter((p) => selectedIds.includes(p.id));
     if (props.onSelectProducts) {
-      props.onSelectProducts(newlySelectedProducts, selectedCustomers); // Send to parent
+      props.onSelectProducts(newlySelectedProducts, selectedCustomers, "quotation", formData.id, formData.code); // Send to parent
     }
 
     handleClose();
@@ -1746,8 +1750,38 @@ const QuotationCreate = forwardRef((props, ref) => {
 
   const customerSearchRef = useRef();
 
+
+  const SalesRef = useRef();
+  function openSales() {
+    SalesRef.current.open(selectedCustomers);
+  }
+
+  const handleSelectedSale = (selectedSale) => {
+
+    if (formData.customer_id !== selectedSale.customer_id) {
+      infoMessage = "The selected sale is not belongs to the customer " + selectedCustomers[0]?.name;
+      setInfoMessage(infoMessage);
+      showInfo = true;
+      setShowInfo(showInfo);
+      return;
+    }
+
+    formData.order_id = selectedSale.id;
+    formData.order_code = selectedSale.code;
+    setFormData({ ...formData });
+  };
+
+  let [showInfo, setShowInfo] = useState(false);
+  let [infoMessage, setInfoMessage] = useState("");
+
   return (
     <>
+      <InfoDialog
+        show={showInfo}
+        message={infoMessage}
+        onClose={() => setShowInfo(false)}
+      />
+      <Sales ref={SalesRef} onSelectSale={handleSelectedSale} showToastMessage={props.showToastMessage} />
       <Customers ref={CustomersRef} onSelectCustomer={handleSelectedCustomer} showToastMessage={props.showToastMessage} />
       <Products ref={ProductsRef} onSelectProducts={handleSelectedProductsToQuotation} showToastMessage={props.showToastMessage} />
       <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
@@ -3935,7 +3969,7 @@ const QuotationCreate = forwardRef((props, ref) => {
             </>}
 
             {formData.type === "quotation" && <>
-              <div className="col-md-6">
+              <div className="col-md-2">
                 <label className="form-label">Status*</label>
 
                 <div className="input-group mb-3">
@@ -3969,18 +4003,46 @@ const QuotationCreate = forwardRef((props, ref) => {
                   </select>
                   {errors.status && (
                     <div style={{ color: "red" }}>
-                      <i className="bi bi-x-lg"> </i>
                       {errors.status}
-                    </div>
-                  )}
-                  {formData.status && !errors.status && (
-                    <div style={{ color: "green" }}>
-                      <i className="bi bi-check-lg"> </i>
-                      Looks good!
                     </div>
                   )}
                 </div>
               </div>
+
+              <div className="col-md-3">
+                <label className="form-label">Sales ID</label>
+                <div className="input-group mb-3">
+                  <input
+                    id="quotation_order_code"
+                    name="quotation_order_code"
+                    value={formData.order_code ? formData.order_code : ""}
+                    type='string'
+                    onChange={(e) => {
+                      delete errors["order_code"];
+                      setErrors({ ...errors });
+                      formData.order_id = "";
+                      formData.order_code = e.target.value;
+                      setFormData({ ...formData });
+                      console.log(formData);
+                    }}
+                    className="form-control"
+
+                    placeholder="Sales ID"
+                  />
+                  <Button className="btn btn-primary" style={{ marginLeft: "0px" }} onClick={() => {
+                    openSales();
+                  }}>
+                    <i className="bi bi-list"></i>
+                  </Button>
+                </div>
+                {errors.order_code && (
+                  <div style={{ color: "red" }}>
+                    {errors.order_code}
+                  </div>
+                )}
+
+              </div>
+
 
               <div className="col-md-3">
                 <label className="form-label">Validity (# of Days)*</label>
