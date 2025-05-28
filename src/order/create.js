@@ -275,8 +275,6 @@ const OrderCreate = forwardRef((props, ref) => {
 
 
                 checkWarnings();
-
-
                 checkErrors();
             })
             .catch(error => {
@@ -967,8 +965,16 @@ const OrderCreate = forwardRef((props, ref) => {
             stock = product.product_stores[localStorage.getItem("store_id")].stock;
         }
 
-        if (product.product_stores && stock < selectedProducts[i].quantity) {
-            warnings["quantity_" + i] = "Warning: Available stock is " + stock;
+        let oldQty = 0;
+        for (let j = 0; j < formData.products?.length; j++) {
+            if (formData.products[j].product_id === selectedProducts[j].product_id) {
+                oldQty = formData.products[j].quantity;
+                break;
+            }
+        }
+
+        if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
+            warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
         } else {
             delete warnings["quantity_" + i];
         }
@@ -1109,34 +1115,7 @@ const OrderCreate = forwardRef((props, ref) => {
             quantity = parseFloat(product.quantity);
         }
 
-        console.log("quantity:", quantity);
-
         delete errors.quantity;
-
-        //let stock = GetProductStockInStore(formData.store_id, product.stores);
-        let stock = 0;
-
-        if (product.product_stores && product.product_stores[formData.store_id]?.stock) {
-            stock = product.product_stores[formData.store_id].stock;
-        }
-
-        if (product.product_stores && stock < quantity) {
-            if (index === false) {
-                index = selectedProducts.length;
-            }
-            // errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
-            warnings["quantity_" + index] = "Warning: Available stock is " + stock
-            console.log("errors:", errors);
-            setWarnings({ ...warnings });
-        }
-
-        if (product.purchase_unit_price > product.unit_price) {
-            // errors["quantity_" + index] = "Stock is only " + stock + " in Store: " + formData.store_name + " for product: " + product.name;
-            errors["purchase_unit_price_" + index] = "Warning: Purchase unit price is greater than Unit Price(without VAT)"
-            console.log("errors:", errors);
-            setErrors({ ...errors });
-        }
-
 
         if (alreadyAdded) {
             selectedProducts[index].quantity = parseFloat(quantity);
@@ -1558,19 +1537,21 @@ const OrderCreate = forwardRef((props, ref) => {
                     method = formData.payments_input[0].method;
                 }
 
-                formData.payments_input = [{
-                    "date_str": formData.date_str,
-                    "amount": 0.00,
-                    "method": method,
-                    "deleted": false,
-                }];
+                if (formData.payments_input[0]) {
+                    formData.payments_input = [{
+                        "date_str": formData.date_str,
+                        "amount": 0.00,
+                        "method": method,
+                        "deleted": false,
+                    }];
 
-                if (formData.net_total > 0) {
-                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
-                    if (formData.cash_discount) {
-                        formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
+                    if (formData.net_total > 0) {
+                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.net_total));
+                        if (formData.cash_discount) {
+                            formData.payments_input[0].amount = formData.payments_input[0].amount - parseFloat(trimTo2Decimals(formData.cash_discount));
+                        }
+                        formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
                     }
-                    formData.payments_input[0].amount = parseFloat(trimTo2Decimals(formData.payments_input[0].amount));
                 }
             }
             findTotalPayments();
@@ -1667,6 +1648,8 @@ const OrderCreate = forwardRef((props, ref) => {
 
     function removePayment(key, validatePayments = false) {
         formData.payments_input.splice(key, 1);
+
+        delete errors["payment_method_" + key];
         //formData.payments_input[key]["deleted"] = true;
         setFormData({ ...formData });
         if (validatePayments) {
