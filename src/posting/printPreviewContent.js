@@ -88,8 +88,8 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     paddingRight: "0px",
                     paddingTop: "10px",
                     paddingBottom: "4px",
-                    marginTop: "0px",
-                    height: "1118px",
+                    marginTop: "9px",
+                    height: "1113px",
                     width: `${props.whatsAppShare ? "750px" : "750px"}`
                 }}
 
