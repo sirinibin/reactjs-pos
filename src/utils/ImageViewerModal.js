@@ -1,4 +1,4 @@
-import React, { useState, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Modal } from 'react-bootstrap';
 
 const ImageViewerModal = forwardRef((props, ref) => {
@@ -45,6 +45,20 @@ const ImageViewerModal = forwardRef((props, ref) => {
         setIndex(null);
         setZoom(1);
     };
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                setIndex(null);
+                setZoom(1);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
     return (
         <Modal show={index !== null} onHide={handleClose} centered size="lg" fullscreen>
