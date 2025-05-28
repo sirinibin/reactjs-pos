@@ -783,13 +783,13 @@ const PreviewContent = forwardRef((props, ref) => {
                                 }} >
                                     <thead>
                                         {props.modelName === "delivery_note" && <tr>
-                                            <th colSpan="2" className="text-end print-label" style={{ padding: "2px" }}>
+                                            <th colSpan="2" className="text-end print-label" style={{ padding: "2px", width: "30%", height: "50px" }}>
                                                 Remarks ملاحظات:
                                             </th>
                                             <th
-                                                colSpan="7"
+                                                colSpan="2"
                                                 className="print-value"
-                                                style={{ padding: "2px" }}
+                                                style={{ padding: "2px", width: "70%" }}
 
                                             >
                                                 {props.model.remarks ? props.model.remarks : ""}

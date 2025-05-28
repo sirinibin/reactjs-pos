@@ -1959,7 +1959,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         name={`${"sales_return_product_name" + index}`}
                                                         onWheel={(e) => e.target.blur()}
                                                         value={product.name}
-                                                        className={`form-control text-end ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
+                                                        className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
                                                         onKeyDown={(e) => {
                                                             RunKeyActions(e, product);
                                                         }}

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import Preview from "./../order/preview.js";
 import { Modal, Button } from "react-bootstrap";
-import StoreCreate from "../store/create.js";
 import CustomerCreate from "../customer/create.js";
 import ProductCreate from "../product/create.js";
 import UserCreate from "../user/create.js";
@@ -26,6 +25,8 @@ import Products from "./../utils/products.js";
 import Customers from "./../utils/customers.js";
 import ResizableTableCell from './../utils/ResizableTableCell';
 import ImageViewerModal from './../utils/ImageViewerModal';
+import * as bootstrap from 'bootstrap';
+import OverflowTooltip from "../utils/OverflowTooltip.js";
 
 const DeliveryNoteCreate = forwardRef((props, ref) => {
   const [enableProductSelection, setEnableProductSelection] = useState(false);
@@ -53,9 +54,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
       selectedProducts = [];
       setSelectedProducts([]);
-
-      selectedStores = [];
-      setSelectedStores([]);
 
       selectedCustomers = [];
       setSelectedCustomers([]);
@@ -90,6 +88,104 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
 
   }));
+
+  let [warnings, setWarnings] = useState({});
+
+  function openUpdateProductForm(id) {
+    ProductCreateFormRef.current.open(id);
+  }
+
+  function openProductDetails(id) {
+    ProductDetailsViewRef.current.open(id);
+  }
+
+
+  function removeWarningAndError(i) {
+    delete warnings["quantity_" + i];
+    delete errors["quantity_" + i];
+    setErrors({ ...errors });
+    setWarnings({ ...warnings });
+  }
+
+  async function checkErrors(index) {
+    if (index) {
+      checkError(index);
+    } else {
+      for (let i = 0; i < selectedProducts.length; i++) {
+        checkError(i);
+      }
+    }
+  }
+
+  function checkError(i) {
+    if (selectedProducts[i].quantity && selectedProducts[i].quantity <= 0) {
+      errors["quantity_" + i] = "Quantity should be > 0";
+    } else if (!selectedProducts[i].quantity) {
+      errors["quantity_" + i] = "Quantity is required";
+    } else {
+      delete errors["quantity_" + i];
+    }
+
+    setErrors({ ...errors });
+  }
+
+
+  async function checkWarnings(index) {
+    if (index) {
+      checkWarning(index);
+    } else {
+      for (let i = 0; i < selectedProducts.length; i++) {
+        checkWarning(i);
+      }
+    }
+  }
+
+
+  async function checkWarning(i) {
+    let product = await getProduct(selectedProducts[i].product_id);
+    let stock = 0;
+
+    if (product.product_stores && product.product_stores[localStorage.getItem("store_id")]?.stock) {
+      stock = product.product_stores[localStorage.getItem("store_id")].stock;
+    }
+
+    let oldQty = 0;
+    for (let j = 0; j < formData.products?.length; j++) {
+      if (formData.products[j].product_id === selectedProducts[j].product_id) {
+        oldQty = formData.products[j].quantity;
+        break;
+      }
+    }
+
+    if (product.product_stores && (stock + oldQty) < selectedProducts[i].quantity) {
+      warnings["quantity_" + i] = "Warning: Available stock is " + (stock + oldQty);
+    } else {
+      delete warnings["quantity_" + i];
+    }
+    setWarnings({ ...warnings });
+  }
+
+  let [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipTriggerList.forEach((el) => {
+      // Dispose existing
+      const existing = bootstrap.Tooltip.getInstance(el);
+      if (existing) existing.dispose();
+
+      // Read new values from attributes
+      const errMsg = el.getAttribute('data-error');
+      const warnMsg = el.getAttribute('data-warning');
+      const tooltipMsg = errMsg || warnMsg || '';
+
+      // Update title
+      el.setAttribute('title', tooltipMsg);
+
+      // Create new tooltip instance
+      new bootstrap.Tooltip(el);
+    });
+  }, [errors, warnings]);
 
   let [store, setStore] = useState({});
 
@@ -159,7 +255,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
 
   //const history = useHistory();
-  let [errors, setErrors] = useState({});
+
   const [isProcessing, setProcessing] = useState(false);
 
 
@@ -175,12 +271,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     price_type: "retail",
     is_discount_percent: false,
   });
-
-
-  //Store Auto Suggestion
-  const [storeOptions, setStoreOptions] = useState([]);
-  let [selectedStores, setSelectedStores] = useState([]);
-  const [isStoresLoading, setIsStoresLoading] = useState(false);
 
   //Customer Auto Suggestion
   const [customerOptions, setCustomerOptions] = useState([]);
@@ -277,14 +367,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
         selectedProducts = deliverynote.products;
         setSelectedProducts([...selectedProducts]);
 
-
-        let selectedStores = [
-          {
-            id: deliverynote.store_id,
-            name: deliverynote.store_name,
-          }
-        ];
-
         if (deliverynote.customer_id && deliverynote.customer?.name) {
           let selectedCustomers = [
             {
@@ -304,15 +386,12 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           }
         ];
 
-
         setSelectedDeliveredByUsers([...selectedDeliveredByUsers]);
-
-        setSelectedStores([...selectedStores]);
-
-
 
         setFormData({ ...formData });
 
+        checkErrors();
+        checkWarnings();
         reCalculate();
       })
       .catch(error => {
@@ -329,42 +408,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       .join("&");
   }
 
-  async function suggestStores(searchTerm) {
-    console.log("Inside handle suggestStores");
-    setStoreOptions([]);
-
-    console.log("searchTerm:" + searchTerm);
-    if (!searchTerm) {
-      return;
-    }
-
-    var params = {
-      name: searchTerm,
-    };
-    var queryString = ObjectToSearchQueryParams(params);
-    if (queryString !== "") {
-      queryString = "&" + queryString;
-    }
-
-    const requestOptions = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: localStorage.getItem("access_token"),
-      },
-    };
-
-    let Select = "select=id,name";
-    setIsStoresLoading(true);
-    let result = await fetch(
-      "/v1/store?" + Select + queryString,
-      requestOptions
-    );
-    let data = await result.json();
-
-    setStoreOptions(data.result);
-    setIsStoresLoading(false);
-  }
 
   async function suggestCustomers(searchTerm) {
     console.log("Inside handle suggestCustomers");
@@ -574,7 +617,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     formData.barcode = barcode;
     setFormData({ ...formData });
     console.log("Inside getProductByBarCode");
-    errors["bar_code"] = "";
+    delete errors["bar_code"];
     setErrors({ ...errors });
 
     console.log("barcode:" + formData.barcode);
@@ -744,7 +787,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     }
 
 
-    errors.product_id = "";
+    delete errors["product_id"];
+
     if (!product) {
       errors.product_id = "Invalid Product";
       setErrors({ ...errors });
@@ -773,7 +817,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
     console.log("quantity:", quantity);
 
-    errors.quantity = "";
+    delete errors["quantity"];
 
     if (alreadyAdded) {
       selectedProducts[index].quantity = parseFloat(quantity);
@@ -822,6 +866,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     const index = selectedProducts.indexOf(product);
     if (index > -1) {
       selectedProducts.splice(index, 1);
+      removeWarningAndError(index);
     }
     setSelectedProducts([...selectedProducts]);
 
@@ -890,11 +935,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
     }
     findVatPrice();
     findNetTotal();
-  }
-
-  const StoreCreateFormRef = useRef();
-  function openStoreCreateForm() {
-    StoreCreateFormRef.current.open();
   }
 
   const CustomerCreateFormRef = useRef();
@@ -1129,10 +1169,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
 
       <ProductView ref={ProductDetailsViewRef} openUpdateForm={openProductUpdateForm} openCreateForm={openProductCreateForm} />
       <ProductCreate ref={ProductCreateFormRef} showToastMessage={props.showToastMessage} openDetailsView={openProductDetailsView} />
-
       <Preview ref={PreviewRef} />
-
-      <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
       <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
@@ -1182,57 +1219,35 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
           </div>
         </Modal.Header>
         <Modal.Body>
-          {Object.keys(errors).length > 0 ?
-            <div>
-              <ul>
-
-                {errors && Object.keys(errors).map((key, index) => {
-                  return (errors[key] ? <li style={{ color: "red" }}>{errors[key]}</li> : "");
-                })}
-              </ul></div> : ""}
-          <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-            {!localStorage.getItem('store_name') ? <div className="col-md-6">
-              <label className="form-label">Store*</label>
-
-              <div className="input-group mb-3">
-                <Typeahead
-                  id="store_id"
-                  labelKey="name"
-                  filterBy={store?.client_filter ? undefined : () => true}
-                  isLoading={isStoresLoading}
-                  isInvalid={errors.store_id ? true : false}
-                  onChange={(selectedItems) => {
-                    errors.store_id = "";
-                    setErrors(errors);
-                    if (selectedItems.length === 0) {
-                      errors.store_id = "Invalid Store selected";
-                      setErrors(errors);
-                      formData.store_id = "";
-                      setFormData({ ...formData });
-                      setSelectedStores([]);
-                      return;
-                    }
-                    formData.store_id = selectedItems[0].id;
-                    setFormData({ ...formData });
-                    setSelectedStores(selectedItems);
-                    //SetPriceOfAllProducts(selectedItems[0].id);
-                  }}
-                  options={storeOptions}
-                  placeholder="Select Store"
-                  selected={selectedStores}
-                  highlightOnlyResult={true}
-                  onInputChange={(searchTerm, e) => {
-                    suggestStores(searchTerm);
-                  }}
-                />
-
-                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                <div style={{ color: "red" }}>
-                  <i className="bi x-lg"> </i>
-                  {errors.store_id}
-                </div>
+          <div style={{
+            maxHeight: "50px",        // Adjust based on design
+            minHeight: "50px",
+            overflowY: "scroll",
+          }}>
+            {errors && Object.keys(errors).length > 0 && (
+              <div
+                style={{
+                  backgroundColor: "#fff0f0",
+                  border: "1px solid #f5c6cb",
+                  padding: "10px",
+                  marginBottom: "10px",
+                  borderRadius: "4px"
+                }}
+              >
+                <ul style={{ marginBottom: 0 }}>
+                  {Object.keys(errors).map((key, index) => {
+                    const message = Array.isArray(errors[key]) ? errors[key][0] : errors[key];
+                    return message ? (
+                      <li key={index} style={{ color: "red" }}>
+                        {message}
+                      </li>
+                    ) : null;
+                  })}
+                </ul>
               </div>
-            </div> : ""}
+            )}
+          </div>
+          <form className="row g-3 needs-validation" onSubmit={handleCreate}>
             <div className="col-md-6">
               <label className="form-label">Customer</label>
               <Typeahead
@@ -1241,10 +1256,10 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 filterBy={store?.client_filter ? undefined : () => true}
                 isLoading={false}
                 onChange={(selectedItems) => {
-                  errors.customer_id = "";
+                  delete errors["customer_id"];
                   setErrors(errors);
                   if (selectedItems.length === 0) {
-                    errors.customer_id = "";
+                    delete errors["customer_id"];
                     setErrors(errors);
                     formData.customer_id = "";
                     setFormData({ ...formData });
@@ -1361,7 +1376,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   value={formData.remarks}
                   type='string'
                   onChange={(e) => {
-                    errors["address"] = "";
+                    delete errors["address"];
                     setErrors({ ...errors });
                     formData.remarks = e.target.value;
                     setFormData({ ...formData });
@@ -1400,7 +1415,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                     setErrors(errors);
                     return;
                   }
-                  errors["product_id"] = "";
+                  delete errors["product_id"];
                   setErrors({ ...errors });
 
                   if (formData.store_id) {
@@ -1460,8 +1475,8 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                 Select {selectedIds.length} Product{selectedIds.length !== 1 ? "s" : ""}
               </button>}
               <table className="table table-striped table-sm table-bordered">
-                <thead>
-                  <tr className="text-center">
+                <tbody>
+                  <tr className="text-center" style={{ borderBottom: "solid 2px" }}>
                     <th></th>
                     {enableProductSelection && <th>
                       <input
@@ -1471,25 +1486,24 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                       /> Select All
                     </th>}
                     <th >SI No.</th>
-                    <th >Part No.</th>
-                    <th style={{ minWidth: "250px" }}>Name</th>
+                    <th style={{ width: "20%" }}>Part No.</th>
+                    <th style={{ width: "30%" }}>Name</th>
                     <th >Info</th>
                     <th >Qty</th>
                   </tr>
-                </thead>
-                <tbody>
                   {selectedProducts.map((product, index) => (
                     <tr key={index} className="text-center">
-                      <td>
+                      <td style={{ verticalAlign: 'middle', padding: '0.25rem' }} >
                         <div
                           style={{ color: "red", cursor: "pointer" }}
                           onClick={() => {
                             removeProduct(product);
                           }}
                         >
-                          <i className="bi bi-x-lg"> </i>
+                          <i className="bi bi-trash"> </i>
                         </div>
                       </td>
+                      <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>{index + 1}</td>
                       {enableProductSelection && <td>
                         <input
                           type="checkbox"
@@ -1497,14 +1511,23 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                           onChange={() => handleSelect(product.id)}
                         />
                       </td>}
-                      <td>{index + 1}</td>
-                      <td>{product.part_number}</td>
-                      <ResizableTableCell
+                      <td style={{ verticalAlign: 'middle', padding: '0.25rem', width: "auto", whiteSpace: "nowrap" }}>
+                        <OverflowTooltip maxWidth={120} value={product.prefix_part_number ? product.prefix_part_number + " - " + product.part_number : product.part_number} />
+                      </td>
+                      <ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
                       >
-                        <div className="input-group mb-3">
-                          <input type="text" onWheel={(e) => e.target.blur()} value={product.name} disabled={!selectedProducts[index].can_edit_name} className="form-control"
+                        <div className="input-group">
+                          <input type="text"
+                            id={`${"delivery_note_product_name" + index}`}
+                            name={`${"delivery_note_product_name" + index}`}
+                            onWheel={(e) => e.target.blur()}
+                            value={product.name}
+                            className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
+                            onKeyDown={(e) => {
+                              RunKeyActions(e, product);
+                            }}
                             placeholder="Name" onChange={(e) => {
-                              errors["name_" + index] = "";
+                              delete errors["name_" + index];
                               setErrors({ ...errors });
 
                               if (!e.target.value) {
@@ -1520,33 +1543,43 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                               selectedProducts[index].name = e.target.value;
                               setSelectedProducts([...selectedProducts]);
                             }} />
+
+
                           <div
-                            style={{ color: "red", cursor: "pointer", marginLeft: "3px" }}
+                            style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
                             onClick={() => {
-                              selectedProducts[index].can_edit_name = !selectedProducts[index].can_edit_name;
-                              setSelectedProducts([...selectedProducts]);
+                              openUpdateProductForm(product.product_id);
                             }}
                           >
-                            {selectedProducts[index].can_edit_name ? <i className="bi bi-floppy"> </i> : <i className="bi bi-pencil"> </i>}
+                            <i className="bi bi-pencil"> </i>
                           </div>
 
                           <div
                             style={{ color: "blue", cursor: "pointer", marginLeft: "10px" }}
                             onClick={() => {
-                              openProductDetailsView(product.product_id);
+                              openProductDetails(product.product_id);
                             }}
                           >
                             <i className="bi bi-eye"> </i>
                           </div>
                         </div>
-                        {errors["name_" + index] && (
-                          <div style={{ color: "red" }}>
-
-                            {errors["name_" + index]}
-                          </div>
+                        {(errors[`name_${index}`] || warnings[`name_${index}`]) && (
+                          <i
+                            className={`bi bi-exclamation-circle-fill ${errors[`name_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                            data-bs-toggle="tooltip"
+                            data-bs-placement="top"
+                            data-error={errors[`name_${index}`] || ''}
+                            data-warning={warnings[`name_${index}`] || ''}
+                            title={errors[`name_${index}`] || warnings[`name_${index}`] || ''}
+                            style={{
+                              fontSize: '1rem',
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                            }}
+                          ></i>
                         )}
                       </ResizableTableCell>
-                      <td>
+                      <td style={{ verticalAlign: 'middle', padding: '0.25rem' }}>
                         <div style={{ zIndex: "9999 !important", position: "absolute !important" }}>
                           <Dropdown drop="top">
                             <Dropdown.Toggle variant="secondary" id="dropdown-secondary" style={{}}>
@@ -1604,7 +1637,6 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                                 &nbsp;
                                 Quotation History  (F2)
                               </Dropdown.Item>
-
                               <Dropdown.Item onClick={() => {
                                 openProductImages(product.product_id);
                               }}>
@@ -1617,65 +1649,99 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                           </Dropdown>
                         </div>
                       </td>
-                      <td style={{ width: "155px" }}>
+                      <td style={{
+                        verticalAlign: 'middle',
+                        padding: '0.25rem',
+                        whiteSpace: 'nowrap',
+                        width: 'auto',
+                        position: 'relative',
+                      }} >
+                        <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
+                          <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
+                            <input type="number"
+                              id={`${"delivery_note_quantity_" + index}`}
+                              name={`${"delivery_note_quantity_" + index}`}
+                              value={product.quantity}
+                              className="form-control"
 
-                        <div className="input-group mb-3">
-                          <input type="number" id={`${"delivery_note_quantity_" + index}`} name={`${"delivery_note_quantity_" + index}`} value={product.quantity} className="form-control delivery_note_quantity"
+                              placeholder="Quantity"
 
-                            placeholder="Quantity"
+                              ref={(el) => {
+                                if (!inputRefs.current[index]) inputRefs.current[index] = {};
+                                inputRefs.current[index][`${"delivery_note_quantity_" + index}`] = el;
+                              }}
+                              onFocus={() => handleFocus(index, `${"delivery_note_quantity_" + index}`)}
+                              onKeyDown={(e) => {
+                                RunKeyActions(e, product);
 
-                            ref={(el) => {
-                              if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                              inputRefs.current[index][`${"delivery_note_quantity_" + index}`] = el;
-                            }}
-                            onFocus={() => handleFocus(index, `${"delivery_note_quantity_" + index}`)}
-                            onKeyDown={(e) => {
-                              RunKeyActions(e, product);
+                                if (e.key === "Enter") {
+                                  moveToProductSearch();
+                                }
+                              }}
 
-                              if (e.key === "Enter") {
-                                moveToProductSearch();
-                              }
-                            }}
+                              onChange={(e) => {
+                                if (timerRef.current) clearTimeout(timerRef.current);
 
-                            onChange={(e) => {
-                              errors["quantity_" + index] = "";
-                              setErrors({ ...errors });
-                              if (!e.target.value) {
-                                errors["quantity_" + index] = "Invalid Quantity";
-                                selectedProducts[index].quantity = e.target.value;
-                                setSelectedProducts([...selectedProducts]);
+                                delete errors["quantity_" + index];
                                 setErrors({ ...errors });
-                                console.log("errors:", errors);
-                                return;
-                              }
 
-                              if (parseFloat(e.target.value) === 0) {
-                                errors["quantity_" + index] = "Quantity should be > 0";
-                                selectedProducts[index].quantity = e.target.value;
+
+                                if (parseFloat(e.target.value) === 0) {
+                                  selectedProducts[index].quantity = e.target.value;
+                                  setSelectedProducts([...selectedProducts]);
+
+                                  timerRef.current = setTimeout(() => {
+                                    checkErrors(index);
+                                    checkWarnings(index);
+                                    reCalculate(index);
+                                  }, 100);
+                                  return;
+                                }
+
+                                if (!e.target.value) {
+                                  selectedProducts[index].quantity = e.target.value;
+                                  setSelectedProducts([...selectedProducts]);
+                                  timerRef.current = setTimeout(() => {
+                                    checkErrors(index);
+                                    checkWarnings(index);
+                                    reCalculate(index);
+                                  }, 100);
+                                  return;
+                                }
+
+
+                                product.quantity = parseFloat(e.target.value);
+
+
+                                selectedProducts[index].quantity = parseFloat(e.target.value);
+
                                 setSelectedProducts([...selectedProducts]);
-                                setErrors({ ...errors });
-                                console.log("errors:", errors);
-                                return;
-                              }
 
-                              product.quantity = parseFloat(e.target.value);
-                              reCalculate();
+                                timerRef.current = setTimeout(() => {
+                                  checkErrors(index);
+                                  checkWarnings(index);
+                                  reCalculate(index);
+                                }, 100);
 
-                              selectedProducts[index].quantity = parseFloat(e.target.value);
-                              console.log("selectedProducts[index].quantity:", selectedProducts[index].quantity);
-                              setSelectedProducts([...selectedProducts]);
-                              reCalculate();
-
-                            }} />
-                          <span className="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
-                        </div>
-                        {errors["quantity_" + index] && (
-                          <div style={{ color: "red" }}>
-                            <i className="bi bi-x-lg"> </i>
-                            {errors["quantity_" + index]}
+                              }} />
+                            <span className="input-group-text" id="basic-addon2"> {selectedProducts[index].unit ? selectedProducts[index].unit : "Units"}</span>
                           </div>
-                        )}
-
+                          {(errors[`quantity_${index}`] || warnings[`quantity_${index}`]) && (
+                            <i
+                              className={`bi bi-exclamation-circle-fill ${errors[`quantity_${index}`] ? 'text-danger' : 'text-warning'} ms-2`}
+                              data-bs-toggle="tooltip"
+                              data-bs-placement="top"
+                              data-error={errors[`quantity_${index}`] || ''}
+                              data-warning={warnings[`quantity_${index}`] || ''}
+                              title={errors[`quantity_${index}`] || warnings[`quantity_${index}`] || ''}
+                              style={{
+                                fontSize: '1rem',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                              }}
+                            ></i>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )).reverse()}

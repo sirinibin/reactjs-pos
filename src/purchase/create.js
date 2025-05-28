@@ -863,11 +863,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
     }
 
     function removeProduct(product) {
-
-
         const index = selectedProducts.indexOf(product);
         if (index > -1) {
             selectedProducts.splice(index, 1);
+            removeWarningAndError(index);
         }
 
         if (product.quantity_returned > 0) {
@@ -878,6 +877,16 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
         setSelectedProducts([...selectedProducts]);
         reCalculate();
+    }
+
+    function removeWarningAndError(i) {
+        delete warnings["quantity_" + i];
+        delete errors["quantity_" + i];
+        delete errors["purchase_unit_price_" + i];
+        delete warnings["purchase_unit_price_" + i];
+        delete warnings["unit_price_" + i];
+        setErrors({ ...errors });
+        setWarnings({ ...warnings });
     }
 
 

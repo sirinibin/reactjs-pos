@@ -2126,8 +2126,6 @@ const OrderCreate = forwardRef((props, ref) => {
                         {errors && Object.keys(errors).length > 0 && (
                             <div
                                 style={{
-
-
                                     backgroundColor: "#fff0f0",
                                     border: "1px solid #f5c6cb",
                                     padding: "10px",
@@ -2565,7 +2563,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                         name={`${"sales_product_name" + index}`}
                                                         onWheel={(e) => e.target.blur()}
                                                         value={product.name}
-                                                        className={`form-control text-end ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
+                                                        className={`form-control text-start ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
                                                         onKeyDown={(e) => {
                                                             RunKeyActions(e, product);
                                                         }}
@@ -2816,8 +2814,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
-
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
+
                                                                 if (e.key === "Backspace") {
                                                                     selectedProducts[index].quantity = "";
                                                                     setSelectedProducts([...selectedProducts]);
@@ -2833,7 +2831,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 }
                                                             }}
                                                             onChange={(e) => {
-                                                                setErrors({ ...errors });
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
 
                                                                 if (parseFloat(e.target.value) === 0) {
