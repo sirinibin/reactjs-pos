@@ -40,8 +40,8 @@ function PurchaseIndex(props) {
     let [totalShippingHandlingFees, setTotalShippingHandlingFees] = useState(0.00);
     let [totalDiscount, setTotalDiscount] = useState(0.00);
     let [totalCashDiscount, setTotalCashDiscount] = useState(0.00);
-    let [netRetailProfit, setNetRetailProfit] = useState(0.00);
-    let [netWholesaleProfit, setNetWholesaleProfit] = useState(0.00);
+    //let [netRetailProfit, setNetRetailProfit] = useState(0.00);
+    //let [netWholesaleProfit, setNetWholesaleProfit] = useState(0.00);
     const [returnCount, setReturnCount] = useState(0.00);
     const [returnPaidAmount, setReturnPaidAmount] = useState(0.00);
 
@@ -708,8 +708,8 @@ function PurchaseIndex(props) {
                 setTotalShippingHandlingFees(data.meta.shipping_handling_fees);
                 setTotalDiscount(data.meta.discount);
                 setTotalCashDiscount(data.meta.cash_discount);
-                setNetRetailProfit(data.meta.net_retail_profit);
-                setNetWholesaleProfit(data.meta.net_wholesale_profit);
+                // setNetRetailProfit(data.meta.net_retail_profit);
+                // setNetWholesaleProfit(data.meta.net_wholesale_profit);
                 setTotalPaidPurchase(data.meta.paid_purchase);
                 setTotalUnPaidPurchase(data.meta.unpaid_purchase);
                 setTotalCashPurchase(data.meta.cash_purchase);
@@ -885,10 +885,10 @@ function PurchaseIndex(props) {
                                     "VAT paid": vatPrice,
                                     "Return Count": returnCount,
                                     "Return Paid Amount": returnPaidAmount,
-                                    "Net retail profit": netRetailProfit,
-                                    "Net retail Profit %": netRetailProfit && totalPurchase ? ((netRetailProfit / totalPurchase) * 100) : "",
-                                    "Net wholesale profit": netWholesaleProfit,
-                                    "Net wholesale Profit %": netWholesaleProfit && totalPurchase ? ((netWholesaleProfit / totalPurchase) * 100) : "",
+                                    // "Net retail profit": netRetailProfit,
+                                    //  "Net retail Profit %": netRetailProfit && totalPurchase ? ((netRetailProfit / totalPurchase) * 100) : "",
+                                    // "Net wholesale profit": netWholesaleProfit,
+                                    // "Net wholesale Profit %": netWholesaleProfit && totalPurchase ? ((netWholesaleProfit / totalPurchase) * 100) : "",
                                 }}
                                 onToggle={handleSummaryToggle}
                             />

@@ -2473,8 +2473,8 @@ const QuotationCreate = forwardRef((props, ref) => {
                         <ResizableTableCell style={{ verticalAlign: 'middle', padding: '0.25rem' }}
                         >
                           <div className="input-group">
-                            <input type="text" id={`${"sales_product_name" + index}`}
-                              name={`${"sales_product_name" + index}`}
+                            <input type="text" id={`${"quotation_product_name" + index}`}
+                              name={`${"quotation_product_name" + index}`}
                               onWheel={(e) => e.target.blur()}
                               value={product.name}
                               className={`form-control text-end ${errors["name_" + index] ? 'is-invalid' : ''} ${warnings["name_" + index] ? 'border-warning text-warning' : ''}`}
@@ -2609,20 +2609,20 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="input-group">
                             <input
                               type="number"
-                              id={`sales_product_purchase_unit_price_${index}`}
-                              name={`sales_product_purchase_unit_price_${index}`}
+                              id={`quotation_product_purchase_unit_price_${index}`}
+                              name={`quotation_product_purchase_unit_price_${index}`}
                               className={`form-control text-end ${errors["purchase_unit_price_" + index] ? 'is-invalid' : ''} ${warnings["purchase_unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                               onWheel={(e) => e.target.blur()}
                               value={product.purchase_unit_price}
                               placeholder="Purchase Unit Price"
                               ref={(el) => {
                                 if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                                inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`] = el;
+                                inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`] = el;
                               }}
                               onFocus={() => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
                                 timerRef.current = setTimeout(() => {
-                                  inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].select();
+                                  inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`].select();
                                 }, 100);
                               }}
                               onKeyDown={(e) => {
@@ -2643,7 +2643,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[(index + 1)][`${"sales_unit_discount_with_vat_" + (index + 1)}`].focus();
+                                      inputRefs.current[(index + 1)][`${"quotation_unit_discount_with_vat_" + (index + 1)}`].focus();
                                     }, 100);
                                   }
                                 }
@@ -2710,20 +2710,20 @@ const QuotationCreate = forwardRef((props, ref) => {
                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                               <input type="number"
                                 style={{ minWidth: "40px" }}
-                                id={`${"sales_product_quantity_" + index}`}
-                                name={`${"sales_product_quantity" + index}`}
+                                id={`${"quotation_product_quantity_" + index}`}
+                                name={`${"quotation_product_quantity" + index}`}
                                 className={`form-control text-end ${errors["quantity_" + index] ? 'is-invalid' : warnings["quantity_" + index] ? 'border-warning text-warning' : ''}`}
                                 onWheel={(e) => e.target.blur()}
                                 value={product.quantity}
                                 placeholder="Quantity"
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                                  inputRefs.current[index][`${"sales_product_quantity_" + index}`] = el;
+                                  inputRefs.current[index][`${"quotation_product_quantity_" + index}`] = el;
                                 }}
                                 onFocus={() => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
-                                    inputRefs.current[index][`${"sales_product_quantity_" + index}`].select();
+                                    inputRefs.current[index][`${"quotation_product_quantity_" + index}`].select();
                                   }, 100);
                                 }}
                                 onKeyDown={(e) => {
@@ -2740,7 +2740,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`].focus();
                                     }, 100);
                                   }
                                 }}
@@ -2806,21 +2806,21 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                               <input type="number"
-                                id={`${"sales_product_unit_price_" + index}`}
-                                name={`${"sales_product_unit_price_" + index}`}
+                                id={`${"quotation_product_unit_price_" + index}`}
+                                name={`${"quotation_product_unit_price_" + index}`}
                                 onWheel={(e) => e.target.blur()}
                                 value={selectedProducts[index].unit_price}
                                 className={`form-control text-end ${errors["unit_price_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_" + index] ? 'border-warning text-warning' : ''}`}
                                 placeholder="Unit Price(without VAT)"
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                                  inputRefs.current[index][`${"sales_product_unit_price_" + index}`] = el;
+                                  inputRefs.current[index][`${"quotation_product_unit_price_" + index}`] = el;
                                 }}
 
                                 onFocus={() => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
-                                    inputRefs.current[index][`${"sales_product_unit_price_" + index}`].select();
+                                    inputRefs.current[index][`${"quotation_product_unit_price_" + index}`].select();
                                   }, 100);
                                 }}
 
@@ -2838,7 +2838,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"sales_product_quantity_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_product_quantity_" + index}`].focus();
                                     }, 100);
                                   }
                                 }}
@@ -2909,21 +2909,21 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                               <input type="number"
-                                id={`${"sales_product_unit_price_with_vat_" + index}`}
-                                name={`${"sales_product_unit_price_with_vat_" + index}`}
+                                id={`${"quotation_product_unit_price_with_vat_" + index}`}
+                                name={`${"quotation_product_unit_price_with_vat_" + index}`}
                                 onWheel={(e) => e.target.blur()}
                                 value={selectedProducts[index].unit_price_with_vat}
                                 className={`form-control text-end ${errors["unit_price_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_price_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                                  inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`] = el;
+                                  inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`] = el;
                                 }}
                                 placeholder="Unit Price(with VAT)"
 
                                 onFocus={() => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
-                                    inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].select();
+                                    inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`].select();
                                   }, 100);
                                 }}
 
@@ -2940,7 +2940,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"sales_product_unit_price_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_product_unit_price_" + index}`].focus();
                                     }, 200);
                                   }
                                 }}
@@ -3021,19 +3021,19 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                               <input type="number"
-                                id={`${"sales_unit_discount_" + index}`}
-                                name={`${"sales_unit_discount_" + index}`}
+                                id={`${"quotation_unit_discount_" + index}`}
+                                name={`${"quotation_unit_discount_" + index}`}
                                 onWheel={(e) => e.target.blur()}
                                 className={`form-control text-end ${errors["unit_discount_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_" + index] ? 'border-warning text-warning' : ''}`}
                                 value={selectedProducts[index].unit_discount}
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                                  inputRefs.current[index][`${"sales_unit_discount_" + index}`] = el;
+                                  inputRefs.current[index][`${"quotation_unit_discount_" + index}`] = el;
                                 }}
                                 onFocus={() => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
-                                    inputRefs.current[index][`${"sales_unit_discount_" + index}`]?.select();
+                                    inputRefs.current[index][`${"quotation_unit_discount_" + index}`]?.select();
                                   }, 100);
                                 }}
                                 onKeyDown={(e) => {
@@ -3042,7 +3042,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`].focus();
                                     }, 100);
                                   }
                                 }}
@@ -3134,19 +3134,19 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                               <input type="number"
-                                id={`${"sales_unit_discount_with_vat_" + index}`}
-                                name={`${"sales_unit_discount_with_vat_" + index}`}
+                                id={`${"quotation_unit_discount_with_vat_" + index}`}
+                                name={`${"quotation_unit_discount_with_vat_" + index}`}
                                 onWheel={(e) => e.target.blur()}
                                 className={`form-control text-end ${errors["unit_discount_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                 value={selectedProducts[index].unit_discount_with_vat}
                                 ref={(el) => {
                                   if (!inputRefs.current[index]) inputRefs.current[index] = {};
-                                  inputRefs.current[index][`${"sales_unit_discount_with_vat_" + index}`] = el;
+                                  inputRefs.current[index][`${"quotation_unit_discount_with_vat_" + index}`] = el;
                                 }}
                                 onFocus={() => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
-                                    inputRefs.current[index][`${"sales_unit_discount_with_vat_" + index}`]?.select();
+                                    inputRefs.current[index][`${"quotation_unit_discount_with_vat_" + index}`]?.select();
                                   }, 100);
                                 }}
                                 onKeyDown={(e) => {
@@ -3169,14 +3169,14 @@ const QuotationCreate = forwardRef((props, ref) => {
                                       } else {
                                         console.log("moviing to next line")
                                         timerRef.current = setTimeout(() => {
-                                          inputRefs.current[index - 1][`${"sales_product_quantity_" + (index - 1)}`]?.focus();
+                                          inputRefs.current[index - 1][`${"quotation_product_quantity_" + (index - 1)}`]?.focus();
                                         }, 100);
                                       }
 
                                     }
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"sales_unit_discount_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_unit_discount_" + index}`].focus();
                                     }, 100);
                                   }
                                 }}
@@ -3266,7 +3266,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                         </td>
                         {/*<td>
                           <div className="input-group mb-3">
-                              <input type="number" id={`${"sales_unit_discount_percent" + index}`} disabled={false} name={`${"sales_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
+                              <input type="number" id={`${"quotation_unit_discount_percent" + index}`} disabled={false} name={`${"quotation_unit_discount_percent" + index}`} onWheel={(e) => e.target.blur()} className="form-control text-end" value={selectedProducts[index].unit_discount_percent} onChange={(e) => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
 
                                   if (parseFloat(e.target.value) === 0) {
@@ -3339,9 +3339,9 @@ const QuotationCreate = forwardRef((props, ref) => {
                           <div className="d-flex align-items-center" style={{ minWidth: 0 }}>
                             <div className="input-group flex-nowrap" style={{ flex: '1 1 auto', minWidth: 0 }}>
                               <input type="number"
-                                id={`${"sales_unit_discount_percent_with_vat_" + index}`}
+                                id={`${"quotation_unit_discount_percent_with_vat_" + index}`}
                                 disabled={true}
-                                name={`${"sales_unit_discount_percent_with_vat_" + index}`}
+                                name={`${"quotation_unit_discount_percent_with_vat_" + index}`}
                                 onWheel={(e) => e.target.blur()}
                                 className={`form-control text-end ${errors["unit_discount_percent_with_vat_" + index] ? 'is-invalid' : ''} ${warnings["unit_discount_percent_with_vat_" + index] ? 'border-warning text-warning' : ''}`}
                                 value={selectedProducts[index].unit_discount_percent_with_vat}
@@ -3966,7 +3966,8 @@ const QuotationCreate = forwardRef((props, ref) => {
             {formData.type === "invoice" && <>
               <div className="col-md-2">
                 <label className="form-label">Cash discount</label>
-                <input type='number' id="sales_cash_discount" name="sales_cash_discount" value={formData.cash_discount} className="form-control "
+                <input type='number' id="quotation_cash_discount"
+                  name="quotation_cash_discount" value={formData.cash_discount} className="form-control "
                   onChange={(e) => {
                     delete errors["cash_discount"];
                     setErrors({ ...errors });
@@ -4049,7 +4050,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                               )}
                             </td>
                             <td style={{ width: "300px" }}>
-                              <input type='number' id={`${"sales_payment_amount" + key}`} name={`${"sales_payment_amount" + key}`} value={formData.payments_input[key].amount} className="form-control "
+                              <input type='number' id={`${"quotation_payment_amount" + key}`} name={`${"quotation_payment_amount" + key}`} value={formData.payments_input[key].amount} className="form-control "
                                 onChange={(e) => {
                                   delete errors["payment_amount_" + key];
                                   setErrors({ ...errors });

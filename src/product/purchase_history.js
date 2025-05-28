@@ -434,50 +434,6 @@ const PurchaseHistory = forwardRef((props, ref) => {
                                     </Badge>
                                 </h1>
                                 <h1 className="text-end">
-                                    Net Retail Profit: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalRetailProfit}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
-                                <h1 className="text-end">
-                                    Net Wholesale Profit: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalWholesaleProfit}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
-                                <h1 className="text-end">
-                                    Retail Loss: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalRetailLoss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
-                                <h1 className="text-end">
-                                    Wholesale Loss: <Badge bg="secondary">
-                                        <NumberFormat
-                                            value={totalWholesaleLoss}
-                                            displayType={"text"}
-                                            thousandSeparator={true}
-                                            suffix={" "}
-                                            renderText={(value, props) => value}
-                                        />
-                                    </Badge>
-                                </h1>
-                                <h1 className="text-end">
                                     VAT Collected: <Badge bg="secondary">
                                         <NumberFormat
                                             value={totalVat.toFixed(2)}
