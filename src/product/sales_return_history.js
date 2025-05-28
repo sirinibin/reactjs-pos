@@ -1,4 +1,4 @@
-import React, { useState, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useRef, forwardRef, useImperativeHandle, useEffect } from "react";
 
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
@@ -32,6 +32,19 @@ const SalesReturnHistory = forwardRef((props, ref) => {
         },
 
     }));
+
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                e.stopPropagation();
+                SetShow(false);
+            }
+        };
+
+        document.addEventListener("keydown", handleKeyDown);
+        return () => document.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
 
     let [store, setStore] = useState({});
