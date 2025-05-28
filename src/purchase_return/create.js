@@ -303,10 +303,11 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                         selectedProductsTemp[i].selected = false;
                     }
                     */
-                    selectedProducts.push(selectedProductsTemp[i]);
+
 
                     selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
                     selectedProductsTemp[i].purchase_unit_price_with_vat = selectedProductsTemp[i].purchasereturn_unit_price_with_vat;
+                    selectedProducts.push(selectedProductsTemp[i]);
                 }
 
 
