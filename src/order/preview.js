@@ -820,6 +820,8 @@ const Preview = forwardRef((props, ref) => {
         return number;
     }, [])
 
+    const timerRef = useRef(null);
+
     const openWhatsAppShare = useCallback(async () => {
         console.log("Inside openWhatsAppShare")
         const element = printAreaRef.current;
@@ -885,7 +887,15 @@ const Preview = forwardRef((props, ref) => {
 
         const whatsappUrl = `https://wa.me/${whatsAppNo}?text=${encodeURIComponent(message)}`;
 
-        window.open(whatsappUrl, "_blank");
+
+
+
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            window.open(whatsappUrl, "_blank");
+        }, 400);
+
+
         handleClose();
 
     }, [getFileName, model, formatPhoneForWhatsApp, phone, modelName]);
