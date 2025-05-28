@@ -1134,6 +1134,18 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
   const customerSearchRef = useRef();
   const timerRef = useRef(null);
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <>
       <ImageViewerModal ref={imageViewerRef} images={productImages} />
@@ -1173,7 +1185,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       <CustomerCreate ref={CustomerCreateFormRef} showToastMessage={props.showToastMessage} />
       <UserCreate ref={UserCreateFormRef} showToastMessage={props.showToastMessage} />
       <SignatureCreate ref={SignatureCreateFormRef} showToastMessage={props.showToastMessage} />
-      <Modal show={show} size="xl" keyboard={false} fullscreen={!enableProductSelection} onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
+      <Modal show={show} size="xl" fullscreen={!enableProductSelection} onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
         <Modal.Header>
           <Modal.Title>
             {!enableProductSelection && formData.id ? "Update Delivery Note #" + formData.code : !enableProductSelection ? "Create New DeliveryNote" : ""}

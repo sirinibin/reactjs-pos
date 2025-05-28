@@ -1886,6 +1886,18 @@ const QuotationCreate = forwardRef((props, ref) => {
     imageViewerRef.current.open(0);
   }
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   return (
     <>
       <ImageViewerModal ref={imageViewerRef} images={productImages} />
@@ -1951,7 +1963,6 @@ const QuotationCreate = forwardRef((props, ref) => {
       />
       <Modal
         show={show}
-        keyboard={false}
         size="xl"
         fullscreen={!enableProductSelection}
         onHide={handleClose}
