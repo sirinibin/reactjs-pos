@@ -1393,7 +1393,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
 
     function removePayment(key, validatePayments = false) {
         formData.payments_input.splice(key, 1);
-        //formData.payments_input[key]["deleted"] = true;
+
+        delete errors["payment_method_" + key];
         setFormData({ ...formData });
         if (validatePayments) {
             validatePaymentAmounts();
