@@ -127,7 +127,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
     }));
 
-    let [warnings, setWarnings] = useState({});
 
 
     let [store, setStore] = useState({});
@@ -1578,6 +1577,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
         ProductCreateFormRef.current.open(id);
     }
 
+
+    let [warnings, setWarnings] = useState({});
+
     async function checkWarnings(index) {
         if (index) {
             checkWarning(index);
@@ -2201,7 +2203,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         <th >Set Retail unit price(without VAT)</th>
                                         <th>Price(without VAT)</th>
                                         <th>Price(with VAT)</th>
-
                                     </tr>
                                 </thead>
                                 <tbody>
