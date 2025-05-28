@@ -292,11 +292,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 setFormData({ ...formData });
 
-                console.log("formData1.status:", formData.status);
-
-
-                console.log("purchaseReturn.products:", purchaseReturn.products);
-
                 let selectedProductsTemp = purchaseReturn.products;
 
                 selectedProducts = [];
@@ -311,6 +306,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
                     selectedProducts.push(selectedProductsTemp[i]);
 
                     selectedProductsTemp[i].purchase_unit_price = selectedProductsTemp[i].purchasereturn_unit_price;
+                    selectedProductsTemp[i].purchase_unit_price_with_vat = selectedProductsTemp[i].purchasereturn_unit_price_with_vat;
                 }
 
 
@@ -318,7 +314,6 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
 
                 setFormData({ ...formData });
                 reCalculate();
-
                 checkWarnings();
             })
             .catch(error => {
