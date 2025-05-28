@@ -593,8 +593,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
         formData.discount_percent = parseFloat(formData.discount_percent);
         formData.vat_percent = parseFloat(formData.vat_percent);
         formData.net_total = parseFloat(formData.net_total);
-        console.log("formData.discount:", formData.discount);
-        console.log("formData.discount_percent:", formData.discount_percent);
 
         if (!formData.shipping_handling_fees && formData.shipping_handling_fees !== 0) {
             errors["shipping_handling_fees"] = "Invalid shipping / handling fees";
@@ -675,8 +673,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 setErrors({});
                 setProcessing(false);
 
-                console.log("Response:");
-                console.log(data);
                 if (formData.id) {
                     if (props.showToastMessage) props.showToastMessage("Purchase updated successfully!", "success");
                 } else {
@@ -1792,7 +1788,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                             <li key={index} style={{ color: "red" }}>
                                                 {message}
                                             </li>
-                                        ) : key;
+                                        ) : null;
                                     })}
                                 </ul>
                             </div>

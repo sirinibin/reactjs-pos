@@ -578,7 +578,7 @@ const PurchaseReturnedCreate = forwardRef((props, ref) => {
             haveErrors = true;
         }
 
-        errors["payment_method"] = "";
+        delete errors["payment_method"];
         setErrors({ ...errors });
 
         if (haveErrors) {
@@ -1569,7 +1569,7 @@ async function reCalculate(productIndex) {
                                             <li key={index} style={{ color: "red" }}>
                                                 {message}
                                             </li>
-                                        ) : key;
+                                        ) : null;
                                     })}
                                 </ul>
                             </div>

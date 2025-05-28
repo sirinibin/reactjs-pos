@@ -1742,7 +1742,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                             <li key={index} style={{ color: "red" }}>
                                                 {message}
                                             </li>
-                                        ) : key;
+                                        ) : null;
                                     })}
                                 </ul>
                             </div>
