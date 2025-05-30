@@ -2391,12 +2391,13 @@ const OrderCreate = forwardRef((props, ref) => {
                         {/*filterBy={store?.client_filter ? undefined : () => true}
                         filterBy={true ? undefined : () => true}
                          filterBy={['name_prefixes', 'name_in_arabic_prefixes']}
+                           filterBy={store?.client_filter ? undefined : () => true}
                         */}
                         <div className="col-md-8" >
                             <label className="form-label">Product Search*</label>
                             <Typeahead
                                 id="product_id"
-                                filterBy={store?.client_filter ? undefined : () => true}
+                                filterBy={['additional_keywords']}
                                 size="lg"
                                 ref={productSearchRef}
                                 labelKey="search_label"
@@ -2441,7 +2442,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
                                     timerRef.current = setTimeout(() => {
                                         suggestProducts(searchTerm);
-                                    }, 400);
+                                    }, 100);
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openProductCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
