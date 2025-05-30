@@ -826,6 +826,8 @@ function ProductIndex(props) {
     const brandSearchRef = useRef();
     const categorySearchRef = useRef();
 
+    const timerRef = useRef(null);
+
     return (
         <>
             <SalesHistory ref={SalesHistoryRef} showToastMessage={props.showToastMessage} />
@@ -1841,7 +1843,10 @@ function ProductIndex(props) {
                                                         placeholder="Search By Part #"
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
-                                                            suggestProducts(searchTerm, "part_number")
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                suggestProducts(searchTerm, "part_number")
+                                                            }, 100);
                                                         }}
                                                         ignoreDiacritics={true}
                                                         multiple
@@ -1898,7 +1903,10 @@ function ProductIndex(props) {
                                                         placeholder="Search By Name | Name in Arabic"
                                                         highlightOnlyResult={true}
                                                         onInputChange={(searchTerm, e) => {
-                                                            suggestProducts(searchTerm, "name")
+                                                            if (timerRef.current) clearTimeout(timerRef.current);
+                                                            timerRef.current = setTimeout(() => {
+                                                                suggestProducts(searchTerm, "name")
+                                                            }, 100);
                                                         }}
                                                         ignoreDiacritics={true}
                                                         multiple

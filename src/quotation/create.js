@@ -2370,7 +2370,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
                   timerRef.current = setTimeout(() => {
                     suggestProducts(searchTerm);
-                  }, 400);
+                  }, 100);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {

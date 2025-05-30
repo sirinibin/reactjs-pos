@@ -653,6 +653,8 @@ const Products = forwardRef((props, ref) => {
     const brandSearchRef = useRef();
     const categorySearchRef = useRef();
 
+    const timerRef = useRef(null);
+
     return (
         <>
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
@@ -1695,7 +1697,10 @@ const Products = forwardRef((props, ref) => {
                                                                     placeholder="Search By Part #"
                                                                     highlightOnlyResult={true}
                                                                     onInputChange={(searchTerm, e) => {
-                                                                        suggestProducts(searchTerm, "part_number")
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            suggestProducts(searchTerm, "part_number")
+                                                                        }, 100);
                                                                     }}
                                                                     ignoreDiacritics={true}
                                                                     multiple
@@ -1779,7 +1784,10 @@ const Products = forwardRef((props, ref) => {
                                                                     placeholder="Search By Name | Name in Arabic"
                                                                     highlightOnlyResult={true}
                                                                     onInputChange={(searchTerm, e) => {
-                                                                        suggestProducts(searchTerm, "name")
+                                                                        if (timerRef.current) clearTimeout(timerRef.current);
+                                                                        timerRef.current = setTimeout(() => {
+                                                                            suggestProducts(searchTerm, "name")
+                                                                        }, 100);
                                                                     }}
                                                                     ignoreDiacritics={true}
                                                                     multiple

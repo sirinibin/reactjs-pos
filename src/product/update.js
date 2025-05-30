@@ -1713,7 +1713,10 @@ const ProductUpdate = forwardRef((props, ref) => {
 
                 }}
                 onInputChange={(searchTerm, e) => {
-                  suggestProducts(searchTerm, "set");
+                  if (timerRef.current) clearTimeout(timerRef.current);
+                  timerRef.current = setTimeout(() => {
+                    suggestProducts(searchTerm, "set");
+                  }, 100);
 
                 }}
               />
@@ -1959,7 +1962,7 @@ const ProductUpdate = forwardRef((props, ref) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
                   timerRef.current = setTimeout(() => {
                     suggestProducts(searchTerm);
-                  }, 400);
+                  }, 100);
 
                 }}
                 multiple
