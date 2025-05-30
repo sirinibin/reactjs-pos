@@ -2339,7 +2339,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="product_id"
                 ref={productSearchRef}
-                filterBy={store?.client_filter ? undefined : () => true}
+                filterBy={['additional_keywords']}
                 size="lg"
                 labelKey="search_label"
                 emptyLabel=""

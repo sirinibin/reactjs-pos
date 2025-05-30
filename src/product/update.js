@@ -1656,7 +1656,7 @@ const ProductUpdate = forwardRef((props, ref) => {
                 labelKey="search_label"
                 emptyLabel=""
                 ref={productSetSearchRef}
-                filterBy={store?.client_filter ? undefined : () => true}
+                filterBy={['additional_keywords']}
                 onChange={(selectedItems) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
 
@@ -1928,7 +1928,7 @@ const ProductUpdate = forwardRef((props, ref) => {
                 labelKey="search_label"
                 emptyLabel=""
                 ref={productSearchRef}
-                filterBy={store?.client_filter ? undefined : () => true}
+                filterBy={['additional_keywords']}
                 onChange={(selectedItems) => {
                   setSelectedLinkedProducts(selectedItems);
                   setOpenProductSearchResult(false);

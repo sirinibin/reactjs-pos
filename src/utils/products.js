@@ -1659,7 +1659,7 @@ const Products = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     id="product_id_by_part_no"
-                                                                    filterBy={store?.client_filter ? undefined : () => true}
+                                                                    filterBy={['additional_keywords']}
                                                                     size="lg"
                                                                     labelKey="search_label"
                                                                     emptyLabel="No products found"
@@ -1722,7 +1722,7 @@ const Products = forwardRef((props, ref) => {
                                                     />
                                                     <Typeahead
                                                         id="product_id"
-                                                          filterBy={store?.client_filter ? undefined : () => true}
+                                                          filterBy={['additional_keywords']}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -1742,7 +1742,7 @@ const Products = forwardRef((props, ref) => {
 
                                                                 <Typeahead
                                                                     id="product_id"
-                                                                    filterBy={store?.client_filter ? undefined : () => true}
+                                                                    filterBy={['additional_keywords']}
                                                                     size="lg"
                                                                     labelKey="search_label"
                                                                     emptyLabel="No products found"

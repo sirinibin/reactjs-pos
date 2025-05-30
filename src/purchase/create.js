@@ -2130,7 +2130,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <label className="form-label">Product*</label>
                             <Typeahead
                                 id="product_id"
-                                filterBy={store?.client_filter ? undefined : () => true}
+                                filterBy={['additional_keywords']}
                                 size="lg"
                                 ref={productSearchRef}
                                 labelKey="search_label"

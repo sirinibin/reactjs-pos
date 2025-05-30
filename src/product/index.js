@@ -1801,11 +1801,11 @@ function ProductIndex(props) {
                                                     </select>
                                                 </th>
                                                 <th style={{ minWidth: "100px" }}></th>
-
+                                                {/**   filterBy={store?.client_filter ? undefined : () => true}  */}
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="product_id_by_part_no"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+                                                        filterBy={['additional_keywords']}
                                                         size="lg"
                                                         ref={productSearchByPartNoRef}
                                                         labelKey="search_label"
@@ -1862,7 +1862,7 @@ function ProductIndex(props) {
                                                     <Typeahead
                                                         id="product_id"
                                                         ref={productSearchRef}
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+                                                        filterBy={['additional_keywords']}
                                                         size="lg"
                                                         labelKey="search_label"
                                                         emptyLabel="No products found"

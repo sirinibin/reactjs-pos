@@ -1412,7 +1412,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="product_id"
                 size="lg"
-                filterBy={store?.client_filter ? undefined : () => true}
+                filterBy={['additional_keywords']}
                 ref={productSearchRef}
                 labelKey="search_label"
                 inputProps={{ className: 'productSearch' }}
