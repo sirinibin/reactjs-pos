@@ -362,7 +362,7 @@ const SalesHistory = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(
             `/v1/customer?${Select}${queryString}`,
             requestOptions
@@ -953,7 +953,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                             <Typeahead
                                                                 id="customer_id"
                                                                 labelKey="search_label"
-                                                                filterBy={store?.client_filter ? undefined : () => true}
+                                                                filterBy={['additional_keywords']}
                                                                 onChange={(selectedItems) => {
                                                                     searchByMultipleValuesField(
                                                                         "customer_id",
@@ -975,7 +975,7 @@ const SalesHistory = forwardRef((props, ref) => {
                                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                                     timerRef.current = setTimeout(() => {
                                                                         suggestCustomers(searchTerm);
-                                                                    }, 400);
+                                                                    }, 100);
                                                                 }}
                                                                 multiple
                                                             />

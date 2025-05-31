@@ -464,7 +464,7 @@ const QuotationCreate = forwardRef((props, ref) => {
     };
 
     let Select =
-      "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+      "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
     // setIsCustomersLoading(true);
     let result = await fetch(
       "/v1/customer?" + Select + queryString,
@@ -2084,7 +2084,7 @@ const QuotationCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="customer_id"
                 labelKey="search_label"
-                filterBy={store?.client_filter ? undefined : () => true}
+                filterBy={['additional_keywords']}
                 isLoading={false}
                 onChange={(selectedItems) => {
                   delete errors["customer_id"];
@@ -2122,7 +2122,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
                   timerRef.current = setTimeout(() => {
                     suggestCustomers(searchTerm);
-                  }, 400);
+                  }, 100);
                 }}
               />
               <Button

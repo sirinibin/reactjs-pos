@@ -331,7 +331,7 @@ function VendorIndex(props) {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
         let data = await result.json();
 
@@ -1133,7 +1133,7 @@ function VendorIndex(props) {
                                                     <Typeahead
                                                         style={{ minWidth: "300px" }}
                                                         id="vendor_id"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+                                                        filterBy={['additional_keywords']}
                                                         labelKey="search_label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -1156,7 +1156,7 @@ function VendorIndex(props) {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
                                                                 suggestVendors(searchTerm);
-                                                            }, 400);
+                                                            }, 100);
                                                         }}
                                                         multiple
                                                     />
@@ -1336,7 +1336,7 @@ function VendorIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",

@@ -386,7 +386,7 @@ const ProductCategoryCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="parent_id"
-                                    filterBy={store?.client_filter ? undefined : () => true}
+
                                     labelKey="name"
                                     isLoading={isProductCategoriesLoading}
                                     isInvalid={errors.parent_id ? true : false}

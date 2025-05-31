@@ -233,7 +233,7 @@ const Customers = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,code,name,credit_balance,account,email,phone,name_in_arabic,phone_in_arabic,vat_no,created_by_name,created_at,stores";
+            "select=id,code,additional_keywords,name,credit_balance,account,email,phone,name_in_arabic,phone_in_arabic,vat_no,created_by_name,created_at,stores";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -363,7 +363,7 @@ const Customers = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(
             `/v1/customer?${Select}${queryString}`,
             requestOptions
@@ -1385,7 +1385,7 @@ const Customers = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="customer_id"
                                                                     labelKey="search_label"
-                                                                    filterBy={store?.client_filter ? undefined : () => true}
+                                                                    filterBy={['additional_keywords']}
                                                                     style={{ minWidth: "300px" }}
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
@@ -1401,7 +1401,7 @@ const Customers = forwardRef((props, ref) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         timerRef.current = setTimeout(() => {
                                                                             suggestCustomers(searchTerm);
-                                                                        }, 400);
+                                                                        }, 100);
                                                                     }}
                                                                     ref={customerSearchRef}
                                                                     onKeyDown={(e) => {
@@ -1730,7 +1730,7 @@ const Customers = forwardRef((props, ref) => {
                                                                 <Typeahead
                                                                     id="created_by"
                                                                     labelKey="name"
-                                                                    filterBy={store?.client_filter ? undefined : () => true}
+
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(
                                                                             "created_by",

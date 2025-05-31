@@ -839,7 +839,7 @@ function CapitalIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="invested_by_user_id"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -860,7 +860,7 @@ function CapitalIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

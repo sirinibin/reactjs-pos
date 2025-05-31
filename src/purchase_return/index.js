@@ -412,7 +412,7 @@ function PurchaseReturnIndex(props) {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(`/v1/vendor?${Select}${queryString}`, requestOptions);
         let data = await result.json();
 
@@ -1339,7 +1339,7 @@ function PurchaseReturnIndex(props) {
                                                     <Typeahead
                                                         id="vendor_id"
                                                         labelKey="search_label"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+                                                        filterBy={['additional_keywords']}
                                                         style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -1362,7 +1362,7 @@ function PurchaseReturnIndex(props) {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
                                                                 suggestVendors(searchTerm);
-                                                            }, 400);
+                                                            }, 100);
                                                         }}
                                                         multiple
                                                     />
@@ -1513,7 +1513,7 @@ function PurchaseReturnIndex(props) {
                                                     <Typeahead
                                                         id="payment_status"
                                                         labelKey="name"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "payment_status",
@@ -1531,7 +1531,7 @@ function PurchaseReturnIndex(props) {
                                                     <Typeahead
                                                         id="payment_methods"
                                                         labelKey="name"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "payment_methods",
@@ -1549,7 +1549,7 @@ function PurchaseReturnIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",

@@ -3,7 +3,6 @@ import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
-import StoreCreate from "../store/create.js";
 import ExpenseCategoryCreate from "../expense_category/create.js";
 import ExpenseCategoryView from "../expense_category/view.js";
 import Resizer from "react-image-file-resizer";
@@ -12,11 +11,6 @@ import { format } from "date-fns";
 
 
 const ExpenseCreate = forwardRef((props, ref) => {
-
-    //Store Auto Suggestion
-    let [selectedStores, setSelectedStores] = useState([]);
-    const isStoresLoading = false;
-
 
     useImperativeHandle(ref, () => ({
         open(id) {
@@ -121,8 +115,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
     let [selectedImage, setSelectedImage] = useState("");
 
 
-    let [storeOptions, setStoreOptions] = useState([]);
-
     let [selectedCategories, setSelectedCategories] = useState([]);
     let [categoryOptions, setCategoryOptions] = useState([]);
 
@@ -193,14 +185,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 formData = data.result;
                 formData.date_str = formData.date;
 
-                let selectedStores = [
-                    {
-                        id: formData.store_id,
-                        name: formData.store_name,
-                    }
-                ];
-                setSelectedStores([...selectedStores]);
-
                 formData.images_content = [];
                 setFormData({ ...formData });
             })
@@ -251,39 +235,7 @@ const ExpenseCreate = forwardRef((props, ref) => {
         setCategoryOptions(data.result);
     }
 
-    async function suggestStores(searchTerm) {
-        console.log("Inside handle suggest Stores");
 
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: localStorage.getItem("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(
-            "/v1/store?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setStoreOptions(data.result);
-    }
 
     useEffect(() => {
         let at = localStorage.getItem("access_token");
@@ -414,10 +366,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
     }
     */
 
-    const StoreCreateFormRef = useRef();
-    function openStoreCreateForm() {
-        StoreCreateFormRef.current.open();
-    }
 
     const ExpenseCategoryCreateFormRef = useRef();
     function openExpenseCategoryCreateForm() {
@@ -438,8 +386,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
 
     return (
         <>
-
-            <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
             {/*
             <ExpenseView ref={DetailsViewRef} />
             */}
@@ -489,52 +435,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-
-                        {!localStorage.getItem('store_name') ? <div className="col-md-6">
-                            <label className="form-label">Store*</label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="store_id"
-                                    filterBy={store?.client_filter ? undefined : () => true}
-                                    labelKey="name"
-                                    isLoading={isStoresLoading}
-                                    isInvalid={errors.store_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.store_id = "";
-                                        errors["product_id"] = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.store_id = "Invalid Store selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedStores([]);
-                                            return;
-                                        }
-                                        formData.store_id = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        console.log("formData.store_id:", formData.store_id);
-                                        selectedStores = selectedItems;
-                                        setSelectedStores([...selectedItems]);
-                                    }
-                                    }
-                                    options={storeOptions}
-                                    placeholder="Select Store"
-                                    selected={selectedStores}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestStores(searchTerm);
-                                    }}
-                                />
-
-                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                <div style={{ color: "red" }}>
-                                    <i className="bi x-lg"> </i>
-                                    {errors.store_id}
-                                </div>
-                            </div>
-                        </div> : ""}
-
                         <div className="col-md-6">
                             <label className="form-label">Amount*</label>
 
@@ -637,7 +537,6 @@ const ExpenseCreate = forwardRef((props, ref) => {
                                 <Typeahead
                                     id="category_id"
                                     labelKey="name"
-                                    filterBy={store?.client_filter ? undefined : () => true}
                                     isInvalid={errors.category_id ? true : false}
                                     onChange={(selectedItems) => {
                                         errors.category_id = "";

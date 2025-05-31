@@ -725,7 +725,7 @@ const OrderIndex = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(
             `/v1/customer?${Select}${queryString}`,
             requestOptions
@@ -1927,7 +1927,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="customer_id"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+                                                        filterBy={['additional_keywords']}
                                                         labelKey="search_label"
                                                         style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
@@ -1944,7 +1944,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
                                                                 suggestCustomers(searchTerm);
-                                                            }, 400);
+                                                            }, 100);
                                                         }}
                                                         ref={customerSearchRef}
                                                         onKeyDown={(e) => {
@@ -2019,7 +2019,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="payment_status"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2037,7 +2037,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="payment_methods"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2135,7 +2135,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2235,7 +2235,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                 <th>
                                                     <Typeahead
                                                         id="status"
-                                                          filterBy={store?.client_filter ? undefined : () => true}
+                                                       
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

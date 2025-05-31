@@ -1803,7 +1803,7 @@ function ProductIndex(props) {
                                                     </select>
                                                 </th>
                                                 <th style={{ minWidth: "100px" }}></th>
-                                                {/**   filterBy={store?.client_filter ? undefined : () => true}  */}
+
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="product_id_by_part_no"
@@ -2029,7 +2029,7 @@ function ProductIndex(props) {
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="category_id"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2058,7 +2058,7 @@ function ProductIndex(props) {
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="brand_id"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2087,7 +2087,7 @@ function ProductIndex(props) {
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="country_code"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -2347,7 +2347,7 @@ function ProductIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

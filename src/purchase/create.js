@@ -453,7 +453,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,additional_keywords,code,use_remarks_in_purchases,remarks,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         // setIsVendorsLoading(true);
         let result = await fetch(
             "/v1/vendor?" + Select + queryString,
@@ -1821,7 +1821,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="store_id"
-                                    filterBy={store?.client_filter ? undefined : () => true}
+
                                     labelKey="name"
                                     isLoading={isStoresLoading}
                                     isInvalid={errors.store_id ? true : false}
@@ -1866,7 +1866,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                             <label className="form-label">Vendor</label>
                             <Typeahead
                                 id="vendor_id"
-                                filterBy={store?.client_filter ? undefined : () => true}
+                                filterBy={['additional_keywords']}
                                 labelKey="search_label"
                                 isLoading={false}
                                 onChange={(selectedItems) => {
@@ -1906,7 +1906,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
                                     timerRef.current = setTimeout(() => {
                                         suggestVendors(searchTerm);
-                                    }, 400);
+                                    }, 100);
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openVendorCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>

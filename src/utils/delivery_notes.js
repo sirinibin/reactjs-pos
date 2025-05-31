@@ -180,7 +180,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(
             `/v1/customer?${Select}${queryString}`,
             requestOptions
@@ -804,7 +804,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     id="customer_id"
-                                                                    filterBy={store?.client_filter ? undefined : () => true}
+                                                                    filterBy={['additional_keywords']}
                                                                     labelKey="search_label"
                                                                     style={{ minWidth: "300px" }}
                                                                     onChange={(selectedItems) => {
@@ -828,7 +828,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
                                                                         if (timerRef.current) clearTimeout(timerRef.current);
                                                                         timerRef.current = setTimeout(() => {
                                                                             suggestCustomers(searchTerm);
-                                                                        }, 400);
+                                                                        }, 100);
                                                                     }}
                                                                     multiple
                                                                 />
@@ -836,7 +836,7 @@ const DeliveryNotes = forwardRef((props, ref) => {
                                                             <th>
                                                                 <Typeahead
                                                                     id="created_by"
-                                                                    filterBy={store?.client_filter ? undefined : () => true}
+
                                                                     labelKey="name"
                                                                     onChange={(selectedItems) => {
                                                                         searchByMultipleValuesField(

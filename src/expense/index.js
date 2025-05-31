@@ -815,7 +815,6 @@ function ExpenseIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="category_id"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -843,7 +842,7 @@ function ExpenseIndex(props) {
                                                 <th>
                                                     <Typeahead
                                                         id="created_by"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         labelKey="name"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(

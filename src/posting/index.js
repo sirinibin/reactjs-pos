@@ -944,7 +944,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                 <th style={{ minWidth: "250px" }}>
                                                     <Typeahead
                                                         id="account_id"
-                                                          filterBy={store?.client_filter ? undefined : () => true}
+                                                        
                                                         labelKey="search_label"
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -1040,7 +1040,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         <th style={{ width: "130px" }}>
                                                             <Typeahead
                                                                 id="account_id"
-                                                                filterBy={store?.client_filter ? undefined : () => true}
+
                                                                 labelKey="search_label"
                                                                 onChange={(selectedItems) => {
                                                                     searchByMultipleValuesField(
@@ -1072,7 +1072,7 @@ const PostingIndex = forwardRef((props, ref) => {
                                                         <th style={{ width: "130px" }}>
                                                             <Typeahead
                                                                 id="account_id"
-                                                                filterBy={store?.client_filter ? undefined : () => true}
+
                                                                 labelKey="search_label"
                                                                 onChange={(selectedItems) => {
                                                                     searchByMultipleValuesField(

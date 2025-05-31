@@ -1053,7 +1053,7 @@ const StoreCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="use_products_from_store_id"
-                                      filterBy={store?.client_filter ? undefined : () => true}
+                                  
                                     labelKey="name"
                                     isInvalid={errors.use_products_from_store_id ? true : false}
                                     onChange={(selectedItems) => {

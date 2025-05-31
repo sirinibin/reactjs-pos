@@ -230,7 +230,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,additional_keywords,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
@@ -591,7 +591,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                 id="customer_id"
                                 labelKey="search_label"
                                 isLoading={false}
-                                filterBy={store?.client_filter ? undefined : () => true}
+                                filterBy={['additional_keywords']}
                                 isInvalid={errors.customer_id ? true : false}
                                 onChange={(selectedItems) => {
                                     errors.customer_id = "";
@@ -623,7 +623,7 @@ const CustomerWithdrawalCreate = forwardRef((props, ref) => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
                                     timerRef.current = setTimeout(() => {
                                         suggestCustomers(searchTerm);
-                                    }, 400);
+                                    }, 100);
                                 }}
                                 ref={customerSearchRef}
                                 onKeyDown={(e) => {

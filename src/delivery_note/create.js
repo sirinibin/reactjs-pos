@@ -439,7 +439,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = "select=id,code,vat_no,remarks,name,phone,name_in_arabic,phone_in_arabic,search_label";
+    let Select = "select=id,code,additional_keywords,vat_no,remarks,name,phone,name_in_arabic,phone_in_arabic,search_label";
     //setIsCustomersLoading(true);
     let result = await fetch(
       "/v1/customer?" + Select + queryString,
@@ -1265,7 +1265,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
               <Typeahead
                 id="customer_id"
                 labelKey="search_label"
-                filterBy={store?.client_filter ? undefined : () => true}
+                filterBy={['additional_keywords']}
                 isLoading={false}
                 onChange={(selectedItems) => {
                   delete errors["customer_id"];
@@ -1287,7 +1287,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   setSelectedCustomers(selectedItems);
                 }}
                 options={customerOptions}
-                placeholder="Customer Name / Mob / VAT # / ID"
+                placeholder="Customer Name | Mob | VAT # | ID"
                 selected={selectedCustomers}
                 highlightOnlyResult={true}
                 ref={customerSearchRef}
@@ -1306,7 +1306,7 @@ const DeliveryNoteCreate = forwardRef((props, ref) => {
                   if (timerRef.current) clearTimeout(timerRef.current);
                   timerRef.current = setTimeout(() => {
                     suggestCustomers(searchTerm);
-                  }, 400);
+                  }, 100);
                 }}
               />
               <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>

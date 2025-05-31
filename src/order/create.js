@@ -413,7 +413,7 @@ const OrderCreate = forwardRef((props, ref) => {
             },
         };
 
-        let Select = "select=id,code,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,additional_keywords,remarks,use_remarks_in_sales,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         // setIsCustomersLoading(true);
         let result = await fetch(
             "/v1/customer?" + Select + queryString,
@@ -2151,7 +2151,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <label className="form-label">Customer</label>
                             <Typeahead
                                 id="customer_id"
-                                filterBy={store?.client_filter ? undefined : () => true}
+                                filterBy={['additional_keywords']}
                                 labelKey="search_label"
                                 isLoading={false}
                                 onChange={(selectedItems) => {
@@ -2200,7 +2200,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
                                     timerRef.current = setTimeout(() => {
                                         suggestCustomers(searchTerm);
-                                    }, 400);
+                                    }, 100);
                                 }}
                             />
                             <Button hide={true.toString()} onClick={openCustomerCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
@@ -2387,12 +2387,6 @@ const OrderCreate = forwardRef((props, ref) => {
                                 </div>
                             )}
                         </div>
-
-                        {/*filterBy={store?.client_filter ? undefined : () => true}
-                        filterBy={true ? undefined : () => true}
-                         filterBy={['name_prefixes', 'name_in_arabic_prefixes']}
-                           filterBy={store?.client_filter ? undefined : () => true}
-                        */}
                         <div className="col-md-8" >
                             <label className="form-label">Product Search*</label>
                             <Typeahead
@@ -4056,7 +4050,7 @@ const OrderCreate = forwardRef((props, ref) => {
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="delivered_by_signature_id"
-                                    filterBy={store?.client_filter ? undefined : () => true}
+                                 
                                     labelKey="name"
                                     isLoading={isDeliveredBySignaturesLoading}
                                     isInvalid={errors.delivered_by_signature_id ? true : false}

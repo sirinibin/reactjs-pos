@@ -260,7 +260,7 @@ function CustomerWithdrawalIndex(props) {
             },
         };
 
-        let Select = "select=id,code,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
+        let Select = "select=id,code,additional_keywords,vat_no,name,phone,name_in_arabic,phone_in_arabic,search_label";
         let result = await fetch(
             `/v1/customer?${Select}${queryString}`,
             requestOptions
@@ -900,7 +900,7 @@ function CustomerWithdrawalIndex(props) {
                                                     <Typeahead
                                                         id="customer_id"
                                                         labelKey="search_label"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+                                                        filterBy={['additional_keywords']}
                                                         style={{ minWidth: "300px" }}
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
@@ -923,7 +923,7 @@ function CustomerWithdrawalIndex(props) {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
                                                                 suggestCustomers(searchTerm);
-                                                            }, 400);
+                                                            }, 100);
                                                         }}
                                                         multiple
                                                     />
@@ -953,7 +953,7 @@ function CustomerWithdrawalIndex(props) {
                                                     <th>
                                                         <Typeahead
                                                             id="payment_methods"
-                                                            filterBy={store?.client_filter ? undefined : () => true}
+
                                                             labelKey="name"
                                                             onChange={(selectedItems) => {
                                                                 searchByMultipleValuesField(
@@ -1006,7 +1006,7 @@ function CustomerWithdrawalIndex(props) {
                                                     <Typeahead
                                                         id="created_by"
                                                         labelKey="name"
-                                                        filterBy={store?.client_filter ? undefined : () => true}
+
                                                         onChange={(selectedItems) => {
                                                             searchByMultipleValuesField(
                                                                 "created_by",

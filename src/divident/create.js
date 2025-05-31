@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Modal, Button } from "react-bootstrap";
 
 import { Spinner } from "react-bootstrap";
 import { Typeahead } from "react-bootstrap-typeahead";
-import StoreCreate from "../store/create.js";
 import Resizer from "react-image-file-resizer";
 import DatePicker from "react-datepicker";
 import { format } from "date-fns";
@@ -11,8 +10,6 @@ import { format } from "date-fns";
 const DividentCreate = forwardRef((props, ref) => {
 
     //Store Auto Suggestion
-    let [selectedStores, setSelectedStores] = useState([]);
-    const isStoresLoading = false;
 
 
 
@@ -114,9 +111,6 @@ const DividentCreate = forwardRef((props, ref) => {
     let [selectedImage, setSelectedImage] = useState("");
 
 
-    let [storeOptions, setStoreOptions] = useState([]);
-
-
     let [errors, setErrors] = useState({});
     const [isProcessing, setProcessing] = useState(false);
 
@@ -176,14 +170,6 @@ const DividentCreate = forwardRef((props, ref) => {
 
                 setSelectedWithdrawnByUsers([...selectedWithdrawnByUsers]);
 
-                let selectedStores = [
-                    {
-                        id: formData.store_id,
-                        name: formData.store_name,
-                    }
-                ];
-                setSelectedStores([...selectedStores]);
-
                 formData.images_content = [];
                 setFormData({ ...formData });
             })
@@ -191,40 +177,6 @@ const DividentCreate = forwardRef((props, ref) => {
                 setProcessing(false);
                 setErrors(error);
             });
-    }
-
-    async function suggestStores(searchTerm) {
-        console.log("Inside handle suggest Stores");
-
-        console.log("searchTerm:" + searchTerm);
-        if (!searchTerm) {
-            return;
-        }
-
-        var params = {
-            name: searchTerm,
-        };
-        var queryString = ObjectToSearchQueryParams(params);
-        if (queryString !== "") {
-            queryString = "&" + queryString;
-        }
-
-        const requestOptions = {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: localStorage.getItem("access_token"),
-            },
-        };
-
-        let Select = "select=id,name";
-        let result = await fetch(
-            "/v1/store?" + Select + queryString,
-            requestOptions
-        );
-        let data = await result.json();
-
-        setStoreOptions(data.result);
     }
 
     useEffect(() => {
@@ -381,15 +333,10 @@ const DividentCreate = forwardRef((props, ref) => {
     }
     */
 
-    const StoreCreateFormRef = useRef();
-    function openStoreCreateForm() {
-        StoreCreateFormRef.current.open();
-    }
+
 
     return (
         <>
-            <StoreCreate ref={StoreCreateFormRef} showToastMessage={props.showToastMessage} />
-
             <Modal show={show} size="xl" onHide={handleClose} animation={false} backdrop="static" scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>
@@ -430,57 +377,13 @@ const DividentCreate = forwardRef((props, ref) => {
                 </Modal.Header>
                 <Modal.Body>
                     <form className="row g-3 needs-validation" onSubmit={handleCreate}>
-                        {!localStorage.getItem('store_name') ? <div className="col-md-6">
-                            <label className="form-label">Store*</label>
-
-                            <div className="input-group mb-3">
-                                <Typeahead
-                                    id="store_id"
-                                    filterBy={store?.client_filter ? undefined : () => true}
-                                    labelKey="name"
-                                    isLoading={isStoresLoading}
-                                    isInvalid={errors.store_id ? true : false}
-                                    onChange={(selectedItems) => {
-                                        errors.store_id = "";
-                                        errors["product_id"] = "";
-                                        setErrors(errors);
-                                        if (selectedItems.length === 0) {
-                                            errors.store_id = "Invalid Store selected";
-                                            setErrors(errors);
-                                            setFormData({ ...formData });
-                                            setSelectedStores([]);
-                                            return;
-                                        }
-                                        formData.store_id = selectedItems[0].id;
-                                        setFormData({ ...formData });
-                                        console.log("formData.store_id:", formData.store_id);
-                                        selectedStores = selectedItems;
-                                        setSelectedStores([...selectedItems]);
-                                    }
-                                    }
-                                    options={storeOptions}
-                                    placeholder="Select Store"
-                                    selected={selectedStores}
-                                    highlightOnlyResult={true}
-                                    onInputChange={(searchTerm, e) => {
-                                        suggestStores(searchTerm);
-                                    }}
-                                />
-
-                                <Button hide={true.toString()} onClick={openStoreCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
-                                <div style={{ color: "red" }}>
-                                    <i className="bi x-lg"> </i>
-                                    {errors.store_id}
-                                </div>
-                            </div>
-                        </div> : ""}
                         <div className="col-md-6">
                             <label className="form-label">Withdrawn By User*</label>
 
                             <div className="input-group mb-3">
                                 <Typeahead
                                     id="withdrawn_by_user_id"
-                                    filterBy={store?.client_filter ? undefined : () => true}
+
                                     labelKey="name"
                                     isLoading={isWithdrawnByUsersLoading}
                                     isInvalid={errors.withdrawn_by_user_id ? true : false}
