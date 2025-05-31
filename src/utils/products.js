@@ -521,7 +521,7 @@ const Products = forwardRef((props, ref) => {
 
 
         let result = await fetch(
-            "/v1/product?" + Select + queryString + "&limit=200&sort=-country_name",
+            "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
             requestOptions
         )
         let data = await result.json();
