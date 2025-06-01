@@ -636,7 +636,6 @@ const Quotations = forwardRef((props, ref) => {
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>{enableSelection && "Select Quotation"}</Modal.Title>
-
                     <div className="col align-self-end text-end">
                         <button
                             type="button"
