@@ -13,8 +13,29 @@ import { trimTo2Decimals } from "./numberUtils";
 import Amount from "../utils/amount.js";
 import StatsSummary from "./StatsSummary.js";
 import eventEmitter from "./eventEmitter";
+import OrderCreate from "./../order/create.js";
+import { formatDistanceToNowStrict } from "date-fns";
+import { enUS } from "date-fns/locale";
 
-//function ProductIndex(props) {
+
+const shortLocale = {
+    ...enUS,
+    formatDistance: (token, count) => {
+        const format = {
+            xSeconds: `${count}s`,
+            xMinutes: `${count}m`,
+            xHours: `${count}h`,
+            xDays: `${count}d`,
+            xMonths: `${count}mo`,
+            xYears: `${count}y`,
+        };
+        return format[token] || "";
+    },
+};
+
+const TimeAgo = ({ date }) => {
+    return <span>{formatDistanceToNowStrict(new Date(date), { locale: shortLocale })} ago</span>;
+};
 
 const Quotations = forwardRef((props, ref) => {
     const [show, SetShow] = useState(false);
@@ -435,7 +456,7 @@ const Quotations = forwardRef((props, ref) => {
             },
         };
         let Select =
-            "select=id,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_name,status,cash_discount,discount_with_vat,created_at,profit,loss";
+            "select=id,order_code,order_id,reported_to_zatca,reported_to_zatca_at,type,payment_status,payment_methods,total_payment_received,balance_amount,code,date,net_total,created_by_name,customer_name,status,cash_discount,discount_with_vat,created_at,profit,loss";
 
         if (localStorage.getItem("store_id")) {
             searchParams.store_id = localStorage.getItem("store_id");
@@ -599,9 +620,19 @@ const Quotations = forwardRef((props, ref) => {
     const timerRef = useRef(null);
 
 
+    const SalesUpdateFormRef = useRef();
+    const [showUpdateOrderForm, setShowUpdateOrderForm] = useState(false);
+    function openSalesUpdateForm(id) {
+        setShowUpdateOrderForm(true);
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => {
+            SalesUpdateFormRef.current.open(id);
+        }, 100);
+    }
 
     return (
         <>
+            {showUpdateOrderForm && <OrderCreate ref={SalesUpdateFormRef} />}
             <Modal show={show} size="xl" onHide={handleClose} animation={false} scrollable={true}>
                 <Modal.Header>
                     <Modal.Title>{enableSelection && "Select Quotation"}</Modal.Title>
@@ -882,6 +913,44 @@ const Quotations = forwardRef((props, ref) => {
                                                                     ) : null}
                                                                 </b>
                                                             </th>
+                                                            <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("order_code");
+                                                                    }}
+                                                                >
+                                                                    Sales ID
+                                                                    {sortField === "order_code" && sortOrder === "-" ? (
+                                                                        <i className="bi bi-sort-numeric-down"></i>
+                                                                    ) : null}
+                                                                    {sortField === "order_code" && sortOrder === "" ? (
+                                                                        <i className="bi bi-sort-numeric-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th>
+                                                            {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+                                                                <b
+                                                                    style={{
+                                                                        textDecoration: "underline",
+                                                                        cursor: "pointer",
+                                                                    }}
+                                                                    onClick={() => {
+                                                                        sort("reported_to_zatca");
+                                                                    }}
+                                                                >
+                                                                    Reported to Zatca
+                                                                    {sortField === "reported_to_zatca" && sortOrder === "-" ? (
+                                                                        <i className="bi bi-sort-alpha-up-alt"></i>
+                                                                    ) : null}
+                                                                    {sortField === "reported_to_zatca" && sortOrder === "" ? (
+                                                                        <i className="bi bi-sort-alpha-up"></i>
+                                                                    ) : null}
+                                                                </b>
+                                                            </th> : ""}
                                                             <th>
                                                                 <b
                                                                     style={{
@@ -1243,6 +1312,27 @@ const Quotations = forwardRef((props, ref) => {
                                                                 />
                                                             </th>
                                                             <th>
+                                                                <input
+                                                                    type="text"
+                                                                    id="order_code"
+                                                                    onChange={(e) =>
+                                                                        searchByFieldValue("order_code", e.target.value)
+                                                                    }
+                                                                    className="form-control"
+                                                                />
+                                                            </th>
+                                                            {store.zatca?.phase === "2" && store.zatca?.connected ? <th>
+                                                                <select
+                                                                    onChange={(e) => {
+                                                                        searchByFieldValue("reported_to_zatca", e.target.value);
+                                                                    }}
+                                                                >
+                                                                    <option value="" SELECTED>ALL</option>
+                                                                    <option value="1">REPORTED</option>
+                                                                    <option value="0">NOT REPORTED</option>
+                                                                </select>
+                                                            </th> : ""}
+                                                            <th>
                                                                 <select
                                                                     value={type}
                                                                     onChange={(e) => {
@@ -1503,6 +1593,20 @@ const Quotations = forwardRef((props, ref) => {
                                                                         <OverflowTooltip value={quotation.customer_name} />
                                                                     </td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} > <Amount amount={quotation.net_total} /> </td>
+                                                                    <td style={{ width: "auto", whiteSpace: "nowrap" }} >
+                                                                        {quotation.order_code && <span style={{ cursor: "pointer", color: "blue" }} onClick={() => {
+                                                                            openSalesUpdateForm(quotation.order_id);
+                                                                        }}>{quotation.order_code}</span>}
+                                                                    </td>
+                                                                    {store.zatca?.phase === "2" && store.zatca?.connected ? <td style={{ width: "auto", whiteSpace: "nowrap" }}>
+                                                                        {quotation.reported_to_zatca ? <span>&nbsp;<span className="badge bg-success">
+                                                                            Reported
+                                                                            {quotation.reported_to_zatca && quotation.reported_to_zatca_at ? <span>&nbsp;<TimeAgo date={quotation.reported_to_zatca_at} />&nbsp;</span> : ""}
+                                                                            &nbsp;</span></span> : ""}
+                                                                        {!quotation.reported_to_zatca ? <span className="badge bg-warning">
+                                                                            Not Reported
+                                                                            &nbsp;</span> : ""}
+                                                                    </td> : ""}
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >  {quotation.type}</td>
                                                                     <td style={{ width: "auto", whiteSpace: "nowrap" }} >
                                                                         <Amount amount={trimTo2Decimals(quotation.total_payment_received)} />

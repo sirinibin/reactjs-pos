@@ -141,7 +141,6 @@ const OrderCreate = forwardRef((props, ref) => {
                 getOrder(id);
             }
 
-
             setFormData({ ...formData });
             reCalculate();
             setShow(true);
