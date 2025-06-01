@@ -1660,6 +1660,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, []);
 
+    const discountRef = useRef(null);
+    const discountWithVATRef = useRef(null);
 
     return (
         <>
@@ -3109,6 +3111,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 onWheel={(e) => e.target.blur()} style={{ width: "150px" }}
                                                 className="text-start"
                                                 value={discount}
+                                                ref={discountRef}
+                                                onFocus={() => {
+                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                    timerRef.current = setTimeout(() => {
+                                                        discountRef.current.select();
+                                                    }, 100);
+                                                }}
                                                 onChange={(e) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                     if (parseFloat(e.target.value) === 0) {
@@ -3203,10 +3212,10 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 onWheel={(e) => e.target.blur()}
                                                 disabled={true}
                                                 style={{ width: "50px" }} className="text-start"
-                                                value={discountPercentWithVAT} onChange={(e) => {
+                                                value={discountPercentWithVAT}
+                                                onChange={(e) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                     if (parseFloat(e.target.value) === 0) {
-
                                                         discountWithVAT = 0;
                                                         setDiscountWithVAT(discountWithVAT);
 
@@ -3240,7 +3249,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         discountPercent = 0;
                                                         setDiscountPercent(discountPercent);
 
-                                                        errors["discount_percent"] = "Discount percent should be >= 0";
+                                                        errors["discount_percent_with_vat"] = "Discount percent should be >= 0";
                                                         setErrors({ ...errors });
                                                         timerRef.current = setTimeout(() => {
                                                             reCalculate();
@@ -3268,8 +3277,8 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         return;
                                                     }
 
-                                                    delete errors["discount_percent"];
-                                                    delete errors["discount"];
+                                                    delete errors["discount_percent_with_vat"];
+                                                    delete errors["discount_with_vat"];
                                                     setErrors({ ...errors });
 
                                                     discountPercentWithVAT = parseFloat(e.target.value);
@@ -3290,6 +3299,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                 style={{ width: "150px" }}
                                                 className="text-start"
                                                 value={discountWithVAT}
+                                                ref={discountWithVATRef}
+                                                onFocus={() => {
+                                                    if (timerRef.current) clearTimeout(timerRef.current);
+                                                    timerRef.current = setTimeout(() => {
+                                                        discountWithVATRef.current.select();
+                                                    }, 100);
+                                                }}
                                                 onChange={(e) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                     if (parseFloat(e.target.value) === 0) {
@@ -3299,7 +3315,7 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         setDiscount(discount);
                                                         setDiscountWithVAT(discount);
                                                         setDiscountPercent(discount);
-                                                        delete errors["discount"];
+                                                        delete errors["discount_with_vat"];
                                                         setErrors({ ...errors });
                                                         timerRef.current = setTimeout(() => {
                                                             reCalculate();
@@ -3338,13 +3354,13 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                         return;
                                                     }
 
-                                                    delete errors["discount"];
-                                                    delete errors["discount_percent"];
+                                                    delete errors["discount_with_vat"];
+                                                    delete errors["discount_percent_with_vat"];
                                                     setErrors({ ...errors });
 
 
                                                     if (/^\d*\.?\d{0,2}$/.test(parseFloat(e.target.value)) === false) {
-                                                        errors["discount"] = "Max. decimal points allowed is 2";
+                                                        errors["discount_with_vat"] = "Max. decimal points allowed is 2";
                                                         setErrors({ ...errors });
                                                     }
 
@@ -3358,9 +3374,9 @@ const SalesReturnCreate = forwardRef((props, ref) => {
                                                     }, 100);
                                                 }} />
                                             {" "}
-                                            {errors.discount && (
+                                            {errors.discount_with_vat && (
                                                 <div style={{ color: "red" }}>
-                                                    {errors.discount}
+                                                    {errors.discount_with_vat}
                                                 </div>
                                             )}
                                         </td>
