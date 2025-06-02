@@ -509,7 +509,7 @@ const CapitalWithdrawalCreate = forwardRef((props, ref) => {
                                         suggestUsers(searchTerm);
                                     }}
                                 />
-                                <Button hide={true.toString()} onClick={props.openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>
+                                {localStorage.getItem('user_role') === "Admin" && <Button hide={true.toString()} onClick={props.openUserCreateForm} className="btn btn-outline-secondary btn-primary btn-sm" type="button" id="button-addon1"> <i className="bi bi-plus-lg"></i> New</Button>}
                                 {errors.withdrawn_by_user_id && (
                                     <div style={{ color: "red" }}>
                                         <i className="bi bi-x-lg"> </i>
