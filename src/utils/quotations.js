@@ -5,7 +5,6 @@ import "react-datepicker/dist/react-datepicker.css";
 import OverflowTooltip from "./OverflowTooltip.js";
 import QuotationCreate from "./../quotation/create.js";
 import QuotationView from "./../quotation/view.js";
-
 import { format } from "date-fns";
 import DatePicker from "react-datepicker";
 import ReactPaginate from "react-paginate";
@@ -38,6 +37,50 @@ const TimeAgo = ({ date }) => {
 };
 
 const Quotations = forwardRef((props, ref) => {
+    useImperativeHandle(ref, () => ({
+        open(enableSelectionValue, selectedCustomers, typeValue, selectedPaymentStatusList) {
+            enableSelection = enableSelectionValue;
+            setEnableSelection(enableSelection);
+            ResetSearchParams();
+            type = "";
+            setType(type);
+            paymentStatus = "";
+            setPaymentStatus(paymentStatus);
+
+            if (typeValue) {
+                type = typeValue
+                setType(type);
+                searchByFieldValue("type", type, true);
+            }
+
+            if (selectedCustomers?.length > 0) {
+                searchByMultipleValuesField("customer_id", selectedCustomers, true);
+            }
+
+            if (selectedPaymentStatusList) {
+                searchByMultipleValuesField("payment_status", selectedPaymentStatusList, true);
+            }
+
+            list();
+            getStore(localStorage.getItem("store_id"));
+            SetShow(true);
+
+            /*
+            console.log("selectedCustomers:", selectedCustomers);
+            if (selectedCustomers?.length > 0) {
+                setSelectedCustomers(selectedCustomers)
+                searchByMultipleValuesField("customer_id", selectedCustomers);
+            } else {
+                list();
+            }
+
+            getStore(localStorage.getItem("store_id"));
+            */
+
+        },
+    }));
+
+
     const [show, SetShow] = useState(false);
 
     function handleClose() {
@@ -59,42 +102,6 @@ const Quotations = forwardRef((props, ref) => {
     let [paymentStatus, setPaymentStatus] = useState("");
     let [enableSelection, setEnableSelection] = useState(false);
 
-    useImperativeHandle(ref, () => ({
-        open(enableSelectionValue, selectedCustomers, typeValue, paymentStatusValue) {
-            enableSelection = enableSelectionValue;
-            setEnableSelection(enableSelection);
-
-            ResetSearchParams();
-
-            type = "";
-            setType(type);
-            paymentStatus = "";
-            setPaymentStatus(paymentStatus);
-
-
-            if (typeValue) {
-                type = typeValue
-                setType(type);
-            }
-
-            if (paymentStatusValue) {
-                paymentStatus = paymentStatusValue
-                setPaymentStatus(paymentStatus);
-            }
-
-
-            console.log("selectedCustomers:", selectedCustomers);
-            if (selectedCustomers?.length > 0) {
-                setSelectedCustomers(selectedCustomers)
-                searchByMultipleValuesField("customer_id", selectedCustomers);
-            } else {
-                list();
-            }
-
-            getStore(localStorage.getItem("store_id"));
-            SetShow(true);
-        },
-    }));
 
 
 
@@ -292,12 +299,15 @@ const Quotations = forwardRef((props, ref) => {
         setUserOptions(data.result);
     }
 
-    function searchByFieldValue(field, value) {
+    function searchByFieldValue(field, value, noList) {
         searchParams[field] = value;
 
         page = 1;
         setPage(page);
-        list();
+
+        if (!noList) {
+            list();
+        }
     }
 
     function searchByDateField(field, value) {
@@ -358,7 +368,7 @@ const Quotations = forwardRef((props, ref) => {
         list();
     }
 
-    function searchByMultipleValuesField(field, values) {
+    function searchByMultipleValuesField(field, values, noList) {
         if (field === "created_by") {
             setSelectedCreatedByUsers(values);
         } else if (field === "customer_id") {
@@ -381,7 +391,9 @@ const Quotations = forwardRef((props, ref) => {
         setPage(page);
         console.log("searchParams1:", searchParams);
         setSearchParams(searchParams);
-        list();
+        if (!noList) {
+            list();
+        }
     }
 
 
@@ -1190,7 +1202,7 @@ const Quotations = forwardRef((props, ref) => {
                                                     <thead>
                                                         <tr className="text-center">
                                                             <th></th>
-                                                            <th></th>
+
                                                             <th>
                                                                 <input
                                                                     type="text"

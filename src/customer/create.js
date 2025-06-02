@@ -430,6 +430,7 @@ const CustomerCreate = forwardRef((props, ref) => {
     let [selectedCountries, setSelectedCountries] = useState([]);
 
     const QuotationsRef = useRef();
+
     function openCreditQuotationInvoices() {
         let selectedCustomers = [
             {
@@ -439,7 +440,18 @@ const CustomerCreate = forwardRef((props, ref) => {
             }
         ];
 
-        QuotationsRef.current.open(false, selectedCustomers, "invoice", "credit");
+        let selectedPaymentStatusList = [
+            {
+                id: "not_paid",
+                name: "Not Paid",
+            },
+            {
+                id: "paid_partially",
+                name: "Paid partially",
+            }
+        ];
+
+        QuotationsRef.current.open(false, selectedCustomers, "invoice", selectedPaymentStatusList);
     }
 
     function openPaidQuotationInvoices() {
@@ -451,7 +463,15 @@ const CustomerCreate = forwardRef((props, ref) => {
             }
         ];
 
-        QuotationsRef.current.open(false, selectedCustomers, "invoice", "paid");
+        let selectedPaymentStatusList = [
+            {
+                id: "paid",
+                name: "Paid",
+            },
+
+        ];
+
+        QuotationsRef.current.open(false, selectedCustomers, "invoice", selectedPaymentStatusList);
     }
 
     const countrySearchRef = useRef();
