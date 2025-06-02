@@ -2281,7 +2281,7 @@ const OrderIndex = forwardRef((props, ref) => {
                                                             </Button>
                                                             &nbsp;
 
-                                                            <Button className={`btn ${!order.customer_name && !order.phone ? "btn-secondary" : "btn-success"} btn-sm`} disabled={!order.customer_name && !order.phone} style={{}} onClick={() => {
+                                                            <Button className={`btn btn-success btn-sm`} style={{}} onClick={() => {
                                                                 sendWhatsAppMessage(order);
                                                             }}>
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">

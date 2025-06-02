@@ -1169,7 +1169,7 @@ function CustomerWithdrawalIndex(props) {
                                                             </Button>
                                                             &nbsp;
 
-                                                            <Button className={`btn ${!customerwithdrawal.customer_name && !customerwithdrawal.phone ? "btn-secondary" : "btn-success"} btn-sm`} disabled={!customerwithdrawal.customer_name && !customerwithdrawal.phone} style={{}} onClick={() => {
+                                                            <Button className={`btn btn-success btn-sm`} style={{}} onClick={() => {
                                                                 sendWhatsAppMessage(customerwithdrawal);
                                                             }}>
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">

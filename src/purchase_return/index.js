@@ -1671,7 +1671,7 @@ function PurchaseReturnIndex(props) {
 
                                                             &nbsp;
 
-                                                            <Button className={`btn ${!purchasereturn.vendor_name && !purchasereturn.phone ? "btn-secondary" : "btn-success"} btn-sm`} disabled={!purchasereturn.vendor_name && !purchasereturn.phone} style={{}} onClick={() => {
+                                                            <Button className={`btn btn-success btn-sm`} style={{}} onClick={() => {
                                                                 sendWhatsAppMessage(purchasereturn);
                                                             }}>
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">

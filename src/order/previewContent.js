@@ -481,7 +481,6 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 <td style={{ borderRight: tableBorderThickness }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
                                                 <th dir="ltr" style={{ unicodeBidi: 'isolate', borderRight: tableBorderThickness }}>
                                                     <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
-
                                                         <span style={{
                                                             display: 'inline-block',
                                                             maxWidth: `${product.name_in_arabic ? "115px" : "230px"}`,
@@ -498,9 +497,6 @@ const PreviewContent = forwardRef((props, ref) => {
                                                             textOverflow: 'ellipsis',
                                                             verticalAlign: 'bottom'
                                                         }}>{product.name_in_arabic}</span></>}
-
-
-                                                        {/*product.name_in_arabic ? "|" + product.name_in_arabic : ""*/}
                                                     </span>
                                                 </th>
                                                 <td style={{ borderRight: tableBorderThickness, marginRight: "2px" }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>

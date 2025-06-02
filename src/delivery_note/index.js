@@ -972,7 +972,7 @@ function DeliveryNoteIndex(props) {
                               </Button>
                               &nbsp;
 
-                              <Button className={`btn ${!deliverynote.customer_name && !deliverynote.phone ? "btn-secondary" : "btn-success"} btn-sm`} disabled={!deliverynote.customer_name && !deliverynote.phone} style={{}} onClick={() => {
+                              <Button className={`btn  btn-success btn-sm`} style={{}} onClick={() => {
                                 sendWhatsAppMessage(deliverynote);
                               }}>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">

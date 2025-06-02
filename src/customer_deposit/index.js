@@ -1169,7 +1169,7 @@ function CustomerDepositIndex(props) {
                                                             </Button>
                                                             &nbsp;
 
-                                                            <Button className={`btn ${!customerdeposit.customer_name && !customerdeposit.phone ? "btn-secondary" : "btn-success"} btn-sm`} disabled={!customerdeposit.customer_name && !customerdeposit.phone} style={{}} onClick={() => {
+                                                            <Button className={`btn btn-success btn-sm`} style={{}} onClick={() => {
                                                                 sendWhatsAppMessage(customerdeposit);
                                                             }}>
                                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 16 16">
