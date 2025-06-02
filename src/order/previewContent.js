@@ -480,7 +480,28 @@ const PreviewContent = forwardRef((props, ref) => {
                                                 <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{product.part_number ? index + 1 + (pageIndex * props.model.pageSize) : ""}</td>
                                                 <td style={{ borderRight: tableBorderThickness }} >{product.prefix_part_number ? product.prefix_part_number + " - " : ""} {product.part_number ? product.part_number : ""}</td>
                                                 <th dir="ltr" style={{ unicodeBidi: 'isolate', borderRight: tableBorderThickness }}>
-                                                    <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>{product.name}{product.name_in_arabic ? "/" + product.name_in_arabic : ""}</span>
+                                                    <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
+
+                                                        <span style={{
+                                                            display: 'inline-block',
+                                                            maxWidth: `${product.name_in_arabic ? "115px" : "230px"}`,
+                                                            whiteSpace: 'nowrap',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            verticalAlign: 'bottom'
+                                                        }}>{product.name}</span>
+                                                        {product.name_in_arabic && <>|<span dir="rtl" style={{
+                                                            display: 'inline-block',
+                                                            maxWidth: "115px",
+                                                            whiteSpace: 'nowrap',
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            verticalAlign: 'bottom'
+                                                        }}>{product.name_in_arabic}</span></>}
+
+
+                                                        {/*product.name_in_arabic ? "|" + product.name_in_arabic : ""*/}
+                                                    </span>
                                                 </th>
                                                 <td style={{ borderRight: tableBorderThickness, marginRight: "2px" }}>{product.quantity ? product.quantity : ""}  {product.unit ? product.unit : ""}</td>
                                                 {props.modelName !== "delivery_note" && <>
