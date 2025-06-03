@@ -387,7 +387,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Part No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per33 text-center" style={{ padding: "0px", width: "32%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                            <th className="per33 text-center" style={{ padding: "0px", width: "31%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -425,7 +425,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Unit Price</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per7 text-center" style={{ padding: "0px", width: "6%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                                <th className="per7 text-center" style={{ padding: "0px", width: "7%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
@@ -483,7 +483,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <span dir="ltr" style={{ unicodeBidi: 'isolate' }}>
                                                         <span style={{
                                                             display: 'inline-block',
-                                                            maxWidth: `${product.name_in_arabic ? "115px" : "230px"}`,
+                                                            maxWidth: `${product.name_in_arabic ? "110px" : "220px"}`,
                                                             whiteSpace: 'nowrap',
                                                             overflow: 'hidden',
                                                             textOverflow: 'ellipsis',
@@ -491,7 +491,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         }}>{product.name}</span>
                                                         {product.name_in_arabic && <>|<span dir="rtl" style={{
                                                             display: 'inline-block',
-                                                            maxWidth: "115px",
+                                                            maxWidth: "110px",
                                                             whiteSpace: 'nowrap',
                                                             overflow: 'hidden',
                                                             textOverflow: 'ellipsis',
