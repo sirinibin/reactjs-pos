@@ -514,7 +514,7 @@ const QuotationCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.with_vat`;
+    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
     //setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
@@ -891,23 +891,13 @@ const QuotationCreate = forwardRef((props, ref) => {
 
     // console.log("product:", product);
     if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
-      if (product.product_stores[formData.store_id].with_vat) {
-        product.unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price / (1 + (formData.vat_percent / 100))));
-        product.unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price;
-      } else {
-        product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
-        product.unit_price_with_vat = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price * (1 + (formData.vat_percent / 100))));
-      }
+      product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+      product.unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price_with_vat;
     }
 
     if (product.product_stores && product.product_stores[formData.store_id]?.purchase_unit_price) {
-      if (product.product_stores[formData.store_id].with_vat) {
-        product.purchase_unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].purchase_unit_price / (1 + (formData.vat_percent / 100))));
-        product.purchase_unit_price_with_vat = product.product_stores[formData.store_id].purchase_unit_price;
-      } else {
-        product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
-        product.purchase_unit_price_with_vat = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].purchase_unit_price * (1 + (formData.vat_percent / 100))));
-      }
+      product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+      product.purchase_unit_price_with_vat = product.product_stores[formData.store_id].purchase_unit_price_with_vat;
     }
 
 

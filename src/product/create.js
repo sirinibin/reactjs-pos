@@ -18,7 +18,6 @@ import countryList from 'react-select-country-list';
 import ImageGallery from '../utils/ImageGallery.js';
 import { trimTo2Decimals } from "../utils/numberUtils";
 //import Select from 'react-select'
-import ProductUpdate from "./update.js";
 
 const ProductCreate = forwardRef((props, ref) => {
 
@@ -262,7 +261,7 @@ const ProductCreate = forwardRef((props, ref) => {
               productStores[i].retail_unit_price = data.result.product_stores[key].retail_unit_price;
               productStores[i].stock = data.result.product_stores[key].stock;
               productStores[i].damaged_stock = data.result.product_stores[key].damaged_stock;
-              productStores[i].with_vat = data.result.product_stores[key].with_vat;
+           
               i++;
             }
           }*/
@@ -460,7 +459,7 @@ const ProductCreate = forwardRef((props, ref) => {
       "purchase_unit_price": productStores[selectedStoreIndex].purchase_unit_price ? productStores[selectedStoreIndex].purchase_unit_price : 0,
       "stock": productStores[selectedStoreIndex].stock ? productStores[selectedStoreIndex].stock : 0,
       "damaged_stock": productStores[selectedStoreIndex].damaged_stock ? productStores[selectedStoreIndex].damaged_stock : 0,
-      "with_vat": productStores[selectedStoreIndex].with_vat ? productStores[selectedStoreIndex].with_vat : false,
+     
     };*/
     //console.log("saving to store id:" + productStores[selectedStoreIndex].store_id);
 
@@ -699,7 +698,7 @@ const ProductCreate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
+    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
     //setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
@@ -767,13 +766,8 @@ const ProductCreate = forwardRef((props, ref) => {
 
 
     if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
-      if (product.product_stores[formData.store_id].with_vat) {
-        product.unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price / (1 + (store.vat_percent / 100))));
-        product.unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price;
-      } else {
-        product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
-        product.unit_price_with_vat = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price * (1 + (store.vat_percent / 100))));
-      }
+      product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+      product.unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price_with_vat;
     } else {
       product.unit_price = 0;
       product.unit_price_with_vat = 0;
@@ -845,24 +839,24 @@ const ProductCreate = forwardRef((props, ref) => {
     formData.set.total = parseFloat(trimTo2Decimals(total));
     formData.set.total_with_vat = parseFloat(trimTo2Decimals(totalWithVAT));
 
-    if (productStores[localStorage.getItem('store_id')]?.with_vat) {
-      productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total_with_vat;
-    } else {
-      productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total;
-    }
+    productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total;
+    productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = formData.set.total_with_vat;
 
     setFormData({ ...formData });
   }
 
 
+  let [showProductUpdateForm, setShowProductUpdateForm] = useState(false);
   const ProductUpdateFormRef = useRef();
   function openUpdateForm(id) {
+    showProductUpdateForm = true;
+    setShowProductUpdateForm(true);
     ProductUpdateFormRef.current.open(id);
   }
 
   return (
     <>
-      <ProductUpdate ref={ProductUpdateFormRef} showToastMessage={props.showToastMessage} />
+      {showProductUpdateForm && <ProductCreate ref={ProductUpdateFormRef} showToastMessage={props.showToastMessage} />}
       <StoreCreate
         ref={StoreCreateFormRef}
         showToastMessage={props.showToastMessage}
@@ -1292,45 +1286,15 @@ const ProductCreate = forwardRef((props, ref) => {
               </select>
             </div>
 
-
-
-
-
-
-
-
-
-
-            <h4>Unit Prices [<input type="checkbox"
-              value={productStores[localStorage.getItem('store_id')]?.with_vat}
-              checked={productStores[localStorage.getItem('store_id')]?.with_vat}
-              onChange={(e) => {
-
-                errors["with_vat"] = "";
-                // if (productStores[localStorage.getItem('store_id')]) {
-                //console.log("productStores[selectedStoreIndex]?.with_vat:", productStores[selectedStoreIndex]?.with_vat);
-                productStores[localStorage.getItem('store_id')].with_vat = !productStores[localStorage.getItem('store_id')]?.with_vat;
-                //setProductStores(productStores)
-                setProductStores({ ...productStores });
-                // setFormData({ ...formData });
-                //}
-                //  productStores[localStorage.getItem('store_id')].with_vat = !productStores[localStorage.getItem('store_id')]?.with_vat
-
-                console.log(formData);
-              }}
-              className=""
-              id="with_vat"
-            />  with VAT?]</h4>
+            <h4>Unit Prices</h4>
             <div className="table-responsive" style={{ overflowX: "auto" }}>
               <table className="table table-striped table-sm table-bordered">
-                <thead>
+                <tbody>
                   <tr className="text-center">
                     <th>Purchase Unit Price</th>
                     <th>Wholesale Unit Price</th>
                     <th>Retail Unit Price</th>
                   </tr>
-                </thead>
-                <tbody>
                   <tr className="text-center">
                     {!localStorage.getItem('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
                     <td style={{ width: "150px" }}>
@@ -1338,11 +1302,7 @@ const ProductCreate = forwardRef((props, ref) => {
                         id={`${"product_purchase_unit_price_0"}`}
                         name={`${"product_purchase_unit_price_0"}`}
                         type="number"
-                        value={
-                          productStores[localStorage.getItem('store_id')]?.purchase_unit_price || productStores[localStorage.getItem('store_id')]?.purchase_unit_price === 0
-                            ? productStores[localStorage.getItem('store_id')]?.purchase_unit_price
-                            : ""
-                        }
+                        value={productStores[localStorage.getItem('store_id')]?.purchase_unit_price}
                         ref={(el) => {
                           if (!inputRefs.current[0]) inputRefs.current[0] = {};
                           inputRefs.current[0][`${"product_purchase_unit_price_0"}`] = el;
@@ -1369,7 +1329,9 @@ const ProductCreate = forwardRef((props, ref) => {
                         className="form-control"
                         placeholder="Purchase Unit Price"
                         onChange={(e) => {
-                          errors["purchase_unit_price_0"] = "";
+                          if (timerRef.current) clearTimeout(timerRef.current);
+
+                          delete errors["purchase_unit_price_0"];
                           setErrors({ ...errors });
 
                           if (!e.target.value) {
@@ -1391,6 +1353,12 @@ const ProductCreate = forwardRef((props, ref) => {
 
                           productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(e.target.value);
                           setProductStores({ ...productStores });
+
+                          timerRef.current = setTimeout(() => {
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price * (1 + (store.vat_percent / 100))));
+                            setProductStores({ ...productStores });
+                          }, 100);
+
                         }}
                       />{" "}
                       {errors["purchase_unit_price_0"] && (
@@ -1436,7 +1404,9 @@ const ProductCreate = forwardRef((props, ref) => {
                         className="form-control"
                         placeholder="Wholesale Unit Price"
                         onChange={(e) => {
-                          errors["wholesale_unit_price"] = "";
+                          if (timerRef.current) clearTimeout(timerRef.current);
+
+                          delete errors["wholesale_unit_price"];
                           setErrors({ ...errors });
 
                           if (!e.target.value) {
@@ -1458,6 +1428,11 @@ const ProductCreate = forwardRef((props, ref) => {
                           productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(e.target.value);
 
                           setProductStores({ ...productStores });
+                          timerRef.current = setTimeout(() => {
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price * (1 + (store.vat_percent / 100))));
+                            setProductStores({ ...productStores });
+                          }, 100);
+
                         }}
                       />
                       {errors["wholesale_unit_price"] && (
@@ -1499,7 +1474,9 @@ const ProductCreate = forwardRef((props, ref) => {
                         className="form-control"
                         placeholder="Retail Unit Price"
                         onChange={(e) => {
-                          errors["retail_unit_price"] = "";
+                          if (timerRef.current) clearTimeout(timerRef.current);
+
+                          delete errors["retail_unit_price"];
                           setErrors({ ...errors });
                           if (!e.target.value) {
                             productStores[localStorage.getItem('store_id')].retail_unit_price = "";
@@ -1520,11 +1497,16 @@ const ProductCreate = forwardRef((props, ref) => {
 
                           console.log("e.target.value:", e.target.value);
 
-                          productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(
-                            e.target.value
-                          );
-                          console.log("productStores[localStorage.getItem('store_id')].retail_unit_price:", productStores[localStorage.getItem('store_id')].retail_unit_price);
+                          productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(e.target.value);
                           setProductStores({ ...productStores });
+
+
+                          timerRef.current = setTimeout(() => {
+                            productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price * (1 + (store.vat_percent / 100))));
+                            setProductStores({ ...productStores });
+                          }, 100);
+
+
                         }}
                       />{" "}
                       {errors["retail_unit_price"] && (
@@ -1534,6 +1516,245 @@ const ProductCreate = forwardRef((props, ref) => {
                         </div>
                       )}
 
+                    </td>
+                  </tr>
+                  <tr className="text-center">
+                    <th>Purchase Unit Price(with VAT)</th>
+                    <th>Wholesale Unit Price(with VAT)</th>
+                    <th>Retail Unit Price(with VAT)</th>
+                  </tr>
+                  <tr className="text-center">
+                    {!localStorage.getItem('store_id') ? <td style={{ width: "150px" }}>{store.name}</td> : ""}
+                    <td style={{ width: "150px" }}>
+                      <input
+                        id={`${"product_purchase_unit_price_with_vat_0"}`}
+                        name={`${"product_purchase_unit_price_with_vat_0"}`}
+                        type="number"
+                        value={
+                          productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat === 0
+                            ? productStores[localStorage.getItem('store_id')]?.purchase_unit_price_with_vat
+                            : ""
+                        }
+                        ref={(el) => {
+                          if (!inputRefs.current[0]) inputRefs.current[0] = {};
+                          inputRefs.current[0][`${"product_purchase_unit_price_with_vat_0"}`] = el;
+                        }}
+                        onFocus={() => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          timerRef.current = setTimeout(() => {
+                            inputRefs.current[0][`${"product_purchase_unit_price_with_vat_0"}`]?.select();
+                          }, 100);
+                        }}
+                        onKeyDown={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          if (e.key === "Enter") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[0][`${"product_wholesale_unit_price_with_vat_0"}`]?.select();
+                            }, 100);
+
+                          } /*else if (e.key ===  "ArrowLeft") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].focus();
+                            }, 100);
+                          }*/
+
+                          if (e.key === "ArrowLeft") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[0][`${"product_retail_unit_price_0"}`].focus();
+                            }, 100);
+                          }
+
+                        }}
+                        className="form-control"
+                        placeholder="Purchase Unit Price with VAT"
+                        onChange={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+
+                          delete errors["purchase_unit_price_with_vat_0"];
+                          setErrors({ ...errors });
+
+                          if (!e.target.value) {
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = "";
+                            setProductStores({ ...productStores });
+                            // setErrors({ ...errors });
+                            console.log("errors:", errors);
+                            return;
+                          }
+                          if (parseFloat(e.target.value) < 0) {
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = "";
+                            setProductStores({ ...productStores });
+
+                            errors["purchase_unit_price_with_vat_0"] =
+                              "Purchase Unit Price with VAT should not be < 0";
+                            setErrors({ ...errors });
+                            return;
+                          }
+
+                          productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat = parseFloat(e.target.value);
+                          setProductStores({ ...productStores });
+
+                          timerRef.current = setTimeout(() => {
+                            productStores[localStorage.getItem('store_id')].purchase_unit_price = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].purchase_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                            setProductStores({ ...productStores });
+                          }, 100);
+
+                        }}
+                      />{" "}
+                      {errors["purchase_unit_price_with_vat_0"] && (
+                        <div style={{ color: "red" }}>
+                          {errors["purchase_unit_price_with_vat_0"]}
+                        </div>
+                      )}
+
+                    </td>
+                    <td style={{ width: "150px" }}>
+                      <input
+                        id={`${"product_wholesale_unit_price_with_vat"}`}
+                        name={`${"product_wholesale_unit_price_with_vat"}`}
+                        type="number"
+                        value={
+                          productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat === 0
+                            ? productStores[localStorage.getItem('store_id')]?.wholesale_unit_price_with_vat
+                            : ""
+                        }
+                        ref={(el) => {
+                          if (!inputRefs.current[0]) inputRefs.current[0] = {};
+                          inputRefs.current[0][`${"product_wholesale_unit_price_with_vat_0"}`] = el;
+                        }}
+                        onFocus={() => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          timerRef.current = setTimeout(() => {
+                            inputRefs.current[0][`${"product_wholesale_unit_price_with_vat_0"}`]?.select();
+                          }, 100);
+                        }}
+                        onKeyDown={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          if (e.key === "Enter") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[0][`${"product_retail_unit_price_with_vat_0"}`]?.select();
+                            }, 100);
+
+                          } else if (e.key === "ArrowLeft") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[0][`${"product_purchase_unit_price_with_vat_0"}`].focus();
+                            }, 100);
+                          }
+                        }}
+                        className="form-control"
+                        placeholder="Wholesale Unit Price with VAT"
+                        onChange={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+
+                          delete errors["wholesale_unit_price_with_vat"];
+                          setErrors({ ...errors });
+
+                          if (!e.target.value) {
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = "";
+                            setProductStores({ ...productStores });
+                            return;
+                          }
+
+                          if (parseFloat(e.target.value) < 0) {
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = "";
+                            setProductStores({ ...productStores });
+
+                            errors["wholesale_unit_price_with_vat"] =
+                              "Wholesale unit price with VAT should not be < 0";
+                            setErrors({ ...errors });
+                            return;
+                          }
+
+                          productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat = parseFloat(e.target.value);
+                          setProductStores({ ...productStores });
+
+                          timerRef.current = setTimeout(() => {
+                            productStores[localStorage.getItem('store_id')].wholesale_unit_price = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].wholesale_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                            setProductStores({ ...productStores });
+                          }, 100);
+
+                        }}
+                      />
+                      {errors["wholesale_unit_price_with_vat"] && (
+                        <div style={{ color: "red" }}>
+                          {errors["wholesale_unit_price_with_vat"]}
+                        </div>
+                      )}
+
+                    </td>
+                    <td style={{ width: "150px" }}>
+                      <input
+                        id={`${"product_retail_unit_price_with_vat"}`}
+                        name={`${"product_retail_unit_price_with_vat"}`}
+                        type="number"
+                        disabled={formData.set?.total}
+                        value={
+                          productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat || productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat === 0
+                            ? productStores[localStorage.getItem('store_id')]?.retail_unit_price_with_vat
+                            : ""
+                        }
+                        ref={(el) => {
+                          if (!inputRefs.current[0]) inputRefs.current[0] = {};
+                          inputRefs.current[0][`${"product_retail_unit_price_with_vat_0"}`] = el;
+                        }}
+                        onFocus={() => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          timerRef.current = setTimeout(() => {
+                            inputRefs.current[0][`${"product_retail_unit_price_with_vat_0"}`]?.select();
+                          }, 100);
+                        }}
+                        onKeyDown={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+                          if (e.key === "ArrowLeft") {
+                            timerRef.current = setTimeout(() => {
+                              inputRefs.current[0][`${"product_wholesale_unit_price_with_vat_0"}`].focus();
+                            }, 100);
+                          }
+                        }}
+                        className="form-control"
+                        placeholder="Retail Unit Price with VAT"
+                        onChange={(e) => {
+                          if (timerRef.current) clearTimeout(timerRef.current);
+
+                          delete errors["retail_unit_price_with_vat"];
+                          setErrors({ ...errors });
+                          if (!e.target.value) {
+                            productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = "";
+                            setProductStores({ ...productStores });
+                            return;
+                          }
+
+                          if (parseFloat(e.target.value) < 0) {
+                            errors["retail_unit_price_with_vat_0"] =
+                              "Retail Unit Price with VAT should not be < 0";
+                            productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = "";
+
+                            setProductStores({ ...productStores });
+                            setErrors({ ...errors });
+                            console.log("errors:", errors);
+                            return;
+                          }
+
+                          console.log("e.target.value:", e.target.value);
+
+                          productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = parseFloat(
+                            e.target.value
+                          );
+                          setProductStores({ ...productStores });
+
+                          timerRef.current = setTimeout(() => {
+                            productStores[localStorage.getItem('store_id')].retail_unit_price = parseFloat(trimTo2Decimals(productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat / (1 + (store.vat_percent / 100))));
+                            setProductStores({ ...productStores });
+                          }, 100);
+
+
+                        }}
+                      />{" "}
+                      {errors["retail_unit_price_with_vat"] && (
+                        <div style={{ color: "red" }}>
+
+                          {errors["retail_unit_price_with_vat"]}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 </tbody>

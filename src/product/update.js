@@ -260,7 +260,6 @@ const ProductUpdate = forwardRef((props, ref) => {
               productStores[i].retail_unit_price = data.result.product_stores[key].retail_unit_price;
               productStores[i].stock = data.result.product_stores[key].stock;
               productStores[i].damaged_stock = data.result.product_stores[key].damaged_stock;
-              productStores[i].with_vat = data.result.product_stores[key].with_vat;
               i++;
             }
           }*/
@@ -441,7 +440,6 @@ const ProductUpdate = forwardRef((props, ref) => {
       "purchase_unit_price": productStores[selectedStoreIndex].purchase_unit_price ? productStores[selectedStoreIndex].purchase_unit_price : 0,
       "stock": productStores[selectedStoreIndex].stock ? productStores[selectedStoreIndex].stock : 0,
       "damaged_stock": productStores[selectedStoreIndex].damaged_stock ? productStores[selectedStoreIndex].damaged_stock : 0,
-      "with_vat": productStores[selectedStoreIndex].with_vat ? productStores[selectedStoreIndex].with_vat : false,
     };*/
     //console.log("saving to store id:" + productStores[selectedStoreIndex].store_id);
 
@@ -680,7 +678,7 @@ const ProductUpdate = forwardRef((props, ref) => {
       },
     };
 
-    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock`;
+    let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
     //setIsProductsLoading(true);
     let result = await fetch(
       "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
@@ -750,13 +748,8 @@ const ProductUpdate = forwardRef((props, ref) => {
     }
 
     if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
-      if (product.product_stores[formData.store_id].with_vat) {
-        product.unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price / (1 + (store.vat_percent / 100))));
-        product.unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price;
-      } else {
-        product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
-        product.unit_price_with_vat = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price * (1 + (store.vat_percent / 100))));
-      }
+      product.unit_price = product.product_stores[formData.store_id].retail_unit_price;
+      product.unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price_with_vat;
     }
 
     formData.set.products.push({
@@ -797,11 +790,8 @@ const ProductUpdate = forwardRef((props, ref) => {
     formData.set.total = parseFloat(trimTo2Decimals(total));
     formData.set.total_with_vat = parseFloat(trimTo2Decimals(totalWithVAT));
 
-    if (productStores[localStorage.getItem('store_id')]?.with_vat) {
-      productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total_with_vat;
-    } else {
-      productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total;
-    }
+    productStores[localStorage.getItem('store_id')].retail_unit_price = formData.set.total;
+    productStores[localStorage.getItem('store_id')].retail_unit_price_with_vat = formData.set.total_with_vat;
 
     setFormData({ ...formData });
   }
@@ -1245,26 +1235,7 @@ const ProductUpdate = forwardRef((props, ref) => {
 
 
 
-            <h4>Unit Prices [<input type="checkbox"
-              value={productStores[localStorage.getItem('store_id')]?.with_vat}
-              checked={productStores[localStorage.getItem('store_id')]?.with_vat}
-              onChange={(e) => {
-
-                errors["with_vat"] = "";
-                // if (productStores[localStorage.getItem('store_id')]) {
-                //console.log("productStores[selectedStoreIndex]?.with_vat:", productStores[selectedStoreIndex]?.with_vat);
-                productStores[localStorage.getItem('store_id')].with_vat = !productStores[localStorage.getItem('store_id')]?.with_vat;
-                //setProductStores(productStores)
-                setProductStores({ ...productStores });
-                // setFormData({ ...formData });
-                //}
-                //  productStores[localStorage.getItem('store_id')].with_vat = !productStores[localStorage.getItem('store_id')]?.with_vat
-
-                console.log(formData);
-              }}
-              className=""
-              id="with_vat"
-            />  with VAT?]</h4>
+            <h4>Unit Prices</h4>
             <div className="table-responsive" style={{ overflowX: "auto" }}>
               <table className="table table-striped table-sm table-bordered">
                 <thead>

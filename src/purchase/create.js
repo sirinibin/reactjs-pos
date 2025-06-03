@@ -506,7 +506,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
         };
 
         // let Select = "select=id,item_code,bar_code,name,product_stores,unit,part_number,name_in_arabic";
-        let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.stock,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.with_vat`;
+        let Select = `select=id,additional_keywords,search_label,set.name,item_code,prefix_part_number,country_name,brand_name,part_number,name,unit,name_in_arabic,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price,product_stores.${localStorage.getItem('store_id')}.purchase_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.retail_unit_price,product_stores.${localStorage.getItem('store_id')}.retail_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.wholesale_unit_price,product_stores.${localStorage.getItem('store_id')}.wholesale_unit_price_with_vat,product_stores.${localStorage.getItem('store_id')}.stock`;
         //  setIsProductsLoading(true);
         let result = await fetch(
             "/v1/product?" + Select + queryString + "&limit=50&sort=-country_name",
@@ -581,7 +581,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                 purchase_unit_price: parseFloat(selectedProducts[i].purchase_unit_price),
                 purchase_unit_price_with_vat: parseFloat(selectedProducts[i].purchase_unit_price_with_vat),
                 retail_unit_price: parseFloat(selectedProducts[i].retail_unit_price),
+                retail_unit_price_with_vat: parseFloat(selectedProducts[i].retail_unit_price_with_vat),
                 wholesale_unit_price: parseFloat(selectedProducts[i].wholesale_unit_price),
+                wholesale_unit_price_with_vat: parseFloat(selectedProducts[i].wholesale_unit_price_with_vat),
                 unit_discount: selectedProducts[i].unit_discount ? parseFloat(selectedProducts[i].unit_discount) : 0,
                 unit_discount_percent: selectedProducts[i].unit_discount_percent ? parseFloat(selectedProducts[i].unit_discount_percent) : 0,
                 unit_discount_with_vat: selectedProducts[i].unit_discount_with_vat ? parseFloat(selectedProducts[i].unit_discount_with_vat) : 0,
@@ -730,31 +732,19 @@ const PurchaseCreate = forwardRef((props, ref) => {
             */
 
             if (product.product_stores && product.product_stores[formData.store_id]?.retail_unit_price) {
-                if (product.product_stores[formData.store_id].with_vat) {
-                    product.purchase_unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].purchase_unit_price / (1 + (formData.vat_percent / 100))));
-                    product.purchase_unit_price_with_vat = product.product_stores[formData.store_id].purchase_unit_price;
-                } else {
-                    product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
-                    product.purchase_unit_price_with_vat = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].purchase_unit_price * (1 + (formData.vat_percent / 100))));
-                }
+                product.purchase_unit_price = product.product_stores[formData.store_id].purchase_unit_price;
+                product.purchase_unit_price_with_vat = product.product_stores[formData.store_id].purchase_unit_price_with_vat;
             }
 
 
             if (product.product_stores[formData.store_id]?.retail_unit_price) {
-                if (product.product_stores[formData.store_id]?.with_vat) {
-                    product.retail_unit_price = parseFloat(trimTo2Decimals(product.product_stores[formData.store_id].retail_unit_price / (1 + (formData.vat_percent / 100))));
-                } else {
-                    product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
-                }
-
+                product.retail_unit_price = product.product_stores[formData.store_id].retail_unit_price;
+                product.retail_unit_price_with_vat = product.product_stores[formData.store_id].retail_unit_price_with_vat;
             }
 
             if (product.product_stores[formData.store_id]?.wholesale_unit_price) {
-                if (product.product_stores[formData.store_id]?.with_vat) {
-                    product.wholesale_unit_price = parseFloat(product.product_stores[formData.store_id].wholesale_unit_price / (1 + (formData.vat_percent / 100)));
-                } else {
-                    product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
-                }
+                product.wholesale_unit_price = product.product_stores[formData.store_id].wholesale_unit_price;
+                product.wholesale_unit_price_with_vat = product.product_stores[formData.store_id].wholesale_unit_price_with_vat;
             }
 
             if (product.product_stores[formData.store_id]) {
@@ -3080,6 +3070,9 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 selectedProducts[index].wholesale_unit_price = parseFloat(e.target.value);
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
+                                                                    selectedProducts[index].wholesale_unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].wholesale_unit_price * (1 + (store.vat_percent / 100))));
+                                                                    setSelectedProducts([...selectedProducts]);
+
                                                                     checkErrors(index);
                                                                     reCalculate(index);
                                                                 }, 100);
@@ -3146,6 +3139,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 selectedProducts[index].retail_unit_price = parseFloat(e.target.value);
                                                                 setSelectedProducts([...selectedProducts]);
                                                                 timerRef.current = setTimeout(() => {
+                                                                    selectedProducts[index].retail_unit_price_with_vat = parseFloat(trimTo2Decimals(selectedProducts[index].retail_unit_price * (1 + (store.vat_percent / 100))));
+                                                                    setSelectedProducts([...selectedProducts]);
                                                                     checkErrors(index);
                                                                     reCalculate(index);
                                                                 }, 100);
