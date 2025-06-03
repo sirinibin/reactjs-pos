@@ -387,7 +387,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                     <li>Part No.</li>
                                                 </ul>
                                             </th>
-                                            <th className="per33 text-center" style={{ padding: "0px", width: "33%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                            <th className="per33 text-center" style={{ padding: "0px", width: "32%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                 <ul
                                                     className="list-unstyled"
                                                     style={{
@@ -425,7 +425,7 @@ const PreviewContent = forwardRef((props, ref) => {
                                                         <li>Unit Price</li>
                                                     </ul>
                                                 </th>
-                                                <th className="per7 text-center" style={{ padding: "0px", width: "5%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
+                                                <th className="per7 text-center" style={{ padding: "0px", width: "6%", borderRight: tableBorderThickness, borderBottom: tableBorderThickness }}>
                                                     <ul
                                                         className="list-unstyled"
                                                         style={{
