@@ -1954,26 +1954,6 @@ const OrderCreate = forwardRef((props, ref) => {
         }
     }
 
-
-    function moveToProductQuantityInputBox() {
-        setTimeout(() => {
-            let index = (selectedProducts.length - 1);
-            const input = document.getElementById('sales_product_quantity_' + index);
-            console.log("Moving to qty field");
-            input?.focus();
-            //  input
-
-        }, 300);
-    }
-
-
-
-    function moveToProductSearch() {
-        setTimeout(() => {
-            productSearchRef.current?.focus();
-        }, 300);
-    }
-
     const productSearchRef = useRef();
 
     const timerRef = useRef(null);
@@ -2454,7 +2434,10 @@ const OrderCreate = forwardRef((props, ref) => {
 
                                     productSearchRef.current?.clear();
                                     setOpenProductSearchResult(false);
-                                    moveToProductQuantityInputBox();
+
+                                    timerRef.current = setTimeout(() => {
+                                        inputRefs.current[(selectedProducts.length - 1)][`${"sales_product_quantity_" + (selectedProducts.length - 1)}`].select();
+                                    }, 100);
                                 }}
                                 options={productOptions}
                                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
@@ -2465,7 +2448,10 @@ const OrderCreate = forwardRef((props, ref) => {
                                         setOpenProductSearchResult(false);
                                         productSearchRef.current?.clear();
                                     }
-                                    moveToProductSearch();
+
+                                    timerRef.current = setTimeout(() => {
+                                        productSearchRef.current.focus();
+                                    }, 100);
                                 }}
                                 onInputChange={(searchTerm, e) => {
                                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -2780,7 +2766,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                             if (timerRef.current) clearTimeout(timerRef.current);
                                                             timerRef.current = setTimeout(() => {
                                                                 inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].select();
-                                                            }, 100);
+                                                            }, 20);
                                                         }}
                                                         onKeyDown={(e) => {
                                                             RunKeyActions(e, product);
@@ -2800,7 +2786,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[(index + 1)][`${"sales_unit_discount_with_vat_" + (index + 1)}`].focus();
+                                                                        inputRefs.current[(index + 1)][`${"sales_unit_discount_with_vat_" + (index + 1)}`].select();
                                                                     }, 100);
                                                                 }
                                                             }
@@ -2881,7 +2867,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_product_quantity_" + index}`].select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
@@ -2897,7 +2883,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].focus();
+                                                                        inputRefs.current[index][`${"sales_product_purchase_unit_price_" + index}`].select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -2977,7 +2963,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_product_unit_price_" + index}`].select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
 
                                                             onKeyDown={(e) => {
@@ -2994,7 +2980,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_quantity_" + index}`].focus();
+                                                                        inputRefs.current[index][`${"sales_product_quantity_" + index}`].select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -3080,7 +3066,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
 
                                                             onKeyDown={(e) => {
@@ -3096,8 +3082,8 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_unit_price_" + index}`].focus();
-                                                                    }, 200);
+                                                                        inputRefs.current[index][`${"sales_product_unit_price_" + index}`].select();
+                                                                    }, 50);
                                                                 }
                                                             }}
                                                             onChange={(e) => {
@@ -3190,7 +3176,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_unit_discount_" + index}`]?.select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
@@ -3198,7 +3184,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].focus();
+                                                                        inputRefs.current[index][`${"sales_product_unit_price_with_vat_" + index}`].select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -3303,7 +3289,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"sales_unit_discount_with_vat_" + index}`]?.select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
@@ -3325,14 +3311,14 @@ const OrderCreate = forwardRef((props, ref) => {
                                                                         } else {
                                                                             console.log("moviing to next line")
                                                                             timerRef.current = setTimeout(() => {
-                                                                                inputRefs.current[index - 1][`${"sales_product_quantity_" + (index - 1)}`]?.focus();
+                                                                                inputRefs.current[index - 1][`${"sales_product_quantity_" + (index - 1)}`]?.select();
                                                                             }, 100);
                                                                         }
 
                                                                     }
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"sales_unit_discount_" + index}`].focus();
+                                                                        inputRefs.current[index][`${"sales_unit_discount_" + index}`].select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -3792,7 +3778,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                     timerRef.current = setTimeout(() => {
                                                         discountRef.current.select();
-                                                    }, 100);
+                                                    }, 20);
                                                 }}
                                                 onChange={(e) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -3980,7 +3966,7 @@ const OrderCreate = forwardRef((props, ref) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                     timerRef.current = setTimeout(() => {
                                                         discountWithVATRef.current.select();
-                                                    }, 100);
+                                                    }, 20);
                                                 }}
                                                 onChange={(e) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);

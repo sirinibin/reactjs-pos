@@ -1595,26 +1595,9 @@ const QuotationCreate = forwardRef((props, ref) => {
     PreviewRef.current.open(model, "whatsapp", "quotation");
   }
 
-
-  function moveToProductQuantityInputBox() {
-    setTimeout(() => {
-      let index = (selectedProducts.length - 1);
-      const input = document.getElementById('quotation_product_quantity_' + index);
-      input?.focus();
-
-    }, 500);
-  }
-
-  function moveToProductSearch() {
-    setTimeout(() => {
-      productSearchRef.current?.focus();
-    }, 500);
-  }
-
   const timerRef = useRef(null);
 
   const productSearchRef = useRef();
-
 
   const inputRefs = useRef({});
 
@@ -2410,7 +2393,11 @@ const QuotationCreate = forwardRef((props, ref) => {
                     addProduct(selectedItems[0]);
                   }
                   setOpenProductSearchResult(false);
-                  moveToProductQuantityInputBox();
+
+                  timerRef.current = setTimeout(() => {
+                    inputRefs.current[(selectedProducts.length - 1)][`${"quotation_product_quantity_" + (selectedProducts.length - 1)}`].select();
+                  }, 100);
+
                 }}
                 options={productOptions}
                 selected={selectedProduct}
@@ -2429,7 +2416,9 @@ const QuotationCreate = forwardRef((props, ref) => {
                     productSearchRef.current?.clear();
                   }
 
-                  moveToProductSearch();
+                  timerRef.current = setTimeout(() => {
+                    productSearchRef.current.focus();
+                  }, 100);
 
                 }}
                 renderMenu={(results, menuProps, state) => (
@@ -2725,7 +2714,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                 if (timerRef.current) clearTimeout(timerRef.current);
                                 timerRef.current = setTimeout(() => {
                                   inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`].select();
-                                }, 100);
+                                }, 20);
                               }}
                               onKeyDown={(e) => {
                                 RunKeyActions(e, product);
@@ -2745,7 +2734,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[(index + 1)][`${"quotation_unit_discount_with_vat_" + (index + 1)}`].focus();
+                                      inputRefs.current[(index + 1)][`${"quotation_unit_discount_with_vat_" + (index + 1)}`].select();
                                     }, 100);
                                   }
                                 }
@@ -2826,7 +2815,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
                                     inputRefs.current[index][`${"quotation_product_quantity_" + index}`].select();
-                                  }, 100);
+                                  }, 20);
                                 }}
                                 onKeyDown={(e) => {
                                   RunKeyActions(e, product);
@@ -2842,7 +2831,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_product_purchase_unit_price_" + index}`].select();
                                     }, 100);
                                   }
                                 }}
@@ -2923,7 +2912,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
                                     inputRefs.current[index][`${"quotation_product_unit_price_" + index}`].select();
-                                  }, 100);
+                                  }, 20);
                                 }}
 
                                 onKeyDown={(e) => {
@@ -2940,7 +2929,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"quotation_product_quantity_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_product_quantity_" + index}`].select();
                                     }, 100);
                                   }
                                 }}
@@ -3026,7 +3015,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
                                     inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`].select();
-                                  }, 100);
+                                  }, 20);
                                 }}
 
                                 onKeyDown={(e) => {
@@ -3042,7 +3031,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                     }, 100);
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"quotation_product_unit_price_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_product_unit_price_" + index}`].select();
                                     }, 200);
                                   }
                                 }}
@@ -3136,7 +3125,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
                                     inputRefs.current[index][`${"quotation_unit_discount_" + index}`]?.select();
-                                  }, 100);
+                                  }, 20);
                                 }}
                                 onKeyDown={(e) => {
                                   RunKeyActions(e, product);
@@ -3144,7 +3133,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_product_unit_price_with_vat_" + index}`].select();
                                     }, 100);
                                   }
                                 }}
@@ -3249,7 +3238,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                                   if (timerRef.current) clearTimeout(timerRef.current);
                                   timerRef.current = setTimeout(() => {
                                     inputRefs.current[index][`${"quotation_unit_discount_with_vat_" + index}`]?.select();
-                                  }, 100);
+                                  }, 20);
                                 }}
                                 onKeyDown={(e) => {
                                   RunKeyActions(e, product);
@@ -3269,14 +3258,14 @@ const QuotationCreate = forwardRef((props, ref) => {
                                       } else {
                                         console.log("moviing to next line")
                                         timerRef.current = setTimeout(() => {
-                                          inputRefs.current[index - 1][`${"quotation_product_quantity_" + (index - 1)}`]?.focus();
+                                          inputRefs.current[index - 1][`${"quotation_product_quantity_" + (index - 1)}`]?.select();
                                         }, 100);
                                       }
 
                                     }
                                   } else if (e.key === "ArrowLeft") {
                                     timerRef.current = setTimeout(() => {
-                                      inputRefs.current[index][`${"quotation_unit_discount_" + index}`].focus();
+                                      inputRefs.current[index][`${"quotation_unit_discount_" + index}`].select();
                                     }, 100);
                                   }
                                 }}
@@ -3737,7 +3726,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           if (timerRef.current) clearTimeout(timerRef.current);
                           timerRef.current = setTimeout(() => {
                             discountRef.current.select();
-                          }, 100);
+                          }, 20);
                         }}
                         onChange={(e) => {
                           if (timerRef.current) clearTimeout(timerRef.current);
@@ -3925,7 +3914,7 @@ const QuotationCreate = forwardRef((props, ref) => {
                           if (timerRef.current) clearTimeout(timerRef.current);
                           timerRef.current = setTimeout(() => {
                             discountWithVATRef.current.select();
-                          }, 100);
+                          }, 20);
                         }}
                         onChange={(e) => {
                           if (timerRef.current) clearTimeout(timerRef.current);

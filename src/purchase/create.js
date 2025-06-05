@@ -1516,17 +1516,6 @@ const PurchaseCreate = forwardRef((props, ref) => {
         PreviewRef.current.open(model, "whatsapp", "purchase");
     }
 
-    function moveToProductQuantityInputBox() {
-        setTimeout(() => {
-            let index = (selectedProducts.length - 1);
-            const input = document.getElementById('purchase_product_quantity_' + index);
-            console.log("Moving to qty field");
-            input?.focus();
-
-        }, 500);
-    }
-
-
     const productSearchRef = useRef();
 
     const timerRef = useRef(null);
@@ -2199,7 +2188,10 @@ const PurchaseCreate = forwardRef((props, ref) => {
 
                                     }
                                     setOpenProductSearchResult(false);
-                                    moveToProductQuantityInputBox();
+                                    timerRef.current = setTimeout(() => {
+                                        inputRefs.current[(selectedProducts.length - 1)][`${"purchase_product_quantity_" + (selectedProducts.length - 1)}`].select();
+                                    }, 100);
+
                                 }}
                                 options={productOptions}
                                 selected={selectedProduct}
@@ -2214,10 +2206,11 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                         }, 100);
                                     }
 
-
                                     timerRef.current = setTimeout(() => {
-                                        productSearchRef.current?.focus();
+                                        productSearchRef.current.focus();
                                     }, 100);
+
+
                                 }}
                                 placeholder="Part No. | Name | Name in Arabic | Brand | Country"
                                 highlightOnlyResult={true}
@@ -2481,7 +2474,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_product_quantity_" + index}`].select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
@@ -2494,8 +2487,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                         }, 100);
                                                                     } else {
                                                                         timerRef.current = setTimeout(() => {
-                                                                            inputRefs.current[(index + 1)][`${"purchase_unit_discount_" + (index + 1)}`].focus();
-                                                                        }, 100);
+                                                                            inputRefs.current[(index + 1)][`${"purchase_unit_discount_" + (index + 1)}`].select();
+                                                                        }, 50);
                                                                     }
                                                                 }
                                                             }}
@@ -2574,7 +2567,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_product_unit_price_" + index}`].select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
@@ -2590,8 +2583,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     }, 300);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"purchase_product_quantity_" + index}`].focus();
-                                                                    }, 100);
+                                                                        inputRefs.current[index][`${"purchase_product_quantity_" + index}`].select();
+                                                                    }, 50);
                                                                 }
                                                             }}
                                                             onChange={(e) => {
@@ -2674,7 +2667,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_product_unit_price_with_vat_" + index}`].select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
 
                                                             onKeyDown={(e) => {
@@ -2691,8 +2684,8 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                     }, 100);
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"purchase_product_unit_price_" + index}`].focus();
-                                                                    }, 200);
+                                                                        inputRefs.current[index][`${"purchase_product_unit_price_" + index}`].select();
+                                                                    }, 50);
                                                                 }
                                                             }}
                                                             onChange={(e) => {
@@ -2773,7 +2766,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_unit_discount_" + index}`]?.select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
@@ -2795,14 +2788,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                         } else {
                                                                             console.log("moviing to next line")
                                                                             timerRef.current = setTimeout(() => {
-                                                                                inputRefs.current[index - 1][`${"purchase_product_quantity_" + (index - 1)}`]?.focus();
+                                                                                inputRefs.current[index - 1][`${"purchase_product_quantity_" + (index - 1)}`]?.select();
                                                                             }, 100);
                                                                         }
 
                                                                     }
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"purchase_product_unit_price_" + index}`].focus();
+                                                                        inputRefs.current[index][`${"purchase_product_unit_price_" + index}`].select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -2909,7 +2902,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                 if (timerRef.current) clearTimeout(timerRef.current);
                                                                 timerRef.current = setTimeout(() => {
                                                                     inputRefs.current[index][`${"purchase_unit_discount_with_vat_" + index}`]?.select();
-                                                                }, 100);
+                                                                }, 20);
                                                             }}
                                                             onKeyDown={(e) => {
                                                                 RunKeyActions(e, product);
@@ -2931,14 +2924,14 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                                         } else {
                                                                             console.log("moviing to next line")
                                                                             timerRef.current = setTimeout(() => {
-                                                                                inputRefs.current[index - 1][`${"purchase_product_quantity_" + (index - 1)}`]?.focus();
+                                                                                inputRefs.current[index - 1][`${"purchase_product_quantity_" + (index - 1)}`]?.select();
                                                                             }, 100);
                                                                         }
 
                                                                     }
                                                                 } else if (e.key === "ArrowLeft") {
                                                                     timerRef.current = setTimeout(() => {
-                                                                        inputRefs.current[index][`${"purchase_unit_discount_" + index}`].focus();
+                                                                        inputRefs.current[index][`${"purchase_unit_discount_" + index}`].select();
                                                                     }, 100);
                                                                 }
                                                             }}
@@ -3457,7 +3450,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                     timerRef.current = setTimeout(() => {
                                                         discountRef.current.select();
-                                                    }, 100);
+                                                    }, 20);
                                                 }}
                                                 onChange={(e) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
@@ -3645,7 +3638,7 @@ const PurchaseCreate = forwardRef((props, ref) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
                                                     timerRef.current = setTimeout(() => {
                                                         discountWithVATRef.current.select();
-                                                    }, 100);
+                                                    }, 20);
                                                 }}
                                                 onChange={(e) => {
                                                     if (timerRef.current) clearTimeout(timerRef.current);
