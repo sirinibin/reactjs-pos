@@ -1185,7 +1185,7 @@ const OrderIndex = forwardRef((props, ref) => {
     }
 
     function sendWhatsAppMessage(model) {
-        PreviewRef.current.open(model, "whatsapp", "sales");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_sales");
     }
 
 

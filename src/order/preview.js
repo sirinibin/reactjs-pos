@@ -7,133 +7,13 @@ import { Invoice } from '@axenda/zatca';
 import html2pdf from 'html2pdf.js';
 import "./print.css";
 import WhatsAppModal from './../utils/WhatsAppModal';
+import MBDIInvoiceBackground from './../INVOICE.jpg';
 //import jsPDF from "jspdf";
 //import html2canvas from "html2canvas";
 
 
 const Preview = forwardRef((props, ref) => {
-
-    function ObjectToSearchQueryParams(object) {
-        return Object.keys(object)
-            .map(function (key) {
-                return `search[${key}]=${object[key]}`;
-            })
-            .join("&");
-    }
-    let [whatsAppShare, setWhatsAppShare] = useState(false);
-    let [phone, setPhone] = useState("");
-
-    function setInvoiceTitle(modelName) {
-        model.modelName = modelName;
-
-        console.log("model.modelName", model.modelName);
-        console.log("model:", model);
-        var IsCashOnly = true;
-        if (model.payment_methods?.length === 0 || model.payment_status === "not_paid") {
-            IsCashOnly = false;
-        }
-
-        for (let i = 0; i < model.payment_methods?.length; i++) {
-            if (model.payment_methods[i] !== "cash") {
-                IsCashOnly = false;
-                break;
-            }
-        }
-
-        var isSimplified = true;
-
-        if (model.modelName === "sales" || model.modelName === "sales_return") {
-            if (model.customer?.vat_no) {
-                isSimplified = false;
-            } else {
-                isSimplified = true;
-            }
-        }
-
-        if (model.modelName === "sales") {
-            if (model.store?.zatca?.phase === "1") {
-                if (model.payment_status !== "not_paid") {
-                    model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
-                    if (IsCashOnly) {
-                        model.invoiceTitle = "CASH TAX INVOICE | فاتورة ضريبية نقدية";
-                    }
-                } else if (model.payment_status === "not_paid") {
-                    model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
-                }
-            } else if (model.store?.zatca?.phase === "2") {
-                if (isSimplified) {
-                    if (model.payment_status === "not_paid") {
-                        model.invoiceTitle = "SIMPLIFIED CREDIT TAX INVOICE | فاتورة ضريبة الائتمان المبسطة";
-                    } else {
-                        model.invoiceTitle = "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة";
-                        if (IsCashOnly) {
-                            model.invoiceTitle = "SIMPLIFIED CASH TAX INVOICE | فاتورة ضريبية نقدية مبسطة";
-                        }
-                    }
-                } else {
-                    if (model.payment_status === "not_paid") {
-                        model.invoiceTitle = "STANDARD CREDIT TAX INVOICE | فاتورة ضريبة الائتمان القياسية";
-                    } else {
-                        model.invoiceTitle = "STANDARD TAX INVOICE | فاتورة ضريبية قياسية";
-                        if (IsCashOnly) {
-                            model.invoiceTitle = "STANDARD CASH TAX INVOICE | فاتورة ضريبية نقدية قياسية";
-                        }
-                    }
-                }
-            }
-        } else if (model.modelName === "sales_return") {
-            if (model.store?.zatca?.phase === "1") {
-                model.invoiceTitle = "SALES RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
-                if (IsCashOnly) {
-                    model.invoiceTitle = "SALES RETURN CASH TAX INVOICE | إقرار مبيعات فاتورة ضريبية نقدية";
-                }
-            } else if (model.store?.zatca?.phase === "2") {
-                if (isSimplified) {
-                    model.invoiceTitle = "SIMPLIFIED CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي مبسط لإقرار إقرار ائتماني";
-                    if (IsCashOnly) {
-                        model.invoiceTitle = "SIMPLIFIED CREDIT NOTE CASH RETURN TAX INVOICE | مذكرة ائتمان مبسطة، إقرار نقدي، فاتورة ضريبية";
-                    }
-                } else {
-                    model.invoiceTitle = "STANDARD CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي قياسي لإرجاع فاتورة الائتمان";
-                    if (IsCashOnly) {
-                        model.invoiceTitle = "STANDARD CREDIT NOTE CASH RETURN TAX INVOICE | سند ائتمان قياسي، إقرار نقدي، فاتورة ضريبية";
-                    }
-                }
-            }
-        } else if (model.modelName === "purchase") {
-            if (model.payment_status === "not_paid") {
-                model.invoiceTitle = "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الشراء بالائتمان";
-            } else {
-                model.invoiceTitle = "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء";
-                if (IsCashOnly) {
-                    model.invoiceTitle = "CASH PURCHASE TAX INVOICE | فاتورة ضريبة الشراء النقدي";
-                }
-            }
-        } else if (model.modelName === "purchase_return") {
-            if (model.payment_status === "not_paid") {
-                model.invoiceTitle = "CREDIT PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء بالائتمان";
-            } else {
-                model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع المشتريات";
-                if (IsCashOnly) {
-                    model.invoiceTitle = "CASH PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء النقدي";
-                }
-            }
-        } else if (model.modelName === "quotation") {
-            model.invoiceTitle = "QUOTATION / اقتباس";
-
-            if (model.type === "invoice" && model.payment_status === "not_paid") {
-                model.invoiceTitle = "CREDIT INVOICE | فاتورة ائتمانية";
-            } else if (model.type === "invoice") {
-                model.invoiceTitle = "INVOICE | فاتورة";
-            }
-        } else if (model.modelName === "delivery_note") {
-            model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";
-        }
-
-        setModel({ ...model });
-    }
-
-    let [modelName, setModelName] = useState("sales");
+    let [InvoiceBackground, setInvoiceBackground] = useState("");
 
     useImperativeHandle(ref, () => ({
         async open(modelObj, whatsapp, modelNameStr) {
@@ -170,6 +50,25 @@ const Preview = forwardRef((props, ref) => {
 
                 if (model.store_id) {
                     await getStore(model.store_id);
+
+
+                    if (model.store.code === "MBDI" && whatsAppShare) {
+                        InvoiceBackground = MBDIInvoiceBackground;
+                        setInvoiceBackground(InvoiceBackground);
+                        fontSizes[modelName + "_storeHeader"] = {
+                            "visible": false,
+                        }
+                        if (fontSizes[modelName + "_marginTop"].value === 0) {
+                            fontSizes[modelName + "_marginTop"] = {
+                                "value": 153,
+                                "unit": "px",
+                                "size": "153px",
+                                "step": 3
+                            };
+                        }
+                        setFontSizes({ ...fontSizes });
+                        saveToLocalStorage("fontSizes", fontSizes);
+                    }
                 }
 
                 if (model.customer_id) {
@@ -268,6 +167,131 @@ const Preview = forwardRef((props, ref) => {
 
     }));
 
+
+
+    function ObjectToSearchQueryParams(object) {
+        return Object.keys(object)
+            .map(function (key) {
+                return `search[${key}]=${object[key]}`;
+            })
+            .join("&");
+    }
+    let [whatsAppShare, setWhatsAppShare] = useState(false);
+    let [phone, setPhone] = useState("");
+
+    function setInvoiceTitle(modelName) {
+        model.modelName = modelName;
+
+        console.log("model.modelName", model.modelName);
+        console.log("model:", model);
+
+        var IsCashOnly = true;
+        if (model.payment_methods?.length === 0 || model.payment_status === "not_paid") {
+            IsCashOnly = false;
+        }
+
+        for (let i = 0; i < model.payment_methods?.length; i++) {
+            if (model.payment_methods[i] !== "cash") {
+                IsCashOnly = false;
+                break;
+            }
+        }
+
+        var isSimplified = true;
+
+        if (model.modelName === "sales" || model.modelName === "whatsapp_sales" || model.modelName === "sales_return" || model.modelName === "whatsapp_sales_return") {
+            if (model.customer?.vat_no) {
+                isSimplified = false;
+            } else {
+                isSimplified = true;
+            }
+        }
+
+        if (model.modelName === "sales" || model.modelName === "whatsapp_sales") {
+            if (model.store?.zatca?.phase === "1") {
+                if (model.payment_status !== "not_paid") {
+                    model.invoiceTitle = "TAX INVOICE | الفاتورة الضريبية";
+                    if (IsCashOnly) {
+                        model.invoiceTitle = "CASH TAX INVOICE | فاتورة ضريبية نقدية";
+                    }
+                } else if (model.payment_status === "not_paid") {
+                    model.invoiceTitle = "CREDIT TAX INVOICE | فاتورة ضريبة الائتمان";
+                }
+            } else if (model.store?.zatca?.phase === "2") {
+                if (isSimplified) {
+                    if (model.payment_status === "not_paid") {
+                        model.invoiceTitle = "SIMPLIFIED CREDIT TAX INVOICE | فاتورة ضريبة الائتمان المبسطة";
+                    } else {
+                        model.invoiceTitle = "SIMPLIFIED TAX INVOICE | فاتورة ضريبية مبسطة";
+                        if (IsCashOnly) {
+                            model.invoiceTitle = "SIMPLIFIED CASH TAX INVOICE | فاتورة ضريبية نقدية مبسطة";
+                        }
+                    }
+                } else {
+                    if (model.payment_status === "not_paid") {
+                        model.invoiceTitle = "STANDARD CREDIT TAX INVOICE | فاتورة ضريبة الائتمان القياسية";
+                    } else {
+                        model.invoiceTitle = "STANDARD TAX INVOICE | فاتورة ضريبية قياسية";
+                        if (IsCashOnly) {
+                            model.invoiceTitle = "STANDARD CASH TAX INVOICE | فاتورة ضريبية نقدية قياسية";
+                        }
+                    }
+                }
+            }
+        } else if (model.modelName === "sales_return" || model.modelName === "whatsapp_sales_return") {
+            if (model.store?.zatca?.phase === "1") {
+                model.invoiceTitle = "SALES RETURN TAX INVOICE | فاتورة ضريبة المبيعات المرتجعة";
+                if (IsCashOnly) {
+                    model.invoiceTitle = "SALES RETURN CASH TAX INVOICE | إقرار مبيعات فاتورة ضريبية نقدية";
+                }
+            } else if (model.store?.zatca?.phase === "2") {
+                if (isSimplified) {
+                    model.invoiceTitle = "SIMPLIFIED CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي مبسط لإقرار إقرار ائتماني";
+                    if (IsCashOnly) {
+                        model.invoiceTitle = "SIMPLIFIED CREDIT NOTE CASH RETURN TAX INVOICE | مذكرة ائتمان مبسطة، إقرار نقدي، فاتورة ضريبية";
+                    }
+                } else {
+                    model.invoiceTitle = "STANDARD CREDIT NOTE RETURN TAX INVOICE | إقرار ضريبي قياسي لإرجاع فاتورة الائتمان";
+                    if (IsCashOnly) {
+                        model.invoiceTitle = "STANDARD CREDIT NOTE CASH RETURN TAX INVOICE | سند ائتمان قياسي، إقرار نقدي، فاتورة ضريبية";
+                    }
+                }
+            }
+        } else if (model.modelName === "purchase" || model.modelName === "whatsapp_purchase") {
+            if (model.payment_status === "not_paid") {
+                model.invoiceTitle = "CREDIT PURCHASE TAX INVOICE | فاتورة ضريبة الشراء بالائتمان";
+            } else {
+                model.invoiceTitle = "PURCHASE TAX INVOICE | فاتورة ضريبة الشراء";
+                if (IsCashOnly) {
+                    model.invoiceTitle = "CASH PURCHASE TAX INVOICE | فاتورة ضريبة الشراء النقدي";
+                }
+            }
+        } else if (model.modelName === "purchase_return" || model.modelName === "whatsapp_purchase_return") {
+            if (model.payment_status === "not_paid") {
+                model.invoiceTitle = "CREDIT PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء بالائتمان";
+            } else {
+                model.invoiceTitle = "PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع المشتريات";
+                if (IsCashOnly) {
+                    model.invoiceTitle = "CASH PURCHASE RETURN TAX INVOICE | فاتورة ضريبة إرجاع الشراء النقدي";
+                }
+            }
+        } else if (model.modelName === "quotation" || model.modelName === "whatsapp_quotation") {
+            model.invoiceTitle = "QUOTATION / اقتباس";
+
+            if (model.type === "invoice" && model.payment_status === "not_paid") {
+                model.invoiceTitle = "CREDIT INVOICE | فاتورة ائتمانية";
+            } else if (model.type === "invoice") {
+                model.invoiceTitle = "INVOICE | فاتورة";
+            }
+        } else if (model.modelName === "delivery_note" || model.modelName === "whatsapp_delivery_note") {
+            model.invoiceTitle = "DELIVERY NOTE / مذكرة تسليم";
+        }
+
+        setModel({ ...model });
+    }
+
+    let [modelName, setModelName] = useState("sales");
+
     function changePageSize(size) {
         fontSizes[modelName + "_pageSize"] = parseInt(size);
         setFontSizes({ ...fontSizes });
@@ -358,17 +382,17 @@ const Preview = forwardRef((props, ref) => {
         let queryParams = ObjectToSearchQueryParams(searchParams);
 
         let apiPath = "";
-        if (modelName && modelName === "sales") {
+        if (modelName && (modelName === "sales" || modelName === "whatsapp_sales")) {
             apiPath = "order"
-        } else if (modelName && modelName === "sales_return") {
+        } else if (modelName && (modelName === "sales_return" || modelName === "whatsapp_sales_return")) {
             apiPath = "sales-return"
-        } else if (modelName && modelName === "purchase") {
+        } else if (modelName && (modelName === "purchase" || modelName === "whatsapp_purchase")) {
             apiPath = "purchase"
-        } else if (modelName && modelName === "purchase_return") {
+        } else if (modelName && (modelName === "purchase_return" || modelName === "whatsapp_purchase_return")) {
             apiPath = "purchase-return"
-        } else if (modelName && modelName === "quotation") {
+        } else if (modelName && (modelName === "quotation" || modelName === "whatsapp_quotation")) {
             apiPath = "quotation"
-        } else if (modelName && modelName === "delivery_note") {
+        } else if (modelName && (modelName === "delivery_note" || modelName === "whatsapp_delivery_note")) {
             apiPath = "delivery-note"
         }
 
@@ -687,17 +711,17 @@ const Preview = forwardRef((props, ref) => {
     const getFileName = useCallback(() => {
         let filename = "";
 
-        if (modelName === "sales") {
+        if (modelName === "sales" || modelName === "whatsapp_sales") {
             filename = "Sales";
-        } else if (modelName === "sales_return") {
+        } else if (modelName === "sales_return" || modelName === "whatsapp_sales_return") {
             filename = "Sales_Return";
-        } else if (modelName === "purchase") {
+        } else if (modelName === "purchase" || modelName === "whatsapp_purchase") {
             filename = "Purchase";
-        } else if (modelName === "purchase_return") {
+        } else if (modelName === "purchase_return" || modelName === "whatsapp_purchase_return") {
             filename = "Purchase_Return";
-        } else if (modelName === "quotation") {
+        } else if (modelName === "quotation" || modelName === "whatsapp_quotation") {
             filename = "Quotation";
-        } else if (modelName === "delivery_note") {
+        } else if (modelName === "delivery_note" || modelName === "whatsapp_delivery_note") {
             filename = "Delivery_Note";
         }
 
@@ -1063,7 +1087,26 @@ const Preview = forwardRef((props, ref) => {
             storedFontSizes = {};
         }
 
-        let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note", "customer_deposit", "customer_withdrawal", "balance_sheet"];
+        let modelNames = [
+            "sales",
+            "whatsapp_sales",
+            "sales_return",
+            "whatsapp_sales_return",
+            "purchase",
+            "whatsapp_purchase",
+            "purchase_return",
+            "whatsapp_purchase_return",
+            "quotation",
+            "whatsapp_quotation",
+            "delivery_note",
+            "whatsapp_delivery_note",
+            "customer_deposit",
+            "whatsapp_customer_deposit",
+            "customer_withdrawal",
+            "whatsapp_customer_withdrawal",
+            "balance_sheet",
+            "whatsapp_balance_sheet"
+        ];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {
                 if (!storedFontSizes[modelNames[key1] + "_" + key2]) {
@@ -1071,11 +1114,8 @@ const Preview = forwardRef((props, ref) => {
                 }
             }
         }
-
         setFontSizes({ ...storedFontSizes });
         saveToLocalStorage("fontSizes", storedFontSizes);
-
-
     }, [setFontSizes, defaultFontSizes, saveToLocalStorage, getFromLocalStorage]);
 
 
@@ -1233,7 +1273,7 @@ const Preview = forwardRef((props, ref) => {
                     </select>
 
                     {/* Show Store Header - Always fixed here */}
-                    {!whatsAppShare && <div className="form-check">
+                    <div className="form-check">
                         <input
                             type="checkbox"
                             className="form-check-input"
@@ -1248,18 +1288,17 @@ const Preview = forwardRef((props, ref) => {
                             }}
                         />
                         <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
-                    </div>}
+                    </div>
 
 
 
                     {/* Margin Control */}
 
-                    {!whatsAppShare && <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
+                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
                         <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
-
-                    </div>}
+                    </div>{"M:" + fontSizes[modelName + "_marginTop"]?.size}
 
                     <div className="col ">
                         <>
@@ -1353,7 +1392,7 @@ const Preview = forwardRef((props, ref) => {
 
             <Modal.Body>
                 <div ref={printAreaRef} className="print-area" id="print-area">
-                    <PreviewContent model={model} whatsAppShare={whatsAppShare} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />
+                    <PreviewContent model={model} invoiceBackground={InvoiceBackground} whatsAppShare={whatsAppShare} modelName={modelName} selectText={selectText} fontSizes={fontSizes} />
                 </div>
             </Modal.Body>
             <Modal.Footer>

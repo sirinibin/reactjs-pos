@@ -90,11 +90,14 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     paddingBottom: "4px",
                     marginTop: "9px",
                     height: "1113px",
-                    width: `${props.whatsAppShare ? "750px" : "750px"}`
+                    width: `${props.whatsAppShare ? "750px" : "750px"}`,
+                    backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                 }}
 
             >
-                {props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? < div className="row">
+                {props.fontSizes[props.modelName + "_storeHeader"]?.visible ? < div className="row">
                     <div className="col">
                         <ul className="list-unstyled text-left">
                             <li>
@@ -148,7 +151,7 @@ const BalanceSheetPrintPreviewContent = forwardRef((props, ref) => {
                     </div>
                 </div> : ""}
 
-                <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
+                <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                     <div className="col">
                         <u><h1 className="text-center clickable-text fw-bold" onClick={() => {
                             props.selectText("invoiceTitle");

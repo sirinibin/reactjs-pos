@@ -5,7 +5,7 @@ import CustomerDepositPreviewContent from './previewContent.js';
 import { Invoice } from '@axenda/zatca';
 import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './../utils/WhatsAppModal';
-
+import MBDIInvoiceBackground from './../INVOICE.jpg';
 
 const CustomerDepositPreview = forwardRef((props, ref) => {
 
@@ -17,12 +17,13 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             .join("&");
     }
 
+    let [InvoiceBackground, setInvoiceBackground] = useState("");
     let [whatsAppShare, setWhatsAppShare] = useState(false);
     let [phone, setPhone] = useState("");
     let [modelName, setModelName] = useState("customer_deposit");
 
     useImperativeHandle(ref, () => ({
-        open(modelObj, whatsapp, modelNameStr) {
+        async open(modelObj, whatsapp, modelNameStr) {
             modelName = modelNameStr;
             setModelName(modelName);
 
@@ -47,7 +48,24 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
 
 
                 if (localStorage.getItem("store_id")) {
-                    getStore(localStorage.getItem("store_id"));
+                    await getStore(localStorage.getItem("store_id"));
+                    if (model.store.code === "MBDI" && whatsAppShare) {
+                        InvoiceBackground = MBDIInvoiceBackground;
+                        setInvoiceBackground(InvoiceBackground);
+                        fontSizes[modelName + "_storeHeader"] = {
+                            "visible": false,
+                        }
+                        if (fontSizes[modelName + "_marginTop"].value === 0) {
+                            fontSizes[modelName + "_marginTop"] = {
+                                "value": 153,
+                                "unit": "px",
+                                "size": "153px",
+                                "step": 3
+                            };
+                        }
+                        setFontSizes({ ...fontSizes });
+                        saveToLocalStorage("fontSizes", fontSizes);
+                    }
                 }
 
                 if (model.customer_id) {
@@ -76,7 +94,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     }
 
 
-    function getStore(id) {
+    async function getStore(id) {
         console.log("inside get Store");
         const requestOptions = {
             method: 'GET',
@@ -86,7 +104,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/store/' + id, requestOptions)
+        await fetch('/v1/store/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -173,9 +191,9 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
         let filename = "";
         console.log("modelName inside getFileName:", modelName);
 
-        if (modelName === "customer_deposit") {
+        if (modelName === "customer_deposit" || modelName === "whatsapp_customer_deposit") {
             filename = "Receipt_receivable";
-        } else if (modelName === "customer_withdrawal") {
+        } else if (modelName === "customer_withdrawal" || modelName === "whatsapp_customer_withdrawal") {
             filename = "Receipt_payable";
         }
 
@@ -323,19 +341,15 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             setShowWhatsAppMessageModal(true);
         }, 100);
 
-
-
-
-
     }, [getFileName, model, formatPhoneForWhatsApp, phone]);
 
 
     function setReceiptTitle(modelName) {
         model.modelName = modelName;
         console.log("model:", model);
-        if (model.modelName === "customer_deposit") {
+        if (model.modelName === "customer_deposit" || model.modelName === "whatsapp_customer_deposit") {
             model.ReceiptTitle = "PAYMENT RECEIPT (RECEIVABLE) | إيصال الدفع (مستحق القبض)";
-        } else if (model.modelName === "customer_withdrawal") {
+        } else if (model.modelName === "customer_withdrawal" || model.modelName === "whatsapp_customer_withdrawal") {
             model.ReceiptTitle = "  PAYMENT RECEIPT (PAYABLE / REFUND) | إيصال الدفع (مستحق الدفع / مسترد)";
         }
 
@@ -512,9 +526,9 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
     };
 
     function formatModelName(str) {
-        if (str === "customer_deposit") {
+        if (str === "customer_deposit" || str === "whatsapp_customer_deposit") {
             return "Customer Receivable"
-        } else if (str === "customer_withdrawal") {
+        } else if (str === "customer_withdrawal" || str === "whatsapp_customer_withdrawal") {
             return "Customer Payable"
         }
         return str
@@ -556,7 +570,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             storedFontSizes = {};
         }
 
-        let modelNames = ["customer_deposit", "customer_withdrawal"];
+        let modelNames = ["customer_deposit", "customer_withdrawal", "whatsapp_customer_deposit", "whatspp_customer_withdrawal"];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {
                 if (!storedFontSizes[modelNames[key1] + "_" + key2]) {
@@ -734,7 +748,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                     </select>
 
                     {/* Show Store Header - Always fixed here */}
-                    {!whatsAppShare && <div className="form-check">
+                    <div className="form-check">
                         <input
                             type="checkbox"
                             className="form-check-input"
@@ -748,15 +762,15 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
                             }}
                         />
                         <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
-                    </div>}
+                    </div>
 
                     {/* Margin Control */}
 
-                    {!whatsAppShare && <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }} >
+                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }} >
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
                         <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
-                    </div>}
+                    </div>
 
                     <div className="col ">
                         <>
@@ -837,7 +851,7 @@ const CustomerDepositPreview = forwardRef((props, ref) => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <CustomerDepositPreviewContent model={model} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} />
+                    <CustomerDepositPreviewContent model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} />
                 </div>
             </Modal.Body>
             <Modal.Footer>

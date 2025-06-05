@@ -66,11 +66,14 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                     paddingBottom: "4px",
                     marginTop: page.top + "px",
                     height: "1118px",
-                    width: `${props.whatsAppShare ? "750px" : "750px"}`
+                    width: `${props.whatsAppShare ? "750px" : "750px"}`,
+                    backgroundImage: `url(${props.whatsAppShare ? props.invoiceBackground : ""})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
                 }}
 
             >
-                {props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? < div className="row">
+                {props.fontSizes[props.modelName + "_storeHeader"]?.visible ? < div className="row">
                     <div className="col">
                         <ul className="list-unstyled text-left">
                             <li>
@@ -124,7 +127,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                     </div>
                 </div> : ""}
 
-                <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible || props.whatsAppShare ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
+                <div className="row" style={{ marginTop: props.fontSizes[props.modelName + "_storeHeader"]?.visible ? "0px" : props.fontSizes[props.modelName + "_marginTop"]?.size }}>
                     <div className="col">
                         <u><h1 className="text-center clickable-text fw-bold" onClick={() => {
                             props.selectText("invoiceTitle");
@@ -151,7 +154,7 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                             ) : "<DATETIME>"} {" | " + getArabicDate(props.model.date)}</div>
                         </div>
 
-                        {props.modelName === "customer_deposit" || props.modelName === "customer_withdrawal" ? <>
+                        {props.modelName === "customer_deposit" || props.modelName === "customer_withdrawal" || props.modelName === "whatsapp_customer_deposit" || props.modelName === "whatsapp_customer_withdrawal" ? <>
                             <div className="row" dir="ltr" style={{ borderBottom: detailsBorderThickness }} >
                                 <div className="col-md-4 print-label" dir="ltr" style={{ borderRight: detailsBorderThickness, borderColor: detailsBorderColor, width: detailsLabelsColumnWidthPercent, padding: "3px" }} ><b>Customer Name | اسم العميل:</b></div>
                                 <div className="col-md-8 print-value" dir="ltr" style={{ borderColor: detailsBorderColor, width: detailsValuesColumnWidthPercent, padding: "3px" }} >
@@ -316,10 +319,10 @@ const CustomerDepositPreviewContent = forwardRef((props, ref) => {
                                         <tr style={{ borderBottom: tableBorderThickness }} key={index} className="text-center"  >
                                             <td style={{ padding: "7px", borderRight: tableBorderThickness }}>{(index + 1) + (pageIndex * props.model.pageSize)}</td>
                                             <td style={{ padding: "1px", borderRight: tableBorderThickness }}>
-                                                {props.model.modelName === "customer_deposit" ? "Payment Received" : ""}
-                                                {props.model.modelName === "customer_withdrawal" ? "Paid" : ""}
-                                                {props.model.customer?.name && props.model.modelName === "customer_deposit" ? " from " + props.model.customer.name : ""}
-                                                {props.model.customer?.name && props.model.modelName === "customer_withdrawal" ? " to " + props.model.customer.name : ""}
+                                                {props.model.modelName === "customer_deposit" || props.model.modelName === "whatsapp_customer_deposit" ? "Payment Received" : ""}
+                                                {props.model.modelName === "customer_withdrawal" || props.model.modelName === "whatsapp_customer_withdrawal" ? "Paid" : ""}
+                                                {props.model.customer?.name && (props.model.modelName === "customer_deposit" || props.model.modelName === "whatsapp_customer_deposit") ? " from " + props.model.customer.name : ""}
+                                                {props.model.customer?.name && (props.model.modelName === "customer_withdrawal" || props.model.modelName === "whatsapp_customer_withdrawal") ? " to " + props.model.customer.name : ""}
                                                 {payment.description ? " | " + payment.description : ""}
                                             </td>
                                             <td style={{ padding: "1px", borderRight: tableBorderThickness }} className="text-center">{payment.method ? GetPaymentMode(payment.method) : ""} </td>

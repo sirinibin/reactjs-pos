@@ -421,7 +421,7 @@ function CustomerWithdrawalIndex(props) {
     }
 
     function sendWhatsAppMessage(model) {
-        PreviewRef.current.open(model, "whatsapp", "customer_withdrawal");
+        PreviewRef.current.open(model, "whatsapp", "whatsapp_customer_withdrawal");
     }
 
     const customerSearchRef = useRef();

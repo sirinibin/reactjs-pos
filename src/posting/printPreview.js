@@ -4,20 +4,26 @@ import BalanceSheetPrintPreviewContent from './printPreviewContent.js';
 import { format } from "date-fns";
 import html2pdf from 'html2pdf.js';
 import WhatsAppModal from './../utils/WhatsAppModal';
+import MBDIInvoiceBackground from './../INVOICE.jpg';
 
 const BalanceSheetPrintPreview = forwardRef((props, ref) => {
 
     let [whatsAppShare, setWhatsAppShare] = useState(false);
+    let [InvoiceBackground, setInvoiceBackground] = useState("");
 
     useImperativeHandle(ref, () => ({
-        open(modelObj, whatsapp) {
+        async open(modelObj, whatsapp) {
             console.log("modelObj:", modelObj);
             if (whatsapp) {
                 whatsAppShare = true;
                 setWhatsAppShare(whatsAppShare)
+                modelName = "whatsapp_balance_sheet";
+                setModelName(modelName);
             } else {
                 whatsAppShare = false;
                 setWhatsAppShare(whatsAppShare)
+                modelName = "balance_sheet";
+                setModelName(modelName);
             }
 
             if (modelObj) {
@@ -247,7 +253,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             });
     }
 
-    function getStore(id) {
+    async function getStore(id) {
         console.log("inside get Store");
         const requestOptions = {
             method: 'GET',
@@ -257,7 +263,7 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
             },
         };
 
-        fetch('/v1/store/' + id, requestOptions)
+        await fetch('/v1/store/' + id, requestOptions)
             .then(async response => {
                 const isJson = response.headers.get('content-type')?.includes('application/json');
                 const data = isJson && await response.json();
@@ -272,6 +278,26 @@ const BalanceSheetPrintPreview = forwardRef((props, ref) => {
                 console.log(data);
                 let storeData = data.result;
                 model.store = storeData;
+
+
+
+                if (model.store.code === "MBDI" && whatsAppShare) {
+                    InvoiceBackground = MBDIInvoiceBackground;
+                    setInvoiceBackground(InvoiceBackground);
+                    fontSizes[modelName + "_storeHeader"] = {
+                        "visible": false,
+                    }
+                    if (fontSizes[modelName + "_marginTop"].value === 0) {
+                        fontSizes[modelName + "_marginTop"] = {
+                            "value": 153,
+                            "unit": "px",
+                            "size": "153px",
+                            "step": 3
+                        };
+                    }
+                    setFontSizes({ ...fontSizes });
+                    saveToLocalStorage("fontSizes", fontSizes);
+                }
 
                 setModel({ ...model });
             })
@@ -477,7 +503,7 @@ const handlePrint = useCallback(async () => {
 
 
 
-    let modelName = "balance_sheet";
+    let [modelName, setModelName] = useState("balance_sheet");
 
     const [showSlider, setShowSlider] = useState(false);
     let [selectedText, setSelectedText] = useState("");
@@ -637,7 +663,7 @@ const handlePrint = useCallback(async () => {
             storedFontSizes = {};
         }
 
-        let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note", "balance_sheet", "customer_deposit", "customer_withdrawal"];
+        let modelNames = ["sales", "sales_return", "purchase", "purchase_return", "quotation", "delivery_note", "balance_sheet", "whatsapp_balance_sheet", "customer_deposit", "customer_withdrawal"];
         for (let key1 in modelNames) {
             for (let key2 in defaultFontSizes) {
                 if (!storedFontSizes[modelNames[key1] + "_" + key2]) {
@@ -793,7 +819,7 @@ const handlePrint = useCallback(async () => {
                     </select>
 
                     {/* Show Store Header - Always fixed here */}
-                    {!whatsAppShare && <div className="form-check">
+                    <div className="form-check">
                         <input
                             type="checkbox"
                             className="form-check-input"
@@ -808,18 +834,17 @@ const handlePrint = useCallback(async () => {
                             }}
                         />
                         <label htmlFor="storeHeaderCheck" className="form-check-label">Show Store Header</label>
-                    </div>}
+                    </div>
 
 
 
                     {/* Margin Control */}
 
-                    {!whatsAppShare && <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
+                    <div className="d-flex align-items-center border rounded bg-light p-2" style={{ marginRight: "200px" }}>
                         <button className="btn btn-outline-secondary" onClick={() => decrementSize(modelName + "_marginTop")}>−</button>
                         <span className="mx-2">Margin Top: {fontSizes[modelName + "_marginTop"]?.size}</span>
                         <button className="btn btn-outline-secondary" onClick={() => incrementSize(modelName + "_marginTop")}>+</button>
-
-                    </div>}
+                    </div>
 
 
                     <>
@@ -884,7 +909,7 @@ const handlePrint = useCallback(async () => {
             </Modal.Header>
             <Modal.Body>
                 <div ref={printAreaRef}>
-                    <BalanceSheetPrintPreviewContent model={model} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
+                    <BalanceSheetPrintPreviewContent model={model} invoiceBackground={InvoiceBackground} modelName={modelName} whatsAppShare={whatsAppShare} selectText={selectText} fontSizes={fontSizes} userName={localStorage.getItem("user_name") ? localStorage.getItem("user_name") : ""} />
                 </div>
             </Modal.Body>
             <Modal.Footer>
