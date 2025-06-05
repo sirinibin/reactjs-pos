@@ -635,7 +635,33 @@ const CustomerCreate = forwardRef((props, ref) => {
                             )}
                         </div>
 
+                        <div className="col-md-2">
+                            <label className="form-label">Phone2 ( 05.. / +966..)</label>
 
+                            <div className="input-group mb-3">
+                                <input
+                                    id="customer_phone2"
+                                    name="customer_phone2"
+                                    value={formData.phone2 ? formData.phone2 : ""}
+                                    type='string'
+                                    onChange={(e) => {
+                                        errors["phone2"] = "";
+                                        setErrors({ ...errors });
+                                        formData.phone2 = e.target.value;
+                                        setFormData({ ...formData });
+                                        console.log(formData);
+                                    }}
+                                    className="form-control"
+
+                                    placeholder="Phone"
+                                />
+                            </div>
+                            {errors.phone2 && (
+                                <div style={{ color: "red" }}>
+                                    {errors.phone2}
+                                </div>
+                            )}
+                        </div>
 
                         <div className="col-md-2">
                             <label className="form-label">VAT NO.(15 digits)</label>
